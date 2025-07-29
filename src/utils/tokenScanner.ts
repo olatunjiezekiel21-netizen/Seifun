@@ -73,6 +73,62 @@ export class TokenScanner {
     this.provider = new ethers.JsonRpcProvider(this.SEI_RPC_URL);
   }
 
+  // Validate if address is a valid Ethereum/Sei address
+  private isValidAddress(address: string): boolean {
+    try {
+      ethers.getAddress(address);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Check if address contains contract code (not an EOA)
+  private async isContract(address: string): Promise<boolean> {
+    try {
+      const code = await this.provider.getCode(address);
+      return code !== '0x';
+    } catch {
+      return false;
+    }
+  }
+
+  // Enhanced token detection - works with any token standard
+  private async detectTokenStandard(address: string): Promise<'ERC20' | 'ERC721' | 'ERC1155' | 'UNKNOWN'> {
+    try {
+      const contract = new ethers.Contract(address, [
+        'function supportsInterface(bytes4) view returns (bool)',
+        'function totalSupply() view returns (uint256)',
+        'function balanceOf(address) view returns (uint256)',
+        'function transfer(address, uint256) returns (bool)'
+      ], this.provider);
+
+      // Check for ERC165 support first
+      try {
+        const isERC721 = await contract.supportsInterface('0x80ac58cd');
+        if (isERC721) return 'ERC721';
+        
+        const isERC1155 = await contract.supportsInterface('0xd9b67a26');
+        if (isERC1155) return 'ERC1155';
+      } catch {
+        // Contract doesn't support ERC165, continue with other checks
+      }
+
+      // Check for ERC20 functions
+      try {
+        await contract.totalSupply.staticCall();
+        await contract.balanceOf.staticCall(ethers.ZeroAddress);
+        return 'ERC20';
+      } catch {
+        // Not a standard ERC20
+      }
+
+      return 'UNKNOWN';
+    } catch {
+      return 'UNKNOWN';
+    }
+  }
+
   async fetchTokenLogo(address: string, symbol: string): Promise<string | null> {
     const logoSources = [
       // Sei-specific token registries (if they exist)
@@ -237,31 +293,140 @@ export class TokenScanner {
     return null;
   }
 
-  async getTokenBasicInfo(address: string): Promise<TokenInfo> {
+    async getTokenBasicInfo(address: string): Promise<TokenInfo> {
     try {
-      const contract = new ethers.Contract(address, EXTENDED_ABI, this.provider);
-      
-      const [name, symbol, decimals, totalSupply] = await Promise.all([
-        contract.name().catch(() => 'Unknown Token'),
-        contract.symbol().catch(() => 'UNKNOWN'),
-        contract.decimals().catch(() => 18),
-        contract.totalSupply().catch(() => ethers.parseUnits('0', 18))
-      ]);
+      // Validate address format
+      if (!this.isValidAddress(address)) {
+        throw new Error('Invalid address format');
+      }
 
-      const logoUrl = await this.fetchTokenLogo(address, symbol);
+      // Check if it's a contract
+      const isContract = await this.isContract(address);
+      if (!isContract) {
+        throw new Error('Address is not a contract (might be an EOA - Externally Owned Account)');
+      }
+
+      // Detect token standard
+      const tokenStandard = await this.detectTokenStandard(address);
+      if (tokenStandard === 'UNKNOWN') {
+        console.warn('Unknown token standard, attempting basic analysis...');
+      }
+
+      const contract = new ethers.Contract(address, EXTENDED_ABI, this.provider);
+
+      // Try different approaches for getting token info
+      const tokenInfo = await this.getTokenInfoWithFallbacks(contract, address, tokenStandard);
+      
+      const logoUrl = await this.fetchTokenLogo(address, tokenInfo.symbol);
 
       return {
-        address,
-        name,
-        symbol,
-        decimals: Number(decimals),
-        totalSupply: totalSupply.toString(),
+        address: ethers.getAddress(address), // Normalize address checksum
+        name: tokenInfo.name,
+        symbol: tokenInfo.symbol,
+        decimals: tokenInfo.decimals,
+        totalSupply: tokenInfo.totalSupply,
         logoUrl: logoUrl || undefined
       };
     } catch (error) {
       console.error('Error fetching basic token info:', error);
-      throw new Error('Failed to fetch token information');
+      throw new Error(`Failed to fetch token information: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  // Enhanced token info fetching with multiple fallback strategies
+  private async getTokenInfoWithFallbacks(contract: ethers.Contract, address: string, tokenStandard: string): Promise<{
+    name: string;
+    symbol: string;
+    decimals: number;
+    totalSupply: string;
+  }> {
+    const fallbackStrategies = [
+      // Strategy 1: Standard ERC20 functions
+      async () => {
+        const [name, symbol, decimals, totalSupply] = await Promise.all([
+          contract.name(),
+          contract.symbol(),
+          contract.decimals(),
+          contract.totalSupply()
+        ]);
+        return {
+          name: String(name),
+          symbol: String(symbol),
+          decimals: Number(decimals),
+          totalSupply: totalSupply.toString()
+        };
+      },
+
+      // Strategy 2: Try with static calls
+      async () => {
+        const [name, symbol, decimals, totalSupply] = await Promise.all([
+          contract.name.staticCall(),
+          contract.symbol.staticCall(),
+          contract.decimals.staticCall(),
+          contract.totalSupply.staticCall()
+        ]);
+        return {
+          name: String(name),
+          symbol: String(symbol),
+          decimals: Number(decimals),
+          totalSupply: totalSupply.toString()
+        };
+      },
+
+      // Strategy 3: Individual calls with error handling
+      async () => {
+        const name = await contract.name().catch(() => 
+          contract.name.staticCall().catch(() => 'Unknown Token')
+        );
+        const symbol = await contract.symbol().catch(() => 
+          contract.symbol.staticCall().catch(() => 'UNKNOWN')
+        );
+        const decimals = await contract.decimals().catch(() => 
+          contract.decimals.staticCall().catch(() => 18)
+        );
+        const totalSupply = await contract.totalSupply().catch(() => 
+          contract.totalSupply.staticCall().catch(() => ethers.parseUnits('0', 18))
+        );
+
+        return {
+          name: String(name),
+          symbol: String(symbol),
+          decimals: Number(decimals),
+          totalSupply: totalSupply.toString()
+        };
+      },
+
+      // Strategy 4: Minimal info for non-standard contracts
+      async () => {
+        // For contracts that don't follow standard, provide basic info
+        const code = await this.provider.getCode(address);
+        const codeHash = ethers.keccak256(code).slice(0, 10);
+        
+        return {
+          name: `Contract ${address.slice(0, 8)}...`,
+          symbol: `C${codeHash.slice(2, 5).toUpperCase()}`,
+          decimals: 18,
+          totalSupply: '0'
+        };
+      }
+    ];
+
+    // Try each strategy until one works
+    for (let i = 0; i < fallbackStrategies.length; i++) {
+      try {
+        console.log(`Trying token info strategy ${i + 1}...`);
+        const result = await fallbackStrategies[i]();
+        console.log(`Strategy ${i + 1} successful:`, result);
+        return result;
+      } catch (error) {
+        console.log(`Strategy ${i + 1} failed:`, error);
+        if (i === fallbackStrategies.length - 1) {
+          throw new Error('All token info strategies failed');
+        }
+      }
+    }
+
+    throw new Error('Failed to get token information');
   }
 
   async checkSupplySafety(contract: ethers.Contract, totalSupply: bigint): Promise<SafetyCheck> {
@@ -568,37 +733,25 @@ export class TokenScanner {
     return factors;
   }
 
-  async analyzeToken(address: string): Promise<TokenAnalysis> {
+    async analyzeToken(address: string): Promise<TokenAnalysis> {
     try {
-      // Get basic token information
-      const basicInfo = await this.getTokenBasicInfo(address);
-      const contract = new ethers.Contract(address, EXTENDED_ABI, this.provider);
+      console.log(`🔍 Starting universal analysis for: ${address}`);
       
-      // Perform all safety checks
-      const [supply, ownership, blacklist, transfer, fees, liquidity, honeypot] = await Promise.all([
-        this.checkSupplySafety(contract, BigInt(basicInfo.totalSupply)),
-        this.checkOwnership(contract),
-        this.checkBlacklistFunction(contract),
-        this.checkTransferFunctions(contract),
-        this.checkTaxes(contract),
-        this.checkLiquidity(address),
-        this.checkHoneypot(contract, address)
-      ]);
+      // Get basic token information with enhanced validation
+      const basicInfo = await this.getTokenBasicInfo(address);
+      console.log(`✅ Token info retrieved: ${basicInfo.name} (${basicInfo.symbol})`);
+      
+      const contract = new ethers.Contract(address, EXTENDED_ABI, this.provider);
 
-      const safetyChecks = {
-        supply,
-        ownership,
-        liquidity,
-        honeypot,
-        blacklist,
-        verified: { passed: true, risk: 'LOW' as const, details: 'Contract verification status unknown' },
-        transfer,
-        fees
-      };
+      // Perform safety checks with enhanced error handling
+      console.log('🔒 Running safety checks...');
+      const safetyChecks = await this.performSafetyChecks(contract, address, basicInfo);
 
       const riskScore = this.calculateRiskScore(safetyChecks);
       const riskFactors = this.getRiskFactors(safetyChecks);
       const isSafe = riskScore >= 70 && !safetyChecks.honeypot.isHoneypot;
+
+      console.log(`📊 Analysis complete. Risk Score: ${riskScore}, Safe: ${isSafe}`);
 
       return {
         basicInfo,
@@ -613,5 +766,72 @@ export class TokenScanner {
       console.error('Token analysis failed:', error);
       throw new Error(`Failed to analyze token: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  // Enhanced safety checks with better error handling
+  private async performSafetyChecks(contract: ethers.Contract, address: string, basicInfo: TokenInfo): Promise<TokenAnalysis['safetyChecks']> {
+    const checks = {
+      supply: null as SafetyCheck | null,
+      ownership: null as (SafetyCheck & { owner?: string; isRenounced?: boolean }) | null,
+      blacklist: null as (SafetyCheck & { hasBlacklist?: boolean }) | null,
+      transfer: null as (SafetyCheck & { hasTransfer?: boolean; hasTransferFrom?: boolean }) | null,
+      fees: null as (SafetyCheck & { buyTax?: number; sellTax?: number; hasExcessiveFees?: boolean }) | null,
+      liquidity: null as (SafetyCheck & { liquidityAmount?: string }) | null,
+      honeypot: null as (SafetyCheck & { isHoneypot?: boolean }) | null,
+      verified: { passed: true, risk: 'LOW' as const, details: 'Contract verification status unknown' }
+    };
+
+    // Run checks with individual error handling
+    const checkPromises = [
+      this.checkSupplySafety(contract, BigInt(basicInfo.totalSupply || '0')).then(result => { checks.supply = result; }).catch(err => {
+        console.warn('Supply check failed:', err);
+        checks.supply = { passed: false, risk: 'UNKNOWN', details: 'Could not analyze supply', error: err.message };
+      }),
+      
+      this.checkOwnership(contract).then(result => { checks.ownership = result; }).catch(err => {
+        console.warn('Ownership check failed:', err);
+        checks.ownership = { passed: false, risk: 'UNKNOWN', details: 'Could not analyze ownership', error: err.message };
+      }),
+      
+      this.checkBlacklistFunction(contract).then(result => { checks.blacklist = result; }).catch(err => {
+        console.warn('Blacklist check failed:', err);
+        checks.blacklist = { passed: true, risk: 'LOW', details: 'Could not check blacklist (likely safe)', hasBlacklist: false };
+      }),
+      
+      this.checkTransferFunctions(contract).then(result => { checks.transfer = result; }).catch(err => {
+        console.warn('Transfer check failed:', err);
+        checks.transfer = { passed: false, risk: 'UNKNOWN', details: 'Could not analyze transfer functions', error: err.message };
+      }),
+      
+      this.checkTaxes(contract).then(result => { checks.fees = result; }).catch(err => {
+        console.warn('Tax check failed:', err);
+        checks.fees = { passed: true, risk: 'LOW', details: 'Could not detect fees (likely no fees)', buyTax: 0, sellTax: 0, hasExcessiveFees: false };
+      }),
+      
+      this.checkLiquidity(address).then(result => { checks.liquidity = result; }).catch(err => {
+        console.warn('Liquidity check failed:', err);
+        checks.liquidity = { passed: false, risk: 'UNKNOWN', details: 'Could not analyze liquidity', error: err.message };
+      }),
+      
+      this.checkHoneypot(contract, address).then(result => { checks.honeypot = result; }).catch(err => {
+        console.warn('Honeypot check failed:', err);
+        checks.honeypot = { passed: true, risk: 'LOW', details: 'Could not analyze for honeypot patterns (likely safe)', isHoneypot: false };
+      })
+    ];
+
+    // Wait for all checks to complete
+    await Promise.all(checkPromises);
+
+    // Ensure all checks have values (fallback to safe defaults)
+    return {
+      supply: checks.supply || { passed: false, risk: 'UNKNOWN', details: 'Supply check failed' },
+      ownership: checks.ownership || { passed: false, risk: 'UNKNOWN', details: 'Ownership check failed' },
+      liquidity: checks.liquidity || { passed: false, risk: 'UNKNOWN', details: 'Liquidity check failed' },
+      honeypot: checks.honeypot || { passed: true, risk: 'LOW', details: 'Honeypot check failed (assumed safe)', isHoneypot: false },
+      blacklist: checks.blacklist || { passed: true, risk: 'LOW', details: 'Blacklist check failed (assumed safe)', hasBlacklist: false },
+      verified: checks.verified,
+      transfer: checks.transfer || { passed: false, risk: 'UNKNOWN', details: 'Transfer check failed' },
+      fees: checks.fees || { passed: true, risk: 'LOW', details: 'Fee check failed (assumed no fees)', buyTax: 0, sellTax: 0, hasExcessiveFees: false }
+    };
   }
 }

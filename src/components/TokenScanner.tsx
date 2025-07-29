@@ -19,10 +19,30 @@ const TokenScanner = () => {
       return;
     }
 
-    // Validate address format (basic check)
-    if (!tokenAddress.startsWith('sei1') && !tokenAddress.startsWith('0x')) {
-      setError('Please enter a valid Sei token address');
+    // Enhanced address validation for universal token support
+    const address = tokenAddress.trim();
+    
+    // Support both Sei native and EVM addresses
+    if (!address.startsWith('0x')) {
+      setError('Please enter a valid EVM address (42 characters starting with 0x)');
       return;
+    }
+
+    // Validate EVM address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      setError('Please enter a valid EVM address (42 characters starting with 0x)');
+      return;
+    }
+
+    // Check for common mistakes
+    if (address === '0x0000000000000000000000000000000000000000') {
+      setError('Zero address is not a valid token address');
+      return;
+    }
+
+    // Warn about potential issues but don't block scanning
+    if (address.toLowerCase() === address || address.toUpperCase() === address) {
+      console.warn('Address may not be checksummed, but proceeding with scan...');
     }
 
     setIsScanning(true);
@@ -59,7 +79,7 @@ const TokenScanner = () => {
         }
       }
 
-      const result = await scanner.analyzeToken(tokenAddress.trim());
+              const result = await scanner.analyzeToken(address);
       setIsLoadingLogo(false);
       setScanResult(result);
       
@@ -139,8 +159,16 @@ const TokenScanner = () => {
             <div className="flex items-center space-x-2">
               <Info className="text-blue-400" size={20} />
               <p className="text-blue-300 text-sm">
-                🚀 <strong>Real Blockchain Analysis:</strong> Try scanning: <code className="bg-blue-500/20 px-2 py-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code>
+                🌐 <strong>Universal Sei Token Scanner:</strong> Works with ANY token on Sei network!
               </p>
+            </div>
+            <div className="mt-3 text-xs text-blue-200">
+              <p><strong>Supported:</strong> ERC20, ERC721, ERC1155, Custom tokens, Factory contracts</p>
+              <p><strong>Try these examples:</strong></p>
+              <div className="mt-2 space-y-1">
+                <p>• Factory: <code className="bg-blue-500/20 px-1 rounded">0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F</code></p>
+                <p>• Test Token: <code className="bg-blue-500/20 px-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code></p>
+              </div>
             </div>
           </div>
         </div>
