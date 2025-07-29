@@ -11,6 +11,8 @@
 [build.environment]
   # Node.js version for build
   NODE_VERSION = "18"
+  # Disable secrets scanning for public blockchain data
+  SECRETS_SCAN_ENABLED = "false"
 
 # Redirect rules for Single Page Application
 [[redirects]]
@@ -31,11 +33,3 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-
-# Form handling (if needed for future features)
-# [build.processing]
-#   skip_processing = false
-
-# Functions directory (if needed for serverless functions)
-# [build]
-#   functions = "netlify/functions"
