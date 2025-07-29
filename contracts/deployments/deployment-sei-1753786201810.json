@@ -1,0 +1,10 @@
+{
+  "network": "sei",
+  "factoryAddress": "0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F",
+  "deployer": "0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e",
+  "timestamp": "2025-07-29T10:50:01.807Z",
+  "contracts": {
+    "TokenCheckerFactory": "0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F",
+    "sampleTokenAddress": "0x0000000000000000000000000000000000000000"
+  }
+}

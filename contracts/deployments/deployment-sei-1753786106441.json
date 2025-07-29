@@ -1,0 +1,8 @@
+{
+  "network": "sei",
+  "deployer": "0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e",
+  "timestamp": "2025-07-29T10:48:26.433Z",
+  "contracts": {
+    "sampleTokenAddress": "0x0000000000000000000000000000000000000000"
+  }
+}
