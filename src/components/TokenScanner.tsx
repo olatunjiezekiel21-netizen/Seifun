@@ -1,146 +1,16 @@
 import React, { useState } from 'react';
 import { Search, Shield, AlertTriangle, CheckCircle, Clock, ExternalLink, Info } from 'lucide-react';
-
-interface ScanResult {
-  address: string;
-  basicInfo: {
-    name: string;
-    symbol: string;
-    decimals: string;
-    totalSupply: string;
-  };
-  analysis: {
-    riskScore: number;
-    isSafe: boolean;
-    riskFactors: string[];
-    safetyChecks: {
-      supply: {
-        passed: boolean;
-        totalSupply: string;
-        risk: string;
-      };
-      ownership: {
-        passed: boolean;
-        owner: string;
-        isOwnershipRenounced: boolean;
-        risk: string;
-      };
-      liquidity: {
-        passed: boolean;
-        liquidity: string;
-        risk: string;
-      };
-      honeypot: {
-        passed: boolean;
-        isHoneypot: boolean;
-        risk: string;
-      };
-      blacklist: {
-        passed: boolean;
-        hasBlacklist: boolean;
-        risk: string;
-      };
-      verified: {
-        passed: boolean;
-        verified: boolean;
-        risk: string;
-      };
-      transfer: {
-        passed: boolean;
-        hasTransfer: boolean;
-        hasTransferFrom: boolean;
-        risk: string;
-      };
-      fees: {
-        passed: boolean;
-        hasExcessiveFees: boolean;
-        risk: string;
-      };
-    };
-  };
-  lastScanned: string;
-  scanCount: number;
-}
+import { TokenScanner as TokenScannerClass, TokenAnalysis } from '../utils/tokenScanner';
 
 const TokenScanner = () => {
   const [tokenAddress, setTokenAddress] = useState('');
   const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [scanResult, setScanResult] = useState<TokenAnalysis | null>(null);
   const [error, setError] = useState('');
-  const [scanHistory, setScanHistory] = useState<ScanResult[]>([]);
-  const [tokenImage, setTokenImage] = useState<string | null>(null);
+  const [scanHistory, setScanHistory] = useState<TokenAnalysis[]>([]);
+  const [scanProgress, setScanProgress] = useState<string[]>([]);
 
-  // Client-side token analysis function
-  const analyzeTokenClientSide = async (address: string): Promise<ScanResult> => {
-    // Simulate analysis with mock data for now
-    // In a real implementation, you would use ethers.js to connect to Sei blockchain
-    
-    await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate analysis time
-    
-    // Mock analysis result
-    const mockResult: ScanResult = {
-      address: address,
-      basicInfo: {
-        name: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598' ? 'Test Token' : 'Unknown Token',
-        symbol: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598' ? 'TEST' : 'UNK',
-        decimals: '18',
-        totalSupply: '1000000000000000000000000'
-      },
-      analysis: {
-        riskScore: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598' ? 85 : Math.floor(Math.random() * 100),
-        isSafe: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598' ? true : Math.random() > 0.5,
-        riskFactors: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598' ? [] : ['High fee structure detected'],
-        safetyChecks: {
-          supply: {
-            passed: true,
-            totalSupply: '1000000000000000000000000',
-            risk: 'LOW'
-          },
-          ownership: {
-            passed: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598',
-            owner: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598' ? '0x0000000000000000000000000000000000000000' : '0x1234567890123456789012345678901234567890',
-            isOwnershipRenounced: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598',
-            risk: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598' ? 'LOW' : 'HIGH'
-          },
-          liquidity: {
-            passed: true,
-            liquidity: '50000000000',
-            risk: 'LOW'
-          },
-          honeypot: {
-            passed: true,
-            isHoneypot: false,
-            risk: 'LOW'
-          },
-          blacklist: {
-            passed: true,
-            hasBlacklist: false,
-            risk: 'LOW'
-          },
-          verified: {
-            passed: true,
-            verified: true,
-            risk: 'LOW'
-          },
-          transfer: {
-            passed: true,
-            hasTransfer: true,
-            hasTransferFrom: true,
-            risk: 'LOW'
-          },
-          fees: {
-            passed: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598',
-            hasExcessiveFees: address !== '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598',
-            risk: address === '0x5f0e07dfee5832faa00c63f2d33a0d79150e8598' ? 'LOW' : 'HIGH'
-          }
-        }
-      },
-      lastScanned: new Date().toISOString(),
-      scanCount: Math.floor(Math.random() * 100) + 1
-    };
-
-    return mockResult;
-  };
+  const scanner = new TokenScannerClass();
 
   const handleScan = async () => {
     if (!tokenAddress.trim()) {
@@ -157,10 +27,32 @@ const TokenScanner = () => {
     setIsScanning(true);
     setError('');
     setScanResult(null);
-    setTokenImage(null);
+    setScanProgress([]);
+
+    const progressSteps = [
+      'Connecting to Sei network...',
+      'Fetching token information...',
+      'Loading token logo...',
+      'Analyzing contract code...',
+      'Checking ownership status...',
+      'Verifying liquidity locks...',
+      'Scanning for honeypot patterns...',
+      'Detecting blacklist functions...',
+      'Analyzing transfer functions...',
+      'Checking fee structure...',
+      'Calculating safety score...'
+    ];
 
     try {
-      const result = await analyzeTokenClientSide(tokenAddress.trim());
+      // Show progress updates
+      for (let i = 0; i < progressSteps.length; i++) {
+        setScanProgress(prev => [...prev, progressSteps[i]]);
+        if (i < progressSteps.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
+      const result = await scanner.analyzeToken(tokenAddress.trim());
       setScanResult(result);
       
       // Add to scan history
@@ -170,6 +62,7 @@ const TokenScanner = () => {
       setError(err instanceof Error ? err.message : 'Failed to scan token');
     } finally {
       setIsScanning(false);
+      setScanProgress([]);
     }
   };
 
@@ -180,12 +73,6 @@ const TokenScanner = () => {
       case 'danger': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'from-green-400 to-green-500';
-    if (score >= 60) return 'from-yellow-400 to-yellow-500';
-    return 'from-red-400 to-red-500';
   };
 
   const getStatusIcon = (status: string) => {
@@ -217,6 +104,16 @@ const TokenScanner = () => {
       <AlertTriangle className="text-red-500" size={16} />;
   };
 
+  const getRiskColor = (risk: string) => {
+    switch (risk) {
+      case 'LOW': return 'bg-green-500/20 text-green-400';
+      case 'MEDIUM': return 'bg-yellow-500/20 text-yellow-400';
+      case 'HIGH': return 'bg-red-500/20 text-red-400';
+      case 'CRITICAL': return 'bg-red-600/30 text-red-300';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
+  };
+
   return (
     <section className="py-20 bg-gradient-to-br from-[#0D1421] via-[#1A1B3A] to-[#2D1B69]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -228,13 +125,13 @@ const TokenScanner = () => {
             </h2>
           </div>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Instantly verify any Sei token's safety with our advanced security analysis
+            Instantly verify any Sei token's safety with our advanced blockchain analysis
           </p>
           <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 max-w-2xl mx-auto">
             <div className="flex items-center space-x-2">
               <Info className="text-blue-400" size={20} />
               <p className="text-blue-300 text-sm">
-                🚀 <strong>Live Demo:</strong> Try scanning this token: <code className="bg-blue-500/20 px-2 py-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code>
+                🚀 <strong>Real Blockchain Analysis:</strong> Try scanning: <code className="bg-blue-500/20 px-2 py-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code>
               </p>
             </div>
           </div>
@@ -287,19 +184,10 @@ const TokenScanner = () => {
               <div className="space-y-6">
                 <div className="flex items-center space-x-3 mb-6">
                   <Clock className="text-[#FF6B35] animate-spin" size={24} />
-                  <h3 className="text-xl font-bold text-white">Running Security Analysis...</h3>
+                  <h3 className="text-xl font-bold text-white">Running Blockchain Analysis...</h3>
                 </div>
                 <div className="space-y-4">
-                  {[
-                    'Analyzing contract code',
-                    'Checking ownership status',
-                    'Verifying liquidity locks',
-                    'Scanning for honeypot patterns',
-                    'Detecting blacklist functions',
-                    'Analyzing transfer functions',
-                    'Checking fee structure',
-                    'Calculating safety score'
-                  ].map((step, idx) => (
+                  {scanProgress.map((step, idx) => (
                     <div key={idx} className="flex items-center space-x-3">
                       <div className="w-6 h-6 border-2 border-[#FF6B35] border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-gray-300">{step}</span>
@@ -318,18 +206,31 @@ const TokenScanner = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="w-16 h-16 bg-gradient-to-br from-[#FF6B35] to-[#FF8E53] rounded-2xl flex items-center justify-center overflow-hidden">
-                      <span className="text-2xl">🪙</span>
+                      {scanResult.basicInfo.logoUrl ? (
+                        <img
+                          src={scanResult.basicInfo.logoUrl}
+                          alt={scanResult.basicInfo.symbol}
+                          className="w-16 h-16 object-contain rounded-2xl"
+                          onError={(e) => { 
+                            e.currentTarget.src = `https://via.placeholder.com/64x64/FF6B35/FFFFFF?text=${scanResult.basicInfo.symbol.slice(0, 2).toUpperCase()}`;
+                          }}
+                        />
+                      ) : (
+                        <span className="text-2xl font-bold text-white">
+                          {scanResult.basicInfo.symbol.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-white">{scanResult.basicInfo.name}</h3>
                       <p className="text-gray-300">{scanResult.basicInfo.symbol}</p>
-                      <p className="text-gray-400 text-sm">{scanResult.address}</p>
+                      <p className="text-gray-400 text-sm">{scanResult.basicInfo.address}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full ${getStatusColor(getSafetyStatus(scanResult.analysis.riskScore))}`}>
-                      {getStatusIcon(getSafetyStatus(scanResult.analysis.riskScore))}
-                      <span className="font-semibold capitalize">{getSafetyStatus(scanResult.analysis.riskScore)}</span>
+                    <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full ${getStatusColor(getSafetyStatus(scanResult.riskScore))}`}>
+                      {getStatusIcon(getSafetyStatus(scanResult.riskScore))}
+                      <span className="font-semibold capitalize">{getSafetyStatus(scanResult.riskScore)}</span>
                     </div>
                   </div>
                 </div>
@@ -358,7 +259,7 @@ const TokenScanner = () => {
                               strokeWidth="8"
                               fill="none"
                               strokeLinecap="round"
-                              strokeDasharray={`${scanResult.analysis.riskScore * 2.51} 251`}
+                              strokeDasharray={`${scanResult.riskScore * 2.51} 251`}
                               className="transition-all duration-1000"
                             />
                             <defs>
@@ -369,7 +270,7 @@ const TokenScanner = () => {
                             </defs>
                           </svg>
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-3xl font-bold text-white">{scanResult.analysis.riskScore}</span>
+                            <span className="text-3xl font-bold text-white">{scanResult.riskScore}</span>
                           </div>
                         </div>
                       </div>
@@ -379,19 +280,14 @@ const TokenScanner = () => {
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold text-white">Security Checks</h4>
                     <div className="space-y-3">
-                      {Object.entries(scanResult.analysis.safetyChecks).map(([key, check]) => (
+                      {Object.entries(scanResult.safetyChecks).map(([key, check]) => (
                         <div key={key} className="flex items-center justify-between">
                           <span className="text-gray-300 capitalize">
                             {key.replace(/([A-Z])/g, ' $1').trim()}
                           </span>
                           <div className="flex items-center space-x-2">
                             {getCheckIcon(check.passed)}
-                            <span className={`text-xs px-2 py-1 rounded-full ${
-                              check.risk === 'LOW' ? 'bg-green-500/20 text-green-400' :
-                              check.risk === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' :
-                              check.risk === 'HIGH' ? 'bg-red-500/20 text-red-400' :
-                              'bg-gray-500/20 text-gray-400'
-                            }`}>
+                            <span className={`text-xs px-2 py-1 rounded-full ${getRiskColor(check.risk)}`}>
                               {check.risk}
                             </span>
                           </div>
@@ -402,11 +298,11 @@ const TokenScanner = () => {
                 </div>
 
                 {/* Risk Factors */}
-                {scanResult.analysis.riskFactors.length > 0 && (
+                {scanResult.riskFactors.length > 0 && (
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold text-white">Risk Factors</h4>
                     <div className="space-y-2">
-                      {scanResult.analysis.riskFactors.map((factor, idx) => (
+                      {scanResult.riskFactors.map((factor, idx) => (
                         <div key={idx} className="flex items-center space-x-2 text-red-400">
                           <AlertTriangle size={16} />
                           <span className="text-sm">{factor}</span>
@@ -415,6 +311,29 @@ const TokenScanner = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Detailed Analysis */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-white">Detailed Analysis</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {Object.entries(scanResult.safetyChecks).map(([key, check]) => (
+                      <div key={key} className="bg-white/5 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="font-medium text-white capitalize">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                          </h5>
+                          <span className={`text-xs px-2 py-1 rounded-full ${getRiskColor(check.risk)}`}>
+                            {check.risk}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-300">{check.details}</p>
+                        {check.error && (
+                          <p className="text-xs text-red-400 mt-1">Error: {check.error}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Token Details */}
                 <div className="grid md:grid-cols-2 gap-8 pt-6 border-t border-white/20">
@@ -446,7 +365,7 @@ const TokenScanner = () => {
                     <h4 className="text-lg font-semibold text-white">Actions</h4>
                     <div className="space-y-3">
                       <button 
-                        onClick={() => window.open(`https://seitrace.com/address/${scanResult.address}`, '_blank')}
+                        onClick={() => window.open(`https://seitrace.com/address/${scanResult.basicInfo.address}`, '_blank')}
                         className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8E53] text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center space-x-2"
                       >
                         <ExternalLink size={16} />
@@ -470,24 +389,37 @@ const TokenScanner = () => {
                 {scanHistory.map((scan, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-[#FF6B35] to-[#FF8E53] rounded-lg flex items-center justify-center text-sm">
-                        {scan.basicInfo.symbol.slice(0, 2)}
+                      <div className="w-8 h-8 bg-gradient-to-br from-[#FF6B35] to-[#FF8E53] rounded-lg flex items-center justify-center text-sm overflow-hidden">
+                        {scan.basicInfo.logoUrl ? (
+                          <img
+                            src={scan.basicInfo.logoUrl}
+                            alt={scan.basicInfo.symbol}
+                            className="w-8 h-8 object-contain rounded-lg"
+                            onError={(e) => { 
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling!.style.display = 'block';
+                            }}
+                          />
+                        ) : null}
+                        <span className={scan.basicInfo.logoUrl ? 'hidden' : 'block'}>
+                          {scan.basicInfo.symbol.slice(0, 2)}
+                        </span>
                       </div>
                       <div>
                         <div className="text-white font-medium">{scan.basicInfo.name}</div>
-                        <div className="text-gray-400 text-sm">{scan.address.slice(0, 8)}...</div>
+                        <div className="text-gray-400 text-sm">{scan.basicInfo.address.slice(0, 8)}...</div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <div className={`px-2 py-1 rounded-full text-xs ${
-                        getSafetyStatus(scan.analysis.riskScore) === 'safe' ? 'bg-green-500/20 text-green-400' :
-                        getSafetyStatus(scan.analysis.riskScore) === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
+                        getSafetyStatus(scan.riskScore) === 'safe' ? 'bg-green-500/20 text-green-400' :
+                        getSafetyStatus(scan.riskScore) === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
                         'bg-red-500/20 text-red-400'
                       }`}>
-                        {scan.analysis.riskScore}
+                        {scan.riskScore}
                       </div>
                       <button 
-                        onClick={() => setTokenAddress(scan.address)}
+                        onClick={() => setTokenAddress(scan.basicInfo.address)}
                         className="text-[#FF6B35] hover:text-[#FF8E53] transition-colors"
                       >
                         <Search size={16} />
