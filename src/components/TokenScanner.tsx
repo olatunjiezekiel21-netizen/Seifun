@@ -9,6 +9,7 @@ const TokenScanner = () => {
   const [error, setError] = useState('');
   const [scanHistory, setScanHistory] = useState<TokenAnalysis[]>([]);
   const [scanProgress, setScanProgress] = useState<string[]>([]);
+  const [isLoadingLogo, setIsLoadingLogo] = useState(false);
 
   const scanner = new TokenScannerClass();
 
@@ -47,12 +48,19 @@ const TokenScanner = () => {
       // Show progress updates
       for (let i = 0; i < progressSteps.length; i++) {
         setScanProgress(prev => [...prev, progressSteps[i]]);
+        
+        // Set logo loading state when we reach the logo step
+        if (progressSteps[i].includes('logo')) {
+          setIsLoadingLogo(true);
+        }
+        
         if (i < progressSteps.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
 
       const result = await scanner.analyzeToken(tokenAddress.trim());
+      setIsLoadingLogo(false);
       setScanResult(result);
       
       // Add to scan history
@@ -212,14 +220,41 @@ const TokenScanner = () => {
                           alt={scanResult.basicInfo.symbol}
                           className="w-16 h-16 object-contain rounded-2xl"
                           onError={(e) => { 
-                            e.currentTarget.src = `https://via.placeholder.com/64x64/FF6B35/FFFFFF?text=${scanResult.basicInfo.symbol.slice(0, 2).toUpperCase()}`;
+                            const target = e.currentTarget;
+                            const parent = target.parentElement;
+                            if (parent) {
+                              // Hide the image and show fallback
+                              target.style.display = 'none';
+                              const fallback = parent.querySelector('.logo-fallback') as HTMLElement;
+                              if (fallback) {
+                                fallback.style.display = 'flex';
+                              } else {
+                                // Create fallback if it doesn't exist
+                                const fallbackDiv = document.createElement('div');
+                                fallbackDiv.className = 'logo-fallback w-16 h-16 flex items-center justify-center text-2xl font-bold text-white';
+                                fallbackDiv.textContent = scanResult.basicInfo.symbol.slice(0, 2).toUpperCase();
+                                parent.appendChild(fallbackDiv);
+                              }
+                            }
+                          }}
+                          onLoad={(e) => {
+                            // Hide fallback when image loads successfully
+                            const target = e.currentTarget;
+                            const parent = target.parentElement;
+                            if (parent) {
+                              const fallback = parent.querySelector('.logo-fallback') as HTMLElement;
+                              if (fallback) {
+                                fallback.style.display = 'none';
+                              }
+                            }
                           }}
                         />
-                      ) : (
-                        <span className="text-2xl font-bold text-white">
-                          {scanResult.basicInfo.symbol.slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
+                      ) : null}
+                      <div 
+                        className={`logo-fallback w-16 h-16 flex items-center justify-center text-2xl font-bold text-white ${scanResult.basicInfo.logoUrl ? 'hidden' : 'flex'}`}
+                      >
+                        {scanResult.basicInfo.symbol.slice(0, 2).toUpperCase()}
+                      </div>
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-white">{scanResult.basicInfo.name}</h3>
@@ -396,14 +431,31 @@ const TokenScanner = () => {
                             alt={scan.basicInfo.symbol}
                             className="w-8 h-8 object-contain rounded-lg"
                             onError={(e) => { 
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling!.style.display = 'block';
+                              const target = e.currentTarget;
+                              const parent = target.parentElement;
+                              if (parent) {
+                                target.style.display = 'none';
+                                const fallback = parent.querySelector('.history-logo-fallback') as HTMLElement;
+                                if (fallback) {
+                                  fallback.style.display = 'flex';
+                                }
+                              }
+                            }}
+                            onLoad={(e) => {
+                              const target = e.currentTarget;
+                              const parent = target.parentElement;
+                              if (parent) {
+                                const fallback = parent.querySelector('.history-logo-fallback') as HTMLElement;
+                                if (fallback) {
+                                  fallback.style.display = 'none';
+                                }
+                              }
                             }}
                           />
                         ) : null}
-                        <span className={scan.basicInfo.logoUrl ? 'hidden' : 'block'}>
-                          {scan.basicInfo.symbol.slice(0, 2)}
-                        </span>
+                        <div className={`history-logo-fallback w-8 h-8 flex items-center justify-center text-sm font-semibold text-white ${scan.basicInfo.logoUrl ? 'hidden' : 'flex'}`}>
+                          {scan.basicInfo.symbol.slice(0, 2).toUpperCase()}
+                        </div>
                       </div>
                       <div>
                         <div className="text-white font-medium">{scan.basicInfo.name}</div>

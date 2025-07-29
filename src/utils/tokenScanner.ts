@@ -75,43 +75,91 @@ export class TokenScanner {
 
   async fetchTokenLogo(address: string, symbol: string): Promise<string | null> {
     const logoSources = [
-      // CoinGecko API
+      // Sei-specific token registries (if they exist)
       async () => {
         try {
+          // This would be a Sei-specific token registry
+          // For now, we'll skip this as Sei doesn't have a public token registry yet
+          return null;
+        } catch (error) {
+          console.log('Sei registry logo fetch failed:', error);
+          return null;
+        }
+      },
+
+      // CoinGecko API (try both Ethereum and generic search)
+      async () => {
+        try {
+          // First try direct contract lookup
           const response = await fetch(`https://api.coingecko.com/api/v3/coins/ethereum/contract/${address.toLowerCase()}`);
           if (response.ok) {
             const data = await response.json();
             return data.image?.large || data.image?.small || null;
           }
         } catch (error) {
-          console.log('CoinGecko logo fetch failed:', error);
+          console.log('CoinGecko contract lookup failed:', error);
+        }
+
+        try {
+          // Then try searching by symbol
+          const searchResponse = await fetch(`https://api.coingecko.com/api/v3/search?query=${symbol}`);
+          if (searchResponse.ok) {
+            const searchData = await searchResponse.json();
+            const coin = searchData.coins?.[0];
+            if (coin && coin.large) {
+              return coin.large;
+            }
+          }
+        } catch (error) {
+          console.log('CoinGecko search failed:', error);
         }
         return null;
       },
       
-      // Trust Wallet assets
+      // Trust Wallet assets (try multiple blockchain paths)
       async () => {
-        try {
-          const logoUrl = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${ethers.getAddress(address)}/logo.png`;
-          const response = await fetch(logoUrl, { method: 'HEAD' });
-          return response.ok ? logoUrl : null;
-        } catch (error) {
-          console.log('Trust Wallet logo fetch failed:', error);
+        const blockchains = ['ethereum', 'smartchain', 'polygon'];
+        
+        for (const blockchain of blockchains) {
+          try {
+            const logoUrl = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${blockchain}/assets/${address}/logo.png`;
+            const response = await fetch(logoUrl, { method: 'HEAD' });
+            if (response.ok) {
+              return logoUrl;
+            }
+          } catch (error) {
+            console.log(`Trust Wallet ${blockchain} logo fetch failed:`, error);
+          }
         }
         return null;
       },
 
-      // TokenLists
+      // TokenLists aggregated sources
       async () => {
         try {
-          const response = await fetch('https://tokens.coingecko.com/uniswap/all.json');
-          if (response.ok) {
-            const data = await response.json();
-            const token = data.tokens.find((t: any) => 
-              t.address.toLowerCase() === address.toLowerCase() || 
-              t.symbol.toLowerCase() === symbol.toLowerCase()
-            );
-            return token?.logoURI || null;
+          const tokenLists = [
+            'https://tokens.coingecko.com/uniswap/all.json',
+            'https://gateway.ipfs.io/ipns/tokens.uniswap.org',
+            'https://raw.githubusercontent.com/compound-finance/token-list/master/compound.tokenlist.json'
+          ];
+
+          for (const listUrl of tokenLists) {
+            try {
+              const response = await fetch(listUrl);
+              if (response.ok) {
+                const data = await response.json();
+                const token = data.tokens?.find((t: any) => 
+                  t.address?.toLowerCase() === address.toLowerCase() || 
+                  t.symbol?.toLowerCase() === symbol.toLowerCase()
+                );
+                if (token?.logoURI) {
+                  return token.logoURI;
+                }
+              }
+            } catch (listError) {
+              console.log(`Token list ${listUrl} failed:`, listError);
+              continue;
+            }
           }
         } catch (error) {
           console.log('TokenLists logo fetch failed:', error);
@@ -119,16 +167,67 @@ export class TokenScanner {
         return null;
       },
 
-      // Fallback to generic token icon
+      // DeFiLlama token logos
       async () => {
-        return `https://via.placeholder.com/64x64/FF6B35/FFFFFF?text=${symbol.slice(0, 2).toUpperCase()}`;
+        try {
+          const response = await fetch(`https://api.llama.fi/token/${address}`);
+          if (response.ok) {
+            const data = await response.json();
+            return data.logo || null;
+          }
+        } catch (error) {
+          console.log('DeFiLlama logo fetch failed:', error);
+        }
+        return null;
+      },
+
+      // Generic crypto icon services
+      async () => {
+        try {
+          // Try CryptoCurrency Icon API
+          const iconUrl = `https://cryptoicons.org/api/icon/${symbol.toLowerCase()}/200`;
+          const response = await fetch(iconUrl, { method: 'HEAD' });
+          if (response.ok) {
+            return iconUrl;
+          }
+        } catch (error) {
+          console.log('CryptoIcons fetch failed:', error);
+        }
+        return null;
+      },
+
+      // Enhanced fallback with better design
+      async () => {
+        // Create a more sophisticated fallback
+        const colors = [
+          '#FF6B35', '#FF8E53', '#4ECDC4', '#45B7D1', 
+          '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'
+        ];
+        
+        // Use address to determine color consistently
+        const colorIndex = parseInt(address.slice(-1), 16) % colors.length;
+        const bgColor = colors[colorIndex].replace('#', '');
+        const textColor = 'FFFFFF';
+        
+        // Get up to 3 characters for better display
+        const displayText = symbol.length >= 2 ? symbol.slice(0, 2).toUpperCase() : symbol.toUpperCase();
+        
+        return `https://via.placeholder.com/128x128/${bgColor}/${textColor}?text=${displayText}`;
       }
     ];
 
+    // Try each source with timeout
     for (const source of logoSources) {
       try {
-        const logo = await source();
-        if (logo) return logo;
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 3000)
+        );
+        
+        const logo = await Promise.race([source(), timeoutPromise]);
+        if (logo) {
+          console.log('Found logo:', logo);
+          return logo;
+        }
       } catch (error) {
         console.log('Logo source failed:', error);
         continue;
