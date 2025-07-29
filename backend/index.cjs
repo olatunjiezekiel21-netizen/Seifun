@@ -1,27 +1,34 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const { ethers } = require("ethers");
-const Token = require("./models/Token");
+const Token = require("./models/Token.cjs");
 const cors = require("cors");
+require('dotenv').config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
 // Connect to MongoDB
-mongoose.connect("YOUR_MONGODB_URI", {
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/seifu", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
 
 // Ethers setup for Sei blockchain
-const provider = new ethers.JsonRpcProvider("YOUR_SEI_RPC_URL");
+const provider = new ethers.JsonRpcProvider(process.env.SEI_RPC_URL || "https://sei-evm-rpc.publicnode.com");
 const factoryAbi = require("./abis/TokenCheckerFactory.json");
 const checkerAbi = require("./abis/TokenSafeChecker.json");
 const erc20Abi = require("./abis/ERC20.json");
-const factoryAddress = "YOUR_FACTORY_CONTRACT_ADDRESS";
+const factoryAddress = process.env.FACTORY_CONTRACT_ADDRESS || "0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F";
 
 const factory = new ethers.Contract(factoryAddress, factoryAbi, provider);
+
+// Log configuration on startup
+console.log("SeifuGuard Backend Configuration:");
+console.log("- Factory Address:", factoryAddress);
+console.log("- RPC URL:", process.env.SEI_RPC_URL || "https://sei-evm-rpc.publicnode.com");
+console.log("- MongoDB URI:", process.env.MONGODB_URI || "mongodb://localhost:27017/seifu");
 
 // Token analysis service
 class TokenAnalyzer {

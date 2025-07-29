@@ -1,9 +1,10 @@
 const { ethers } = require("ethers");
+require('dotenv').config();
 const Token = require("./models/Token");
 const checkerAbi = require("./abis/TokenSafeChecker.json");
 
-// Set up provider
-const provider = new ethers.JsonRpcProvider("YOUR_SEI_RPC_URL");
+// Ethers setup for Sei blockchain
+const provider = new ethers.JsonRpcProvider(process.env.SEI_RPC_URL || "https://sei-evm-rpc.publicnode.com");
 
 // Helper to start monitoring all checkers in DB
 async function monitorAllCheckers() {
