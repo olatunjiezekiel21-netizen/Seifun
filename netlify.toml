@@ -1,11 +1,12 @@
 [build]
-  command = "npm run build"
+  command = "rm -rf node_modules/.cache && rm -rf dist && npm ci && npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
-  # Disable secrets scanning - these are public blockchain addresses and documentation
   SECRETS_SCAN_ENABLED = "false"
+  FORCE_REBUILD = "true"
+  BUILD_ID = "emergency-fix-v2"
 
 [[redirects]]
   from = "/*"
@@ -18,8 +19,9 @@
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
+    Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
   for = "/assets/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "no-cache, no-store, must-revalidate"
