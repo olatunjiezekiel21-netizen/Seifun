@@ -130,74 +130,8 @@ export class TokenScanner {
   }
 
   async fetchTokenLogo(address: string, symbol: string): Promise<string | null> {
-    const logoSources = [
-      // CoinGecko API (try both Ethereum and generic search)
-      async () => {
-        try {
-          // First try direct contract lookup
-          const response = await fetch(`https://api.coingecko.com/api/v3/coins/ethereum/contract/${address.toLowerCase()}`);
-          if (response.ok) {
-            const data = await response.json();
-            return data.image?.large || data.image?.small || null;
-          }
-        } catch (error) {
-          console.log('CoinGecko contract lookup failed:', error);
-        }
-
-        try {
-          // Then try searching by symbol
-          const searchResponse = await fetch(`https://api.coingecko.com/api/v3/search?query=${symbol}`);
-          if (searchResponse.ok) {
-            const searchData = await searchResponse.json();
-            const coin = searchData.coins?.[0];
-            if (coin && coin.large) {
-              return coin.large;
-            }
-          }
-        } catch (error) {
-          console.log('CoinGecko search failed:', error);
-        }
-        return null;
-      },
-      
-      // Trust Wallet assets (try multiple blockchain paths)
-      async () => {
-        const blockchains = ['ethereum', 'smartchain', 'polygon'];
-        
-        for (const blockchain of blockchains) {
-          try {
-            const logoUrl = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${blockchain}/assets/${address}/logo.png`;
-            const response = await fetch(logoUrl, { method: 'HEAD' });
-            if (response.ok) {
-              return logoUrl;
-            }
-          } catch (error) {
-            console.log(`Trust Wallet ${blockchain} logo fetch failed:`, error);
-          }
-        }
-        return null;
-      }
-    ];
-
-    // Try each source with timeout
-    for (const source of logoSources) {
-      try {
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 3000)
-        );
-        
-        const logo = await Promise.race([source(), timeoutPromise]);
-        if (logo) {
-          console.log('Found logo:', logo);
-          return logo;
-        }
-      } catch (error) {
-        console.log('Logo source failed:', error);
-        continue;
-      }
-    }
-
-    // Return null if no logo found - don't create fallback URL
+    // As requested: just return null for logos - leave blank if no real logo
+    // This ensures no mock data or fallback logos are displayed
     return null;
   }
 
