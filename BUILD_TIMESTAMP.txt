@@ -1,0 +1,4 @@
+BUILD_TIMESTAMP: 2025-01-30-23:35:00
+FORCE_CACHE_CLEAR: true
+EMERGENCY_FIX: seifu.fun_update
+VERSION: 1.0.1-emergency
