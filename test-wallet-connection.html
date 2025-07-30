@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .wallet-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔗 Sei Wallet Connection Test</h1>
+        <p>This page tests the wallet connection functionality for the Seifu app.</p>
+
+        <!-- Wallet Detection -->
+        <div class="test-section" id="wallet-detection">
+            <h3>1. Wallet Detection</h3>
+            <p>Checking for available wallets...</p>
+            <div id="detection-results"></div>
+        </div>
+
+        <!-- Connection Test -->
+        <div class="test-section" id="connection-test">
+            <h3>2. Connection Test</h3>
+            <button onclick="testConnection()" id="connect-btn">Test Connection</button>
+            <div id="connection-results"></div>
+        </div>
+
+        <!-- Current Status -->
+        <div class="test-section" id="status">
+            <h3>3. Current Status</h3>
+            <div id="status-results">Not connected</div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="test-section info">
+            <h3>📋 Instructions</h3>
+            <ul>
+                <li><strong>Sei Wallet:</strong> Install the Sei wallet browser extension</li>
+                <li><strong>Compass:</strong> Install Compass wallet with Sei support</li>
+                <li><strong>Keplr:</strong> Install Keplr wallet with Sei chain added</li>
+            </ul>
+            <p><strong>Note:</strong> Make sure your wallet is unlocked and has Sei testnet configured.</p>
+        </div>
+    </div>
+
+    <script>
+        // Wallet detection
+        function detectWallets() {
+            const results = document.getElementById('detection-results');
+            const wallets = [];
+
+            if (typeof window.sei !== 'undefined') {
+                wallets.push('✅ Sei Wallet Extension detected');
+            } else {
+                wallets.push('❌ Sei Wallet Extension not found');
+            }
+
+            if (typeof window.compass !== 'undefined') {
+                wallets.push('✅ Compass Wallet detected');
+            } else {
+                wallets.push('❌ Compass Wallet not found');
+            }
+
+            if (typeof window.keplr !== 'undefined') {
+                wallets.push('✅ Keplr Wallet detected');
+            } else {
+                wallets.push('❌ Keplr Wallet not found');
+            }
+
+            results.innerHTML = wallets.join('<br>');
+            
+            const section = document.getElementById('wallet-detection');
+            if (wallets.some(w => w.includes('✅'))) {
+                section.className = 'test-section success';
+            } else {
+                section.className = 'test-section error';
+            }
+        }
+
+        // Test connection
+        async function testConnection() {
+            const btn = document.getElementById('connect-btn');
+            const results = document.getElementById('connection-results');
+            const status = document.getElementById('status-results');
+            
+            btn.disabled = true;
+            btn.textContent = 'Connecting...';
+            results.innerHTML = 'Attempting to connect...';
+
+            try {
+                let wallet = null;
+                let walletType = '';
+
+                // Try different wallets
+                if (typeof window.sei !== 'undefined') {
+                    wallet = window.sei;
+                    walletType = 'Sei Wallet Extension';
+                } else if (typeof window.compass !== 'undefined') {
+                    wallet = window.compass;
+                    walletType = 'Compass Wallet';
+                } else if (typeof window.keplr !== 'undefined') {
+                    wallet = window.keplr;
+                    walletType = 'Keplr Wallet';
+                }
+
+                if (!wallet) {
+                    throw new Error('No compatible wallet found');
+                }
+
+                results.innerHTML = `Found ${walletType}, requesting connection...`;
+
+                let address = '';
+                if (walletType === 'Keplr Wallet') {
+                    await wallet.enable('sei-devnet-3');
+                    const key = await wallet.getKey('sei-devnet-3');
+                    address = key.bech32Address;
+                } else {
+                    const accounts = await wallet.request({
+                        method: 'sei_requestAccounts'
+                    });
+                    address = accounts[0];
+                }
+
+                // Try to get balance
+                let balance = '0.0000';
+                try {
+                    if (walletType !== 'Keplr Wallet') {
+                        const balanceResult = await wallet.request({
+                            method: 'sei_getBalance',
+                            params: [address]
+                        });
+                        balance = balanceResult ? (parseInt(balanceResult) / 1e18).toFixed(4) : '0.0000';
+                    }
+                } catch (balanceError) {
+                    console.log('Balance fetch failed:', balanceError);
+                }
+
+                // Success!
+                const section = document.getElementById('connection-test');
+                section.className = 'test-section success';
+                
+                results.innerHTML = `
+                    <div class="wallet-info">
+                        <strong>✅ Connection Successful!</strong><br>
+                        <strong>Wallet:</strong> ${walletType}<br>
+                        <strong>Address:</strong> ${address}<br>
+                        <strong>Balance:</strong> ${balance} SEI
+                    </div>
+                `;
+
+                status.innerHTML = `
+                    <div class="wallet-info">
+                        <strong>Connected to ${walletType}</strong><br>
+                        Address: <code>${address}</code><br>
+                        Balance: ${balance} SEI
+                    </div>
+                `;
+
+            } catch (error) {
+                const section = document.getElementById('connection-test');
+                section.className = 'test-section error';
+                
+                results.innerHTML = `
+                    <strong>❌ Connection Failed:</strong><br>
+                    ${error.message}
+                `;
+                
+                status.innerHTML = 'Connection failed';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test Connection';
+            }
+        }
+
+        // Run detection on page load
+        window.addEventListener('load', detectWallets);
+    </script>
+</body>
+</html>
