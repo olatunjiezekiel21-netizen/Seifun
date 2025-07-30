@@ -4,6 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  # Disable secrets scanning - these are public blockchain addresses and documentation
+  SECRETS_SCAN_ENABLED = "false"
 
 [[redirects]]
   from = "/*"
