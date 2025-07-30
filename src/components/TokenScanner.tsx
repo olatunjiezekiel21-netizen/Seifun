@@ -193,22 +193,22 @@ const TokenScanner = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-[#0D1421] via-[#1A1B3A] to-[#2D1B69]">
+    <section className="py-12 sm:py-20 bg-gradient-to-br from-[#0D1421] via-[#1A1B3A] to-[#2D1B69]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center space-y-6 mb-12">
+        <div className="text-center space-y-4 sm:space-y-6 mb-8 sm:mb-12">
           <div className="flex items-center justify-center space-x-3">
-            <Shield className="text-[#FF6B35]" size={32} />
-            <h2 className="text-4xl lg:text-5xl font-bold text-white">
+            <Shield className="text-[#FF6B35]" size={28} />
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
               SeifuGuard <span className="text-[#FF6B35]">Scanner</span>
             </h2>
           </div>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto px-4">
             Instantly verify any Sei token's safety with our advanced blockchain analysis
           </p>
-          <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 max-w-2xl mx-auto">
-            <div className="flex items-center space-x-2">
-              <Info className="text-blue-400" size={20} />
-              <p className="text-blue-300 text-sm">
+          <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3 sm:p-4 max-w-2xl mx-auto">
+            <div className="flex items-start sm:items-center space-x-2">
+              <Info className="text-blue-400 mt-0.5 sm:mt-0 flex-shrink-0" size={18} />
+              <p className="text-blue-300 text-xs sm:text-sm text-left">
                 🌐 <strong>Universal Sei Token Scanner:</strong> Works with ANY token on Sei network!
               </p>
             </div>
@@ -216,8 +216,8 @@ const TokenScanner = () => {
               <p><strong>Supported:</strong> ERC20, ERC721, ERC1155, Custom tokens, Factory contracts</p>
               <p><strong>Try these examples:</strong></p>
               <div className="mt-2 space-y-1">
-                <p>• Token Contract: <code className="bg-blue-500/20 px-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code></p>
-                <p>• Wallet Address: <code className="bg-blue-500/20 px-1 rounded">0x742d35Cc6635C0532925a3b8D41c4e9E4532D3eE</code> (will show wallet info)</p>
+                <p className="break-all">• Token Contract: <code className="bg-blue-500/20 px-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code></p>
+                <p className="break-all">• Wallet Address: <code className="bg-blue-500/20 px-1 rounded">0x742d35Cc6635C0532925a3b8D41c4e9E4532D3eE</code> (will show wallet info)</p>
                 <p className="text-blue-300">💡 <strong>Note:</strong> Wallet addresses show balance info, token contracts show safety analysis</p>
               </div>
             </div>
@@ -226,24 +226,24 @@ const TokenScanner = () => {
 
         <div className="max-w-4xl mx-auto">
           {/* Scanner Input */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 mb-8">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-8 border border-white/20 mb-6 sm:mb-8">
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-3">
                   Sei Token Contract Address
                 </label>
-                <div className="flex space-x-4">
+                <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                   <input
                     type="text"
                     value={tokenAddress}
                     onChange={(e) => setTokenAddress(e.target.value)}
-                    placeholder="sei1... or 0x..."
-                    className="flex-1 px-6 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent transition-all"
+                    placeholder="0x... (Token contract address)"
+                    className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent transition-all text-sm sm:text-base"
                   />
                   <button
                     onClick={handleScan}
                     disabled={isScanning}
-                    className="px-8 py-4 bg-gradient-to-r from-[#FF6B35] to-[#FF8E53] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#FF6B35]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                    className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#FF6B35] to-[#FF8E53] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#FF6B35]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 whitespace-nowrap"
                   >
                     {isScanning ? (
                       <>

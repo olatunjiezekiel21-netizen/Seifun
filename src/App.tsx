@@ -8,6 +8,7 @@ import SeifuMasterAI from './components/SeifuMasterAI';
 import LiveTokens from './components/LiveTokens';
 import TrustedCreators from './components/TrustedCreators';
 import Footer from './components/Footer';
+import CreateToken from './components/CreateToken';
 import Launchpad from './pages/Launchpad';
 import MemeHub from './pages/MemeHub';
 import Docs from './pages/Docs';
@@ -36,6 +37,7 @@ function App() {
               <TrustedCreators />
             </main>
           } />
+          <Route path="/create-token" element={<CreateToken />} />
           <Route path="/launchpad" element={<Launchpad />} />
           <Route path="/memehub" element={<MemeHub />} />
           <Route path="/docs" element={<Docs />} />
