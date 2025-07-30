@@ -54,9 +54,9 @@ const Docs = () => {
         { id: 'safety-features', title: 'Safety Features' }
       ]
     },
-    {
-      id: 'memehub',
-      title: 'MemeHub',
+            {
+          id: 'memehub',
+          title: 'seifu.fun',
       icon: TrendingUp,
       subsections: [
         { id: 'discovering-tokens', title: 'Discovering Tokens' },

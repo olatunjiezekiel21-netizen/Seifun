@@ -188,7 +188,7 @@ const MemeHub = () => {
               <Flame className="text-white" size={20} sm:size={28} />
             </div>
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-white">
-              Meme<span className="text-[#FF6B35]">Hub</span>
+              seifu<span className="text-[#FF6B35]">.fun</span>
             </h1>
           </div>
           <p className="text-base sm:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed px-4">

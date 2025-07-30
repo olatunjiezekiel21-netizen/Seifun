@@ -4,6 +4,7 @@ import { Wallet, Menu, X, LogOut } from 'lucide-react';
 import { useWallet } from '../utils/walletConnection';
 
 const Header = () => {
+  console.log('HEADER_COMPONENT_LOADED_INTEGRATION_TEST');
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const location = useLocation();
   const { isConnected, address, balance, isConnecting, error, connectWallet, disconnectWallet } = useWallet();
@@ -24,7 +25,7 @@ const Header = () => {
                 alt="Seifu Logo" 
                 className="w-8 h-8 rounded-full"
               />
-              <span className="text-2xl font-bold text-[#141414]">seifu</span>
+              <span className="text-2xl font-bold text-[#141414]">seifu_INTEGRATION_TEST</span>
             </Link>
           </div>
 

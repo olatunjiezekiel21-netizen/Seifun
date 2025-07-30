@@ -39,7 +39,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">SeifuGuard</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Token Launchpad</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">MemeHub</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">seifu.fun</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">DAO Governance</a></li>
             </ul>
           </div>

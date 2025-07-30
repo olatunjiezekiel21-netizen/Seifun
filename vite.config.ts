@@ -13,6 +13,12 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false, // Disable sourcemaps for production
     minify: 'terser', // Better minification
+    terserOptions: {
+      compress: {
+        drop_console: false, // Keep console.log statements
+        drop_debugger: false
+      }
+    },
     rollupOptions: {
       output: {
         manualChunks: {
