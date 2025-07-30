@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
 import { Upload, Shield, Rocket, Lock, Users, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { ethers } from 'ethers';
+import { useWallet } from '../utils/walletConnection';
+
+// Factory contract ABI (simplified)
+const FACTORY_ABI = [
+  "function createToken(string memory name, string memory symbol, uint8 decimals, uint256 totalSupply) external payable returns (address)",
+  "function creationFee() external view returns (uint256)",
+  "function getUserTokens(address user) external view returns (tuple(address tokenAddress, address owner, string name, string symbol, uint8 decimals, uint256 totalSupply, uint256 createdAt)[])"
+];
+
+// Factory contract address (placeholder - will be updated when deployed)
+const FACTORY_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 interface TokenFormData {
   name: string;
@@ -24,9 +36,12 @@ interface TokenFormData {
 }
 
 const LaunchpadForm = () => {
+  const { isConnected, address, connectWallet } = useWallet();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed' | null>(null);
+  const [createdTokenAddress, setCreatedTokenAddress] = useState<string | null>(null);
+  const [creationError, setCreationError] = useState<string | null>(null);
   const [formData, setFormData] = useState<TokenFormData>({
     name: '',
     symbol: '',
@@ -73,18 +88,79 @@ const LaunchpadForm = () => {
   };
 
   const handleSubmit = async () => {
+    if (!isConnected || !address) {
+      setCreationError('Please connect your wallet first');
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.name.trim() || !formData.symbol.trim() || !formData.totalSupply) {
+      setCreationError('Please fill in all required fields (Name, Symbol, Total Supply)');
+      return;
+    }
+
     setIsSubmitting(true);
     setVerificationStatus('pending');
+    setCreationError(null);
+    setCreatedTokenAddress(null);
     
-    // Simulate verification process
-    setTimeout(() => {
+    try {
+      // Note: This is a placeholder implementation for demo purposes
+      // In production, you would deploy the factory contract first
+      if (FACTORY_ADDRESS === "0x0000000000000000000000000000000000000000") {
+        // Simulate token creation process
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setVerificationStatus('verified');
+        
+        // Simulate token creation
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const mockTokenAddress = `0x${Math.random().toString(16).substr(2, 40)}`;
+        setCreatedTokenAddress(mockTokenAddress);
+        
+        setIsSubmitting(false);
+        setTimeout(() => {
+          setCurrentStep(4);
+        }, 1000);
+        return;
+      }
+
+      // Real implementation (when factory is deployed)
+      const provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
+      const signer = provider.getSigner(address);
+      const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, signer);
+
+      // Get creation fee
+      const fee = await factory.creationFee();
+      
+      // Create token
+      const tx = await factory.createToken(
+        formData.name,
+        formData.symbol,
+        18, // Default to 18 decimals
+        formData.totalSupply,
+        { value: fee }
+      );
+
       setVerificationStatus('verified');
+      
+      // Wait for transaction confirmation
+      const receipt = await tx.wait();
+      const tokenAddress = receipt.logs[0].address; // Get token address from event
+      
+      setCreatedTokenAddress(tokenAddress);
       setIsSubmitting(false);
-      // Automatically move to step 4 after verification
+      
+      // Move to success step
       setTimeout(() => {
         setCurrentStep(4);
       }, 1000);
-    }, 3000);
+
+    } catch (error) {
+      console.error('Token creation failed:', error);
+      setVerificationStatus('failed');
+      setCreationError(error instanceof Error ? error.message : 'Failed to create token');
+      setIsSubmitting(false);
+    }
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -584,31 +660,64 @@ const LaunchpadForm = () => {
               Next
             </button>
           ) : currentStep === 3 ? (
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="px-6 py-3 bg-[#FF3C3C] text-white rounded-xl font-semibold hover:bg-[#E63636] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Verifying...</span>
-                </>
-              ) : (
-                <>
-                  <Shield size={16} />
-                  <span>Start Verification</span>
-                </>
+            <>
+              {creationError && (
+                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="text-red-400 flex-shrink-0" size={16} />
+                    <p className="text-red-400 text-sm">{creationError}</p>
+                  </div>
+                </div>
               )}
-            </button>
+              {!isConnected ? (
+                <button
+                  onClick={connectWallet}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors flex items-center space-x-2"
+                >
+                  <span>Connect Wallet to Continue</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="px-6 py-3 bg-[#FF3C3C] text-white rounded-xl font-semibold hover:bg-[#E63636] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Creating Token...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Shield size={16} />
+                      <span>Create Token (0.01 SEI)</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </>
           ) : (
-            <button
-              onClick={() => {}}
-             className="px-8 py-3 bg-gradient-to-r from-[#FF3C3C] to-[#FF6B6B] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#FF3C3C]/25 transition-all flex items-center space-x-2 animate-pulse"
-            >
-              <Rocket size={16} />
-              <span>Launch Token</span>
-            </button>
+            <div className="space-y-4">
+              {createdTokenAddress && (
+                <div className="p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <CheckCircle className="text-green-400 flex-shrink-0 mt-0.5" size={16} />
+                    <div>
+                      <p className="text-green-400 font-semibold text-sm mb-1">Token Created Successfully!</p>
+                      <p className="text-green-300 text-xs break-all">Address: {createdTokenAddress}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <button
+                onClick={() => createdTokenAddress && window.open(`https://seitrace.com/address/${createdTokenAddress}`, '_blank')}
+                disabled={!createdTokenAddress}
+                className="px-8 py-3 bg-gradient-to-r from-[#FF3C3C] to-[#FF6B6B] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#FF3C3C]/25 transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Rocket size={16} />
+                <span>{createdTokenAddress ? 'View on Seitrace' : 'Token Launch Complete'}</span>
+              </button>
+            </div>
           )}
         </div>
       </div>

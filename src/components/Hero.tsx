@@ -1,7 +1,10 @@
 import React from 'react';
 import { ArrowRight, Shield, Rocket } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative bg-gradient-to-br from-[#F7F7F9] via-white to-[#FFF5F5] py-20 overflow-hidden">
       {/* Background Elements */}
@@ -30,12 +33,18 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-gradient-to-r from-[#FF6B35] to-[#FF8E53] text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-[#FF6B35]/25 transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 transition-all">
+              <button 
+                onClick={() => navigate('/launchpad')}
+                className="bg-gradient-to-r from-[#FF6B35] to-[#FF8E53] text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-[#FF6B35]/25 transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 transition-all"
+              >
                 <Rocket size={20} />
                 <span>Create Token</span>
                 <ArrowRight size={20} />
               </button>
-              <button className="border-2 border-[#FF6B35] text-[#FF6B35] px-8 py-4 rounded-xl font-semibold text-lg hover:bg-[#FF6B35] hover:text-white transition-all flex items-center justify-center space-x-2">
+              <button 
+                onClick={() => navigate('/memehub')}
+                className="border-2 border-[#FF6B35] text-[#FF6B35] px-8 py-4 rounded-xl font-semibold text-lg hover:bg-[#FF6B35] hover:text-white transition-all flex items-center justify-center space-x-2"
+              >
                 <Shield size={20} />
                 <span>Explore Tokens</span>
               </button>

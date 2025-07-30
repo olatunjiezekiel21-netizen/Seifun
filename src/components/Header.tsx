@@ -31,14 +31,6 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
-              to="/create-token" 
-              className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                location.pathname === '/create-token' ? 'text-[#FF3C3C]' : 'text-gray-700'
-              }`}
-            >
-              Create Token
-            </Link>
-            <Link 
               to="/launchpad" 
               className={`hover:text-[#FF3C3C] transition-colors font-medium ${
                 location.pathname === '/launchpad' ? 'text-[#FF3C3C]' : 'text-gray-700'
@@ -52,7 +44,7 @@ const Header = () => {
                 location.pathname === '/memehub' ? 'text-[#FF3C3C]' : 'text-gray-700'
               }`}
             >
-              MemeHub
+              seifu.fun
             </Link>
             <a href="#leaderboard" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
               Leaderboard
@@ -125,15 +117,6 @@ const Header = () => {
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
               <Link 
-                to="/create-token" 
-                className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                  location.pathname === '/create-token' ? 'text-[#FF3C3C]' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Create Token
-              </Link>
-              <Link 
                 to="/launchpad" 
                 className={`hover:text-[#FF3C3C] transition-colors font-medium ${
                   location.pathname === '/launchpad' ? 'text-[#FF3C3C]' : 'text-gray-700'
@@ -149,7 +132,7 @@ const Header = () => {
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                MemeHub
+                seifu.fun
               </Link>
               <a href="#leaderboard" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
                 Leaderboard
