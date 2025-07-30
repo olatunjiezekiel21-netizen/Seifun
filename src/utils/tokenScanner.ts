@@ -131,18 +131,6 @@ export class TokenScanner {
 
   async fetchTokenLogo(address: string, symbol: string): Promise<string | null> {
     const logoSources = [
-      // Sei-specific token registries (if they exist)
-      async () => {
-        try {
-          // This would be a Sei-specific token registry
-          // For now, we'll skip this as Sei doesn't have a public token registry yet
-          return null;
-        } catch (error) {
-          console.log('Sei registry logo fetch failed:', error);
-          return null;
-        }
-      },
-
       // CoinGecko API (try both Ethereum and generic search)
       async () => {
         try {
@@ -188,87 +176,6 @@ export class TokenScanner {
           }
         }
         return null;
-      },
-
-      // TokenLists aggregated sources
-      async () => {
-        try {
-          const tokenLists = [
-            'https://tokens.coingecko.com/uniswap/all.json',
-            'https://gateway.ipfs.io/ipns/tokens.uniswap.org',
-            'https://raw.githubusercontent.com/compound-finance/token-list/master/compound.tokenlist.json'
-          ];
-
-          for (const listUrl of tokenLists) {
-            try {
-              const response = await fetch(listUrl);
-              if (response.ok) {
-                const data = await response.json();
-                const token = data.tokens?.find((t: any) => 
-                  t.address?.toLowerCase() === address.toLowerCase() || 
-                  t.symbol?.toLowerCase() === symbol.toLowerCase()
-                );
-                if (token?.logoURI) {
-                  return token.logoURI;
-                }
-              }
-            } catch (listError) {
-              console.log(`Token list ${listUrl} failed:`, listError);
-              continue;
-            }
-          }
-        } catch (error) {
-          console.log('TokenLists logo fetch failed:', error);
-        }
-        return null;
-      },
-
-      // DeFiLlama token logos
-      async () => {
-        try {
-          const response = await fetch(`https://api.llama.fi/token/${address}`);
-          if (response.ok) {
-            const data = await response.json();
-            return data.logo || null;
-          }
-        } catch (error) {
-          console.log('DeFiLlama logo fetch failed:', error);
-        }
-        return null;
-      },
-
-      // Generic crypto icon services
-      async () => {
-        try {
-          // Try CryptoCurrency Icon API
-          const iconUrl = `https://cryptoicons.org/api/icon/${symbol.toLowerCase()}/200`;
-          const response = await fetch(iconUrl, { method: 'HEAD' });
-          if (response.ok) {
-            return iconUrl;
-          }
-        } catch (error) {
-          console.log('CryptoIcons fetch failed:', error);
-        }
-        return null;
-      },
-
-      // Enhanced fallback with better design
-      async () => {
-        // Create a more sophisticated fallback
-        const colors = [
-          '#FF6B35', '#FF8E53', '#4ECDC4', '#45B7D1', 
-          '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8'
-        ];
-        
-        // Use address to determine color consistently
-        const colorIndex = parseInt(address.slice(-1), 16) % colors.length;
-        const bgColor = colors[colorIndex].replace('#', '');
-        const textColor = 'FFFFFF';
-        
-        // Get up to 3 characters for better display
-        const displayText = symbol.length >= 2 ? symbol.slice(0, 2).toUpperCase() : symbol.toUpperCase();
-        
-        return `https://via.placeholder.com/128x128/${bgColor}/${textColor}?text=${displayText}`;
       }
     ];
 
@@ -290,6 +197,7 @@ export class TokenScanner {
       }
     }
 
+    // Return null if no logo found - don't create fallback URL
     return null;
   }
 
@@ -641,22 +549,24 @@ export class TokenScanner {
 
   async checkLiquidity(address: string): Promise<SafetyCheck & { liquidityAmount?: string }> {
     try {
-      // This is a simplified liquidity check
-      // In a real implementation, you would check DEX pools
+      // Note: This is a simplified liquidity check for demonstration
+      // Real implementation would check DEX pools like DragonSwap, Astroport, etc.
       const balance = await this.provider.getBalance(address);
       const hasLiquidity = balance > ethers.parseEther('0.1');
       
       return {
         passed: hasLiquidity,
         risk: hasLiquidity ? 'LOW' : 'HIGH',
-        details: hasLiquidity ? 'Contract has some ETH balance' : 'No significant liquidity detected',
+        details: hasLiquidity 
+          ? `Contract has ${ethers.formatEther(balance)} SEI balance` 
+          : 'No significant liquidity detected - Coming Soon: Full DEX integration',
         liquidityAmount: ethers.formatEther(balance)
       };
     } catch (error) {
       return {
         passed: false,
         risk: 'UNKNOWN',
-        details: 'Could not check liquidity',
+        details: 'Could not check liquidity - Coming Soon: Full DEX integration',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
@@ -760,7 +670,7 @@ export class TokenScanner {
         isSafe,
         riskFactors,
         lastScanned: new Date().toISOString(),
-        scanCount: Math.floor(Math.random() * 100) + 1 // Mock scan count
+        scanCount: 1 // Real implementation would track this in a database
       };
     } catch (error) {
       console.error('Token analysis failed:', error);
@@ -778,7 +688,12 @@ export class TokenScanner {
       fees: null as (SafetyCheck & { buyTax?: number; sellTax?: number; hasExcessiveFees?: boolean }) | null,
       liquidity: null as (SafetyCheck & { liquidityAmount?: string }) | null,
       honeypot: null as (SafetyCheck & { isHoneypot?: boolean }) | null,
-      verified: { passed: true, risk: 'LOW' as const, details: 'Contract verification status unknown' }
+      verified: { 
+        passed: false, 
+        risk: 'UNKNOWN' as const, 
+        details: 'Contract verification status - Coming Soon: Integration with block explorers',
+        isVerified: false
+      }
     };
 
     // Run checks with individual error handling

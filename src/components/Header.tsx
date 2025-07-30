@@ -1,10 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Wallet, Menu, X } from 'lucide-react';
+import { Wallet, Menu, X, LogOut } from 'lucide-react';
+import { useWallet } from '../utils/walletConnection';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const location = useLocation();
+  const { isConnected, address, balance, isConnecting, error, connectWallet, disconnectWallet } = useWallet();
+
+  const truncateAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
 
   return (
     <header className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
@@ -54,10 +60,48 @@ const Header = () => {
           </nav>
 
           {/* Connect Wallet Button */}
-          <button className="hidden md:flex items-center space-x-2 bg-[#141414] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors">
-            <Wallet size={18} />
-            <span>Connect Wallet</span>
-          </button>
+          <div className="hidden md:flex items-center space-x-2">
+            {error && (
+              <div className="text-red-500 text-sm mr-2">
+                {error}
+              </div>
+            )}
+            {isConnected ? (
+              <div className="flex items-center space-x-2">
+                <div className="bg-green-100 text-green-800 px-3 py-1 rounded-lg text-sm">
+                  {balance} SEI
+                </div>
+                <div className="bg-gray-100 text-gray-800 px-3 py-1 rounded-lg text-sm font-mono">
+                  {address ? truncateAddress(address) : ''}
+                </div>
+                <button 
+                  onClick={disconnectWallet}
+                  className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors"
+                  title="Disconnect Wallet"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={connectWallet}
+                disabled={isConnecting}
+                className="flex items-center space-x-2 bg-[#141414] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isConnecting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Connecting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Wallet size={18} />
+                    <span>Connect Wallet</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -102,10 +146,48 @@ const Header = () => {
               >
                 Docs
               </Link>
-              <button className="flex items-center space-x-2 bg-[#141414] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors w-fit">
-                <Wallet size={18} />
-                <span>Connect Wallet</span>
-              </button>
+              
+              {/* Mobile Wallet Connection */}
+              {error && (
+                <div className="text-red-500 text-sm">
+                  {error}
+                </div>
+              )}
+              {isConnected ? (
+                <div className="flex flex-col space-y-2">
+                  <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm text-center">
+                    Balance: {balance} SEI
+                  </div>
+                  <div className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg text-sm font-mono text-center">
+                    {address ? truncateAddress(address) : ''}
+                  </div>
+                  <button 
+                    onClick={disconnectWallet}
+                    className="flex items-center justify-center space-x-2 bg-red-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-red-600 transition-colors w-fit"
+                  >
+                    <LogOut size={18} />
+                    <span>Disconnect</span>
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={connectWallet}
+                  disabled={isConnecting}
+                  className="flex items-center space-x-2 bg-[#141414] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isConnecting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Connecting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wallet size={18} />
+                      <span>Connect Wallet</span>
+                    </>
+                  )}
+                </button>
+              )}
             </nav>
           </div>
         )}

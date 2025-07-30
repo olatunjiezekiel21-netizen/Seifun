@@ -251,38 +251,26 @@ const TokenScanner = () => {
                             const target = e.currentTarget;
                             const parent = target.parentElement;
                             if (parent) {
-                              // Hide the image and show fallback
+                              // Hide the image and show empty space
                               target.style.display = 'none';
-                              const fallback = parent.querySelector('.logo-fallback') as HTMLElement;
-                              if (fallback) {
-                                fallback.style.display = 'flex';
-                              } else {
-                                // Create fallback if it doesn't exist
-                                const fallbackDiv = document.createElement('div');
-                                fallbackDiv.className = 'logo-fallback w-16 h-16 flex items-center justify-center text-2xl font-bold text-white';
-                                fallbackDiv.textContent = scanResult.basicInfo.symbol.slice(0, 2).toUpperCase();
-                                parent.appendChild(fallbackDiv);
-                              }
+                              parent.style.background = 'transparent';
+                              parent.style.border = '2px dashed rgba(255, 255, 255, 0.3)';
                             }
                           }}
                           onLoad={(e) => {
-                            // Hide fallback when image loads successfully
+                            // Ensure proper display when image loads successfully
                             const target = e.currentTarget;
                             const parent = target.parentElement;
                             if (parent) {
-                              const fallback = parent.querySelector('.logo-fallback') as HTMLElement;
-                              if (fallback) {
-                                fallback.style.display = 'none';
-                              }
+                              parent.style.background = '';
+                              parent.style.border = '';
                             }
                           }}
                         />
-                      ) : null}
-                      <div 
-                        className={`logo-fallback w-16 h-16 flex items-center justify-center text-2xl font-bold text-white ${scanResult.basicInfo.logoUrl ? 'hidden' : 'flex'}`}
-                      >
-                        {scanResult.basicInfo.symbol.slice(0, 2).toUpperCase()}
-                      </div>
+                      ) : (
+                        // Show empty space with dashed border when no logo
+                        <div className="w-16 h-16 border-2 border-dashed border-white/30 rounded-2xl bg-transparent"></div>
+                      )}
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-white">{scanResult.basicInfo.name}</h3>
@@ -380,7 +368,13 @@ const TokenScanner = () => {
                   <h4 className="text-lg font-semibold text-white">Detailed Analysis</h4>
                   <div className="grid md:grid-cols-2 gap-4">
                     {Object.entries(scanResult.safetyChecks).map(([key, check]) => (
-                      <div key={key} className="bg-white/5 rounded-xl p-4">
+                      <div key={key} className="bg-white/5 rounded-xl p-4 relative">
+                        {/* Coming Soon Badge for specific features */}
+                        {(key === 'liquidity' || key === 'verified') && (
+                          <div className="absolute top-2 right-2 bg-blue-500/20 text-blue-300 text-xs px-2 py-1 rounded-full border border-blue-500/30">
+                            Coming Soon
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mb-2">
                           <h5 className="font-medium text-white capitalize">
                             {key.replace(/([A-Z])/g, ' $1').trim()}
@@ -463,27 +457,23 @@ const TokenScanner = () => {
                               const parent = target.parentElement;
                               if (parent) {
                                 target.style.display = 'none';
-                                const fallback = parent.querySelector('.history-logo-fallback') as HTMLElement;
-                                if (fallback) {
-                                  fallback.style.display = 'flex';
-                                }
+                                parent.style.background = 'transparent';
+                                parent.style.border = '1px dashed rgba(255, 255, 255, 0.3)';
                               }
                             }}
                             onLoad={(e) => {
                               const target = e.currentTarget;
                               const parent = target.parentElement;
                               if (parent) {
-                                const fallback = parent.querySelector('.history-logo-fallback') as HTMLElement;
-                                if (fallback) {
-                                  fallback.style.display = 'none';
-                                }
+                                parent.style.background = '';
+                                parent.style.border = '';
                               }
                             }}
                           />
-                        ) : null}
-                        <div className={`history-logo-fallback w-8 h-8 flex items-center justify-center text-sm font-semibold text-white ${scan.basicInfo.logoUrl ? 'hidden' : 'flex'}`}>
-                          {scan.basicInfo.symbol.slice(0, 2).toUpperCase()}
-                        </div>
+                        ) : (
+                          // Show empty space with dashed border when no logo
+                          <div className="w-8 h-8 border border-dashed border-white/30 rounded-lg bg-transparent"></div>
+                        )}
                       </div>
                       <div>
                         <div className="text-white font-medium">{scan.basicInfo.name}</div>
