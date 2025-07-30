@@ -690,7 +690,7 @@ const LaunchpadForm = () => {
                   ) : (
                     <>
                       <Shield size={16} />
-                      <span>Create Token (0.01 SEI)</span>
+                      <span>Create Token (2 SEI)</span>
                     </>
                   )}
                 </button>

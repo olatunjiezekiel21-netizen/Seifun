@@ -55,11 +55,12 @@ contract SimpleTokenFactory {
     mapping(address => TokenInfo[]) public userTokens;
     TokenInfo[] public allTokens;
     
-    uint256 public creationFee = 0.01 ether; // Small fee to prevent spam
-    address public feeRecipient;
+    uint256 public creationFee = 2 ether; // 2 SEI creation fee
+    address public feeRecipient; // Dev wallet address
     
-    constructor() {
-        feeRecipient = msg.sender;
+    constructor(address _feeRecipient) {
+        require(_feeRecipient != address(0), "Fee recipient cannot be zero address");
+        feeRecipient = _feeRecipient;
     }
     
     function createToken(

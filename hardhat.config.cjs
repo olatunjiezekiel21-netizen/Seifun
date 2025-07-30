@@ -1,19 +1,32 @@
 require("@nomicfoundation/hardhat-toolbox");
-require('dotenv').config();
+require("dotenv").config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
-    version: "0.8.28",
+    version: "0.8.19",
     settings: {
-      optimizer: { enabled: true, runs: 200 },
-      viaIR: true
-    }
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
   },
   networks: {
-    sei: {
-      url: process.env.SEI_RPC_URL || "https://sei-testnet-rpc.publicnode.com",
-      accounts: [process.env.PRIVATE_KEY]
-    }
-  }
+    hardhat: {
+      chainId: 1337,
+    },
+    seiTestnet: {
+      url: "https://evm-rpc-testnet.sei-apis.com",
+      chainId: 1328,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: 20000000000, // 20 gwei
+    },
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts",
+  },
 };
