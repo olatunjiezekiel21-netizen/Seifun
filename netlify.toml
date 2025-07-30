@@ -6,22 +6,8 @@
   NODE_VERSION = "18"
   SECRETS_SCAN_ENABLED = "false"
   FORCE_REBUILD = "true"
-  BUILD_ID = "emergency-fix-v2"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
-    X-Content-Type-Options = "nosniff"
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
