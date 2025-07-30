@@ -10,8 +10,8 @@ const FACTORY_ABI = [
   "function getUserTokens(address user) external view returns (tuple(address tokenAddress, address owner, string name, string symbol, uint8 decimals, uint256 totalSupply, uint256 createdAt)[])"
 ];
 
-// Factory contract address (placeholder - will be updated when deployed)
-const FACTORY_ADDRESS = "0x0000000000000000000000000000000000000000";
+// Factory contract address (deployed on SEI testnet)
+const FACTORY_ADDRESS = "0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F";
 
 interface TokenFormData {
   name: string;
@@ -105,24 +105,7 @@ const LaunchpadForm = () => {
     setCreatedTokenAddress(null);
     
     try {
-      // Note: This is a placeholder implementation for demo purposes
-      // In production, you would deploy the factory contract first
-      if (FACTORY_ADDRESS === "0x0000000000000000000000000000000000000000") {
-        // Simulate token creation process
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setVerificationStatus('verified');
-        
-        // Simulate token creation
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const mockTokenAddress = `0x${Math.random().toString(16).substr(2, 40)}`;
-        setCreatedTokenAddress(mockTokenAddress);
-        
-        setIsSubmitting(false);
-        setTimeout(() => {
-          setCurrentStep(4);
-        }, 1000);
-        return;
-      }
+      // Real token creation using deployed factory contract
 
       // Real implementation (when factory is deployed)
       const provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
