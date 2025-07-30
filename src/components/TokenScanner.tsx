@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Search, Shield, AlertTriangle, CheckCircle, Clock, ExternalLink, Info } from 'lucide-react';
+import { Search, Shield, AlertTriangle, CheckCircle, Clock, ExternalLink, Info, Wallet } from 'lucide-react';
 import { TokenScanner as TokenScannerClass, TokenAnalysis } from '../utils/tokenScanner';
+import { ethers } from 'ethers';
 
 const TokenScanner = () => {
   const [tokenAddress, setTokenAddress] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<TokenAnalysis | null>(null);
   const [error, setError] = useState('');
+  const [isWalletAddress, setIsWalletAddress] = useState(false);
+  const [walletInfo, setWalletInfo] = useState<{address: string, balance: string} | null>(null);
   const [scanHistory, setScanHistory] = useState<TokenAnalysis[]>([]);
   const [scanProgress, setScanProgress] = useState<string[]>([]);
   const [isLoadingLogo, setIsLoadingLogo] = useState(false);
@@ -48,46 +51,93 @@ const TokenScanner = () => {
     setIsScanning(true);
     setError('');
     setScanResult(null);
+    setIsWalletAddress(false);
+    setWalletInfo(null);
     setScanProgress([]);
 
     const progressSteps = [
       'Connecting to Sei network...',
-      'Fetching token information...',
-      'Loading token logo...',
-      'Analyzing contract code...',
-      'Checking ownership status...',
-      'Verifying liquidity locks...',
-      'Scanning for honeypot patterns...',
-      'Detecting blacklist functions...',
-      'Analyzing transfer functions...',
-      'Checking fee structure...',
-      'Calculating safety score...'
+      'Checking address type...',
+      'Analyzing address...'
     ];
 
     try {
-      // Show progress updates
+      // Show initial progress
       for (let i = 0; i < progressSteps.length; i++) {
         setScanProgress(prev => [...prev, progressSteps[i]]);
-        
-        // Set logo loading state when we reach the logo step
-        if (progressSteps[i].includes('logo')) {
-          setIsLoadingLogo(true);
-        }
-        
-        if (i < progressSteps.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-              const result = await scanner.analyzeToken(address);
-      setIsLoadingLogo(false);
-      setScanResult(result);
-      
-      // Add to scan history
-      setScanHistory(prev => [result, ...prev.slice(0, 4)]);
+      // First, check if it's a contract or wallet address
+      const provider = scanner['provider']; // Access the provider from scanner
+      const code = await provider.getCode(address);
+      const isContract = code !== '0x';
+
+      if (!isContract) {
+        // This is a wallet address (EOA), not a token contract
+        setScanProgress(prev => [...prev, 'Fetching wallet balance...']);
+        
+        try {
+          const balance = await provider.getBalance(address);
+          const balanceInSei = parseFloat(ethers.formatEther(balance)).toFixed(4);
+          
+          setIsWalletAddress(true);
+          setWalletInfo({
+            address: ethers.getAddress(address),
+            balance: balanceInSei
+          });
+        } catch (balanceError) {
+          setIsWalletAddress(true);
+          setWalletInfo({
+            address: ethers.getAddress(address),
+            balance: '0.0000'
+          });
+        }
+      } else {
+        // This is a contract, proceed with token analysis
+        const tokenProgressSteps = [
+          'Fetching token information...',
+          'Loading token logo...',
+          'Analyzing contract code...',
+          'Checking ownership status...',
+          'Verifying liquidity locks...',
+          'Scanning for honeypot patterns...',
+          'Detecting blacklist functions...',
+          'Analyzing transfer functions...',
+          'Checking fee structure...',
+          'Calculating safety score...'
+        ];
+
+        for (let i = 0; i < tokenProgressSteps.length; i++) {
+          setScanProgress(prev => [...prev, tokenProgressSteps[i]]);
+          
+          // Set logo loading state when we reach the logo step
+          if (tokenProgressSteps[i].includes('logo')) {
+            setIsLoadingLogo(true);
+          }
+          
+          if (i < tokenProgressSteps.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 400));
+          }
+        }
+
+        const result = await scanner.analyzeToken(address);
+        setIsLoadingLogo(false);
+        setScanResult(result);
+        
+        // Add to scan history
+        setScanHistory(prev => [result, ...prev.slice(0, 4)]);
+      }
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to scan token');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to scan address';
+      
+      // Check if it's specifically about EOA
+      if (errorMessage.includes('EOA') || errorMessage.includes('Externally Owned Account')) {
+        setError('This appears to be a wallet address, not a token contract. Wallet addresses cannot be scanned for token information.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsScanning(false);
       setScanProgress([]);
@@ -166,8 +216,9 @@ const TokenScanner = () => {
               <p><strong>Supported:</strong> ERC20, ERC721, ERC1155, Custom tokens, Factory contracts</p>
               <p><strong>Try these examples:</strong></p>
               <div className="mt-2 space-y-1">
-                <p>• Factory: <code className="bg-blue-500/20 px-1 rounded">0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F</code></p>
-                <p>• Test Token: <code className="bg-blue-500/20 px-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code></p>
+                <p>• Token Contract: <code className="bg-blue-500/20 px-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code></p>
+                <p>• Wallet Address: <code className="bg-blue-500/20 px-1 rounded">0x742d35Cc6635C0532925a3b8D41c4e9E4532D3eE</code> (will show wallet info)</p>
+                <p className="text-blue-300">💡 <strong>Note:</strong> Wallet addresses show balance info, token contracts show safety analysis</p>
               </div>
             </div>
           </div>
@@ -229,6 +280,99 @@ const TokenScanner = () => {
                       <span className="text-gray-300">{step}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Wallet Address Results */}
+          {isWalletAddress && walletInfo && (
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+              <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
+                      <Wallet className="text-white" size={32} />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Wallet Address</h3>
+                      <p className="text-gray-300">Externally Owned Account (EOA)</p>
+                      <p className="text-gray-400 text-sm font-mono">{walletInfo.address}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-500/20 text-blue-300">
+                      <Wallet size={20} />
+                      <span className="font-semibold">Wallet</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Wallet Information */}
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-white">Address Information</h4>
+                    <div className="bg-white/5 rounded-xl p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Address Type:</span>
+                          <span className="text-white font-medium">Externally Owned Account</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">SEI Balance:</span>
+                          <span className="text-white font-medium">{walletInfo.balance} SEI</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Contract Code:</span>
+                          <span className="text-gray-400">None (Wallet Address)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-white">What This Means</h4>
+                    <div className="bg-blue-500/10 rounded-xl p-4 border border-blue-500/20">
+                      <div className="space-y-3 text-sm">
+                        <p className="text-blue-200">
+                          <strong>This is a wallet address, not a token contract.</strong>
+                        </p>
+                        <p className="text-gray-300">
+                          • Wallet addresses hold SEI and tokens but don't have smart contract code
+                        </p>
+                        <p className="text-gray-300">
+                          • Cannot be analyzed for token safety features
+                        </p>
+                        <p className="text-gray-300">
+                          • To scan a token, you need the token's contract address
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-6 border-t border-white/20">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button 
+                      onClick={() => window.open(`https://seitrace.com/address/${walletInfo.address}`, '_blank')}
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                    >
+                      <ExternalLink size={16} />
+                      <span>View on Seitrace</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setTokenAddress('');
+                        setIsWalletAddress(false);
+                        setWalletInfo(null);
+                      }}
+                      className="flex-1 border border-blue-500 text-blue-400 py-3 px-4 rounded-xl font-semibold hover:bg-blue-500/10 transition-all"
+                    >
+                      Scan Another Address
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
