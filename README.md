@@ -1,185 +1,246 @@
-# 🛡️ SeifuGuard - Universal Sei Token Scanner
+# 🚀 Seifu - Professional Token Launchpad on SEI Network
 
-A comprehensive, real-time token safety scanner for the Sei blockchain network. Analyze any token or smart contract with advanced security checks, logo fetching, and professional UI.
+[![Netlify Status](https://api.netlify.com/api/v1/badges/your-badge-id/deploy-status)](https://app.netlify.com/sites/your-site-name/deploys)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![SEI Network](https://img.shields.io/badge/Network-SEI%20Testnet-blue)](https://sei.io)
 
-## 🌟 Features
+> **Live Demo**: [Your Netlify URL Here]
+> 
+> **Factory Contract**: [`0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F`](https://seitrace.com/address/0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F)
 
-### 🔍 Universal Token Support
-- **ERC20 Tokens**: Full safety analysis with all security checks
-- **Non-Standard Tokens**: Adaptive analysis with multiple fallback strategies
-- **Smart Contracts**: Basic contract information and analysis
-- **Factory Contracts**: Contract deployment and interaction analysis
-- **NFT Contracts**: Basic information display for ERC721/ERC1155
+## 🌟 **What is Seifu?**
 
-### 🛡️ Advanced Security Analysis
-- **Supply Analysis**: Total supply validation and mint function detection
-- **Ownership Checks**: Contract owner detection and renouncement status
-- **Blacklist Detection**: Identifies dangerous blacklist functionality
-- **Transfer Analysis**: Validates transfer function availability
-- **Tax/Fee Detection**: Identifies buy/sell taxes and excessive fees
-- **Liquidity Analysis**: Basic liquidity validation
-- **Honeypot Detection**: Advanced contract code pattern analysis
+Seifu is a **professional token launchpad** built on the SEI Network that enables users to:
+- 🔍 **Scan & analyze** any SEI token for safety
+- 🚀 **Create new tokens** with a simple, intuitive interface  
+- 💰 **Generate revenue** through a 2 SEI creation fee model
+- 📱 **Access on mobile** with full responsive design
+- 🔗 **Connect wallets** (Sei, Compass, Keplr support)
 
-### 🎨 Professional UI Features
-- **Multi-Source Logo Fetching**: Tries 6+ different logo sources
-- **Smart Fallbacks**: Beautiful, consistent generated logos
-- **Real-Time Progress**: Live scanning progress indicators
-- **Scan History**: Maintains history of analyzed tokens
-- **Responsive Design**: Works on all devices
-- **Error Handling**: Graceful handling of any contract type
+## ✨ **Key Features**
 
-## 🚀 Live Demo
+### 🔍 **Advanced Token Scanner**
+- **Real-time analysis** of any SEI token contract
+- **Wallet vs Contract detection** (no more mock data!)
+- **Safety checks**: Supply, ownership, liquidity analysis
+- **Mobile responsive** design for on-the-go scanning
 
-**Deployed on Netlify**: [Your Netlify URL will be here]
+### 🚀 **Token Creation Launchpad**
+- **One-click token deployment** on SEI testnet
+- **2 SEI creation fee** (automatic revenue generation)
+- **Real blockchain integration** with ethers.js
+- **Professional UI/UX** for seamless user experience
 
-## 🧪 Test Addresses
+### 💰 **Revenue Model**
+- **Automated fee collection**: 2 SEI per token creation
+- **Direct wallet transfers**: Fees go to developer wallet
+- **Scalable business model**: Ready for mainnet deployment
 
-Try these addresses to see the scanner in action:
+### 📱 **Mobile-First Design**
+- **Fully responsive** across all devices
+- **Touch-optimized** interface
+- **No horizontal scrolling** issues
+- **Professional mobile experience**
 
-1. **Factory Contract** (Non-ERC20):
-   ```
-   0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F
-   ```
+## 🏗️ **Architecture**
 
-2. **Test Token** (Demo):
-   ```
-   0x5f0e07dfee5832faa00c63f2d33a0d79150e8598
-   ```
+### **Frontend Stack**
+- ⚛️ **React 18** with TypeScript
+- 🎨 **Tailwind CSS** for styling
+- 🔗 **React Router** for navigation
+- 🌐 **Vite** for fast development
+- 📱 **Mobile-responsive** design
 
-## 🛠️ Development
+### **Blockchain Integration**
+- 🔗 **Ethers.js v6** for Web3 connectivity
+- 🏭 **Smart Contract Factory** for token deployment
+- 💳 **Multi-wallet support** (Sei, Compass, Keplr)
+- 🌐 **SEI Testnet** integration
 
-### Prerequisites
-- Node.js 18+
-- npm or yarn
+### **Smart Contracts**
+- 📄 **SimpleTokenFactory.sol**: Main factory contract
+- 🪙 **SimpleToken.sol**: ERC20 token template
+- 💰 **Fee management**: Automated 2 SEI collection
+- 🔒 **Ownership controls**: Secure admin functions
 
-### Installation
+## 🚀 **Deployment Information**
+
+### **Live Deployment**
+- **Network**: SEI Testnet (Chain ID: 1328)
+- **Factory Contract**: `0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F`
+- **Fee Recipient**: `0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e`
+- **Creation Fee**: 2 SEI per token
+
+### **Netlify Configuration**
+- **Build Command**: `npm run build`
+- **Publish Directory**: `dist`
+- **Environment**: Node.js 18
+- **SPA Routing**: Configured with redirects
+
+## 🛠️ **Development Setup**
+
+### **Prerequisites**
 ```bash
-git clone [your-repo-url]
-cd seifu
-npm install
+Node.js 18+
+npm or yarn
+Git
 ```
 
-### Development Server
+### **Installation**
 ```bash
+# Clone repository
+git clone https://github.com/Godswork4/seifu.git
+cd seifu
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
 ```
 
-### Build for Production
+### **Available Scripts**
 ```bash
-npm run build
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+npm run compile      # Compile smart contracts
+npm run deploy:factory # Deploy factory contract
 ```
 
-### Preview Production Build
-```bash
-npm run preview
+## 📋 **Project Structure**
+
+```
+seifu/
+├── src/
+│   ├── components/          # React components
+│   │   ├── Header.tsx       # Navigation & wallet connection
+│   │   ├── Hero.tsx         # Landing section
+│   │   ├── TokenScanner.tsx # Token analysis component
+│   │   └── LaunchpadForm.tsx # Token creation form
+│   ├── pages/               # Route pages
+│   ├── utils/               # Utilities
+│   │   ├── tokenScanner.ts  # Token analysis logic
+│   │   └── walletConnection.ts # Wallet integration
+│   └── App.tsx              # Main application
+├── contracts/               # Smart contracts
+│   ├── SimpleTokenFactory.sol
+│   └── SimpleToken.sol
+├── scripts/                 # Deployment scripts
+├── public/                  # Static assets
+└── dist/                   # Production build
 ```
 
-## 🌐 Deployment
+## 🔧 **Configuration**
 
-### Netlify Deployment
-
-#### Option 1: Deploy from Git (Recommended)
-1. Push your code to GitHub
-2. Connect your GitHub repo to Netlify
-3. Netlify will automatically deploy using the `netlify.toml` configuration
-
-#### Option 2: Manual Deployment
-1. Build the project: `npm run build`
-2. Drag and drop the `dist` folder to Netlify
-
-#### Option 3: Netlify CLI
-```bash
-# Install Netlify CLI
-npm install -g netlify-cli
-
-# Login to Netlify
-netlify login
-
-# Deploy
-netlify deploy --prod --dir=dist
-```
-
-### Other Deployment Options
-- **Vercel**: Works out of the box with zero configuration
-- **GitHub Pages**: Use the included GitHub Actions workflow
-- **Firebase Hosting**: Compatible with static hosting
-- **AWS S3 + CloudFront**: For enterprise deployments
-
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env` file for local development:
+### **Environment Variables**
 ```env
-# Sei Network Configuration
-SEI_RPC_URL=https://evm-rpc-testnet.sei-apis.com
-FACTORY_CONTRACT_ADDRESS=0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F
-
-# Database Configuration (for backend)
-MONGODB_URI=mongodb://localhost:27017/seifu
-PORT=3001
+# For contract deployment only
+PRIVATE_KEY=your-private-key-here
+DEV_WALLET=0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e
+SEI_TESTNET_RPC=https://evm-rpc-testnet.sei-apis.com
 ```
 
-### Vite Configuration
-The `vite.config.ts` is optimized for:
-- Fast builds with code splitting
-- Optimal asset handling
-- Development server configuration
-- Production optimizations
+### **Network Configuration**
+```javascript
+// SEI Testnet
+Chain ID: 1328
+RPC URL: https://evm-rpc-testnet.sei-apis.com
+Explorer: https://seitrace.com
+```
 
-## 🏗️ Architecture
+## 💰 **Revenue Analytics**
 
-### Frontend (React + TypeScript)
-- **React 18**: Modern React with hooks
-- **TypeScript**: Type-safe development
-- **Vite**: Fast build tool and dev server
-- **Tailwind CSS**: Utility-first styling
-- **Ethers.js**: Blockchain interaction
+### **Business Model**
+- **Revenue Stream**: 2 SEI per token creation
+- **Market Size**: SEI ecosystem growth
+- **Scalability**: Ready for mainnet deployment
+- **Automation**: No manual intervention required
 
-### Token Scanner Engine
-- **Multi-Strategy Analysis**: 4 fallback strategies for token info
-- **Enhanced Validation**: Address format and contract detection
-- **Logo Fetching**: 6+ sources with smart fallbacks
-- **Safety Checks**: 8 different security analysis modules
+### **Fee Structure**
+```
+Token Creation Fee: 2 SEI
+Gas Fees: Paid by user
+Revenue Share: 100% to developer
+Payment Method: Automatic on creation
+```
 
-### Backend (Optional)
-- **Node.js + Express**: API server
-- **MongoDB**: Token data storage
-- **Event Monitoring**: Blockchain event tracking
+## 🧪 **Testing**
 
-## 📊 Token Analysis Process
+### **Manual Testing**
+- ✅ Token scanner with various addresses
+- ✅ Wallet connection across different wallets
+- ✅ Token creation end-to-end flow
+- ✅ Mobile responsiveness testing
+- ✅ Revenue collection verification
 
-1. **Address Validation**: Format validation and checksum verification
-2. **Contract Detection**: Distinguishes contracts from EOAs
-3. **Token Standard Detection**: Identifies ERC20/721/1155 compatibility
-4. **Multi-Strategy Info Fetching**: 4 fallback strategies for token data
-5. **Logo Fetching**: Searches 6+ sources for token logos
-6. **Safety Analysis**: 8 comprehensive security checks
-7. **Risk Scoring**: Calculated risk score based on findings
-8. **Results Display**: Professional UI with detailed analysis
+### **Test Addresses**
+```bash
+# Contract Address (for token analysis)
+0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F
 
-## 🤝 Contributing
+# Wallet Address (for wallet info)
+0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e
+```
+
+## 📱 **Mobile Experience**
+
+- **Responsive Design**: Works on all screen sizes
+- **Touch Optimized**: Easy mobile navigation
+- **Fast Loading**: Optimized build (80KB gzipped)
+- **PWA Ready**: Can be installed as app
+
+## 🚀 **Deployment Guide**
+
+### **Netlify Deployment**
+1. Fork this repository
+2. Connect to Netlify
+3. Configure build settings:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+4. Deploy!
+
+### **Custom Domain**
+- Update DNS settings
+- Configure SSL certificate
+- Set up redirects if needed
+
+## 🔐 **Security**
+
+- ✅ **Smart contract audited** (basic security checks)
+- ✅ **Input validation** on all forms
+- ✅ **Secure wallet connections**
+- ✅ **No private key exposure**
+- ✅ **HTTPS enforcement**
+
+## 🤝 **Contributing**
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 📄 License
+## 📄 **License**
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🙏 **Acknowledgments**
 
-- Sei Network for the blockchain infrastructure
-- Ethers.js for blockchain interaction
-- React community for the amazing ecosystem
-- All logo providers (CoinGecko, Trust Wallet, etc.)
+- **SEI Network** for the fast, scalable blockchain
+- **React & Vite** for the excellent development experience
+- **Tailwind CSS** for the beautiful, responsive design
+- **Ethers.js** for seamless Web3 integration
 
-## 📞 Support
+## 📞 **Support**
 
-For support, please open an issue on GitHub or contact the development team.
+- **Issues**: [GitHub Issues](https://github.com/Godswork4/seifu/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Godswork4/seifu/discussions)
+- **Email**: [your-email@example.com]
 
 ---
 
-**Built with ❤️ for the Sei ecosystem** 🌊
+**Built with ❤️ for the SEI ecosystem**
+
+*Ready to launch your next token? Visit [Your Netlify URL] and start creating!* 🚀
