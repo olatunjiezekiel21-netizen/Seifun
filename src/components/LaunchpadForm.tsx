@@ -11,7 +11,7 @@ const FACTORY_ABI = [
 ];
 
 // Factory contract address (deployed on SEI testnet)
-const FACTORY_ADDRESS = "0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F";
+const FACTORY_ADDRESS = "0xFA5F3D94e9F07B22e28C7fc9B5dE688c7d3C1dCd";
 
 interface TokenFormData {
   name: string;

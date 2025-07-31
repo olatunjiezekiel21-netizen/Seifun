@@ -13,10 +13,9 @@ contract SimpleToken is ERC20, Ownable {
         uint8 decimals_,
         uint256 totalSupply,
         address owner
-    ) ERC20(name, symbol) {
+    ) ERC20(name, symbol) Ownable(owner) {
         _decimals = decimals_;
         _mint(owner, totalSupply * 10**decimals_);
-        _transferOwnership(owner);
     }
     
     function decimals() public view virtual override returns (uint8) {

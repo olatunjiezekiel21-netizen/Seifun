@@ -33,50 +33,12 @@ async function main() {
   console.log(`✅ Fee recipient: ${feeRecipient}`);
   console.log(`✅ Matches dev wallet: ${feeRecipient.toLowerCase() === DEV_WALLET.toLowerCase()}`);
 
-  // Create a test token to verify everything works
-  console.log("\n🧪 Testing token creation...");
-  try {
-    const testTx = await factory.createToken(
-      "Test Token",
-      "TEST",
-      18,
-      1000000,
-      { value: creationFee }
-    );
-    
-    const receipt = await testTx.wait();
-    console.log("✅ Test token creation successful!");
-    console.log(`📝 Transaction hash: ${receipt.hash}`);
-    
-    // Get the created token address from events
-    const tokenCreatedEvent = receipt.logs.find(log => {
-      try {
-        const parsedLog = factory.interface.parseLog(log);
-        return parsedLog.name === 'TokenCreated';
-      } catch {
-        return false;
-      }
-    });
-    
-    if (tokenCreatedEvent) {
-      const parsedEvent = factory.interface.parseLog(tokenCreatedEvent);
-      const tokenAddress = parsedEvent.args.tokenAddress;
-      console.log(`🪙 Test token address: ${tokenAddress}`);
-      console.log(`🔗 View token: https://seitrace.com/address/${tokenAddress}`);
-    }
-    
-  } catch (error) {
-    console.log("❌ Test token creation failed:", error.message);
-  }
-
   console.log("\n🎉 Deployment complete!");
   console.log(`📋 Factory Address: ${factoryAddress}`);
   console.log(`💰 Creation Fee: 2 SEI`);
   console.log(`👤 Dev Wallet: ${DEV_WALLET}`);
-  console.log("\n📝 Next steps:");
-  console.log("1. Update FACTORY_ADDRESS in LaunchpadForm.tsx");
-  console.log("2. Test token creation on the frontend");
-  console.log("3. Verify contract on block explorer if needed");
+  console.log("\n📝 UPDATE .env with:");
+  console.log(`FACTORY_CONTRACT_ADDRESS=${factoryAddress}`);
 }
 
 main()
