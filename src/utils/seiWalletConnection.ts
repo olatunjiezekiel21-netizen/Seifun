@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 
 // Sei wallet types and interfaces
 interface SeiWallet {
@@ -286,9 +287,11 @@ export const useSeiWallet = () => {
 
   const fetchBalance = async (address: string): Promise<string> => {
     try {
-      // This would typically use the wallet's provider or a separate RPC call
-      // For now, return a placeholder
-      return '0.0000';
+      // Use Sei testnet RPC to fetch real balance
+      const provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
+      const balance = await provider.getBalance(address);
+      const balanceInSei = ethers.formatEther(balance);
+      return parseFloat(balanceInSei).toFixed(4);
     } catch (error) {
       console.error('Error fetching balance:', error);
       return '0.0000';

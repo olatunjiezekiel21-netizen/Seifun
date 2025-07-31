@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Shield, Rocket, Lock, Users, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { ethers } from 'ethers';
-import { useWallet } from '../utils/walletConnection';
+import { useSeiWallet } from '../utils/seiWalletConnection';
 
 // Factory contract ABI (simplified)
 const FACTORY_ABI = [
@@ -11,7 +11,7 @@ const FACTORY_ABI = [
 ];
 
 // Factory contract address (deployed on SEI testnet)
-const FACTORY_ADDRESS = "0xFA5F3D94e9F07B22e28C7fc9B5dE688c7d3C1dCd";
+const FACTORY_ADDRESS = "0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F";
 
 interface TokenFormData {
   name: string;
@@ -36,7 +36,7 @@ interface TokenFormData {
 }
 
 const LaunchpadForm = () => {
-  const { isConnected, address, connectWallet } = useWallet();
+  const { isConnected, address, connectWallet } = useSeiWallet();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed' | null>(null);
@@ -107,9 +107,13 @@ const LaunchpadForm = () => {
     try {
       // Real token creation using deployed factory contract
 
-      // Real implementation (when factory is deployed)
-      const provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
-      const signer = provider.getSigner(address);
+      // Real implementation using connected wallet
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask or use a compatible wallet');
+      }
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, signer);
 
       // Get creation fee
