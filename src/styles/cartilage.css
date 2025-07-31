@@ -1,0 +1,440 @@
+/* 🦴 CARTILAGE DESIGN SYSTEM - Flexible, Connective UI Framework */
+
+/* ===== CARTILAGE CORE PRINCIPLES ===== */
+:root {
+  /* Flexibility Variables */
+  --cartilage-flex-tension: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --cartilage-stretch-ease: 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --cartilage-absorb-ease: 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* Adaptive Spacing - Like cartilage compression/expansion */
+  --cartilage-space-compressed: 0.5rem;
+  --cartilage-space-relaxed: 1rem;
+  --cartilage-space-stretched: 2rem;
+  --cartilage-space-extended: 3rem;
+  
+  /* Connection Radii - Smooth joint connections */
+  --cartilage-radius-tight: 8px;
+  --cartilage-radius-medium: 16px;
+  --cartilage-radius-loose: 24px;
+  --cartilage-radius-fluid: 32px;
+  
+  /* Adaptive Colors - Context-aware theming */
+  --cartilage-surface-primary: rgba(255, 255, 255, 0.95);
+  --cartilage-surface-secondary: rgba(247, 247, 249, 0.8);
+  --cartilage-surface-elevated: rgba(255, 255, 255, 0.98);
+  --cartilage-surface-adaptive: rgba(255, 255, 255, var(--surface-opacity, 0.9));
+  
+  /* Connection Lines - Visual tissue connections */
+  --cartilage-connection-subtle: rgba(0, 0, 0, 0.05);
+  --cartilage-connection-medium: rgba(0, 0, 0, 0.1);
+  --cartilage-connection-strong: rgba(255, 60, 60, 0.2);
+  
+  /* Responsive Breakpoints */
+  --cartilage-mobile: 375px;
+  --cartilage-tablet: 768px;
+  --cartilage-desktop: 1024px;
+  --cartilage-wide: 1440px;
+}
+
+/* ===== CARTILAGE BASE COMPONENTS ===== */
+
+/* Flexible Container - Main cartilage tissue */
+.cartilage-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cartilage-space-relaxed);
+  padding: var(--cartilage-space-relaxed);
+  background: var(--cartilage-surface-adaptive);
+  border-radius: var(--cartilage-radius-medium);
+  backdrop-filter: blur(12px);
+  transition: all var(--cartilage-flex-tension);
+  position: relative;
+  overflow: hidden;
+}
+
+.cartilage-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--cartilage-connection-subtle) 50%, 
+    transparent 100%);
+  opacity: 0;
+  transition: opacity var(--cartilage-flex-tension);
+}
+
+.cartilage-container:hover::before {
+  opacity: 1;
+}
+
+/* Adaptive Sizing */
+.cartilage-container.compressed {
+  --cartilage-space-relaxed: var(--cartilage-space-compressed);
+  --cartilage-radius-medium: var(--cartilage-radius-tight);
+}
+
+.cartilage-container.stretched {
+  --cartilage-space-relaxed: var(--cartilage-space-stretched);
+  --cartilage-radius-medium: var(--cartilage-radius-loose);
+}
+
+.cartilage-container.extended {
+  --cartilage-space-relaxed: var(--cartilage-space-extended);
+  --cartilage-radius-medium: var(--cartilage-radius-fluid);
+}
+
+/* ===== CARTILAGE CARDS - Flexible Content Blocks ===== */
+
+.cartilage-card {
+  background: var(--cartilage-surface-primary);
+  border-radius: var(--cartilage-radius-medium);
+  padding: var(--cartilage-space-relaxed);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all var(--cartilage-stretch-ease);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.cartilage-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, 
+    rgba(255, 60, 60, 0.1) 0%,
+    transparent 50%,
+    rgba(255, 60, 60, 0.05) 100%);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  opacity: 0;
+  transition: opacity var(--cartilage-flex-tension);
+}
+
+/* Card States - Like cartilage under different pressures */
+.cartilage-card:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.1),
+    0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.cartilage-card:hover::after {
+  opacity: 1;
+}
+
+.cartilage-card.active {
+  border-color: rgba(255, 60, 60, 0.2);
+  background: var(--cartilage-surface-elevated);
+}
+
+.cartilage-card.connected {
+  border-color: rgba(255, 60, 60, 0.3);
+  box-shadow: 
+    0 0 0 1px rgba(255, 60, 60, 0.1),
+    0 4px 12px rgba(255, 60, 60, 0.1);
+}
+
+/* ===== CARTILAGE FLOW - Connecting Elements ===== */
+
+.cartilage-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cartilage-space-relaxed);
+  position: relative;
+}
+
+.cartilage-flow::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--cartilage-connection-subtle) 20%,
+    var(--cartilage-connection-medium) 50%,
+    var(--cartilage-connection-subtle) 80%,
+    transparent 100%
+  );
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity var(--cartilage-stretch-ease);
+}
+
+.cartilage-flow:hover::before {
+  opacity: 1;
+}
+
+/* Horizontal Flow */
+.cartilage-flow.horizontal {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.cartilage-flow.horizontal::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  bottom: auto;
+  width: auto;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--cartilage-connection-subtle) 20%,
+    var(--cartilage-connection-medium) 50%,
+    var(--cartilage-connection-subtle) 80%,
+    transparent 100%
+  );
+  transform: translateY(-50%);
+}
+
+/* ===== CARTILAGE BUTTONS - Adaptive Interactive Elements ===== */
+
+.cartilage-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #FF3C3C 0%, #FF6B6B 100%);
+  color: white;
+  border: none;
+  border-radius: var(--cartilage-radius-medium);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--cartilage-absorb-ease);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.cartilage-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity var(--cartilage-flex-tension);
+}
+
+.cartilage-button:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(255, 60, 60, 0.3);
+}
+
+.cartilage-button:hover::before {
+  opacity: 1;
+}
+
+.cartilage-button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Button Variants */
+.cartilage-button.secondary {
+  background: var(--cartilage-surface-primary);
+  color: #333;
+  border: 1px solid var(--cartilage-connection-medium);
+}
+
+.cartilage-button.ghost {
+  background: transparent;
+  color: #FF3C3C;
+  border: 1px solid rgba(255, 60, 60, 0.3);
+}
+
+.cartilage-button.adaptive {
+  background: var(--cartilage-surface-adaptive);
+  color: var(--text-adaptive, #333);
+  border: 1px solid var(--border-adaptive, var(--cartilage-connection-medium));
+}
+
+/* ===== CARTILAGE INPUTS - Flexible Form Elements ===== */
+
+.cartilage-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: var(--cartilage-surface-primary);
+  border: 1px solid var(--cartilage-connection-medium);
+  border-radius: var(--cartilage-radius-medium);
+  font-size: 0.95rem;
+  transition: all var(--cartilage-flex-tension);
+  outline: none;
+}
+
+.cartilage-input:focus {
+  border-color: #FF3C3C;
+  box-shadow: 0 0 0 3px rgba(255, 60, 60, 0.1);
+  background: var(--cartilage-surface-elevated);
+}
+
+.cartilage-input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+  transition: color var(--cartilage-flex-tension);
+}
+
+.cartilage-input:focus::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+/* ===== CARTILAGE GRID - Adaptive Layout System ===== */
+
+.cartilage-grid {
+  display: grid;
+  gap: var(--cartilage-space-relaxed);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  transition: gap var(--cartilage-stretch-ease);
+}
+
+.cartilage-grid.tight {
+  gap: var(--cartilage-space-compressed);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.cartilage-grid.loose {
+  gap: var(--cartilage-space-stretched);
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+}
+
+/* ===== CARTILAGE ANIMATIONS - Smooth Transitions ===== */
+
+@keyframes cartilage-expand {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cartilage-connect {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cartilage-flow {
+  0% { transform: translateY(10px); opacity: 0; }
+  50% { transform: translateY(-2px); opacity: 0.7; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.cartilage-animate-in {
+  animation: cartilage-expand var(--cartilage-stretch-ease) forwards;
+}
+
+.cartilage-animate-connect {
+  animation: cartilage-connect var(--cartilage-flex-tension) forwards;
+}
+
+.cartilage-animate-flow {
+  animation: cartilage-flow var(--cartilage-absorb-ease) forwards;
+}
+
+/* ===== RESPONSIVE CARTILAGE - Device Adaptation ===== */
+
+@media (max-width: 768px) {
+  .cartilage-container {
+    --cartilage-space-relaxed: var(--cartilage-space-compressed);
+    --cartilage-radius-medium: var(--cartilage-radius-tight);
+  }
+  
+  .cartilage-flow.horizontal {
+    flex-direction: column;
+  }
+  
+  .cartilage-flow.horizontal::before {
+    left: 50%;
+    right: auto;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    height: auto;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--cartilage-connection-subtle) 20%,
+      var(--cartilage-connection-medium) 50%,
+      var(--cartilage-connection-subtle) 80%,
+      transparent 100%
+    );
+    transform: translateX(-50%);
+  }
+  
+  .cartilage-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1440px) {
+  .cartilage-container {
+    --cartilage-space-relaxed: var(--cartilage-space-stretched);
+  }
+}
+
+/* ===== CARTILAGE UTILITIES ===== */
+
+.cartilage-surface-adaptive {
+  background: var(--cartilage-surface-adaptive);
+  backdrop-filter: blur(12px);
+}
+
+.cartilage-border-adaptive {
+  border: 1px solid var(--cartilage-connection-medium);
+}
+
+.cartilage-shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cartilage-shadow-medium {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cartilage-shadow-strong {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Contextual Adaptation */
+.cartilage-context-scanner {
+  --surface-opacity: 0.95;
+  --text-adaptive: #1a1a1a;
+  --border-adaptive: rgba(255, 60, 60, 0.2);
+}
+
+.cartilage-context-wallet {
+  --surface-opacity: 0.9;
+  --text-adaptive: #2563eb;
+  --border-adaptive: rgba(37, 99, 235, 0.2);
+}
+
+.cartilage-context-safety {
+  --surface-opacity: 0.92;
+  --text-adaptive: #059669;
+  --border-adaptive: rgba(5, 150, 105, 0.2);
+}
+
+.cartilage-context-launch {
+  --surface-opacity: 0.98;
+  --text-adaptive: #7c3aed;
+  --border-adaptive: rgba(124, 58, 237, 0.2);
+}
