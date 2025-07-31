@@ -1,181 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid, List, Flame, Star, Filter } from 'lucide-react';
-import MemeHubFilters from '../components/MemeHubFilters';
+import SeifunLaunchFilters from '../components/SeifunLaunchFilters';
 import MemeTokenGrid from '../components/MemeTokenGrid';
 import TrendingStats from '../components/TrendingStats';
+import { SeiTokenRegistry, SeiTokenInfo } from '../utils/seiTokenRegistry';
 
-const MemeHub = () => {
+const SeifunLaunch = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filters, setFilters] = useState({});
+  const [seiTokens, setSeiTokens] = useState<SeiTokenInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data for meme tokens
-  const memeTokens = [
-    {
-      id: 1,
-      name: 'SeiDoge',
-      symbol: 'SDOGE',
-      image: '🐕',
-      score: 94,
-      creator: 'dogemaster',
-      price: '$0.0012',
-      change24h: '+45.2%',
-      volume24h: '$124K',
-      marketCap: '$2.4M',
-      holders: 1247,
-      trending: 'up' as const,
-      category: 'dogs',
-      likes: 342,
-      comments: 89,
-      views: 1520,
-      launchDate: '2 days ago',
-      description: 'The ultimate doge token on Sei blockchain with community governance and automatic LP locking.'
-    },
-    {
-      id: 2,
-      name: 'MoonCat',
-      symbol: 'MCAT',
-      image: '🐱',
-      score: 87,
-      creator: 'catwhiskers',
-      price: '$0.0089',
-      change24h: '+23.1%',
-      volume24h: '$89K',
-      marketCap: '$1.8M',
-      holders: 892,
-      trending: 'up' as const,
-      category: 'cats',
-      likes: 256,
-      comments: 67,
-      views: 1120,
-      launchDate: '5 days ago',
-      description: 'Feline-powered DeFi with purr-fect tokenomics and whisker-sharp security features.'
-    },
-    {
-      id: 3,
-      name: 'PepeSei',
-      symbol: 'PEPES',
-      image: '🐸',
-      score: 91,
-      creator: 'frogforce',
-      price: '$0.0156',
-      change24h: '+67.8%',
-      volume24h: '$156K',
-      marketCap: '$3.1M',
-      holders: 1689,
-      trending: 'up' as const,
-      category: 'frogs',
-      likes: 489,
-      comments: 123,
-      views: 2340,
-      launchDate: '1 day ago',
-      description: 'The rarest Pepe on Sei with community-driven memes and deflationary mechanics.'
-    },
-    {
-      id: 4,
-      name: 'AIBot',
-      symbol: 'AIBOT',
-      image: '🤖',
-      score: 78,
-      creator: 'techguru',
-      price: '$0.0234',
-      change24h: '+12.8%',
-      volume24h: '$67K',
-      marketCap: '$1.2M',
-      holders: 567,
-      trending: 'up' as const,
-      category: 'ai',
-      likes: 178,
-      comments: 45,
-      views: 890,
-      launchDate: '1 week ago',
-      description: 'AI-powered meme generation with smart contract automation and neural network governance.'
-    },
-    {
-      id: 5,
-      name: 'DiamondHands',
-      symbol: 'DIAMOND',
-      image: '💎',
-      score: 82,
-      creator: 'hodlking',
-      price: '$0.0067',
-      change24h: '-5.2%',
-      volume24h: '$45K',
-      marketCap: '$890K',
-      holders: 423,
-      trending: 'down' as const,
-      category: 'defi',
-      likes: 134,
-      comments: 28,
-      views: 670,
-      launchDate: '3 days ago',
-      description: 'For true diamond hands only. Rewards long-term holders with increasing yields over time.'
-    },
-    {
-      id: 6,
-      name: 'RocketFrog',
-      symbol: 'RFROG',
-      image: '🚀',
-      score: 89,
-      creator: 'spacefrog',
-      price: '$0.0198',
-      change24h: '+89.4%',
-      volume24h: '$234K',
-      marketCap: '$4.2M',
-      holders: 2134,
-      trending: 'up' as const,
-      category: 'frogs',
-      likes: 567,
-      comments: 156,
-      views: 3450,
-      launchDate: '6 hours ago',
-      description: 'To the moon and beyond! Rocket-powered frog with interstellar ambitions and cosmic rewards.'
-    },
-    {
-      id: 7,
-      name: 'CyberShiba',
-      symbol: 'CSHIB',
-      image: '🐕‍🦺',
-      score: 76,
-      creator: 'cyberpunk',
-      price: '$0.0045',
-      change24h: '+34.7%',
-      volume24h: '$78K',
-      marketCap: '$1.5M',
-      holders: 789,
-      trending: 'up' as const,
-      category: 'dogs',
-      likes: 298,
-      comments: 72,
-      views: 1340,
-      launchDate: '4 days ago',
-      description: 'Cyberpunk-themed Shiba with neon aesthetics and futuristic tokenomics for the digital age.'
-    },
-    {
-      id: 8,
-      name: 'MemeLord',
-      symbol: 'MLORD',
-      image: '👑',
-      score: 85,
-      creator: 'memelord',
-      price: '$0.0123',
-      change24h: '+56.3%',
-      volume24h: '$167K',
-      marketCap: '$2.8M',
-      holders: 1456,
-      trending: 'up' as const,
-      category: 'other',
-      likes: 423,
-      comments: 98,
-      views: 2180,
-      launchDate: '12 hours ago',
-      description: 'The ultimate meme royalty token with crown-worthy features and kingdom-building mechanics.'
+  const seiRegistry = new SeiTokenRegistry(true); // Use testnet
+
+  useEffect(() => {
+    loadSeiTokens();
+  }, []);
+
+  const loadSeiTokens = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Get trending tokens from Sei registry
+      const trendingTokens = await seiRegistry.getTrendingTokens();
+      
+      // Convert SeiTokenInfo to the format expected by MemeTokenGrid
+      const formattedTokens = trendingTokens.map((token, index) => ({
+        id: index + 1,
+        name: token.name,
+        symbol: token.symbol,
+        image: token.logoUrl || '🪙', // Use logo or fallback emoji
+        score: token.verified ? 95 : Math.floor(Math.random() * 40) + 60, // Higher score for verified tokens
+        creator: token.address.slice(0, 8), // Use part of address as creator
+        price: token.marketData?.price ? `$${token.marketData.price.toFixed(6)}` : '$0.000000',
+        change24h: token.marketData?.priceChange24h ? 
+          `${token.marketData.priceChange24h > 0 ? '+' : ''}${token.marketData.priceChange24h.toFixed(1)}%` : 
+          '+0.0%',
+        volume24h: token.marketData?.volume24h ? 
+          `$${(token.marketData.volume24h / 1000).toFixed(0)}K` : 
+          '$0K',
+        marketCap: token.marketData?.marketCap ? 
+          `$${(token.marketData.marketCap / 1000000).toFixed(1)}M` : 
+          '$0M',
+        holders: Math.floor(Math.random() * 2000) + 100, // Placeholder - would need DEX data
+        trending: 'up' as const,
+        category: token.verified ? 'verified' : 'community',
+        likes: Math.floor(Math.random() * 500) + 50,
+        comments: Math.floor(Math.random() * 100) + 10,
+        views: Math.floor(Math.random() * 3000) + 500,
+        launchDate: 'Recent', // Placeholder
+        description: token.description || `${token.name} token on Sei blockchain with ${token.verified ? 'verified' : 'community'} status.`,
+        verified: token.verified,
+        website: token.website
+      }));
+
+      setSeiTokens(formattedTokens);
+    } catch (err) {
+      console.error('Error loading Sei tokens:', err);
+      setError('Failed to load tokens. Using fallback data.');
+      
+      // Fallback to sample data if API fails
+      setSeiTokens([
+        {
+          id: 1,
+          name: 'Sei',
+          symbol: 'SEI',
+          image: 'https://assets.coingecko.com/coins/images/28205/large/Sei_Logo_-_Transparent.png',
+          score: 98,
+          creator: 'sei-protocol',
+          price: '$0.5234',
+          change24h: '+12.4%',
+          volume24h: '$2.4M',
+          marketCap: '$524M',
+          holders: 15420,
+          trending: 'up' as const,
+          category: 'verified',
+          likes: 1250,
+          comments: 340,
+          views: 8900,
+          launchDate: 'Genesis',
+          description: 'Native token of the Sei blockchain - the fastest Layer 1 for trading.',
+          verified: true,
+          website: 'https://sei.io'
+        }
+      ]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
-    // Here you would typically filter the tokens based on the filters
-    console.log('Filters changed:', newFilters);
   };
 
   return (
@@ -201,7 +118,7 @@ const MemeHub = () => {
         <TrendingStats />
 
         {/* Filters */}
-        <MemeHubFilters onFilterChange={handleFilterChange} />
+        <SeifunLaunchFilters onFilterChange={handleFilterChange} />
 
         {/* View Controls */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 space-y-4 sm:space-y-0">
@@ -240,13 +157,13 @@ const MemeHub = () => {
             </div>
 
             <div className="text-gray-400 text-xs sm:text-sm">
-              {memeTokens.length} tokens found
+              {seiTokens.length} tokens found
             </div>
           </div>
         </div>
 
         {/* Token Grid */}
-        <MemeTokenGrid tokens={memeTokens} viewMode={viewMode} />
+        <MemeTokenGrid tokens={seiTokens} viewMode={viewMode} />
 
         {/* Load More */}
         <div className="text-center mt-8 sm:mt-12">
@@ -288,4 +205,4 @@ const MemeHub = () => {
   );
 };
 
-export default MemeHub;
+export default SeifunLaunch;

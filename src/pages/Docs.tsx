@@ -55,7 +55,7 @@ const Docs = () => {
       ]
     },
             {
-          id: 'memehub',
+          id: 'seifun-launch',
           title: 'seifu.fun',
       icon: TrendingUp,
       subsections: [

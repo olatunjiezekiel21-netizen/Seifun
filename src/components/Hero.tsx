@@ -42,7 +42,7 @@ const Hero = () => {
                 <ArrowRight size={20} />
               </button>
               <button 
-                onClick={() => navigate('/memehub')}
+                onClick={() => navigate('/seifun-launch')}
                 className="border-2 border-[#FF6B35] text-[#FF6B35] px-8 py-4 rounded-xl font-semibold text-lg hover:bg-[#FF6B35] hover:text-white transition-all flex items-center justify-center space-x-2"
               >
                 <Shield size={20} />

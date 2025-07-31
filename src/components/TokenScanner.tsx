@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Shield, AlertTriangle, CheckCircle, Clock, ExternalLink, Info, Wallet } from 'lucide-react';
 import { TokenScanner as TokenScannerClass, TokenAnalysis } from '../utils/tokenScanner';
+import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 import { ethers } from 'ethers';
 
 const TokenScanner = () => {
@@ -15,6 +16,7 @@ const TokenScanner = () => {
   const [isLoadingLogo, setIsLoadingLogo] = useState(false);
 
   const scanner = new TokenScannerClass();
+  const seiRegistry = new SeiTokenRegistry(true);
 
   const handleScan = async () => {
     if (!tokenAddress.trim()) {
@@ -68,23 +70,22 @@ const TokenScanner = () => {
         await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-      // First, check if it's a contract or wallet address
-      const provider = scanner['provider']; // Access the provider from scanner
-      const code = await provider.getCode(address);
-      const isContract = code !== '0x';
-
-      if (!isContract) {
+      // Enhanced wallet detection using Sei registry
+      setScanProgress(prev => [...prev, 'Checking if address is a wallet...']);
+      
+             const isWallet = await seiRegistry.isWalletAddress(address);
+      
+      if (isWallet) {
         // This is a wallet address (EOA), not a token contract
         setScanProgress(prev => [...prev, 'Fetching wallet balance...']);
         
         try {
-          const balance = await provider.getBalance(address);
-          const balanceInSei = parseFloat(ethers.formatEther(balance)).toFixed(4);
+                     const balance = await seiRegistry.getWalletBalance(address);
           
           setIsWalletAddress(true);
           setWalletInfo({
             address: ethers.getAddress(address),
-            balance: balanceInSei
+            balance: parseFloat(balance).toFixed(4)
           });
         } catch (balanceError) {
           setIsWalletAddress(true);

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Wallet, Menu, X, LogOut } from 'lucide-react';
-import { useWallet } from '../utils/walletConnection';
+import { Wallet, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { useSeiWallet } from '../utils/seiWalletConnection';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const location = useLocation();
-  const { isConnected, address, balance, isConnecting, error, connectWallet, disconnectWallet } = useWallet();
+  const { isConnected, address, balance, isConnecting, error, walletType, connectWallet, disconnectWallet, switchWallet, availableWallets } = useSeiWallet();
+  const [showWalletDropdown, setShowWalletDropdown] = React.useState(false);
 
   const truncateAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -39,12 +40,12 @@ const Header = () => {
               Launchpad
             </Link>
             <Link 
-              to="/memehub" 
+              to="/seifun-launch" 
               className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                location.pathname === '/memehub' ? 'text-[#FF3C3C]' : 'text-gray-700'
+                location.pathname === '/seifun-launch' ? 'text-[#FF3C3C]' : 'text-gray-700'
               }`}
             >
-              seifu.fun
+              seifun.launch
             </Link>
             <a href="#leaderboard" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
               Leaderboard
@@ -74,32 +75,110 @@ const Header = () => {
                 <div className="bg-gray-100 text-gray-800 px-3 py-1 rounded-lg text-sm font-mono">
                   {address ? truncateAddress(address) : ''}
                 </div>
-                <button 
-                  onClick={disconnectWallet}
-                  className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-colors"
-                  title="Disconnect Wallet"
-                >
-                  <LogOut size={16} />
-                </button>
+                <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full capitalize">
+                  {walletType}
+                </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowWalletDropdown(!showWalletDropdown)}
+                    className="p-2 text-gray-600 hover:text-[#FF3C3C] transition-colors"
+                    title="Wallet Options"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                  
+                  {showWalletDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                      <div className="p-2">
+                        <button
+                          onClick={() => {
+                            disconnectWallet();
+                            setShowWalletDropdown(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 transition-colors flex items-center space-x-2 text-red-600"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Disconnect</span>
+                        </button>
+                        {availableWallets.length > 1 && (
+                          <>
+                            <hr className="my-2" />
+                            <div className="px-3 py-1 text-xs text-gray-500 uppercase tracking-wide">
+                              Switch Wallet
+                            </div>
+                            {availableWallets.filter(w => w !== walletType).map((wallet) => (
+                              <button
+                                key={wallet}
+                                onClick={() => {
+                                  switchWallet(wallet);
+                                  setShowWalletDropdown(false);
+                                }}
+                                className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 transition-colors capitalize"
+                              >
+                                {wallet} Wallet
+                              </button>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
-              <button 
-                onClick={connectWallet}
-                disabled={isConnecting}
-                className="flex items-center space-x-2 bg-[#141414] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isConnecting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Connecting...</span>
-                  </>
-                ) : (
-                  <>
-                    <Wallet size={18} />
-                    <span>Connect Wallet</span>
-                  </>
+              <div className="relative">
+                <button
+                  onClick={() => availableWallets.length === 1 ? connectWallet() : setShowWalletDropdown(!showWalletDropdown)}
+                  disabled={isConnecting}
+                  className="flex items-center space-x-2 bg-[#141414] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isConnecting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Connecting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wallet size={18} />
+                      <span>Connect Wallet</span>
+                      {availableWallets.length > 1 && <ChevronDown className="w-4 h-4" />}
+                    </>
+                  )}
+                </button>
+                
+                {showWalletDropdown && !isConnecting && availableWallets.length > 1 && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="p-3 border-b border-gray-100">
+                      <p className="text-sm text-gray-600">Choose a wallet to connect</p>
+                    </div>
+                    <div className="p-2">
+                      {availableWallets.map((wallet) => (
+                        <button
+                          key={wallet}
+                          onClick={() => {
+                            connectWallet(wallet);
+                            setShowWalletDropdown(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 transition-colors flex items-center space-x-3"
+                        >
+                          <div className="w-8 h-8 bg-gradient-to-r from-[#FF3C3C] to-[#FF6B6B] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {wallet.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900 capitalize">{wallet} Wallet</div>
+                            <div className="text-xs text-gray-500">
+                              {wallet === 'sei' && 'Official Sei Wallet'}
+                              {wallet === 'compass' && 'Cosmos ecosystem wallet'}
+                              {wallet === 'keplr' && 'Multi-chain Cosmos wallet'}
+                              {wallet === 'metamask' && 'Ethereum & EVM chains'}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
             )}
           </div>
 
@@ -126,13 +205,13 @@ const Header = () => {
                 Launchpad
               </Link>
               <Link 
-                to="/memehub" 
+                to="/seifun-launch" 
                 className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                  location.pathname === '/memehub' ? 'text-[#FF3C3C]' : 'text-gray-700'
+                  location.pathname === '/seifun-launch' ? 'text-[#FF3C3C]' : 'text-gray-700'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                seifu.fun
+                seifun.launch
               </Link>
               <a href="#leaderboard" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
                 Leaderboard

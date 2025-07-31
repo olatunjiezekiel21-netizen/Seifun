@@ -9,7 +9,7 @@ import LiveTokens from './components/LiveTokens';
 import TrustedCreators from './components/TrustedCreators';
 import Footer from './components/Footer';
 import Launchpad from './pages/Launchpad';
-import MemeHub from './pages/MemeHub';
+import SeifunLaunch from './pages/SeifunLaunch';
 import Docs from './pages/Docs';
 
 function App() {
@@ -37,7 +37,7 @@ function App() {
             </main>
           } />
           <Route path="/launchpad" element={<Launchpad />} />
-          <Route path="/memehub" element={<MemeHub />} />
+          <Route path="/seifun-launch" element={<SeifunLaunch />} />
           <Route path="/docs" element={<Docs />} />
         </Routes>
         <Footer />

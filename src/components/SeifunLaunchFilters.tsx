@@ -5,7 +5,7 @@ interface FilterProps {
   onFilterChange: (filters: any) => void;
 }
 
-const MemeHubFilters: React.FC<FilterProps> = ({ onFilterChange }) => {
+const SeifunLaunchFilters: React.FC<FilterProps> = ({ onFilterChange }) => {
   const [activeFilters, setActiveFilters] = useState({
     timeframe: '24h',
     category: 'all',
@@ -174,4 +174,4 @@ const MemeHubFilters: React.FC<FilterProps> = ({ onFilterChange }) => {
   );
 };
 
-export default MemeHubFilters;
+export default SeifunLaunchFilters;
