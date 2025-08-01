@@ -354,14 +354,14 @@ const TokenPulse = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white pt-20">
+    <div className="min-h-screen pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl sm:text-5xl font-bold sei-text-primary mb-6">
             Token Pulse
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg sei-text-secondary max-w-2xl mx-auto">
             Real-time token analysis, AI-powered insights, and professional trading tools
           </p>
         </div>
@@ -395,8 +395,8 @@ const TokenPulse = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'sei-btn sei-btn-primary'
+                  : 'sei-btn sei-btn-secondary'
               }`}
             >
               <tab.icon size={16} />
@@ -406,7 +406,7 @@ const TokenPulse = () => {
         </div>
 
         {/* Content */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="sei-card p-6">
           {activeTab === 'live' && renderLiveActivity()}
           {activeTab === 'creators' && renderCreatorSpotlight()}
           {activeTab === 'trends' && renderTrendingPatterns()}

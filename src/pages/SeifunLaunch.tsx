@@ -115,9 +115,9 @@ const SeifunLaunch = () => {
   });
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Clean Hero Section - Jupiter Style */}
-      <div className="bg-gradient-to-b from-slate-50 to-white border-b border-gray-100">
+    <div className="min-h-screen pt-20">
+      {/* Clean Hero Section - Consistent Theme */}
+      <div className="sei-bg-secondary border-b sei-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-6">
@@ -125,27 +125,27 @@ const SeifunLaunch = () => {
               <span className="text-sm font-medium text-gray-700">Sei Network</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-gray-900">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 sei-text-primary">
               seifu.launch
             </h1>
             
-            <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
+            <p className="text-lg sei-text-secondary mb-12 max-w-2xl mx-auto">
               Professional token discovery and analysis on Sei Network
             </p>
 
             {/* Clean Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-              <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <div className="text-2xl font-bold text-gray-900">{filteredTokens.length}</div>
-                <div className="text-sm text-gray-600">Tokens</div>
+              <div className="sei-card p-4">
+                <div className="text-2xl font-bold sei-text-primary">{filteredTokens.length}</div>
+                <div className="text-sm sei-text-secondary">Tokens</div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <div className="text-2xl font-bold text-gray-900">$12.4M</div>
-                <div className="text-sm text-gray-600">24h Volume</div>
+              <div className="sei-card p-4">
+                <div className="text-2xl font-bold sei-text-primary">$12.4M</div>
+                <div className="text-sm sei-text-secondary">24h Volume</div>
               </div>
-              <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <div className="text-2xl font-bold text-gray-900">156</div>
-                <div className="text-sm text-gray-600">New Today</div>
+              <div className="sei-card p-4">
+                <div className="text-2xl font-bold sei-text-primary">156</div>
+                <div className="text-sm sei-text-secondary">New Today</div>
               </div>
             </div>
           </div>
@@ -166,8 +166,8 @@ const SeifunLaunch = () => {
                   onClick={() => setActiveCategory(category.id as any)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                     isActive 
-                      ? 'bg-gray-900 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'sei-btn sei-btn-primary' 
+                      : 'sei-btn sei-btn-secondary'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -178,72 +178,69 @@ const SeifunLaunch = () => {
           </div>
         </div>
 
-        {/* Cartilage Filter and View Controls */}
+        {/* Filter and View Controls */}
         <div className="flex flex-col lg:flex-row gap-6 mb-8">
           <div className="flex-1">
-            <div className="cartilage-filter-panel bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-gray-200/50">
+            <div className="sei-card p-6">
               <SeifunLaunchFilters onFilterChange={handleFilterChange} />
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="cartilage-view-toggle flex bg-white/70 backdrop-blur-md rounded-2xl border border-gray-200/50 p-2">
+            <div className="flex sei-card p-2">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`cartilage-toggle-btn p-3 rounded-xl transition-all duration-300 ${
+                className={`p-3 rounded-lg transition-all ${
                   viewMode === 'grid' 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                    ? 'sei-bg-red text-white' 
+                    : 'sei-text-secondary hover:sei-text-primary hover:bg-gray-100'
                 }`}
               >
                 <Grid size={20} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`cartilage-toggle-btn p-3 rounded-xl transition-all duration-300 ${
+                className={`p-3 rounded-lg transition-all ${
                   viewMode === 'list' 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                    ? 'sei-bg-red text-white' 
+                    : 'sei-text-secondary hover:sei-text-primary hover:bg-gray-100'
                 }`}
               >
                 <List size={20} />
               </button>
             </div>
             
-            <div className="text-gray-600 text-sm bg-white/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-200/50">
+            <div className="sei-text-secondary text-sm sei-card px-4 py-2">
               {filteredTokens.length} tokens found
             </div>
           </div>
         </div>
 
-        {/* Cartilage Main Content Grid */}
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Cartilage Sidebar */}
+          {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="cartilage-sidebar bg-white/70 backdrop-blur-md rounded-2xl border border-gray-200/50 overflow-hidden">
+            <div className="sei-card overflow-hidden">
               <TrendingStats />
             </div>
           </div>
 
-          {/* Cartilage Token Grid */}
+          {/* Token Grid */}
           <div className="lg:col-span-3">
-            <div className="cartilage-content-area">
+            <div>
               {loading ? (
-                <div className="cartilage-loading flex items-center justify-center py-20">
-                  <div className="relative">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200"></div>
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-transparent border-t-purple-500 absolute top-0 left-0"></div>
-                  </div>
+                <div className="flex items-center justify-center py-20">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-red-500"></div>
                 </div>
               ) : error ? (
-                <div className="cartilage-error bg-gradient-to-r from-red-50 to-pink-50 border border-red-200/50 rounded-2xl p-8 text-center backdrop-blur-sm">
-                  <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl mb-4 mx-auto">
+                <div className="sei-card p-8 text-center">
+                  <div className="flex items-center justify-center w-16 h-16 sei-bg-red rounded-2xl mb-4 mx-auto">
                     <Star className="w-8 h-8 text-white" />
                   </div>
-                  <p className="text-red-800 text-lg mb-4">{error}</p>
+                  <p className="sei-text-primary text-lg mb-4">{error}</p>
                   <button 
                     onClick={loadSeiTokens}
-                    className="cartilage-retry-btn px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:scale-105 transition-all duration-300 shadow-lg"
+                    className="sei-btn sei-btn-primary px-6 py-3"
                   >
                     Try Again
                   </button>
@@ -261,34 +258,34 @@ const SeifunLaunch = () => {
           </div>
         </div>
 
-        {/* Cartilage Featured Section */}
-        <div className="mt-16 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur-md rounded-3xl p-8 border border-gray-200/50">
+        {/* Featured Section */}
+        <div className="mt-16 sei-card p-8">
           <div className="text-center space-y-6">
             <div className="flex items-center justify-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 sei-bg-red rounded-2xl flex items-center justify-center">
                 <Star className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-800">Featured Token of the Day</h3>
+              <h3 className="text-3xl font-bold sei-text-primary">Featured Token of the Day</h3>
             </div>
-            <p className="text-gray-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="sei-text-secondary max-w-2xl mx-auto leading-relaxed">
               Every day we spotlight the most innovative, secure, and community-loved token. 
               Today's featured token has achieved exceptional safety scores and engagement metrics.
             </p>
             
             {filteredTokens.length > 0 && (
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 max-w-md mx-auto border border-purple-200/50">
+              <div className="sei-card p-6 max-w-md mx-auto">
                 <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-2xl">
+                  <div className="w-16 h-16 sei-bg-red rounded-2xl flex items-center justify-center text-2xl">
                     {filteredTokens[0].image || '🚀'}
                   </div>
                   <div className="text-left">
-                    <h4 className="text-xl font-bold text-gray-800">{filteredTokens[0].name}</h4>
-                    <p className="text-gray-600">{filteredTokens[0].symbol}</p>
+                    <h4 className="text-xl font-bold sei-text-primary">{filteredTokens[0].name}</h4>
+                    <p className="sei-text-secondary">{filteredTokens[0].symbol}</p>
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">{filteredTokens[0].score}</div>
-                  <div className="text-gray-600 text-sm">SeifuScore™</div>
+                  <div className="text-3xl font-bold sei-red mb-2">{filteredTokens[0].score}</div>
+                  <div className="sei-text-secondary text-sm">SeifuScore™</div>
                 </div>
               </div>
             )}
