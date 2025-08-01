@@ -68,6 +68,7 @@ export interface TokenAnalysis {
     verified: SafetyCheck & { isVerified?: boolean };
     transfer: SafetyCheck & { hasTransfer?: boolean; hasTransferFrom?: boolean };
     fees: SafetyCheck & { buyTax?: number; sellTax?: number; hasExcessiveFees?: boolean };
+    holderDistribution: SafetyCheck & { holderAnalysis?: any };
   };
   riskScore: number;
   isSafe: boolean;
@@ -651,6 +652,154 @@ export class TokenScanner {
     }
   }
 
+  // Holder distribution analysis for rug pull detection
+  async checkHolderDistribution(address: string): Promise<SafetyCheck & { holderAnalysis?: any }> {
+    try {
+      const contract = new ethers.Contract(address, [
+        'function totalSupply() view returns (uint256)',
+        'function balanceOf(address) view returns (uint256)',
+        'function decimals() view returns (uint8)',
+        'function owner() view returns (address)'
+      ], this.provider);
+
+      const [totalSupply, decimals] = await Promise.all([
+        contract.totalSupply(),
+        contract.decimals().catch(() => 18)
+      ]);
+
+      // Get top holder addresses to check (common addresses to analyze)
+      const addressesToCheck = [
+        address, // Contract itself (burned tokens)
+        '0x0000000000000000000000000000000000000000', // Burn address
+        '0x000000000000000000000000000000000000dEaD', // Dead address
+      ];
+
+      // Try to get owner if available
+      try {
+        const owner = await contract.owner();
+        if (owner && owner !== '0x0000000000000000000000000000000000000000') {
+          addressesToCheck.push(owner);
+        }
+      } catch {
+        // Owner function not available
+      }
+
+      const holderBalances = [];
+      let totalCheckedBalance = BigInt(0);
+
+      for (const addr of addressesToCheck) {
+        try {
+          // Skip zero address if it causes errors (some tokens don't allow this)
+          if (addr === '0x0000000000000000000000000000000000000000') {
+            // Try a different approach for burn address - check if contract has a burn function
+            try {
+              const burnBalance = await contract.balanceOf(addr);
+              const percentage = totalSupply > 0 ? (Number(burnBalance * BigInt(10000)) / Number(totalSupply)) / 100 : 0;
+              
+              if (burnBalance > 0) {
+                holderBalances.push({
+                  address: addr,
+                  balance: ethers.formatUnits(burnBalance, decimals),
+                  percentage: percentage.toFixed(2)
+                });
+                totalCheckedBalance += burnBalance;
+              }
+            } catch {
+              // Skip if zero address query fails
+              continue;
+            }
+          } else {
+            const balance = await contract.balanceOf(addr);
+            const percentage = totalSupply > 0 ? (Number(balance * BigInt(10000)) / Number(totalSupply)) / 100 : 0;
+            
+            if (balance > 0) {
+              holderBalances.push({
+                address: addr,
+                balance: ethers.formatUnits(balance, decimals),
+                percentage: percentage.toFixed(2)
+              });
+              totalCheckedBalance += balance;
+            }
+          }
+        } catch (error) {
+          // Silently skip addresses that cause errors
+          continue;
+        }
+      }
+
+      // Analyze distribution
+      const totalSupplyFormatted = ethers.formatUnits(totalSupply, decimals);
+      const checkedPercentage = totalSupply > 0 ? (Number(totalCheckedBalance * BigInt(10000)) / Number(totalSupply)) / 100 : 0;
+      
+      // Risk assessment
+      let risk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
+      let details = 'Holder distribution appears healthy';
+      let passed = true;
+
+      // Check for concerning patterns
+      const highConcentrationHolders = holderBalances.filter(h => parseFloat(h.percentage) > 20);
+      const ownerHoldings = holderBalances.find(h => h.address !== address && h.address !== '0x0000000000000000000000000000000000000000' && h.address !== '0x000000000000000000000000000000000000dEaD');
+
+      if (highConcentrationHolders.length > 0) {
+        const maxHolding = Math.max(...highConcentrationHolders.map(h => parseFloat(h.percentage)));
+        if (maxHolding > 50) {
+          risk = 'CRITICAL';
+          details = `CRITICAL: Single holder owns ${maxHolding.toFixed(2)}% of supply - extreme rug pull risk`;
+          passed = false;
+        } else if (maxHolding > 30) {
+          risk = 'HIGH';
+          details = `HIGH RISK: Major holder owns ${maxHolding.toFixed(2)}% of supply`;
+          passed = false;
+        } else {
+          risk = 'MEDIUM';
+          details = `MODERATE RISK: Large holder detected (${maxHolding.toFixed(2)}% of supply)`;
+        }
+      }
+
+      if (ownerHoldings && parseFloat(ownerHoldings.percentage) > 15) {
+        risk = risk === 'CRITICAL' ? 'CRITICAL' : 'HIGH';
+        details += ` | Owner/Creator holds ${ownerHoldings.percentage}% - potential dump risk`;
+        passed = false;
+      }
+
+      // Check burn percentage (good sign)
+      const burnedTokens = holderBalances.filter(h => 
+        h.address === '0x0000000000000000000000000000000000000000' || 
+        h.address === '0x000000000000000000000000000000000000dEaD' ||
+        h.address === address
+      );
+      
+      const totalBurnedPercentage = burnedTokens.reduce((sum, h) => sum + parseFloat(h.percentage), 0);
+      
+      if (totalBurnedPercentage > 50) {
+        details += ` | ${totalBurnedPercentage.toFixed(2)}% tokens burned - excellent`;
+      } else if (totalBurnedPercentage > 20) {
+        details += ` | ${totalBurnedPercentage.toFixed(2)}% tokens burned - good`;
+      }
+
+      return {
+        passed,
+        risk,
+        details,
+        holderAnalysis: {
+          totalSupply: totalSupplyFormatted,
+          topHolders: holderBalances,
+          analyzedPercentage: checkedPercentage.toFixed(2),
+          burnedPercentage: totalBurnedPercentage.toFixed(2),
+          riskFactors: highConcentrationHolders.length > 0 ? ['High concentration detected'] : []
+        }
+      };
+
+    } catch (error) {
+      return {
+        passed: false,
+        risk: 'UNKNOWN',
+        details: 'Could not analyze holder distribution - this may indicate contract issues',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
   calculateRiskScore(safetyChecks: TokenAnalysis['safetyChecks']): number {
     let score = 100;
     
@@ -736,7 +885,8 @@ export class TokenScanner {
       blacklistCheck,
       verifiedCheck,
       transferCheck,
-      feesCheck
+      feesCheck,
+      holderDistributionCheck
     ] = await Promise.all([
       this.checkSupplySafety(contract, BigInt(tokenInfo.totalSupply || '0')),
       this.checkOwnership(contract),
@@ -745,7 +895,8 @@ export class TokenScanner {
       this.checkBlacklistFunction(contract),
       this.checkVerification(tokenInfo),
       this.checkTransferFunctions(contract),
-      this.checkTaxes(contract)
+      this.checkTaxes(contract),
+      this.checkHolderDistribution(tokenInfo.address)
     ]);
 
     return {
@@ -756,7 +907,8 @@ export class TokenScanner {
       blacklist: blacklistCheck,
       verified: verifiedCheck,
       transfer: transferCheck,
-      fees: feesCheck
+      fees: feesCheck,
+      holderDistribution: holderDistributionCheck
     };
   }
 
