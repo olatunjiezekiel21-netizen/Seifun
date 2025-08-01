@@ -14,7 +14,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+    <header className="sei-nav sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -25,7 +25,7 @@ const Header = () => {
                 alt="Seifu Logo" 
                 className="w-8 h-8 rounded-full"
               />
-              <span className="text-2xl font-bold text-[#141414]">seifu</span>
+              <span className="text-2xl font-bold sei-red">seifu</span>
             </Link>
           </div>
 
@@ -33,32 +33,32 @@ const Header = () => {
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
               to="/launchpad" 
-              className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                location.pathname === '/launchpad' ? 'text-[#FF3C3C]' : 'text-gray-700'
+              className={`sei-nav-link font-medium ${
+                location.pathname === '/launchpad' ? 'active' : ''
               }`}
             >
               Launchpad
             </Link>
             <Link 
               to="/seifun-launch" 
-              className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                location.pathname === '/seifun-launch' ? 'text-[#FF3C3C]' : 'text-gray-700'
+              className={`sei-nav-link font-medium ${
+                location.pathname === '/seifun-launch' ? 'active' : ''
               }`}
             >
               seifun.launch
             </Link>
             <Link 
               to="/token-pulse" 
-              className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                location.pathname === '/token-pulse' ? 'text-[#FF3C3C]' : 'text-gray-700'
+              className={`sei-nav-link font-medium ${
+                location.pathname === '/token-pulse' ? 'active' : ''
               }`}
             >
               Token Pulse
             </Link>
             <Link 
               to="/docs" 
-              className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                location.pathname === '/docs' ? 'text-[#FF3C3C]' : 'text-gray-700'
+              className={`sei-nav-link font-medium ${
+                location.pathname === '/docs' ? 'active' : ''
               }`}
             >
               Docs
@@ -145,7 +145,7 @@ const Header = () => {
                 <button
                   onClick={() => availableWallets.length === 1 ? connectWallet() : setShowWalletDropdown(!showWalletDropdown)}
                   disabled={isConnecting}
-                  className="flex items-center space-x-2 bg-[#141414] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center space-x-2 sei-btn sei-btn-primary px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isConnecting ? (
                     <>
@@ -273,7 +273,7 @@ const Header = () => {
                 <button 
                   onClick={connectWallet}
                   disabled={isConnecting}
-                  className="flex items-center space-x-2 bg-[#141414] text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition-colors w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center space-x-2 sei-btn sei-btn-primary px-6 py-2.5 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isConnecting ? (
                     <>

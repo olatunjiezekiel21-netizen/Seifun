@@ -1,5 +1,5 @@
-/* Import Cartilage Design System */
-@import './styles/cartilage.css';
+/* Import Sei Ecosystem Theme */
+@import './styles/sei-theme.css';
 
 @tailwind base;
 @tailwind components;

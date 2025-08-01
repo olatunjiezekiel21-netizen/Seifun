@@ -70,32 +70,65 @@ const TokenScanner = () => {
         await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-      // Enhanced wallet detection using Sei registry
-      setScanProgress(prev => [...prev, 'Checking if address is a wallet...']);
+      // Try to analyze as token first, then check if it's a wallet
+      setScanProgress(prev => [...prev, 'Attempting token analysis...']);
       
-             const isWallet = await seiRegistry.isWalletAddress(address);
+      let isTokenContract = false;
       
-      if (isWallet) {
-        // This is a wallet address (EOA), not a token contract
-        setScanProgress(prev => [...prev, 'Fetching wallet balance...']);
-        
-        try {
-                     const balance = await seiRegistry.getWalletBalance(address);
-          
-          setIsWalletAddress(true);
-          setWalletInfo({
-            address: ethers.getAddress(address),
-            balance: parseFloat(balance).toFixed(4)
-          });
-        } catch (balanceError) {
-          setIsWalletAddress(true);
-          setWalletInfo({
-            address: ethers.getAddress(address),
-            balance: '0.0000'
-          });
+            try {
+        // Try to get token info first - this will work for any ERC20 token
+        const tokenInfo = await seiRegistry.getTokenInfo(address);
+        if (tokenInfo && (tokenInfo.name || tokenInfo.symbol)) {
+          isTokenContract = true;
         }
-      } else {
-        // This is a contract, proceed with token analysis
+      } catch (error) {
+        // If token analysis fails, check if it's a wallet
+        console.log('Token analysis failed, checking if wallet:', error);
+      }
+      
+      if (!isTokenContract) {
+        // Check if it's a wallet address (EOA)
+        setScanProgress(prev => [...prev, 'Checking if address is a wallet...']);
+        const isWallet = await seiRegistry.isWalletAddress(address);
+        
+        if (isWallet) {
+          // This is a wallet address (EOA), not a token contract
+          setScanProgress(prev => [...prev, 'Fetching wallet balance...']);
+          
+          try {
+            const balance = await seiRegistry.getWalletBalance(address);
+            
+            setIsWalletAddress(true);
+            setWalletInfo({
+              address: ethers.getAddress(address),
+              balance: parseFloat(balance).toFixed(4)
+            });
+          } catch (balanceError) {
+            setIsWalletAddress(true);
+            setWalletInfo({
+              address: ethers.getAddress(address),
+              balance: '0.0000'
+            });
+          }
+          
+          // Add to scan history for wallet
+          setScanHistory(prev => [{
+            address: ethers.getAddress(address),
+            name: 'Wallet Address',
+            symbol: 'WALLET',
+            safetyScore: 0,
+            timestamp: new Date(),
+            isWallet: true
+          }, ...prev.slice(0, 4)]);
+          
+          return; // Exit early for wallet addresses
+        } else {
+          // It's a contract but not a recognized token - still try to analyze
+          setScanProgress(prev => [...prev, 'Unknown contract detected, attempting analysis...']);
+        }
+      }
+      
+      // Proceed with token analysis for contracts
         const tokenProgressSteps = [
           'Fetching token information...',
           'Loading token logo...',
@@ -128,7 +161,6 @@ const TokenScanner = () => {
         
         // Add to scan history
         setScanHistory(prev => [result, ...prev.slice(0, 4)]);
-      }
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to scan address';
