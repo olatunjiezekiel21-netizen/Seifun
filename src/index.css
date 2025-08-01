@@ -1,6 +1,6 @@
+/* Import Cartilage Design System */
+@import './styles/cartilage.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Cartilage Design System */
-@import './styles/cartilage.css';
