@@ -100,11 +100,32 @@ export class SeiTokenRegistry {
   // Fetch token information from multiple sources
   async getTokenInfo(address: string): Promise<SeiTokenInfo | null> {
     try {
-      // Normalize address
-      const normalizedAddress = ethers.getAddress(address.toLowerCase());
+      // Handle special cases first
+      if (address.toLowerCase() === 'sei' || address === '0x0000000000000000000000000000000000000000') {
+        const seiToken = KNOWN_SEI_TOKENS['0x0000000000000000000000000000000000000000'];
+        return {
+          address: '0x0000000000000000000000000000000000000000',
+          ...seiToken
+        };
+      }
 
-      // Check if it's a known token
-      const knownToken = KNOWN_SEI_TOKENS[normalizedAddress];
+      // Normalize address
+      let normalizedAddress: string;
+      try {
+        normalizedAddress = ethers.getAddress(address.toLowerCase());
+      } catch (error) {
+        console.error('Invalid address format:', address);
+        return null;
+      }
+
+      // Check if it's a known token (case-insensitive)
+      const knownToken = KNOWN_SEI_TOKENS[normalizedAddress] || 
+                        KNOWN_SEI_TOKENS[address.toLowerCase()] ||
+                        Object.entries(KNOWN_SEI_TOKENS).find(([key, token]) => 
+                          key.toLowerCase() === address.toLowerCase() ||
+                          token.symbol.toLowerCase() === address.toLowerCase()
+                        )?.[1];
+      
       if (knownToken) {
         return {
           address: normalizedAddress,
@@ -130,31 +151,93 @@ export class SeiTokenRegistry {
     }
   }
 
-  // Get token info directly from blockchain
+  // Get token info directly from blockchain with enhanced detection
   private async getTokenFromBlockchain(address: string): Promise<Partial<SeiTokenInfo> | null> {
     try {
-      const contract = new ethers.Contract(address, [
+      // First check if it's a contract
+      const code = await this.provider.getCode(address);
+      if (code === '0x') {
+        // This is an EOA (wallet), not a contract
+        return null;
+      }
+
+      // Try multiple contract interfaces for better compatibility
+      const erc20Contract = new ethers.Contract(address, [
         'function name() view returns (string)',
         'function symbol() view returns (string)',
         'function decimals() view returns (uint8)',
-        'function totalSupply() view returns (uint256)'
+        'function totalSupply() view returns (uint256)',
+        'function balanceOf(address) view returns (uint256)'
       ], this.provider);
 
-      const [name, symbol, decimals, totalSupply] = await Promise.all([
-        contract.name().catch(() => 'Unknown'),
-        contract.symbol().catch(() => 'UNKNOWN'),
-        contract.decimals().catch(() => 18),
-        contract.totalSupply().catch(() => BigInt(0))
-      ]);
+      // Try to get basic token info with more robust error handling
+      let name = 'Unknown Token';
+      let symbol = 'UNKNOWN';
+      let decimals = 18;
+      let totalSupply = BigInt(0);
+      let hasERC20Functions = false;
 
-      return {
-        address,
-        name: String(name),
-        symbol: String(symbol),
-        decimals: Number(decimals),
-        totalSupply: totalSupply.toString(),
-        type: 'erc20'
-      };
+      try {
+        // Test if this contract has ERC20 functions by calling balanceOf with zero address
+        await erc20Contract.balanceOf('0x0000000000000000000000000000000000000000');
+        hasERC20Functions = true;
+      } catch (error) {
+        // Not an ERC20, might be a different type of contract
+        console.log('Not a standard ERC20 contract:', error);
+      }
+
+      if (hasERC20Functions) {
+        // Try to get token details
+        try {
+          name = await erc20Contract.name();
+        } catch (e) {
+          // Some tokens don't implement name()
+          console.log('No name() function:', e);
+        }
+
+        try {
+          symbol = await erc20Contract.symbol();
+        } catch (e) {
+          // Some tokens don't implement symbol()
+          console.log('No symbol() function:', e);
+        }
+
+        try {
+          decimals = await erc20Contract.decimals();
+        } catch (e) {
+          // Default to 18 if decimals() fails
+          console.log('No decimals() function, using default 18:', e);
+        }
+
+        try {
+          totalSupply = await erc20Contract.totalSupply();
+        } catch (e) {
+          // Some tokens don't implement totalSupply()
+          console.log('No totalSupply() function:', e);
+        }
+
+        return {
+          address,
+          name: String(name),
+          symbol: String(symbol),
+          decimals: Number(decimals),
+          totalSupply: totalSupply.toString(),
+          type: 'erc20',
+          verified: true
+        };
+      } else {
+        // It's a contract but not ERC20 - might be a factory or other contract
+        // Try to get some basic info if possible
+        return {
+          address,
+          name: 'Smart Contract',
+          symbol: 'CONTRACT',
+          decimals: 0,
+          totalSupply: '0',
+          type: 'erc20', // Keep as erc20 for compatibility
+          verified: false
+        };
+      }
     } catch (error) {
       console.error('Error fetching from blockchain:', error);
       return null;
