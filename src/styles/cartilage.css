@@ -438,3 +438,216 @@
   --text-adaptive: #7c3aed;
   --border-adaptive: rgba(124, 58, 237, 0.2);
 }
+
+/* ===== SEIFU.LAUNCH SPECIFIC CARTILAGE STYLES ===== */
+
+/* Blob animations for organic movement */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Cartilage background with subtle patterns */
+.cartilage-bg {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+}
+
+/* Cartilage title with fluid text effects */
+.cartilage-title {
+  background: linear-gradient(
+    45deg,
+    #ffffff,
+    #e0e7ff,
+    #fce7f3,
+    #ffffff,
+    #ddd6fe,
+    #fecaca
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Cartilage navigation items */
+.cartilage-nav-item {
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.cartilage-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.cartilage-nav-item:hover::before {
+  left: 100%;
+}
+
+/* Cartilage filter panel */
+.cartilage-filter-panel {
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.cartilage-filter-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Cartilage view toggle buttons */
+.cartilage-view-toggle {
+  backdrop-filter: blur(12px);
+}
+
+.cartilage-toggle-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.cartilage-toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transition: all 0.3s ease;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.cartilage-toggle-btn:hover::before {
+  width: 100px;
+  height: 100px;
+}
+
+/* Cartilage sidebar */
+.cartilage-sidebar {
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.cartilage-sidebar:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+/* Cartilage loading animation */
+.cartilage-loading {
+  animation: pulse 2s infinite;
+}
+
+/* Cartilage error state */
+.cartilage-error {
+  backdrop-filter: blur(8px);
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cartilage retry button */
+.cartilage-retry-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.cartilage-retry-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.cartilage-retry-btn:hover::before {
+  left: 100%;
+}
+
+/* Cartilage token container */
+.cartilage-token-container {
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced backdrop blur support */
+@supports (backdrop-filter: blur(10px)) {
+  .cartilage-filter-panel,
+  .cartilage-view-toggle,
+  .cartilage-sidebar {
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Cartilage responsive adjustments for seifu.launch */
+@media (max-width: 768px) {
+  .cartilage-title {
+    font-size: 3rem;
+  }
+  
+  .cartilage-nav-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
