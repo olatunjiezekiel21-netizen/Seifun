@@ -641,7 +641,9 @@ const Docs = () => {
           <h3 className="text-2xl font-bold text-white text-center mb-8">Quick Access</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <a
-              href="#"
+              href="https://github.com/Godswork4/seifu/blob/main/API.md"
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-[#FF6B35]/50 transition-all group text-center"
             >
               <Code className="text-[#FF6B35] mx-auto mb-4 group-hover:scale-110 transition-transform" size={32} />
@@ -653,7 +655,9 @@ const Docs = () => {
             </a>
 
             <a
-              href="#"
+              href={`https://seitrace.com/address/0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-[#FF6B35]/50 transition-all group text-center"
             >
               <Lock className="text-[#FF6B35] mx-auto mb-4 group-hover:scale-110 transition-transform" size={32} />
@@ -665,7 +669,9 @@ const Docs = () => {
             </a>
 
             <a
-              href="#"
+              href="https://discord.gg/seifu"
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-[#FF6B35]/50 transition-all group text-center"
             >
               <Users className="text-[#FF6B35] mx-auto mb-4 group-hover:scale-110 transition-transform" size={32} />
@@ -677,7 +683,7 @@ const Docs = () => {
             </a>
 
             <a
-              href="#"
+              href="mailto:support@seifu.app"
               className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-[#FF6B35]/50 transition-all group text-center"
             >
               <HelpCircle className="text-[#FF6B35] mx-auto mb-4 group-hover:scale-110 transition-transform" size={32} />

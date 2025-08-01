@@ -89,24 +89,54 @@ export const useSeiWallet = () => {
       const availableWallets = getAvailableWallets();
       
       if (availableWallets.length === 0) {
-        throw new Error('No Sei-compatible wallets found. Please install Sei Wallet, Compass, Keplr, or MetaMask.');
+        // Provide helpful guidance instead of just error
+        const helpMessage = `No Sei-compatible wallets detected. Please:
+
+1. 📱 Install a Sei wallet:
+   • Sei Wallet: https://sei.io/wallet
+   • Compass Wallet: https://compass.keplr.app/
+   • Keplr: https://keplr.app/
+   • MetaMask: https://metamask.io/
+
+2. 🔄 Refresh this page after installation
+
+3. 🔗 Make sure your wallet is unlocked
+
+Need help? Visit our docs for detailed setup instructions.`;
+        
+        setWalletState(prev => ({
+          ...prev,
+          isConnecting: false,
+          error: helpMessage
+        }));
+        return;
       }
 
-      // Use specified wallet or default to first available
+      // Use specified wallet or show selection if multiple available
       const targetWallet = walletType || availableWallets[0];
       
       if (!availableWallets.includes(targetWallet)) {
-        throw new Error(`${targetWallet} wallet not found. Please install it first.`);
+        throw new Error(`${targetWallet} wallet not found. Available wallets: ${availableWallets.join(', ')}`);
       }
 
       await connectToWallet(targetWallet);
       
     } catch (error) {
       console.error('Wallet connection error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to connect wallet';
+      
+      // Provide more helpful error messages
+      let helpfulMessage = errorMessage;
+      if (errorMessage.includes('User rejected')) {
+        helpfulMessage = 'Connection was cancelled. Please try again and approve the connection in your wallet.';
+      } else if (errorMessage.includes('not found')) {
+        helpfulMessage = `${errorMessage}\n\nPlease install the wallet extension and refresh the page.`;
+      }
+      
       setWalletState(prev => ({
         ...prev,
         isConnecting: false,
-        error: error instanceof Error ? error.message : 'Failed to connect wallet'
+        error: helpfulMessage
       }));
     }
   };
@@ -329,11 +359,16 @@ export const useSeiWallet = () => {
     await connectWallet(newWalletType);
   };
 
+  const clearError = () => {
+    setWalletState(prev => ({ ...prev, error: null }));
+  };
+
   return {
     ...walletState,
     connectWallet,
     disconnectWallet,
     switchWallet,
+    clearError,
     availableWallets: getAvailableWallets()
   };
 };

@@ -107,16 +107,28 @@ export class TokenScanner {
   }
 
   // Enhanced token detection - works with any token standard
-  private async detectTokenStandard(address: string): Promise<'ERC20' | 'ERC721' | 'ERC1155' | 'UNKNOWN'> {
+  private async detectTokenStandard(address: string): Promise<'ERC20' | 'ERC721' | 'ERC1155' | 'FACTORY' | 'UNKNOWN'> {
     try {
       const contract = new ethers.Contract(address, [
         'function supportsInterface(bytes4) view returns (bool)',
         'function totalSupply() view returns (uint256)',
         'function balanceOf(address) view returns (uint256)',
-        'function transfer(address, uint256) returns (bool)'
+        'function transfer(address, uint256) returns (bool)',
+        'function getUserTokens(address) view returns (tuple(address,address,string,string,uint8,uint256,uint256)[])',
+        'function getAllTokens() view returns (tuple(address,address,string,string,uint8,uint256,uint256)[])',
+        'function creationFee() view returns (uint256)'
       ], this.provider);
 
-      // Check for ERC165 support first
+      // Check for factory contract first
+      try {
+        await contract.creationFee.staticCall();
+        await contract.getAllTokens.staticCall();
+        return 'FACTORY';
+      } catch {
+        // Not a factory contract
+      }
+
+      // Check for ERC165 support
       try {
         const isERC721 = await contract.supportsInterface('0x80ac58cd');
         if (isERC721) return 'ERC721';
@@ -166,6 +178,13 @@ export class TokenScanner {
         throw new Error('Address is a wallet (EOA), not a token contract');
       }
 
+      // Detect contract type
+      const contractType = await this.detectTokenStandard(address);
+      
+      if (contractType === 'FACTORY') {
+        return await this.getFactoryInfo(address);
+      }
+
       // Get token info from Sei registry first
       const seiTokenInfo = await this.seiRegistry.getTokenInfo(address);
       
@@ -188,7 +207,7 @@ export class TokenScanner {
 
       // Fallback to blockchain query if not in registry
       const contract = new ethers.Contract(address, EXTENDED_ABI, this.provider);
-      const tokenInfo = await this.getTokenInfoWithFallbacks(contract, address, 'ERC20');
+      const tokenInfo = await this.getTokenInfoWithFallbacks(contract, address, contractType);
       
       const logoUrl = await this.fetchTokenLogo(address, tokenInfo.symbol);
 
@@ -204,6 +223,40 @@ export class TokenScanner {
     } catch (error) {
       console.error('Error fetching basic token info:', error);
       throw new Error(`Failed to fetch token information: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Get factory contract information
+  private async getFactoryInfo(address: string): Promise<TokenInfo> {
+    try {
+      const contract = new ethers.Contract(address, [
+        'function creationFee() view returns (uint256)',
+        'function getAllTokens() view returns (tuple(address,address,string,string,uint8,uint256,uint256)[])',
+        'function getTotalTokensCreated() view returns (uint256)'
+      ], this.provider);
+
+      const [creationFee, allTokens, totalCreated] = await Promise.all([
+        contract.creationFee(),
+        contract.getAllTokens(),
+        contract.getTotalTokensCreated()
+      ]);
+
+      return {
+        address: ethers.getAddress(address),
+        name: 'Seifu Token Factory',
+        symbol: 'FACTORY',
+        decimals: 18,
+        totalSupply: totalCreated.toString(),
+        type: 'factory',
+        verified: true,
+        description: `Token factory contract that has created ${totalCreated} tokens. Creation fee: ${ethers.formatEther(creationFee)} SEI`,
+        marketData: {
+          price: parseFloat(ethers.formatEther(creationFee)),
+          volume24h: allTokens.length
+        }
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch factory information: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

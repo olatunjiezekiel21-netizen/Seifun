@@ -10,6 +10,7 @@ import TrustedCreators from './components/TrustedCreators';
 import Footer from './components/Footer';
 import Launchpad from './pages/Launchpad';
 import SeifunLaunch from './pages/SeifunLaunch';
+import TokenPulse from './pages/TokenPulse';
 import Docs from './pages/Docs';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
           } />
           <Route path="/launchpad" element={<Launchpad />} />
           <Route path="/seifun-launch" element={<SeifunLaunch />} />
+          <Route path="/token-pulse" element={<TokenPulse />} />
           <Route path="/docs" element={<Docs />} />
         </Routes>
         <Footer />

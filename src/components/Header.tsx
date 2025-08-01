@@ -6,7 +6,7 @@ import { useSeiWallet } from '../utils/seiWalletConnection';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const location = useLocation();
-  const { isConnected, address, balance, isConnecting, error, walletType, connectWallet, disconnectWallet, switchWallet, availableWallets } = useSeiWallet();
+  const { isConnected, address, balance, isConnecting, error, walletType, connectWallet, disconnectWallet, switchWallet, availableWallets, clearError } = useSeiWallet();
   const [showWalletDropdown, setShowWalletDropdown] = React.useState(false);
 
   const truncateAddress = (addr: string) => {
@@ -47,9 +47,14 @@ const Header = () => {
             >
               seifun.launch
             </Link>
-            <a href="#leaderboard" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
-              Leaderboard
-            </a>
+            <Link 
+              to="/token-pulse" 
+              className={`hover:text-[#FF3C3C] transition-colors font-medium ${
+                location.pathname === '/token-pulse' ? 'text-[#FF3C3C]' : 'text-gray-700'
+              }`}
+            >
+              Token Pulse
+            </Link>
             <Link 
               to="/docs" 
               className={`hover:text-[#FF3C3C] transition-colors font-medium ${
@@ -63,8 +68,18 @@ const Header = () => {
           {/* Connect Wallet Button */}
           <div className="hidden md:flex items-center space-x-2">
             {error && (
-              <div className="text-red-500 text-sm mr-2">
-                {error}
+              <div className="relative">
+                <div className="absolute right-0 top-12 w-80 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50">
+                  <div className="text-red-800 text-sm whitespace-pre-line">
+                    {error}
+                  </div>
+                  <button 
+                    onClick={clearError}
+                    className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
             )}
             {isConnected ? (
@@ -213,9 +228,15 @@ const Header = () => {
               >
                 seifun.launch
               </Link>
-              <a href="#leaderboard" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
-                Leaderboard
-              </a>
+                              <Link 
+                  to="/token-pulse" 
+                  className={`hover:text-[#FF3C3C] transition-colors font-medium ${
+                    location.pathname === '/token-pulse' ? 'text-[#FF3C3C]' : 'text-gray-700'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Token Pulse
+                </Link>
               <Link 
                 to="/docs" 
                 className={`hover:text-[#FF3C3C] transition-colors font-medium ${
