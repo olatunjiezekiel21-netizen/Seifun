@@ -299,14 +299,14 @@ Need help? Visit our docs for detailed setup instructions.`;
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [{
-          chainId: '0x530', // 1328 in hex (Sei testnet)
-          chainName: 'Sei Testnet',
+          chainId: '0x531', // 1329 in hex (Sei mainnet)
+                      chainName: 'Sei Network',
           nativeCurrency: {
             name: 'Sei',
             symbol: 'SEI',
             decimals: 18
           },
-          rpcUrls: ['https://evm-rpc-testnet.sei-apis.com'],
+                      rpcUrls: ['https://evm-rpc.sei-apis.com'],
           blockExplorerUrls: ['https://seitrace.com']
         }]
       });
@@ -318,7 +318,7 @@ Need help? Visit our docs for detailed setup instructions.`;
   const fetchBalance = async (address: string): Promise<string> => {
     try {
       // Use Sei testnet RPC to fetch real balance
-      const rpcUrl = import.meta.env.VITE_SEI_TESTNET_RPC || 'https://evm-rpc-testnet.sei-apis.com';
+      const rpcUrl = import.meta.env.VITE_SEI_MAINNET_RPC || 'https://evm-rpc.sei-apis.com';
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       const balance = await provider.getBalance(address);
       const balanceInSei = ethers.formatEther(balance);

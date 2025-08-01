@@ -54,7 +54,7 @@ export class SeiTokenRegistry {
   private provider: ethers.JsonRpcProvider;
   private isTestnet: boolean;
 
-  constructor(isTestnet = true) {
+  constructor(isTestnet = false) {
     this.isTestnet = isTestnet;
     const network = isTestnet ? SEI_NETWORKS.testnet : SEI_NETWORKS.mainnet;
     this.provider = new ethers.JsonRpcProvider(network.rpc);
