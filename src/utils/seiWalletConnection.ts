@@ -288,7 +288,8 @@ export const useSeiWallet = () => {
   const fetchBalance = async (address: string): Promise<string> => {
     try {
       // Use Sei testnet RPC to fetch real balance
-      const provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
+      const rpcUrl = import.meta.env.VITE_SEI_TESTNET_RPC || 'https://evm-rpc-testnet.sei-apis.com';
+      const provider = new ethers.JsonRpcProvider(rpcUrl);
       const balance = await provider.getBalance(address);
       const balanceInSei = ethers.formatEther(balance);
       return parseFloat(balanceInSei).toFixed(4);

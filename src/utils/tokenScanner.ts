@@ -79,7 +79,7 @@ export interface TokenAnalysis {
 export class TokenScanner {
   private provider: ethers.JsonRpcProvider;
   private seiRegistry: SeiTokenRegistry;
-  private readonly SEI_RPC_URL = 'https://evm-rpc-testnet.sei-apis.com';
+  private readonly SEI_RPC_URL = import.meta.env.VITE_SEI_TESTNET_RPC || 'https://evm-rpc-testnet.sei-apis.com';
 
   constructor() {
     this.provider = new ethers.JsonRpcProvider(this.SEI_RPC_URL);
