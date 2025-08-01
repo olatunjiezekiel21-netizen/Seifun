@@ -1,45 +1,73 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract SimpleToken is ERC20, Ownable {
-    uint8 private _decimals;
+contract SimpleToken {
+    string public name;
+    string public symbol;
+    uint8 public decimals;
+    uint256 public totalSupply;
+    address public owner;
+    
+    mapping(address => uint256) private balances;
+    mapping(address => mapping(address => uint256)) private allowances;
+    
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
     
     constructor(
-        string memory name,
-        string memory symbol,
-        uint8 decimals_,
-        uint256 totalSupply,
-        address owner
-    ) ERC20(name, symbol) Ownable(owner) {
-        _decimals = decimals_;
-        _mint(owner, totalSupply * 10**decimals_);
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals,
+        uint256 _totalSupply,
+        address _owner
+    ) {
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
+        totalSupply = _totalSupply * 10**_decimals;
+        owner = _owner;
+        balances[_owner] = totalSupply;
+        emit Transfer(address(0), _owner, totalSupply);
     }
     
-    function decimals() public view virtual override returns (uint8) {
-        return _decimals;
+    function balanceOf(address account) public view returns (uint256) {
+        return balances[account];
     }
     
-    function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount);
+    function transfer(address to, uint256 amount) public returns (bool) {
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+        return true;
     }
     
-    function burn(uint256 amount) public {
-        _burn(msg.sender, amount);
+    function approve(address spender, uint256 amount) public returns (bool) {
+        allowances[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+    
+    function allowance(address owner_, address spender) public view returns (uint256) {
+        return allowances[owner_][spender];
+    }
+    
+    function transferFrom(address from, address to, uint256 amount) public returns (bool) {
+        require(balances[from] >= amount, "Insufficient balance");
+        require(allowances[from][msg.sender] >= amount, "Insufficient allowance");
+        
+        balances[from] -= amount;
+        balances[to] += amount;
+        allowances[from][msg.sender] -= amount;
+        
+        emit Transfer(from, to, amount);
+        return true;
     }
 }
 
 contract SimpleTokenFactory {
-    event TokenCreated(
-        address indexed tokenAddress,
-        address indexed owner,
-        string name,
-        string symbol,
-        uint8 decimals,
-        uint256 totalSupply
-    );
+    uint256 public creationFee = 2 ether; // 2 SEI
+    address public feeRecipient;
     
     struct TokenInfo {
         address tokenAddress;
@@ -51,15 +79,20 @@ contract SimpleTokenFactory {
         uint256 createdAt;
     }
     
-    mapping(address => TokenInfo[]) public userTokens;
     TokenInfo[] public allTokens;
+    mapping(address => TokenInfo[]) public userTokens;
     
-    uint256 public creationFee = 2 ether; // 2 SEI creation fee
-    address public feeRecipient; // Dev wallet address
+    event TokenCreated(
+        address indexed tokenAddress,
+        address indexed owner,
+        string name,
+        string symbol,
+        uint8 decimals,
+        uint256 totalSupply
+    );
     
-    constructor(address _feeRecipient) {
-        require(_feeRecipient != address(0), "Fee recipient cannot be zero address");
-        feeRecipient = _feeRecipient;
+    constructor() {
+        feeRecipient = msg.sender;
     }
     
     function createToken(
@@ -74,7 +107,7 @@ contract SimpleTokenFactory {
         require(decimals <= 18, "Decimals cannot exceed 18");
         require(totalSupply > 0, "Total supply must be greater than 0");
         
-        // Create new token
+        // Deploy new token
         SimpleToken newToken = new SimpleToken(
             name,
             symbol,
@@ -82,7 +115,6 @@ contract SimpleTokenFactory {
             totalSupply,
             msg.sender
         );
-        
         address tokenAddress = address(newToken);
         
         // Store token info

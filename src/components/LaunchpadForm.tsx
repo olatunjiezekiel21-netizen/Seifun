@@ -116,23 +116,102 @@ const LaunchpadForm = () => {
       let provider, signer;
       
       if (useTestnet) {
-        // For testnet: create a provider and use private key (for testing only)
+        // For testnet: create real tokens using private key (if available)
         console.log('🧪 Using testnet mode with dev wallet');
         const rpcUrl = import.meta.env.VITE_SEI_TESTNET_RPC || 'https://evm-rpc-testnet.sei-apis.com';
         provider = new ethers.JsonRpcProvider(rpcUrl);
         
-        // For testing, we'll need the private key. In a real app, this would come from the user's wallet
-        // For now, let's simulate the transaction without actually sending it
-        console.log('⚠️  Testnet mode: Would create token with dev wallet', address);
+        // Check if we have private key for real transactions
+        const privateKey = import.meta.env.VITE_DEV_WALLET_PRIVATE_KEY;
         
-        // Simulate the transaction for testing
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate network delay
+        if (privateKey) {
+          console.log('🔑 Private key found - creating REAL token on testnet');
+          
+          try {
+            // Create wallet from private key
+            const wallet = new ethers.Wallet(privateKey, provider);
+            
+            // Verify wallet address matches
+            if (wallet.address.toLowerCase() !== address.toLowerCase()) {
+              throw new Error('Private key does not match dev wallet address');
+            }
+            
+            // Create factory contract instance
+            const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, wallet);
+            
+            // Get creation fee
+            const fee = await factory.creationFee();
+            console.log(`💰 Creation fee: ${ethers.formatEther(fee)} SEI`);
+            
+            // Create the token with real transaction
+            setVerificationStatus('pending');
+            console.log('📝 Sending transaction to blockchain...');
+            
+            const tx = await factory.createToken(
+              formData.name,
+              formData.symbol,
+              18, // Default to 18 decimals
+              formData.totalSupply,
+              { value: fee }
+            );
+            
+            console.log(`⏳ Transaction sent: ${tx.hash}`);
+            console.log('⏳ Waiting for confirmation...');
+            
+            // Wait for transaction confirmation
+            const receipt = await tx.wait();
+            console.log('✅ Transaction confirmed!');
+            
+            // Extract token address from event logs
+            const tokenCreatedEvent = receipt.logs.find(log => {
+              try {
+                const decoded = factory.interface.parseLog(log);
+                return decoded.name === 'TokenCreated';
+              } catch {
+                return false;
+              }
+            });
+            
+            let tokenAddress;
+            if (tokenCreatedEvent) {
+              const decoded = factory.interface.parseLog(tokenCreatedEvent);
+              tokenAddress = decoded.args[0]; // First argument is token address
+            } else {
+              // Fallback: use the contract address from the first log
+              tokenAddress = receipt.logs[0]?.address || receipt.contractAddress;
+            }
+            
+            if (!tokenAddress) {
+              throw new Error('Could not determine token address from transaction');
+            }
+            
+            setVerificationStatus('verified');
+            setCreatedTokenAddress(tokenAddress);
+            
+            console.log('🎉 REAL TOKEN CREATED SUCCESSFULLY!');
+            console.log(`📍 Token Address: ${tokenAddress}`);
+            console.log(`🔗 Transaction: ${tx.hash}`);
+            console.log(`🌐 View on SeiTrace: https://seitrace.com/address/${tokenAddress}?chain=sei-testnet`);
+            
+          } catch (error) {
+            console.error('❌ Real token creation failed:', error);
+            throw error; // Re-throw to be caught by outer try-catch
+          }
+          
+        } else {
+          console.log('⚠️  No private key - simulating token creation');
+          
+          // Simulate the transaction for testing UI
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const mockTokenAddress = '0x' + Math.random().toString(16).substr(2, 40);
+          setVerificationStatus('verified');
+          setCreatedTokenAddress(mockTokenAddress);
+          
+          console.log('🧪 Simulated token created:', mockTokenAddress);
+          console.log('💡 Add VITE_DEV_WALLET_PRIVATE_KEY to create real tokens');
+        }
         
-        // Generate a mock token address for testing
-        const mockTokenAddress = '0x' + Math.random().toString(16).substr(2, 40);
-        
-        setVerificationStatus('verified');
-        setCreatedTokenAddress(mockTokenAddress);
         setIsSubmitting(false);
         
         // Move to success step
@@ -140,7 +219,6 @@ const LaunchpadForm = () => {
           setCurrentStep(4);
         }, 1000);
         
-        console.log('✅ Mock token created successfully:', mockTokenAddress);
         return;
       }
       
@@ -749,12 +827,19 @@ const LaunchpadForm = () => {
                 </div>
               )}
               <button
-                onClick={() => createdTokenAddress && window.open(`https://seitrace.com/address/${createdTokenAddress}`, '_blank')}
+                onClick={() => {
+                  if (createdTokenAddress) {
+                    const explorerUrl = useTestnet 
+                      ? `https://seitrace.com/address/${createdTokenAddress}?chain=sei-testnet`
+                      : `https://seitrace.com/address/${createdTokenAddress}`;
+                    window.open(explorerUrl, '_blank');
+                  }
+                }}
                 disabled={!createdTokenAddress}
                 className="px-8 py-3 bg-gradient-to-r from-[#FF3C3C] to-[#FF6B6B] text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-[#FF3C3C]/25 transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Rocket size={16} />
-                <span>{createdTokenAddress ? 'View on Seitrace' : 'Token Launch Complete'}</span>
+                <span>{createdTokenAddress ? `View on SeiTrace ${useTestnet ? '(Testnet)' : ''}` : 'Token Launch Complete'}</span>
               </button>
             </div>
           )}
