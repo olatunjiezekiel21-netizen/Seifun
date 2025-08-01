@@ -72,7 +72,7 @@ const Hero = () => {
             <div className="relative z-10 bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-[#141414]">SeifuGuard</h3>
+                  <h3 className="text-xl font-bold text-[#141414]">SeifunGuard</h3>
                   <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                     Live Audit
                   </span>

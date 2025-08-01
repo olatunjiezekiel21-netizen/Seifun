@@ -5,6 +5,13 @@
   --sei-red-light: #FF3333;
   --sei-red-dark: #CC0000;
   
+  /* Sei Logo Colors for Morphistic Theme */
+  --sei-logo-primary: #FF6B35; /* Orange from Sei logo */
+  --sei-logo-secondary: #4ECDC4; /* Teal from Sei logo */
+  --sei-logo-accent: #45B7D1; /* Blue accent */
+  --sei-logo-gradient: linear-gradient(135deg, #FF6B35 0%, #4ECDC4 50%, #45B7D1 100%);
+  --sei-morphistic-gradient: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(78, 205, 196, 0.1) 50%, rgba(69, 183, 209, 0.1) 100%);
+  
   /* Sei Grays - Professional & Clean */
   --sei-gray-50: #FAFAFA;
   --sei-gray-100: #F5F5F5;
@@ -16,6 +23,15 @@
   --sei-gray-700: #404040;
   --sei-gray-800: #262626;
   --sei-gray-900: #171717;
+  
+  /* Dark Theme Colors (Jupiter Pro inspired) */
+  --sei-dark-bg: #0A0A0A;
+  --sei-dark-surface: #1A1A1A;
+  --sei-dark-card: #2A2A2A;
+  --sei-dark-border: #333333;
+  --sei-dark-text: #FFFFFF;
+  --sei-dark-text-secondary: #A0A0A0;
+  --sei-dark-text-muted: #666666;
   
   /* Sei Backgrounds */
   --sei-bg-primary: #FFFFFF;
@@ -64,6 +80,54 @@
 .sei-red { color: var(--sei-red); }
 .sei-bg-red { background-color: var(--sei-red); }
 .sei-gradient-primary { background: var(--sei-gradient-primary); }
+
+/* Morphistic Theme Classes for Launchpad */
+.sei-morphistic-bg { 
+  background: var(--sei-morphistic-gradient);
+  backdrop-filter: blur(20px);
+}
+
+.sei-morphistic-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.sei-morphistic-gradient { background: var(--sei-logo-gradient); }
+.sei-logo-primary { color: var(--sei-logo-primary); }
+.sei-logo-secondary { color: var(--sei-logo-secondary); }
+.sei-logo-accent { color: var(--sei-logo-accent); }
+
+/* Dark Theme Classes (Jupiter Pro inspired) */
+.sei-dark-bg { background-color: var(--sei-dark-bg); }
+.sei-dark-surface { background-color: var(--sei-dark-surface); }
+.sei-dark-card { background-color: var(--sei-dark-card); }
+.sei-dark-border { border-color: var(--sei-dark-border); }
+.sei-dark-text { color: var(--sei-dark-text); }
+.sei-dark-text-secondary { color: var(--sei-dark-text-secondary); }
+.sei-dark-text-muted { color: var(--sei-dark-text-muted); }
+
+/* Information Areas with Black Background */
+.sei-info-area {
+  background-color: #000000;
+  color: #FFFFFF;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #333333;
+}
+
+.sei-info-area h3 {
+  color: #FFFFFF;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.sei-info-area p {
+  color: #A0A0A0;
+  line-height: 1.6;
+}
 
 /* Sei Card Styles */
 .sei-card {
@@ -129,6 +193,40 @@
 .sei-btn-ghost:hover {
   background: var(--sei-bg-tertiary);
   color: var(--sei-text-primary);
+}
+
+/* Morphistic Button Styles */
+.sei-btn-morphistic {
+  background: var(--sei-logo-gradient);
+  color: white;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.sei-btn-morphistic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.sei-btn-morphistic:hover::before {
+  left: 100%;
+}
+
+.sei-btn-morphistic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
 }
 
 /* Sei Input Styles */
@@ -208,9 +306,15 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes sei-morphistic-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(78, 205, 196, 0.4); }
+}
+
 .sei-pulse { animation: sei-pulse 2s infinite; }
 .sei-bounce { animation: sei-bounce 1s infinite; }
 .sei-fade-in { animation: sei-fade-in 0.3s ease-out; }
+.sei-morphistic-glow { animation: sei-morphistic-glow 3s ease-in-out infinite; }
 
 /* Sei Layout */
 .sei-container {

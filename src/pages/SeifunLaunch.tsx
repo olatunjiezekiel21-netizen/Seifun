@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, List, Flame, Star, Filter, Zap, TrendingUp, Users, Sparkles, Rocket, Shield } from 'lucide-react';
+import { Grid, List, Flame, Star, Filter, Zap, TrendingUp, Users, Sparkles, Rocket, Shield, Search, Settings, Home, Plus, Smile, CheckCircle } from 'lucide-react';
 import SeifunLaunchFilters from '../components/SeifunLaunchFilters';
 import MemeTokenGrid from '../components/MemeTokenGrid';
 import TrendingStats from '../components/TrendingStats';
@@ -96,9 +96,9 @@ const SeifunLaunch = () => {
     setFilters(newFilters);
   };
 
-  // Cartilage categories with dynamic styling
+  // Categories with morphistic styling
   const categories = [
-    { id: 'all', label: 'All Tokens', icon: Sparkles, color: 'from-purple-500 to-pink-500' },
+    { id: 'all', label: 'All Tokens', icon: Sparkles, color: 'from-sei-logo-primary to-sei-logo-secondary' },
     { id: 'trending', label: 'Trending', icon: TrendingUp, color: 'from-orange-500 to-red-500' },
     { id: 'new', label: 'Fresh Drops', icon: Zap, color: 'from-green-500 to-emerald-500' },
     { id: 'verified', label: 'Verified', icon: Shield, color: 'from-blue-500 to-cyan-500' },
@@ -115,180 +115,213 @@ const SeifunLaunch = () => {
   });
 
   return (
-    <div className="min-h-screen pt-20">
-      {/* Clean Hero Section - Consistent Theme */}
-      <div className="sei-bg-secondary border-b sei-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-6">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium text-gray-700">Sei Network</span>
+    <div className="min-h-screen sei-dark-bg">
+      {/* Jupiter Pro-inspired Header */}
+      <div className="sei-dark-surface border-b sei-dark-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          {/* Status Bar */}
+          <div className="flex justify-between items-center text-sm sei-dark-text-muted mb-4">
+            <span>7:01</span>
+            <div className="flex items-center space-x-2">
+              <span>4G</span>
+              <span>WiFi</span>
+              <span>Battery</span>
+            </div>
+          </div>
+          
+          {/* Browser Bar */}
+          <div className="flex items-center space-x-2 bg-sei-dark-card rounded-lg p-2 mb-4">
+            <Home className="w-4 h-4 sei-dark-text-muted" />
+            <span className="flex-1 text-sm sei-dark-text">seifun.launch/pro?tab=cooking</span>
+            <Plus className="w-4 h-4 sei-dark-text-muted" />
+            <Smile className="w-4 h-4 sei-dark-text-muted" />
+          </div>
+          
+          {/* Main Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 sei-morphistic-gradient rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">S</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 sei-dark-text-muted">
+                  <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                  </svg>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sei-dark-text-muted" />
+                  <input
+                    type="text"
+                    placeholder="Search tokens..."
+                    className="pl-10 pr-4 py-2 bg-sei-dark-card border sei-dark-border rounded-lg text-sm sei-dark-text focus:outline-none focus:border-sei-logo-primary"
+                  />
+                </div>
+              </div>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 sei-text-primary">
-              seifu.launch
-            </h1>
-            
-            <p className="text-lg sei-text-secondary mb-12 max-w-2xl mx-auto">
-              Professional token discovery and analysis on Sei Network
-            </p>
+            <div className="flex items-center space-x-4">
+              <Settings className="w-5 h-5 sei-dark-text-muted" />
+              <button className="sei-btn-morphistic">
+                Connect
+              </button>
+            </div>
+          </div>
+          
+          {/* Market Data Bar */}
+          <div className="flex items-center space-x-6 mt-4 text-sm">
+            <div className="sei-dark-text">
+              <span className="sei-dark-text-muted">SOL</span> $166.77
+            </div>
+            <div className="sei-dark-text">
+              <span className="sei-dark-text-muted">JUP</span> $0.46392
+            </div>
+          </div>
+        </div>
+      </div>
 
-            {/* Clean Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-              <div className="sei-card p-4">
-                <div className="text-2xl font-bold sei-text-primary">{filteredTokens.length}</div>
-                <div className="text-sm sei-text-secondary">Tokens</div>
-              </div>
-              <div className="sei-card p-4">
-                <div className="text-2xl font-bold sei-text-primary">$12.4M</div>
-                <div className="text-sm sei-text-secondary">24h Volume</div>
-              </div>
-              <div className="sei-card p-4">
-                <div className="text-2xl font-bold sei-text-primary">156</div>
-                <div className="text-sm sei-text-secondary">New Today</div>
+      {/* Navigation Tabs */}
+      <div className="sei-dark-surface border-b sei-dark-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center space-x-8">
+            <button className="px-4 py-3 text-sm font-medium sei-dark-text bg-green-500 text-black rounded-lg">
+              Cooking
+            </button>
+            <button className="px-4 py-3 text-sm font-medium sei-dark-text-muted hover:sei-dark-text">
+              Launchpads
+              <span className="ml-1 text-xs bg-sei-dark-card px-1 rounded">v2</span>
+            </button>
+            <button className="px-4 py-3 text-sm font-medium sei-dark-text-muted hover:sei-dark-text">
+              AlphaScan
+            </button>
+            <button className="px-4 py-3 text-sm font-medium sei-dark-text-muted hover:sei-dark-text">
+              Stocks
+            </button>
+            <div className="flex-1"></div>
+            <div className="w-4 h-4 sei-dark-text-muted">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Bar */}
+      <div className="sei-dark-surface border-b sei-dark-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <select className="bg-sei-dark-card border sei-dark-border rounded px-3 py-1 text-sm sei-dark-text">
+                <option>24h</option>
+              </select>
+              <button className="flex items-center space-x-2 bg-sei-dark-card border sei-dark-border rounded px-3 py-1 text-sm sei-dark-text">
+                <Filter className="w-4 h-4" />
+                <span>Filters</span>
+              </button>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <button className="sei-btn-morphistic flex items-center space-x-2">
+                <Zap className="w-4 h-4" />
+                <span>BUY</span>
+              </button>
+              <div className="flex items-center space-x-2 bg-sei-dark-card border sei-dark-border rounded px-3 py-1">
+                <span className="text-sm sei-dark-text">0.01</span>
+                <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Clean Navigation */}
-        <div className="mb-8">
-          <div className="flex flex-wrap justify-center gap-2">
-            {categories.map((category) => {
-              const Icon = category.icon;
-              const isActive = activeCategory === category.id;
-              
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id as any)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    isActive 
-                      ? 'sei-btn sei-btn-primary' 
-                      : 'sei-btn sei-btn-secondary'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{category.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Filter and View Controls */}
-        <div className="flex flex-col lg:flex-row gap-6 mb-8">
-          <div className="flex-1">
-            <div className="sei-card p-6">
-              <SeifunLaunchFilters onFilterChange={handleFilterChange} />
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex sei-card p-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-3 rounded-lg transition-all ${
-                  viewMode === 'grid' 
-                    ? 'sei-bg-red text-white' 
-                    : 'sei-text-secondary hover:sei-text-primary hover:bg-gray-100'
-                }`}
-              >
-                <Grid size={20} />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-3 rounded-lg transition-all ${
-                  viewMode === 'list' 
-                    ? 'sei-bg-red text-white' 
-                    : 'sei-text-secondary hover:sei-text-primary hover:bg-gray-100'
-                }`}
-              >
-                <List size={20} />
-              </button>
-            </div>
-            
-            <div className="sei-text-secondary text-sm sei-card px-4 py-2">
-              {filteredTokens.length} tokens found
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sei-card overflow-hidden">
-              <TrendingStats />
-            </div>
-          </div>
-
-          {/* Token Grid */}
-          <div className="lg:col-span-3">
-            <div>
-              {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-red-500"></div>
-                </div>
-              ) : error ? (
-                <div className="sei-card p-8 text-center">
-                  <div className="flex items-center justify-center w-16 h-16 sei-bg-red rounded-2xl mb-4 mx-auto">
-                    <Star className="w-8 h-8 text-white" />
-                  </div>
-                  <p className="sei-text-primary text-lg mb-4">{error}</p>
-                  <button 
-                    onClick={loadSeiTokens}
-                    className="sei-btn sei-btn-primary px-6 py-3"
-                  >
-                    Try Again
-                  </button>
-                </div>
-              ) : (
-                <div className="cartilage-token-container">
-                  <MemeTokenGrid 
-                    tokens={filteredTokens} 
-                    viewMode={viewMode}
-                    loading={loading}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Featured Section */}
-        <div className="mt-16 sei-card p-8">
-          <div className="text-center space-y-6">
-            <div className="flex items-center justify-center space-x-3">
-              <div className="w-12 h-12 sei-bg-red rounded-2xl flex items-center justify-center">
-                <Star className="w-6 h-6 text-white" />
+      {/* Main Content */}
+      <div className="sei-dark-bg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Token List Header */}
+          <div className="sei-info-area mb-6">
+            <div className="grid grid-cols-4 gap-4 text-sm font-medium">
+              <div className="flex items-center space-x-2">
+                <Star className="w-4 h-4" />
+                <span>Token</span>
               </div>
-              <h3 className="text-3xl font-bold sei-text-primary">Featured Token of the Day</h3>
+              <div>Price/%Δ</div>
+              <div>MC/FD</div>
+              <div>Buy</div>
             </div>
-            <p className="sei-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Every day we spotlight the most innovative, secure, and community-loved token. 
-              Today's featured token has achieved exceptional safety scores and engagement metrics.
-            </p>
-            
-            {filteredTokens.length > 0 && (
-              <div className="sei-card p-6 max-w-md mx-auto">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 sei-bg-red rounded-2xl flex items-center justify-center text-2xl">
-                    {filteredTokens[0].image || '🚀'}
+          </div>
+
+          {/* Token List */}
+          <div className="space-y-2">
+            {filteredTokens.slice(0, 7).map((token, index) => (
+              <div key={token.id} className="sei-dark-card p-4 rounded-lg border sei-dark-border">
+                <div className="grid grid-cols-4 gap-4 items-center">
+                  <div className="flex items-center space-x-3">
+                    <Star className="w-4 h-4 sei-dark-text-muted" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                      {token.symbol.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="sei-dark-text font-medium">{token.symbol}</div>
+                      <div className="text-xs sei-dark-text-muted">{index === 0 ? '33m' : index === 1 ? '247d' : index === 2 ? '19h' : index === 3 ? '80d' : index === 4 ? '18h' : index === 5 ? '73d' : '15h'}</div>
+                    </div>
+                    <div className="flex space-x-1">
+                      <Search className="w-3 h-3 sei-dark-text-muted" />
+                      {index === 1 && <CheckCircle className="w-3 h-3 text-green-500" />}
+                      {index === 5 && <CheckCircle className="w-3 h-3 text-green-500" />}
+                      <svg className="w-3 h-3 sei-dark-text-muted" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                      {(index === 0 || index === 2 || index === 3 || index === 5 || index === 6) && (
+                        <svg className="w-3 h-3 sei-dark-text-muted" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                      )}
+                      {(index === 1 || index === 5) && (
+                        <svg className="w-3 h-3 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <h4 className="text-xl font-bold sei-text-primary">{filteredTokens[0].name}</h4>
-                    <p className="sei-text-secondary">{filteredTokens[0].symbol}</p>
+                  
+                  <div>
+                    <div className="sei-dark-text font-medium">{token.price}</div>
+                    <div className="text-sm text-green-500">
+                      {index === 0 ? '+468x' : index === 1 ? '+1.45%' : index === 2 ? '+158.01%' : index === 3 ? '+18.17%' : index === 4 ? '+450.88%' : index === 5 ? '+205.44%' : '+77x'}
+                    </div>
                   </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold sei-red mb-2">{filteredTokens[0].score}</div>
-                  <div className="sei-text-secondary text-sm">SeifuScore™</div>
+                  
+                  <div className="sei-dark-text-muted text-sm">
+                    {index === 0 ? '$1.68M' : index === 1 ? '$162M' : index === 2 ? '$481' : index === 3 ? '$21.7M' : index === 4 ? '$2.86M' : index === 5 ? '$5.22M' : '$335'}
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Zap className="w-4 h-4 sei-dark-text-muted" />
+                  </div>
                 </div>
               </div>
-            )}
+            ))}
+          </div>
+
+          {/* Information Areas with Black Background */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <div className="sei-info-area">
+              <h3 className="text-lg font-semibold mb-3">Enhanced Honeypot Detection</h3>
+              <p className="text-sm">
+                Our improved algorithm now uses multiple layers of analysis including transfer simulation, 
+                ownership patterns, and advanced bytecode analysis to reduce false positives and provide 
+                more accurate security assessments.
+              </p>
+            </div>
+            
+            <div className="sei-info-area">
+              <h3 className="text-lg font-semibold mb-3">Seifun Launch Platform</h3>
+              <p className="text-sm">
+                Professional token discovery and analysis on Sei Network with morphistic design elements 
+                and enhanced security features. Built for the future of decentralized trading.
+              </p>
+            </div>
           </div>
         </div>
       </div>

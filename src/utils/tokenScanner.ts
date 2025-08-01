@@ -629,29 +629,168 @@ export class TokenScanner {
 
   async checkHoneypot(contract: ethers.Contract, address: string): Promise<SafetyCheck & { isHoneypot?: boolean }> {
     try {
-      // Basic honeypot detection by checking contract code patterns
+      // Enhanced honeypot detection with multiple layers
       const code = await this.provider.getCode(address);
       
-      // Look for suspicious patterns in bytecode
+      // 1. Basic bytecode pattern analysis
       const suspiciousPatterns = [
         '6360fe47', // Common revert pattern
         'fe', // Invalid opcode at the end
         '60006000fd', // Revert with no message
+        '5a', // PUSH2 followed by invalid opcode
+        '6000fe', // PUSH1 0x00 followed by invalid opcode
       ];
 
-      const isHoneypot = suspiciousPatterns.some(pattern => code.includes(pattern));
+      // 2. Check for excessive use of REVERT opcodes
+      const revertCount = (code.match(/fd/g) || []).length;
+      const isExcessiveRevert = revertCount > 10; // More than 10 REVERT opcodes is suspicious
+
+      // 3. Check for transfer function simulation
+      let transferSimulationPassed = false;
+      try {
+        // Try to simulate a transfer call (this is a basic simulation)
+        const transferData = contract.interface.encodeFunctionData('transfer', [
+          '0x0000000000000000000000000000000000000000', // Zero address
+          ethers.parseUnits('1', 18) // 1 token
+        ]);
+        
+        // Check if the call would revert (this is a simplified check)
+        const callResult = await this.provider.call({
+          to: address,
+          data: transferData,
+          from: '0x0000000000000000000000000000000000000000'
+        });
+        
+        transferSimulationPassed = callResult !== '0x';
+      } catch (error) {
+        // If simulation fails, it might be a honeypot
+        transferSimulationPassed = false;
+      }
+
+      // 4. Check for ownership patterns that indicate honeypot
+      let ownershipCheckPassed = true;
+      try {
+        const owner = await contract.owner();
+        if (owner && owner !== '0x0000000000000000000000000000000000000000') {
+          // Check if owner can transfer tokens
+          const ownerBalance = await contract.balanceOf(owner);
+          if (ownerBalance > 0) {
+            // Try to simulate owner transfer
+            const ownerTransferData = contract.interface.encodeFunctionData('transfer', [
+              '0x0000000000000000000000000000000000000000',
+              ownerBalance
+            ]);
+            
+            try {
+              await this.provider.call({
+                to: address,
+                data: ownerTransferData,
+                from: owner
+              });
+              ownershipCheckPassed = true;
+            } catch {
+              ownershipCheckPassed = false;
+            }
+          }
+        }
+      } catch {
+        // If we can't check ownership, assume it's okay
+        ownershipCheckPassed = true;
+      }
+
+      // 5. Check for blacklist functions that could be used maliciously
+      let blacklistCheckPassed = true;
+      try {
+        const blacklistFunctions = ['isBlacklisted', 'blacklisted', '_isBlacklisted'];
+        for (const func of blacklistFunctions) {
+          try {
+            await contract[func]('0x0000000000000000000000000000000000000000');
+            // If this doesn't revert, the function exists and might be malicious
+            blacklistCheckPassed = false;
+            break;
+          } catch {
+            // Function doesn't exist or reverts, which is good
+          }
+        }
+      } catch {
+        // If we can't check blacklist functions, assume it's okay
+        blacklistCheckPassed = true;
+      }
+
+      // 6. Advanced pattern analysis
+      const hasSuspiciousPatterns = suspiciousPatterns.some(pattern => code.includes(pattern));
+      
+      // 7. Check for excessive gas usage patterns
+      const gasHeavyPatterns = [
+        '6000', // PUSH1 - if used excessively
+        '5a', // PUSH2 - if used excessively
+      ];
+      
+      const gasHeavyCount = gasHeavyPatterns.reduce((count, pattern) => {
+        return count + (code.match(new RegExp(pattern, 'g')) || []).length;
+      }, 0);
+      
+      const isGasHeavy = gasHeavyCount > 50; // More than 50 gas-heavy operations
+
+      // 8. Final honeypot determination with weighted scoring
+      let honeypotScore = 0;
+      let riskFactors: string[] = [];
+
+      if (hasSuspiciousPatterns) {
+        honeypotScore += 30;
+        riskFactors.push('Suspicious bytecode patterns detected');
+      }
+      
+      if (isExcessiveRevert) {
+        honeypotScore += 25;
+        riskFactors.push('Excessive REVERT opcodes found');
+      }
+      
+      if (!transferSimulationPassed) {
+        honeypotScore += 35;
+        riskFactors.push('Transfer simulation failed');
+      }
+      
+      if (!ownershipCheckPassed) {
+        honeypotScore += 20;
+        riskFactors.push('Owner transfer simulation failed');
+      }
+      
+      if (!blacklistCheckPassed) {
+        honeypotScore += 15;
+        riskFactors.push('Suspicious blacklist functions detected');
+      }
+      
+      if (isGasHeavy) {
+        honeypotScore += 10;
+        riskFactors.push('Excessive gas usage patterns');
+      }
+
+      // Determine if it's a honeypot based on score
+      const isHoneypot = honeypotScore >= 50; // Threshold for honeypot detection
+      
+      // Determine risk level
+      let risk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
+      if (honeypotScore >= 70) risk = 'CRITICAL';
+      else if (honeypotScore >= 50) risk = 'HIGH';
+      else if (honeypotScore >= 30) risk = 'MEDIUM';
+      else risk = 'LOW';
+
+      const details = isHoneypot 
+        ? `Honeypot detected (Score: ${honeypotScore}/100). ${riskFactors.join('; ')}`
+        : `No honeypot patterns detected (Score: ${honeypotScore}/100)`;
       
       return {
         passed: !isHoneypot,
-        risk: isHoneypot ? 'CRITICAL' : 'LOW',
-        details: isHoneypot ? 'Potential honeypot patterns detected in contract code' : 'No honeypot patterns detected',
+        risk,
+        details,
         isHoneypot
       };
     } catch (error) {
       return {
         passed: false,
         risk: 'UNKNOWN',
-        details: 'Could not analyze contract for honeypot patterns',
+        details: 'Could not analyze contract for honeypot patterns - analysis failed',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }

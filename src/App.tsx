@@ -17,7 +17,7 @@ import AIChat from './pages/AIChat';
 function App() {
   React.useEffect(() => {
     // Update document title
-    document.title = 'Seifu - Launch Safe Meme Tokens on Sei';
+    document.title = 'Seifun - Launch Safe Meme Tokens on Sei';
     
     // Add smooth scrolling
     document.documentElement.style.scrollBehavior = 'smooth';

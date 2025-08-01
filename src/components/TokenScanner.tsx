@@ -240,7 +240,7 @@ const TokenScanner = () => {
           <div className="flex items-center justify-center space-x-3">
             <Shield className="text-[#FF6B35]" size={28} />
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              SeifuGuard <span className="text-[#FF6B35]">Scanner</span>
+              SeifunGuard <span className="text-[#FF6B35]">Scanner</span>
             </h2>
           </div>
           <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto px-4">
@@ -638,6 +638,26 @@ const TokenScanner = () => {
               </div>
             </div>
           )}
+
+          {/* Information Areas with Black Background */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <div className="sei-info-area">
+              <h3 className="text-lg font-semibold mb-3">Enhanced Honeypot Detection</h3>
+              <p className="text-sm">
+                Our improved algorithm uses multiple layers of analysis including transfer simulation, 
+                ownership patterns, and advanced bytecode analysis to reduce false positives and provide 
+                more accurate security assessments for Sei tokens.
+              </p>
+            </div>
+            
+            <div className="sei-info-area">
+              <h3 className="text-lg font-semibold mb-3">Seifun Security Features</h3>
+              <p className="text-sm">
+                Advanced contract analysis with real-time verification, holder distribution analysis, 
+                and comprehensive risk assessment to ensure safe token trading on the Sei network.
+              </p>
+            </div>
+          </div>
 
           {/* Scan History */}
           {scanHistory.length > 0 && (

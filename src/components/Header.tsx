@@ -25,7 +25,7 @@ const Header = () => {
                 alt="Seifu Logo" 
                 className="w-8 h-8 rounded-full"
               />
-              <span className="text-2xl font-bold sei-red">seifu</span>
+              <span className="text-2xl font-bold sei-red">seifun</span>
             </Link>
           </div>
 
