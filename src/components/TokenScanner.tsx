@@ -217,8 +217,8 @@ const TokenScanner = () => {
               <p><strong>Supported:</strong> ERC20, ERC721, ERC1155, Custom tokens, Factory contracts</p>
               <p><strong>Try these examples:</strong></p>
               <div className="mt-2 space-y-1">
-                <p className="break-all">• Token Contract: <code className="bg-blue-500/20 px-1 rounded">0x5f0e07dfee5832faa00c63f2d33a0d79150e8598</code></p>
-                <p className="break-all">• Wallet Address: <code className="bg-blue-500/20 px-1 rounded">0x742d35Cc6635C0532925a3b8D41c4e9E4532D3eE</code> (will show wallet info)</p>
+                <p className="break-all">• Factory Contract: <code className="bg-blue-500/20 px-1 rounded">0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F</code></p>
+                <p className="break-all">• Dev Wallet: <code className="bg-blue-500/20 px-1 rounded">0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e</code> (will show wallet info)</p>
                 <p className="text-blue-300">💡 <strong>Note:</strong> Wallet addresses show balance info, token contracts show safety analysis</p>
               </div>
             </div>
