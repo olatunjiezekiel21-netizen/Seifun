@@ -55,14 +55,22 @@ const Header = () => {
             >
               Token Pulse
             </Link>
-            <Link 
-              to="/docs" 
-              className={`sei-nav-link font-medium ${
-                location.pathname === '/docs' ? 'active' : ''
-              }`}
-            >
-              Docs
-            </Link>
+                                  <Link 
+                        to="/docs" 
+                        className={`sei-nav-link font-medium ${
+                          location.pathname === '/docs' ? 'active' : ''
+                        }`}
+                      >
+                        Docs
+                      </Link>
+                      <Link 
+                        to="/ai-chat" 
+                        className={`sei-nav-link font-medium ${
+                          location.pathname === '/ai-chat' ? 'active' : ''
+                        }`}
+                      >
+                        AI Chat
+                      </Link>
           </nav>
 
           {/* Connect Wallet Button */}
@@ -245,6 +253,15 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Docs
+              </Link>
+              <Link 
+                to="/ai-chat" 
+                className={`hover:text-[#FF3C3C] transition-colors font-medium ${
+                  location.pathname === '/ai-chat' ? 'text-[#FF3C3C]' : 'text-gray-700'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                AI Chat
               </Link>
               
               {/* Mobile Wallet Connection */}
