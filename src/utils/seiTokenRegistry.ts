@@ -178,12 +178,28 @@ export class SeiTokenRegistry {
       let hasERC20Functions = false;
 
       try {
-        // Test if this contract has ERC20 functions by calling balanceOf with zero address
-        await erc20Contract.balanceOf('0x0000000000000000000000000000000000000000');
+        // Test if this contract has ERC20 functions by trying multiple approaches
+        // First try totalSupply() as it's usually safer than balanceOf(0x0)
+        await erc20Contract.totalSupply();
         hasERC20Functions = true;
+        console.log('Detected ERC20 via totalSupply()');
       } catch (error) {
-        // Not an ERC20, might be a different type of contract
-        console.log('Not a standard ERC20 contract:', error);
+        try {
+          // Fallback: try balanceOf with zero address
+          await erc20Contract.balanceOf('0x0000000000000000000000000000000000000000');
+          hasERC20Functions = true;
+          console.log('Detected ERC20 via balanceOf(0x0)');
+        } catch (error2) {
+          try {
+            // Final fallback: try to get decimals (often works even when others fail)
+            await erc20Contract.decimals();
+            hasERC20Functions = true;
+            console.log('Detected ERC20 via decimals()');
+          } catch (error3) {
+            // Not an ERC20, might be a different type of contract
+            console.log('Not a standard ERC20 contract:', error3);
+          }
+        }
       }
 
       if (hasERC20Functions) {

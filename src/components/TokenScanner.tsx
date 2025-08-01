@@ -3,6 +3,7 @@ import { Search, Shield, AlertTriangle, CheckCircle, Clock, ExternalLink, Info, 
 import { TokenScanner as TokenScannerClass, TokenAnalysis } from '../utils/tokenScanner';
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 import { ethers } from 'ethers';
+import TokenDetailsModal from './TokenDetailsModal';
 
 const TokenScanner = () => {
   const [tokenAddress, setTokenAddress] = useState('');
@@ -14,9 +15,16 @@ const TokenScanner = () => {
   const [scanHistory, setScanHistory] = useState<TokenAnalysis[]>([]);
   const [scanProgress, setScanProgress] = useState<string[]>([]);
   const [isLoadingLogo, setIsLoadingLogo] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<any>(null);
 
   const scanner = new TokenScannerClass();
-  const seiRegistry = new SeiTokenRegistry(true);
+  const seiRegistry = new SeiTokenRegistry(false); // Use mainnet for token scanning
+
+  const openTokenDetails = (token: any) => {
+    setSelectedToken(token);
+    setShowDetailsModal(true);
+  };
 
   const handleScan = async () => {
     if (!tokenAddress.trim()) {
@@ -599,6 +607,22 @@ const TokenScanner = () => {
                     <h4 className="text-lg font-semibold text-white">Actions</h4>
                     <div className="space-y-3">
                       <button 
+                        onClick={() => openTokenDetails({
+                          address: scanResult.basicInfo.address,
+                          name: scanResult.basicInfo.name,
+                          symbol: scanResult.basicInfo.symbol,
+                          logoUrl: scanResult.basicInfo.logoUrl,
+                          safetyScore: scanResult.riskScore,
+                          totalSupply: scanResult.basicInfo.totalSupply,
+                          verified: scanResult.riskScore >= 80,
+                          description: `${scanResult.basicInfo.name} token on Sei Network`
+                        })}
+                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center space-x-2"
+                      >
+                        <Info size={16} />
+                        <span>View Details</span>
+                      </button>
+                      <button 
                         onClick={() => window.open(`https://seitrace.com/address/${scanResult.basicInfo.address}`, '_blank')}
                         className="w-full bg-gradient-to-r from-[#FF6B35] to-[#FF8E53] text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center space-x-2"
                       >
@@ -679,6 +703,13 @@ const TokenScanner = () => {
           )}
         </div>
       </div>
+
+      {/* Token Details Modal */}
+      <TokenDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        token={selectedToken}
+      />
     </section>
   );
 };
