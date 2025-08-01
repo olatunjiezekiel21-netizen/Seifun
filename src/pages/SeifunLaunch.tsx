@@ -115,61 +115,37 @@ const SeifunLaunch = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-100 cartilage-bg">
-      {/* Cartilage Hero Section */}
-      <div className="relative overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-gradient-to-r from-yellow-400 to-red-400 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-gradient-to-r from-green-400 to-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-        </div>
+    <div className="min-h-screen bg-white">
+      {/* Clean Hero Section - Jupiter Style */}
+      <div className="bg-gradient-to-b from-slate-50 to-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-6">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm font-medium text-gray-700">Sei Network</span>
+            </div>
+            
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 text-gray-900">
+              seifu.launch
+            </h1>
+            
+            <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
+              Professional token discovery and analysis on Sei Network
+            </p>
 
-        <div className="relative bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 text-white py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-6 border border-white/20">
-                <Rocket className="w-4 h-4" />
-                <span className="text-sm font-medium">Powered by Sei Network</span>
+            {/* Clean Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="text-2xl font-bold text-gray-900">{filteredTokens.length}</div>
+                <div className="text-sm text-gray-600">Tokens</div>
               </div>
-              
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 cartilage-title">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200">
-                  seifu.launch
-                </span>
-              </h1>
-              
-              <p className="text-xl md:text-2xl text-purple-100 mb-12 max-w-4xl mx-auto leading-relaxed">
-                Experience the future of meme token discovery with <span className="text-pink-300 font-semibold">fluid intelligence</span>, 
-                <span className="text-cyan-300 font-semibold"> real-time insights</span>, and 
-                <span className="text-green-300 font-semibold"> professional-grade safety analysis</span>
-              </p>
-
-              {/* Cartilage Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                <div className="cartilage-card bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105">
-                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl mb-4 mx-auto">
-                    <Flame className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold mb-2">{seiTokens.length || 2847}</div>
-                  <div className="text-purple-200 text-sm">Active Tokens</div>
-                </div>
-
-                <div className="cartilage-card bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105">
-                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl mb-4 mx-auto">
-                    <TrendingUp className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold mb-2">$12.4M</div>
-                  <div className="text-green-200 text-sm">24h Volume</div>
-                </div>
-
-                <div className="cartilage-card bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-white/40 transition-all duration-500 hover:scale-105">
-                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl mb-4 mx-auto">
-                    <Zap className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-3xl font-bold mb-2">156</div>
-                  <div className="text-orange-200 text-sm">Fresh Today</div>
-                </div>
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="text-2xl font-bold text-gray-900">$12.4M</div>
+                <div className="text-sm text-gray-600">24h Volume</div>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="text-2xl font-bold text-gray-900">156</div>
+                <div className="text-sm text-gray-600">New Today</div>
               </div>
             </div>
           </div>
@@ -177,9 +153,9 @@ const SeifunLaunch = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Cartilage Category Navigation */}
-        <div className="mb-12">
-          <div className="flex flex-wrap justify-center gap-3">
+        {/* Clean Navigation */}
+        <div className="mb-8">
+          <div className="flex flex-wrap justify-center gap-2">
             {categories.map((category) => {
               const Icon = category.icon;
               const isActive = activeCategory === category.id;
@@ -188,17 +164,14 @@ const SeifunLaunch = () => {
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id as any)}
-                  className={`cartilage-nav-item group relative flex items-center gap-3 px-6 py-3 rounded-2xl font-medium transition-all duration-300 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                     isActive 
-                      ? `bg-gradient-to-r ${category.color} text-white shadow-lg scale-105` 
-                      : 'bg-white/60 backdrop-blur-sm text-gray-700 hover:bg-white/80 hover:scale-105 border border-gray-200/50'
+                      ? 'bg-gray-900 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-600'} group-hover:scale-110 transition-transform`} />
-                  <span className="font-semibold">{category.label}</span>
-                  {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-2xl"></div>
-                  )}
+                  <Icon className="w-4 h-4" />
+                  <span>{category.label}</span>
                 </button>
               );
             })}

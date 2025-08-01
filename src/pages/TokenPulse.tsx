@@ -15,6 +15,8 @@ import {
   Timer,
   Sparkles
 } from 'lucide-react';
+import TokenChart from '../components/TokenChart';
+import AITraderChat from '../components/AITraderChat';
 
 interface TokenActivity {
   id: string;
@@ -352,17 +354,37 @@ const TokenPulse = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#1A1A1A] to-[#0A0A0A] pt-20">
+    <div className="min-h-screen bg-white pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-            Token <span className="text-[#FF6B35]">Pulse</span>
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            Token Pulse
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Real-time insights into the Seifu ecosystem. Track live activity, discover top creators, 
-            and understand trending patterns in the meme token space.
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Real-time token analysis, AI-powered insights, and professional trading tools
           </p>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Featured Token Chart */}
+          <div className="lg:col-span-2">
+            <TokenChart 
+              tokenAddress="0xbd82f3bfe1df0c84faec88a22ebc34c9a86595dc" 
+              tokenSymbol="CHIPS" 
+              className="mb-6"
+            />
+            <TokenChart 
+              tokenAddress="0x95597eb8d227a7c4b4f5e807a815c5178ee6dbe1" 
+              tokenSymbol="SEIYAN" 
+            />
+          </div>
+          
+          {/* AI Trading Assistant */}
+          <div className="lg:col-span-1">
+            <AITraderChat />
+          </div>
         </div>
 
         {/* Navigation Tabs */}
@@ -371,20 +393,20 @@ const TokenPulse = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-[#FF6B35] text-white'
-                  : 'bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              <tab.icon size={18} />
+              <tab.icon size={16} />
               {tab.label}
             </button>
           ))}
         </div>
 
         {/* Content */}
-        <div className="bg-white/5 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-white/10">
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
           {activeTab === 'live' && renderLiveActivity()}
           {activeTab === 'creators' && renderCreatorSpotlight()}
           {activeTab === 'trends' && renderTrendingPatterns()}

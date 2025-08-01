@@ -25,7 +25,44 @@ export const KNOWN_SEI_TOKENS = {
     verified: true,
     type: 'native'
   },
-  // Add more known Sei tokens as they become available
+  // CHIPS - Popular Sei meme token
+  '0xbd82f3bfe1df0c84faec88a22ebc34c9a86595dc': {
+    name: 'CHIPS',
+    symbol: 'CHIPS',
+    decimals: 18,
+    logoUrl: 'https://raw.githubusercontent.com/sei-protocol/sei-chain/main/assets/chips.png',
+    verified: true,
+    type: 'erc20',
+    description: 'CHIPS - The original Sei meme token with gaming utility',
+    website: 'https://chipscoin.io',
+    twitter: '@ChipsCoinSei',
+    telegram: 'https://t.me/chipscoin',
+    marketData: {
+      price: 0.00234,
+      marketCap: 2340000,
+      volume24h: 456789,
+      priceChange24h: 23.45
+    }
+  },
+  // SEIYAN - Another popular Sei meme token
+  '0x95597eb8d227a7c4b4f5e807a815c5178ee6dbe1': {
+    name: 'SEIYAN',
+    symbol: 'SEIYAN',
+    decimals: 18,
+    logoUrl: 'https://raw.githubusercontent.com/sei-protocol/sei-chain/main/assets/seiyan.png',
+    verified: true,
+    type: 'erc20',
+    description: 'SEIYAN - The Super Saiyan of Sei Network meme tokens',
+    website: 'https://seiyan.network',
+    twitter: '@SeiyanToken',
+    telegram: 'https://t.me/seiyan',
+    marketData: {
+      price: 0.00567,
+      marketCap: 4400000,
+      volume24h: 789123,
+      priceChange24h: 45.67
+    }
+  }
 };
 
 export interface SeiTokenInfo {
