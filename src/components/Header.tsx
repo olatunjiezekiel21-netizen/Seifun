@@ -84,16 +84,21 @@ const Header = () => {
           {/* Wallet Connection */}
           <div className="flex items-center space-x-4 relative">
             {error && (
-              <div className="absolute right-0 top-12 w-80 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-[100]">
-                <div className="text-red-800 text-sm whitespace-pre-line">
-                  {error}
+              <div className="absolute right-0 top-12 w-80 sei-morphistic-card rounded-xl shadow-xl border border-red-200/50 backdrop-blur-sm z-[100]">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-red-800">Connection Error</span>
+                    <button
+                      onClick={clearError}
+                      className="text-red-400 hover:text-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="text-red-700 text-sm whitespace-pre-line">
+                    {error}
+                  </div>
                 </div>
-                <button 
-                  onClick={clearError}
-                  className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
-                >
-                  Dismiss
-                </button>
               </div>
             )}
             {isConnected ? (
@@ -117,22 +122,33 @@ const Header = () => {
                   </button>
                   
                   {showWalletDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[100]" ref={walletDropdownRef}>
+                    <div className="absolute right-0 mt-2 w-48 sei-morphistic-card rounded-xl shadow-xl border border-gray-200/50 backdrop-blur-sm z-[100]" ref={walletDropdownRef}>
+                      <div className="p-3 border-b border-gray-200/30">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Wallet Options</span>
+                          <button
+                            onClick={() => setShowWalletDropdown(false)}
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                       <div className="p-2">
                         <button
                           onClick={() => {
                             disconnectWallet();
                             setShowWalletDropdown(false);
                           }}
-                          className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 transition-colors flex items-center space-x-2 text-red-600"
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200 flex items-center space-x-2 text-red-600 hover:text-red-700"
                         >
                           <LogOut className="w-4 h-4" />
                           <span>Disconnect</span>
                         </button>
                         {availableWallets.length > 1 && (
                           <>
-                            <hr className="my-2" />
-                            <div className="px-3 py-1 text-xs text-gray-500 uppercase tracking-wide">
+                            <hr className="my-2 border-gray-200/30" />
+                            <div className="px-3 py-1 text-xs text-gray-500 uppercase tracking-wide font-medium">
                               Switch Wallet
                             </div>
                             {availableWallets.filter(w => w !== walletType).map((wallet) => (
@@ -142,7 +158,7 @@ const Header = () => {
                                   switchWallet(wallet);
                                   setShowWalletDropdown(false);
                                 }}
-                                className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 transition-colors capitalize"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 transition-all duration-200 capitalize text-gray-700 hover:text-gray-900"
                               >
                                 {wallet} Wallet
                               </button>
@@ -194,9 +210,17 @@ After installing, refresh the page and try again.`);
                 </button>
                 
                 {showWalletDropdown && !isConnecting && availableWallets.length > 1 && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-[100]" ref={walletDropdownRef}>
-                    <div className="p-3 border-b border-gray-100">
-                      <p className="text-sm text-gray-600">Choose a wallet to connect</p>
+                  <div className="absolute right-0 mt-2 w-56 sei-morphistic-card rounded-xl shadow-xl border border-gray-200/50 backdrop-blur-sm z-[100]" ref={walletDropdownRef}>
+                    <div className="p-3 border-b border-gray-200/30">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-700">Choose a wallet to connect</p>
+                        <button
+                          onClick={() => setShowWalletDropdown(false)}
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <div className="p-2">
                       {availableWallets.map((wallet) => (
@@ -206,23 +230,23 @@ After installing, refresh the page and try again.`);
                             connectWallet(wallet);
                             setShowWalletDropdown(false);
                           }}
-                          className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 flex items-center space-x-2 text-gray-700 hover:text-gray-900"
                         >
-                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
                             <span className="text-white text-xs font-bold">{wallet.charAt(0).toUpperCase()}</span>
                           </div>
-                          <span className="capitalize">{wallet} Wallet</span>
+                          <span className="capitalize font-medium">{wallet} Wallet</span>
                         </button>
                       ))}
                     </div>
-                    <div className="p-3 border-t border-gray-100 bg-gray-50">
+                    <div className="p-3 border-t border-gray-200/30 bg-gradient-to-r from-gray-50/50 to-gray-100/50">
                       <p className="text-xs text-gray-500">
                         Don't have a wallet? 
                         <a 
                           href="https://sei.io/wallet" 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 ml-1"
+                          className="text-blue-600 hover:text-blue-800 ml-1 font-medium"
                         >
                           Get Sei Wallet
                         </a>
@@ -232,16 +256,26 @@ After installing, refresh the page and try again.`);
                 )}
                 
                 {availableWallets.length === 0 && (
-                  <div className="absolute right-0 mt-2 w-80 bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-xl z-[100]">
-                    <div className="text-yellow-800 text-sm">
-                      <p className="font-medium mb-2">No wallet detected</p>
-                      <p className="mb-2">Please install a Sei-compatible wallet:</p>
-                      <ul className="text-xs space-y-1">
-                        <li>• <a href="https://sei.io/wallet" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Sei Wallet</a></li>
-                        <li>• <a href="https://compass.keplr.app/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Compass Wallet</a></li>
-                        <li>• <a href="https://keplr.app/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Keplr</a></li>
-                        <li>• <a href="https://metamask.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">MetaMask</a></li>
-                      </ul>
+                  <div className="absolute right-0 mt-2 w-80 sei-morphistic-card rounded-xl shadow-xl border border-yellow-200/50 backdrop-blur-sm z-[100]">
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-yellow-800">No Wallet Detected</span>
+                        <button
+                          onClick={() => setShowWalletDropdown(false)}
+                          className="text-yellow-400 hover:text-yellow-600 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-yellow-700 text-sm">
+                        <p className="mb-2">Please install a Sei-compatible wallet:</p>
+                        <ul className="space-y-1">
+                          <li>• <a href="https://sei.io/wallet" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline font-medium">Sei Wallet</a></li>
+                          <li>• <a href="https://compass.keplr.app/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline font-medium">Compass Wallet</a></li>
+                          <li>• <a href="https://keplr.app/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline font-medium">Keplr</a></li>
+                          <li>• <a href="https://metamask.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline font-medium">MetaMask</a></li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 )}
