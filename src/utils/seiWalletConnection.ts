@@ -74,10 +74,15 @@ export const useSeiWallet = () => {
   const getAvailableWallets = (): string[] => {
     const wallets: string[] = [];
     
-    if (window.sei) wallets.push('sei');
-    if (window.compass) wallets.push('compass');
-    if (window.keplr) wallets.push('keplr');
-    if (window.ethereum) wallets.push('metamask');
+    // Check for Sei wallets with better error handling
+    try {
+      if (window.sei && typeof window.sei.connect === 'function') wallets.push('sei');
+      if (window.compass && typeof window.compass.connect === 'function') wallets.push('compass');
+      if (window.keplr && typeof window.keplr.enable === 'function') wallets.push('keplr');
+      if (window.ethereum && typeof window.ethereum.request === 'function') wallets.push('metamask');
+    } catch (error) {
+      console.warn('Error detecting wallets:', error);
+    }
     
     return wallets;
   };
@@ -127,10 +132,14 @@ Need help? Visit our docs for detailed setup instructions.`;
       
       // Provide more helpful error messages
       let helpfulMessage = errorMessage;
-      if (errorMessage.includes('User rejected')) {
+      if (errorMessage.includes('User rejected') || errorMessage.includes('user rejected')) {
         helpfulMessage = 'Connection was cancelled. Please try again and approve the connection in your wallet.';
-      } else if (errorMessage.includes('not found')) {
+      } else if (errorMessage.includes('not found') || errorMessage.includes('not installed')) {
         helpfulMessage = `${errorMessage}\n\nPlease install the wallet extension and refresh the page.`;
+      } else if (errorMessage.includes('already processing')) {
+        helpfulMessage = 'Wallet connection already in progress. Please wait a moment and try again.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('chain')) {
+        helpfulMessage = 'Network connection issue. Please check your internet connection and try again.';
       }
       
       setWalletState(prev => ({
@@ -142,22 +151,31 @@ Need help? Visit our docs for detailed setup instructions.`;
   };
 
   const connectToWallet = async (walletType: string) => {
-    switch (walletType) {
-      case 'sei':
-        await connectSeiWallet();
-        break;
-      case 'compass':
-        await connectCompassWallet();
-        break;
-      case 'keplr':
-        await connectKeplrWallet();
-        break;
-      case 'metamask':
-        await connectMetaMaskWallet();
-        break;
-      default:
-        throw new Error(`Unsupported wallet type: ${walletType}`);
-    }
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Connection timeout. Please try again.')), 30000); // 30 second timeout
+    });
+
+    const connectionPromise = (async () => {
+      switch (walletType) {
+        case 'sei':
+          await connectSeiWallet();
+          break;
+        case 'compass':
+          await connectCompassWallet();
+          break;
+        case 'keplr':
+          await connectKeplrWallet();
+          break;
+        case 'metamask':
+          await connectMetaMaskWallet();
+          break;
+        default:
+          throw new Error(`Unsupported wallet type: ${walletType}`);
+      }
+    })();
+
+    await Promise.race([connectionPromise, timeoutPromise]);
   };
 
   const connectSeiWallet = async () => {

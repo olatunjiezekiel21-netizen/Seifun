@@ -103,6 +103,10 @@ const MemeTokenGrid: React.FC<MemeTokenGridProps> = ({ tokens, viewMode }) => {
                   <div className="text-xs text-gray-400">24h Change</div>
                 </div>
                 <div className="text-center hidden sm:block">
+                  <div className="text-sm sm:text-lg font-bold text-white">{token.marketCap}</div>
+                  <div className="text-xs text-gray-400">Market Cap</div>
+                </div>
+                <div className="text-center hidden sm:block">
                   <div className="text-sm sm:text-lg font-bold text-white">{token.volume24h}</div>
                   <div className="text-xs text-gray-400">Volume</div>
                 </div>
@@ -189,12 +193,12 @@ const MemeTokenGrid: React.FC<MemeTokenGridProps> = ({ tokens, viewMode }) => {
                 <div className="text-gray-400">24h</div>
               </div>
               <div>
-                <div className="text-white font-bold">{token.volume24h}</div>
-                <div className="text-gray-400">Volume</div>
+                <div className="text-white font-bold">{token.marketCap}</div>
+                <div className="text-gray-400">Market Cap</div>
               </div>
               <div>
-                <div className="text-white font-bold">{token.holders.toLocaleString()}</div>
-                <div className="text-gray-400">Holders</div>
+                <div className="text-white font-bold">{token.volume24h}</div>
+                <div className="text-gray-400">Volume</div>
               </div>
             </div>
 
