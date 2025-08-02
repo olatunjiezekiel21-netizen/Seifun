@@ -9,11 +9,14 @@ const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <img 
-                src="/Seifu.png" 
-                alt="Seifu Logo" 
-                className="w-8 h-8 rounded-full"
-              />
+              <div className="relative">
+                <img 
+                  src="/Seifu.png" 
+                  alt="Seifun Logo" 
+                  className="w-8 h-8 rounded-full hover:scale-105 transition-transform duration-300 animate-pulse"
+                />
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400/20 via-blue-400/20 to-red-400/20 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
               <span className="text-2xl font-bold">seifun</span>
             </div>
             <p className="text-gray-400 leading-relaxed">

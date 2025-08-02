@@ -46,11 +46,14 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <img 
-              src="/Seifu.png" 
-              alt="Seifun Logo" 
-              className="w-10 h-10 rounded-full hover:scale-105 transition-transform duration-200"
-            />
+            <div className="relative">
+              <img 
+                src="/Seifu.png" 
+                alt="Seifun Logo" 
+                className="w-10 h-10 rounded-full hover:scale-105 transition-transform duration-300 animate-pulse"
+              />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400/20 via-blue-400/20 to-red-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-ping"></div>
+            </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold bg-gradient-to-r from-green-500 via-blue-500 to-red-500 bg-clip-text text-transparent">
                 Seifun
@@ -81,7 +84,7 @@ const Header = () => {
           {/* Wallet Connection */}
           <div className="flex items-center space-x-4 relative">
             {error && (
-              <div className="absolute right-0 top-12 w-80 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-[60]">
+              <div className="absolute right-0 top-12 w-80 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-[100]">
                 <div className="text-red-800 text-sm whitespace-pre-line">
                   {error}
                 </div>
@@ -114,7 +117,7 @@ const Header = () => {
                   </button>
                   
                   {showWalletDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-[60]" ref={walletDropdownRef}>
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-[100]" ref={walletDropdownRef}>
                       <div className="p-2">
                         <button
                           onClick={() => {
@@ -189,7 +192,7 @@ After installing, refresh the page and try again.`);
                 </button>
                 
                 {showWalletDropdown && !isConnecting && availableWallets.length > 1 && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-[60]" ref={walletDropdownRef}>
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-[100]" ref={walletDropdownRef}>
                     <div className="p-3 border-b border-gray-100">
                       <p className="text-sm text-gray-600">Choose a wallet to connect</p>
                     </div>
@@ -227,7 +230,7 @@ After installing, refresh the page and try again.`);
                 )}
                 
                 {availableWallets.length === 0 && (
-                  <div className="absolute right-0 mt-2 w-80 bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-lg z-[60]">
+                  <div className="absolute right-0 mt-2 w-80 bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-xl z-[100]">
                     <div className="text-yellow-800 text-sm">
                       <p className="font-medium mb-2">No wallet detected</p>
                       <p className="mb-2">Please install a Sei-compatible wallet:</p>
