@@ -25,16 +25,29 @@ const Header = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (walletDropdownRef.current && !walletDropdownRef.current.contains(event.target as Node)) {
-        setShowWalletDropdown(false);
+      // Don't close if clicking on the dropdown itself or its children
+      if (walletDropdownRef.current && walletDropdownRef.current.contains(event.target as Node)) {
+        return;
       }
+      
+      // Don't close if clicking on the wallet button that opens the dropdown
+      const walletButton = (event.target as Element)?.closest('button');
+      if (walletButton && walletButton.getAttribute('title') === 'Wallet Options') {
+        return;
+      }
+      
+      // Close the dropdown
+      setShowWalletDropdown(false);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+    // Only add listener if dropdown is open
+    if (showWalletDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showWalletDropdown]);
 
   const truncateAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -89,7 +102,10 @@ const Header = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-red-800">Connection Error</span>
                     <button
-                      onClick={clearError}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearError();
+                      }}
                       className="text-red-400 hover:text-red-600 transition-colors"
                     >
                       <X className="w-4 h-4" />
@@ -127,7 +143,10 @@ const Header = () => {
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-gray-700">Wallet Options</span>
                           <button
-                            onClick={() => setShowWalletDropdown(false)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowWalletDropdown(false);
+                            }}
                             className="text-gray-400 hover:text-gray-600 transition-colors"
                           >
                             <X className="w-4 h-4" />
@@ -215,7 +234,10 @@ After installing, refresh the page and try again.`);
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-gray-700">Choose a wallet to connect</p>
                         <button
-                          onClick={() => setShowWalletDropdown(false)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowWalletDropdown(false);
+                          }}
                           className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
                           <X className="w-4 h-4" />
@@ -261,7 +283,10 @@ After installing, refresh the page and try again.`);
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-yellow-800">No Wallet Detected</span>
                         <button
-                          onClick={() => setShowWalletDropdown(false)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowWalletDropdown(false);
+                          }}
                           className="text-yellow-400 hover:text-yellow-600 transition-colors"
                         >
                           <X className="w-4 h-4" />
