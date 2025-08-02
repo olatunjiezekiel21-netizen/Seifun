@@ -63,9 +63,8 @@ const Header = () => {
               <img 
                 src="/Seifu.png" 
                 alt="Seifun Logo" 
-                className="w-10 h-10 rounded-full hover:scale-105 transition-transform duration-300"
+                className="w-10 h-10 rounded-full"
               />
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/20 via-teal-400/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold sei-text-primary">
@@ -97,7 +96,7 @@ const Header = () => {
           {/* Wallet Connection */}
           <div className="flex items-center space-x-4 relative">
             {error && (
-              <div className="absolute right-0 top-12 w-80 sei-morphistic-card rounded-xl shadow-xl border border-red-200/50 backdrop-blur-sm z-[100]">
+              <div className="absolute right-0 top-12 w-80 sei-card rounded-xl shadow-xl z-[100]">
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-red-800">Connection Error</span>
@@ -131,14 +130,14 @@ const Header = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowWalletDropdown(!showWalletDropdown)}
-                    className="p-2 text-gray-600 hover:text-[#526FFF] transition-colors"
+                    className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
                     title="Wallet Options"
                   >
                     <ChevronDown className="w-4 h-4" />
                   </button>
                   
                   {showWalletDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 sei-morphistic-card rounded-xl shadow-xl border border-gray-200/50 backdrop-blur-sm z-[100]" ref={walletDropdownRef}>
+                    <div className="absolute right-0 mt-2 w-48 sei-card rounded-xl shadow-xl z-[100]" ref={walletDropdownRef}>
                       <div className="p-3 border-b border-gray-200/30">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium text-gray-700">Wallet Options</span>
@@ -159,7 +158,7 @@ const Header = () => {
                             disconnectWallet();
                             setShowWalletDropdown(false);
                           }}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200 flex items-center space-x-2 text-red-600 hover:text-red-700"
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200 flex items-center space-x-2 text-red-600 hover:text-red-700"
                         >
                           <LogOut className="w-4 h-4" />
                           <span>Disconnect</span>
@@ -177,7 +176,7 @@ const Header = () => {
                                   switchWallet(wallet);
                                   setShowWalletDropdown(false);
                                 }}
-                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 transition-all duration-200 capitalize text-gray-700 hover:text-gray-900"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200 capitalize text-gray-700 hover:text-gray-900"
                               >
                                 {wallet} Wallet
                               </button>
@@ -205,7 +204,7 @@ const Header = () => {
                     }
                   }}
                   disabled={isConnecting}
-                  className="flex items-center space-x-2 sei-btn sei-btn-primary px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center space-x-2 sei-btn-wallet px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isConnecting ? (
                     <>
@@ -222,7 +221,7 @@ const Header = () => {
                 </button>
                 
                 {showWalletDropdown && !isConnecting && availableWallets.length > 1 && (
-                  <div className="absolute right-0 mt-2 w-56 sei-morphistic-card rounded-xl shadow-xl border border-gray-200/50 backdrop-blur-sm z-[100]" ref={walletDropdownRef}>
+                  <div className="absolute right-0 mt-2 w-56 sei-card rounded-xl shadow-xl z-[100]" ref={walletDropdownRef}>
                     <div className="p-3 border-b border-gray-200/30">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-gray-700">Choose a wallet to connect</p>
@@ -245,16 +244,16 @@ const Header = () => {
                             connectWallet(wallet);
                             setShowWalletDropdown(false);
                           }}
-                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 flex items-center space-x-2 text-gray-700 hover:text-gray-900"
+                          className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200 flex items-center space-x-2 text-gray-700 hover:text-gray-900"
                         >
-                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm">
+                          <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center shadow-sm">
                             <span className="text-white text-xs font-bold">{wallet.charAt(0).toUpperCase()}</span>
                           </div>
                           <span className="capitalize font-medium">{wallet} Wallet</span>
                         </button>
                       ))}
                     </div>
-                    <div className="p-3 border-t border-gray-200/30 bg-gradient-to-r from-gray-50/50 to-gray-100/50">
+                    <div className="p-3 border-t border-gray-200/30 bg-gray-50/50">
                       <p className="text-xs text-gray-500">
                         Don't have a wallet? 
                         <a 
@@ -271,7 +270,7 @@ const Header = () => {
                 )}
                 
                 {availableWallets.length === 0 && showWalletDropdown && (
-                  <div className="absolute right-0 mt-2 w-80 sei-morphistic-card rounded-xl shadow-xl border border-yellow-200/50 backdrop-blur-sm z-[100]">
+                  <div className="absolute right-0 mt-2 w-80 sei-card rounded-xl shadow-xl z-[100]">
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-yellow-800">No Wallet Detected</span>
@@ -299,8 +298,59 @@ const Header = () => {
                 )}
               </div>
             )}
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-200">
+            <nav className="flex flex-col space-y-4">
+              <Link 
+                to="/" 
+                className="sei-mobile-menu-item"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link 
+                to="/launchpad" 
+                className="sei-mobile-menu-item"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Launchpad
+              </Link>
+              <Link 
+                to="/seifun-launch" 
+                className="sei-mobile-menu-item"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Seifun.launch
+              </Link>
+              <Link 
+                to="/token-pulse" 
+                className="sei-mobile-menu-item"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Token Pulse
+              </Link>
+              <Link 
+                to="/dev-plus" 
+                className="sei-mobile-menu-item"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Dev Plus
+              </Link>
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );
