@@ -4,7 +4,6 @@ import SeifunLaunchFilters from '../components/SeifunLaunchFilters';
 import MemeTokenGrid from '../components/MemeTokenGrid';
 import TrendingStats from '../components/TrendingStats';
 import { SeiTokenRegistry, SeiTokenInfo } from '../utils/seiTokenRegistry';
-import MotionLogo from '../components/MotionLogo';
 
 const SeifunLaunch = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -163,7 +162,6 @@ const SeifunLaunch = () => {
           {/* Hero Section */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-3 mb-4">
-              <MotionLogo size={48} />
               <h1 className="text-4xl font-bold bg-gradient-to-r from-green-500 via-blue-500 to-red-500 bg-clip-text text-transparent">
                 Seifun Discover
               </h1>
@@ -270,7 +268,7 @@ const SeifunLaunch = () => {
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="flex items-center space-x-3">
-              <MotionLogo size={32} />
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               <span className="text-lg text-gray-600">Loading tokens...</span>
             </div>
           </div>
