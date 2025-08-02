@@ -169,8 +169,10 @@ const Header = () => {
 
 After installing, refresh the page and try again.`);
                     } else if (availableWallets.length === 1) {
-                      connectWallet();
+                      // Connect directly if only one wallet is available
+                      connectWallet(availableWallets[0]);
                     } else {
+                      // Show dropdown only if multiple wallets are available
                       setShowWalletDropdown(!showWalletDropdown);
                     }
                   }}
