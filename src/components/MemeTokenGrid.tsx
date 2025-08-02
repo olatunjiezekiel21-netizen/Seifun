@@ -83,7 +83,7 @@ const MemeTokenGrid: React.FC<MemeTokenGridProps> = ({ tokens, viewMode }) => {
                   <div className={`text-lg sm:text-2xl font-bold px-3 sm:px-4 py-1 sm:py-2 rounded-full ${getScoreColor(token.score)}`}>
                     {token.score}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">SeifuScore</p>
+                  <p className="text-xs text-gray-400 mt-1">SeifunScore</p>
                 </div>
               </div>
 

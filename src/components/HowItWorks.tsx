@@ -12,7 +12,7 @@ const HowItWorks = () => {
     },
     {
       number: 2,
-      title: 'SeifuGuard',
+              title: 'SeifunGuard',
       description: 'Get an audit score',
       icon: Shield,
       color: 'from-[#FF6B35] to-[#FF8E53]'

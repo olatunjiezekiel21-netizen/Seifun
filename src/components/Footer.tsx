@@ -14,7 +14,7 @@ const Footer = () => {
                 alt="Seifu Logo" 
                 className="w-8 h-8 rounded-full"
               />
-              <span className="text-2xl font-bold">seifu</span>
+              <span className="text-2xl font-bold">seifun</span>
             </div>
             <p className="text-gray-400 leading-relaxed">
               The decentralized token verifier and launchpad built for the Sei ecosystem. 
@@ -37,9 +37,9 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-bold">Product</h3>
             <ul className="space-y-3">
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">SeifuGuard</a></li>
+                              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">SeifunGuard</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Token Launchpad</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">seifu.fun</a></li>
+                              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">seifun.fun</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">DAO Governance</a></li>
             </ul>
           </div>
@@ -75,7 +75,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © 2025 Seifu. All rights reserved.
+            © 2025 Seifun. All rights reserved.
           </p>
           <div className="flex space-x-8 mt-4 md:mt-0">
             <a href="#" className="text-gray-400 hover:text-white transition-colors text-sm">Privacy Policy</a>

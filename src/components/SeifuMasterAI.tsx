@@ -63,7 +63,7 @@ const SeifuMasterAI = () => {
               <Bot className="text-white" size={28} />
             </div>
             <h2 className="text-5xl lg:text-6xl font-bold text-white">
-              Seifu<span className="text-[#FF6B35]">Master</span> AI
+              Seifun<span className="text-[#FF6B35]">Master</span> AI
             </h2>
           </div>
           <div className="flex items-center justify-center space-x-2 mb-4">
@@ -87,7 +87,7 @@ const SeifuMasterAI = () => {
                     <Bot className="text-white" size={20} />
                   </div>
                   <div>
-                    <h3 className="text-white font-bold text-lg">SeifuMaster AI</h3>
+                    <h3 className="text-white font-bold text-lg">SeifunMaster AI</h3>
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                       <span className="text-green-400 text-sm">Online & Learning</span>
@@ -119,7 +119,7 @@ const SeifuMasterAI = () => {
                   <div className="flex space-x-3">
                     <input
                       type="text"
-                      placeholder="Ask SeifuMaster anything about tokens..."
+                      placeholder="Ask SeifunMaster anything about tokens..."
                       className="flex-1 bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
                       disabled
                     />

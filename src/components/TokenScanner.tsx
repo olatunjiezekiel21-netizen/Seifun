@@ -474,7 +474,7 @@ const TokenScanner = () => {
                 {/* Score Display */}
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-white">SeifuScore</h4>
+                    <h4 className="text-lg font-semibold text-white">SeifunScore</h4>
                     <div className="relative">
                       <div className="flex items-center justify-center">
                         <div className="relative w-32 h-32">

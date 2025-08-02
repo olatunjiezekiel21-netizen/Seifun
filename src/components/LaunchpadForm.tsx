@@ -587,7 +587,7 @@ const LaunchpadForm = () => {
     <div className="space-y-8">
       <div className="text-center">
         <Shield className="w-16 h-16 text-[#FF3C3C] mx-auto mb-4" />
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">SeifuGuard Verification</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">SeifunGuard Verification</h3>
         <p className="text-gray-600">
           Your token will be automatically verified for safety and security
         </p>
@@ -625,7 +625,7 @@ const LaunchpadForm = () => {
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-green-700">SeifuScore</span>
+                <span className="text-sm text-green-700">SeifunScore</span>
                 <span className="text-2xl font-bold text-green-600">94</span>
               </div>
               <div className="w-full h-3 bg-green-200 rounded-full overflow-hidden">
