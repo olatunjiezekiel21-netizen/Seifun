@@ -64,12 +64,12 @@ const Header = () => {
                         Docs
                       </Link>
                       <Link 
-                        to="/ai-chat" 
+                        to="/dev-plus" 
                         className={`sei-nav-link font-medium ${
-                          location.pathname === '/ai-chat' ? 'active' : ''
+                          location.pathname === '/dev-plus' ? 'active' : ''
                         }`}
                       >
-                        AI Chat
+                        Dev Plus
                       </Link>
           </nav>
 

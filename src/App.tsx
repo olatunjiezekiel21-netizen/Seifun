@@ -12,7 +12,7 @@ import Launchpad from './pages/Launchpad';
 import SeifunLaunch from './pages/SeifunLaunch';
 import TokenPulse from './pages/TokenPulse';
 import Docs from './pages/Docs';
-import AIChat from './pages/AIChat';
+import DevPlus from './pages/AIChat';
 
 function App() {
   React.useEffect(() => {
@@ -42,7 +42,7 @@ function App() {
           <Route path="/seifun-launch" element={<SeifunLaunch />} />
           <Route path="/token-pulse" element={<TokenPulse />} />
           <Route path="/docs" element={<Docs />} />
-          <Route path="/ai-chat" element={<AIChat />} />
+          <Route path="/dev-plus" element={<DevPlus />} />
         </Routes>
         <Footer />
       </div>

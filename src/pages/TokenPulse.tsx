@@ -13,405 +13,563 @@ import {
   Target,
   BarChart3,
   Timer,
-  Sparkles
+  Sparkles,
+  Search,
+  Filter,
+  Download,
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle,
+  DollarSign,
+  Percent,
+  ArrowUp,
+  ArrowDown,
+  Settings,
+  Calendar,
+  PieChart,
+  LineChart,
+  BarChart,
+  Shield
 } from 'lucide-react';
 import TokenChart from '../components/TokenChart';
-import AITraderChat from '../components/AITraderChat';
 
-interface TokenActivity {
+interface TokenAnalytics {
   id: string;
   tokenName: string;
   tokenSymbol: string;
-  creator: string;
-  action: 'created' | 'traded' | 'verified';
-  timestamp: Date;
-  value?: string;
-  safetyScore?: number;
+  price: string;
+  priceChange24h: string;
+  volume24h: string;
+  marketCap: string;
+  holders: number;
+  transactions24h: number;
+  liquidity: string;
+  safetyScore: number;
+  createdAt: Date;
 }
 
-interface CreatorSpotlight {
-  address: string;
-  name: string;
-  tokensCreated: number;
+interface TradingMetrics {
   totalVolume: string;
-  avgSafetyScore: number;
-  badge: string;
-  avatar?: string;
+  totalTransactions: number;
+  activeTokens: number;
+  averageSafetyScore: number;
+  topGainers: number;
+  topLosers: number;
 }
 
-interface TrendingPattern {
-  pattern: string;
-  description: string;
-  impact: 'positive' | 'neutral' | 'negative';
-  frequency: number;
-  examples: string[];
+interface MarketTrend {
+  period: string;
+  volume: string;
+  transactions: number;
+  newTokens: number;
+  avgPriceChange: string;
 }
 
 const TokenPulse = () => {
-  const [activeTab, setActiveTab] = useState<'live' | 'creators' | 'trends' | 'favorites'>('live');
-  const [liveActivities, setLiveActivities] = useState<TokenActivity[]>([]);
-  const [featuredCreators, setFeaturedCreators] = useState<CreatorSpotlight[]>([]);
-  const [trendingPatterns, setTrendingPatterns] = useState<TrendingPattern[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'tokens' | 'trends' | 'analytics'>('overview');
+  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | '90d'>('24h');
+  const [tokens, setTokens] = useState<TokenAnalytics[]>([]);
+  const [metrics, setMetrics] = useState<TradingMetrics>({
+    totalVolume: '$2.4M',
+    totalTransactions: 15420,
+    activeTokens: 247,
+    averageSafetyScore: 78,
+    topGainers: 23,
+    topLosers: 8
+  });
+  const [marketTrends, setMarketTrends] = useState<MarketTrend[]>([]);
 
-  // Simulate live data (in real app, this would be from WebSocket/API)
+  // Simulate analytics data
   useEffect(() => {
-    const mockActivities: TokenActivity[] = [
+    const mockTokens: TokenAnalytics[] = [
       {
         id: '1',
         tokenName: 'SeiMoon',
         tokenSymbol: 'MOON',
-        creator: '0x966C...894e',
-        action: 'created',
-        timestamp: new Date(Date.now() - 2 * 60 * 1000),
-        safetyScore: 85
+        price: '$0.00234',
+        priceChange24h: '+156.7%',
+        volume24h: '$45,230',
+        marketCap: '$234K',
+        holders: 1234,
+        transactions24h: 89,
+        liquidity: '$12,450',
+        safetyScore: 85,
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
       },
       {
         id: '2',
         tokenName: 'SafeRocket',
         tokenSymbol: 'ROCKET',
-        creator: '0x742d...D3eE',
-        action: 'verified',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000),
-        safetyScore: 92
+        price: '$0.00156',
+        priceChange24h: '+89.2%',
+        volume24h: '$32,150',
+        marketCap: '$156K',
+        holders: 892,
+        transactions24h: 67,
+        liquidity: '$8,920',
+        safetyScore: 92,
+        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000)
       },
       {
         id: '3',
         tokenName: 'DegenCoin',
         tokenSymbol: 'DEGEN',
-        creator: '0x123a...456b',
-        action: 'traded',
-        timestamp: new Date(Date.now() - 8 * 60 * 1000),
-        value: '1,250 SEI',
-        safetyScore: 67
+        price: '$0.00089',
+        priceChange24h: '-23.4%',
+        volume24h: '$18,750',
+        marketCap: '$89K',
+        holders: 567,
+        transactions24h: 34,
+        liquidity: '$5,230',
+        safetyScore: 67,
+        createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000)
       }
     ];
 
-    const mockCreators: CreatorSpotlight[] = [
-      {
-        address: '0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e',
-        name: 'TokenMaster',
-        tokensCreated: 12,
-        totalVolume: '45,230 SEI',
-        avgSafetyScore: 88,
-        badge: 'Verified Creator'
-      },
-      {
-        address: '0x742d35Cc6635C0532925a3b8D41c4e9E4532D3eE',
-        name: 'SafeLauncher',
-        tokensCreated: 8,
-        totalVolume: '32,100 SEI',
-        avgSafetyScore: 91,
-        badge: 'Safety Champion'
-      },
-      {
-        address: '0x123abc456def789ghi012jkl345mno678pqr901st',
-        name: 'MemeKing',
-        tokensCreated: 15,
-        totalVolume: '28,750 SEI',
-        avgSafetyScore: 75,
-        badge: 'Community Favorite'
-      }
+    const mockTrends: MarketTrend[] = [
+      { period: '24h', volume: '$2.4M', transactions: 15420, newTokens: 12, avgPriceChange: '+12.4%' },
+      { period: '7d', volume: '$18.7M', transactions: 98750, newTokens: 89, avgPriceChange: '+8.9%' },
+      { period: '30d', volume: '$67.2M', transactions: 324500, newTokens: 234, avgPriceChange: '+15.2%' }
     ];
 
-    const mockTrends: TrendingPattern[] = [
-      {
-        pattern: 'Safety-First Tokens',
-        description: 'Tokens with 80+ safety scores are getting 3x more trading volume',
-        impact: 'positive',
-        frequency: 85,
-        examples: ['SafeRocket', 'SecureToken', 'TrustCoin']
-      },
-      {
-        pattern: 'Community Engagement',
-        description: 'Tokens with active Discord/Telegram see 2x better performance',
-        impact: 'positive',
-        frequency: 72,
-        examples: ['CommunityMoon', 'ChatToken', 'SocialCoin']
-      },
-      {
-        pattern: 'Quick Launch Pattern',
-        description: 'Tokens launched within 1 hour of creation show higher initial volume',
-        impact: 'neutral',
-        frequency: 58,
-        examples: ['QuickMoon', 'InstantToken', 'FastLaunch']
-      }
-    ];
-
-    setLiveActivities(mockActivities);
-    setFeaturedCreators(mockCreators);
-    setTrendingPatterns(mockTrends);
-
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      const newActivity: TokenActivity = {
-        id: Date.now().toString(),
-        tokenName: `Token${Math.floor(Math.random() * 1000)}`,
-        tokenSymbol: `TK${Math.floor(Math.random() * 100)}`,
-        creator: `0x${Math.random().toString(16).substr(2, 8)}...${Math.random().toString(16).substr(2, 4)}`,
-        action: ['created', 'traded', 'verified'][Math.floor(Math.random() * 3)] as any,
-        timestamp: new Date(),
-        safetyScore: Math.floor(Math.random() * 40) + 60,
-        value: Math.random() > 0.5 ? `${Math.floor(Math.random() * 5000)} SEI` : undefined
-      };
-
-      setLiveActivities(prev => [newActivity, ...prev.slice(0, 9)]);
-    }, 30000); // Update every 30 seconds
-
-    return () => clearInterval(interval);
+    setTokens(mockTokens);
+    setMarketTrends(mockTrends);
   }, []);
 
-  const getActionIcon = (action: string) => {
-    switch (action) {
-      case 'created': return <Sparkles className="text-blue-400" size={16} />;
-      case 'traded': return <TrendingUp className="text-green-400" size={16} />;
-      case 'verified': return <Award className="text-yellow-400" size={16} />;
-      default: return <Activity className="text-gray-400" size={16} />;
-    }
+  const getPriceChangeColor = (change: string) => {
+    return change.startsWith('+') ? 'text-green-500' : 'text-red-500';
   };
 
   const getSafetyColor = (score: number) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    return 'text-red-400';
+    if (score >= 80) return 'text-green-500';
+    if (score >= 60) return 'text-yellow-500';
+    return 'text-red-500';
   };
 
-  const getTimeAgo = (timestamp: Date) => {
-    const minutes = Math.floor((Date.now() - timestamp.getTime()) / 60000);
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-  };
-
-  const renderLiveActivity = () => (
+  const renderOverview = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Activity className="text-[#FF6B35]" size={24} />
-          Live Token Activity
-        </h2>
-        <div className="flex items-center gap-2 text-green-400">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="text-sm">Live</span>
-        </div>
-      </div>
-
-      <div className="grid gap-4">
-        {liveActivities.map((activity) => (
-          <div key={activity.id} className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 hover:border-[#FF6B35]/50 transition-all">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {getActionIcon(activity.action)}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white">{activity.tokenName}</span>
-                    <span className="text-gray-400 text-sm">({activity.tokenSymbol})</span>
-                    {activity.safetyScore && (
-                      <span className={`text-xs px-2 py-1 rounded-full bg-black/20 ${getSafetyColor(activity.safetyScore)}`}>
-                        {activity.safetyScore}/100
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-300">
-                    {activity.action === 'created' && 'New token created by'}
-                    {activity.action === 'traded' && 'Traded for'}
-                    {activity.action === 'verified' && 'Verified by'}
-                    {' '}
-                    <span className="font-mono">{activity.creator}</span>
-                    {activity.value && <span className="text-green-400 ml-2">{activity.value}</span>}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-gray-400 flex items-center gap-1">
-                  <Clock size={12} />
-                  {getTimeAgo(activity.timestamp)}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderCreatorSpotlight = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <Users className="text-[#FF6B35]" size={24} />
-        Creator Spotlight
-      </h2>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {featuredCreators.map((creator, index) => (
-          <div key={creator.address} className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-[#FF6B35]/50 transition-all">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B35] to-[#FF8E53] rounded-full flex items-center justify-center text-white font-bold">
-                {creator.name.charAt(0)}
-              </div>
-              <div>
-                <h3 className="font-bold text-white">{creator.name}</h3>
-                <p className="text-xs text-gray-400 font-mono">{creator.address.slice(0, 10)}...</p>
-              </div>
-              {index === 0 && <Award className="text-yellow-400 ml-auto" size={20} />}
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-300 text-sm">Tokens Created</span>
-                <span className="text-white font-semibold">{creator.tokensCreated}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-300 text-sm">Total Volume</span>
-                <span className="text-green-400 font-semibold">{creator.totalVolume}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-300 text-sm">Avg Safety Score</span>
-                <span className={`font-semibold ${getSafetyColor(creator.avgSafetyScore)}`}>
-                  {creator.avgSafetyScore}/100
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <span className="inline-block px-3 py-1 bg-[#FF6B35]/20 text-[#FF6B35] text-xs rounded-full">
-                {creator.badge}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderTrendingPatterns = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <BarChart3 className="text-[#FF6B35]" size={24} />
-        Trending Patterns
-      </h2>
-
-      <div className="space-y-4">
-        {trendingPatterns.map((trend, index) => (
-          <div key={index} className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full ${
-                  trend.impact === 'positive' ? 'bg-green-400' : 
-                  trend.impact === 'negative' ? 'bg-red-400' : 'bg-yellow-400'
-                }`}></div>
-                <h3 className="text-lg font-bold text-white">{trend.pattern}</h3>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-400">Frequency</div>
-                <div className="text-lg font-bold text-white">{trend.frequency}%</div>
-              </div>
-            </div>
-
-            <p className="text-gray-300 mb-4">{trend.description}</p>
-
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="sei-card p-4">
+          <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-gray-400 mb-2">Examples:</div>
-              <div className="flex flex-wrap gap-2">
-                {trend.examples.map((example, i) => (
-                  <span key={i} className="px-2 py-1 bg-black/20 text-gray-300 text-xs rounded-md">
-                    {example}
-                  </span>
-                ))}
-              </div>
+              <p className="text-sm sei-text-secondary">Total Volume</p>
+              <p className="text-2xl font-bold sei-text-primary">{metrics.totalVolume}</p>
             </div>
+            <DollarSign className="w-8 h-8 sei-text-muted" />
           </div>
-        ))}
+        </div>
+        
+        <div className="sei-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm sei-text-secondary">Transactions</p>
+              <p className="text-2xl font-bold sei-text-primary">{metrics.totalTransactions.toLocaleString()}</p>
+            </div>
+            <Activity className="w-8 h-8 sei-text-muted" />
+          </div>
+        </div>
+        
+        <div className="sei-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm sei-text-secondary">Active Tokens</p>
+              <p className="text-2xl font-bold sei-text-primary">{metrics.activeTokens}</p>
+            </div>
+            <Star className="w-8 h-8 sei-text-muted" />
+          </div>
+        </div>
+        
+        <div className="sei-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm sei-text-secondary">Avg Safety Score</p>
+              <p className="text-2xl font-bold sei-text-primary">{metrics.averageSafetyScore}</p>
+            </div>
+            <Shield className="w-8 h-8 sei-text-muted" />
+          </div>
+        </div>
       </div>
-    </div>
-  );
 
-  const renderFavorites = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <Heart className="text-[#FF6B35]" size={24} />
-        Community Favorites
-      </h2>
-
-      <div className="text-center py-12">
-        <Heart className="text-gray-400 mx-auto mb-4" size={48} />
-        <h3 className="text-xl font-bold text-white mb-2">Coming Soon!</h3>
-        <p className="text-gray-300">
-          Community voting and favorites feature is under development.
-          <br />
-          Users will be able to save and vote on their favorite tokens.
-        </p>
+      {/* Market Trends Chart */}
+      <div className="sei-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold sei-text-primary">Market Trends</h3>
+          <div className="flex items-center space-x-2">
+            <select 
+              value={timeRange} 
+              onChange={(e) => setTimeRange(e.target.value as any)}
+              className="sei-input text-sm"
+            >
+              <option value="24h">24h</option>
+              <option value="7d">7d</option>
+              <option value="30d">30d</option>
+              <option value="90d">90d</option>
+            </select>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {marketTrends.map((trend, index) => (
+            <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm sei-text-secondary">{trend.period}</p>
+              <p className="text-lg font-semibold sei-text-primary">{trend.volume}</p>
+              <p className="text-xs sei-text-muted">{trend.transactions.toLocaleString()} tx</p>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
 
-  const tabs = [
-    { id: 'live', label: 'Live Activity', icon: Activity },
-    { id: 'creators', label: 'Creators', icon: Users },
-    { id: 'trends', label: 'Trends', icon: TrendingUp },
-    { id: 'favorites', label: 'Favorites', icon: Heart }
-  ];
-
-  return (
-    <div className="min-h-screen pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-bold sei-text-primary mb-6">
-            Token Pulse
-          </h1>
-          <p className="text-lg sei-text-secondary max-w-2xl mx-auto">
-            Real-time token analysis, AI-powered insights, and professional trading tools
-          </p>
+      {/* Top Performers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="sei-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold sei-text-primary">Top Gainers</h3>
+            <ArrowUp className="w-5 h-5 text-green-500" />
+          </div>
+          <div className="space-y-3">
+            {tokens.filter(t => t.priceChange24h.startsWith('+')).slice(0, 5).map((token, index) => (
+              <div key={token.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-green-600">{index + 1}</span>
+                  </div>
+                  <div>
+                    <p className="font-medium sei-text-primary">{token.tokenSymbol}</p>
+                    <p className="text-xs sei-text-secondary">{token.tokenName}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-green-500">{token.priceChange24h}</p>
+                  <p className="text-xs sei-text-secondary">{token.price}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Featured Token Chart */}
-          <div className="lg:col-span-2">
-            <TokenChart 
-              tokenAddress="0xbd82f3bfe1df0c84faec88a22ebc34c9a86595dc" 
-              tokenSymbol="CHIPS" 
-              className="mb-6"
-            />
-            <TokenChart 
-              tokenAddress="0x95597eb8d227a7c4b4f5e807a815c5178ee6dbe1" 
-              tokenSymbol="SEIYAN" 
-            />
+        <div className="sei-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold sei-text-primary">Top Losers</h3>
+            <ArrowDown className="w-5 h-5 text-red-500" />
+          </div>
+          <div className="space-y-3">
+            {tokens.filter(t => t.priceChange24h.startsWith('-')).slice(0, 5).map((token, index) => (
+              <div key={token.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-red-600">{index + 1}</span>
+                  </div>
+                  <div>
+                    <p className="font-medium sei-text-primary">{token.tokenSymbol}</p>
+                    <p className="text-xs sei-text-secondary">{token.tokenName}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-red-500">{token.priceChange24h}</p>
+                  <p className="text-xs sei-text-secondary">{token.price}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTokens = () => (
+    <div className="space-y-6">
+      {/* Filters */}
+      <div className="sei-card p-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sei-text-muted" />
+              <input
+                type="text"
+                placeholder="Search tokens..."
+                className="w-full pl-10 pr-4 py-2 sei-input"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 sei-text-muted" />
+            <select className="sei-input text-sm">
+              <option>All Tokens</option>
+              <option>Verified Only</option>
+              <option>High Volume</option>
+            </select>
+            <button className="sei-btn sei-btn-secondary">
+              <Download className="w-4 h-4" />
+              Export
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tokens Table */}
+      <div className="sei-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium sei-text-secondary uppercase tracking-wider">Token</th>
+                <th className="px-6 py-3 text-left text-xs font-medium sei-text-secondary uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-medium sei-text-secondary uppercase tracking-wider">24h Change</th>
+                <th className="px-6 py-3 text-left text-xs font-medium sei-text-secondary uppercase tracking-wider">Volume</th>
+                <th className="px-6 py-3 text-left text-xs font-medium sei-text-secondary uppercase tracking-wider">Market Cap</th>
+                <th className="px-6 py-3 text-left text-xs font-medium sei-text-secondary uppercase tracking-wider">Safety</th>
+                <th className="px-6 py-3 text-left text-xs font-medium sei-text-secondary uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {tokens.map((token) => (
+                <tr key={token.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        {token.tokenSymbol.charAt(0)}
+                      </div>
+                      <div className="ml-3">
+                        <div className="font-medium sei-text-primary">{token.tokenSymbol}</div>
+                        <div className="text-sm sei-text-secondary">{token.tokenName}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium sei-text-primary">{token.price}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`font-medium ${getPriceChangeColor(token.priceChange24h)}`}>
+                      {token.priceChange24h}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="sei-text-primary">{token.volume24h}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="sei-text-primary">{token.marketCap}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className={`font-medium ${getSafetyColor(token.safetyScore)}`}>
+                      {token.safetyScore}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <button className="sei-btn sei-btn-ghost">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className="sei-btn sei-btn-ghost">
+                        <BarChart3 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTrends = () => (
+    <div className="space-y-6">
+      <div className="sei-card p-6">
+        <h3 className="text-lg font-semibold sei-text-primary mb-4">Market Trends Analysis</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <TrendingUp className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+            <p className="text-sm sei-text-secondary">Volume Trend</p>
+            <p className="text-xl font-bold sei-text-primary">+12.4%</p>
+            <p className="text-xs sei-text-muted">vs last period</p>
           </div>
           
-          {/* AI Trading Assistant */}
-          <div className="lg:col-span-1">
-            <AITraderChat />
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <Users className="w-8 h-8 text-green-500 mx-auto mb-2" />
+            <p className="text-sm sei-text-secondary">New Holders</p>
+            <p className="text-xl font-bold sei-text-primary">+8.7%</p>
+            <p className="text-xs sei-text-muted">vs last period</p>
+          </div>
+          
+          <div className="text-center p-4 bg-purple-50 rounded-lg">
+            <Star className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+            <p className="text-sm sei-text-secondary">New Tokens</p>
+            <p className="text-xl font-bold sei-text-primary">+15.2%</p>
+            <p className="text-xs sei-text-muted">vs last period</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="sei-card p-6">
+        <h3 className="text-lg font-semibold sei-text-primary mb-4">Trading Patterns</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <Flame className="w-5 h-5 text-orange-500" />
+              <div>
+                <p className="font-medium sei-text-primary">High Volume Spikes</p>
+                <p className="text-sm sei-text-secondary">Detected in 12 tokens</p>
+              </div>
+            </div>
+            <span className="text-sm font-medium text-orange-500">+23%</span>
+          </div>
+          
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <Target className="w-5 h-5 text-blue-500" />
+              <div>
+                <p className="font-medium sei-text-primary">Price Manipulation</p>
+                <p className="text-sm sei-text-secondary">Suspicious activity in 3 tokens</p>
+              </div>
+            </div>
+            <span className="text-sm font-medium text-red-500">-5%</span>
+          </div>
+          
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+              <div>
+                <p className="font-medium sei-text-primary">Healthy Growth</p>
+                <p className="text-sm sei-text-secondary">Sustained growth in 45 tokens</p>
+              </div>
+            </div>
+            <span className="text-sm font-medium text-green-500">+18%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAnalytics = () => (
+    <div className="space-y-6">
+      <div className="sei-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold sei-text-primary">Advanced Analytics</h3>
+          <button className="sei-btn sei-btn-secondary">
+            <RefreshCw className="w-4 h-4" />
+            Refresh Data
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h4 className="font-medium sei-text-primary mb-3">Volume Distribution</h4>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm sei-text-secondary">Top 10 tokens</span>
+                <span className="text-sm font-medium sei-text-primary">67%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '67%' }}></div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm sei-text-secondary">Mid-tier tokens</span>
+                <span className="text-sm font-medium sei-text-primary">23%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-green-500 h-2 rounded-full" style={{ width: '23%' }}></div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm sei-text-secondary">Small tokens</span>
+                <span className="text-sm font-medium sei-text-primary">10%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '10%' }}></div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="font-medium sei-text-primary mb-3">Safety Score Distribution</h4>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm sei-text-secondary">Safe (80-100)</span>
+                <span className="text-sm font-medium text-green-500">45%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-green-500 h-2 rounded-full" style={{ width: '45%' }}></div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm sei-text-secondary">Medium (60-79)</span>
+                <span className="text-sm font-medium text-yellow-500">35%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '35%' }}></div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm sei-text-secondary">Risky (0-59)</span>
+                <span className="text-sm font-medium text-red-500">20%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-red-500 h-2 rounded-full" style={{ width: '20%' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen pt-20 sei-bg-secondary">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold sei-text-primary">Token Pulse Analytics</h1>
+              <p className="sei-text-secondary">Real-time market analytics and token performance tracking</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button className="sei-btn sei-btn-secondary">
+                <Calendar className="w-4 h-4" />
+                {timeRange}
+              </button>
+              <button className="sei-btn sei-btn-primary">
+                <Download className="w-4 h-4" />
+                Export Report
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'sei-btn sei-btn-primary'
-                  : 'sei-btn sei-btn-secondary'
-              }`}
-            >
-              <tab.icon size={16} />
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex space-x-1 bg-white rounded-lg p-1 mb-8">
+          {[
+            { id: 'overview', label: 'Overview', icon: BarChart3 },
+            { id: 'tokens', label: 'Tokens', icon: Star },
+            { id: 'trends', label: 'Trends', icon: TrendingUp },
+            { id: 'analytics', label: 'Analytics', icon: PieChart }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'sei-bg-red text-white'
+                    : 'sei-text-secondary hover:sei-text-primary'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Content */}
-        <div className="sei-card p-6">
-          {activeTab === 'live' && renderLiveActivity()}
-          {activeTab === 'creators' && renderCreatorSpotlight()}
-          {activeTab === 'trends' && renderTrendingPatterns()}
-          {activeTab === 'favorites' && renderFavorites()}
-        </div>
+        {activeTab === 'overview' && renderOverview()}
+        {activeTab === 'tokens' && renderTokens()}
+        {activeTab === 'trends' && renderTrends()}
+        {activeTab === 'analytics' && renderAnalytics()}
       </div>
     </div>
   );
