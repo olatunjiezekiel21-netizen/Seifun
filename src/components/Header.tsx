@@ -194,15 +194,8 @@ const Header = () => {
                 <button
                   onClick={() => {
                     if (availableWallets.length === 0) {
-                      // Show helpful message when no wallets are available
-                      alert(`No Sei-compatible wallets detected. Please install one of these wallets:
-
-• Sei Wallet: https://sei.io/wallet
-• Compass Wallet: https://compass.keplr.app/
-• Keplr: https://keplr.app/
-• MetaMask: https://metamask.io/
-
-After installing, refresh the page and try again.`);
+                      // Show dropdown with wallet installation guide
+                      setShowWalletDropdown(!showWalletDropdown);
                     } else if (availableWallets.length === 1) {
                       // Connect directly if only one wallet is available
                       connectWallet(availableWallets[0]);
@@ -277,7 +270,7 @@ After installing, refresh the page and try again.`);
                   </div>
                 )}
                 
-                {availableWallets.length === 0 && (
+                {availableWallets.length === 0 && showWalletDropdown && (
                   <div className="absolute right-0 mt-2 w-80 sei-morphistic-card rounded-xl shadow-xl border border-yellow-200/50 backdrop-blur-sm z-[100]">
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-2">
