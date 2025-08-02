@@ -54,8 +54,8 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sei-nav sticky top-0 z-50">
+      <div className="sei-container">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
@@ -63,33 +63,33 @@ const Header = () => {
               <img 
                 src="/Seifu.png" 
                 alt="Seifun Logo" 
-                className="w-10 h-10 rounded-full hover:scale-105 transition-transform duration-300 animate-pulse"
+                className="w-10 h-10 rounded-full hover:scale-105 transition-transform duration-300"
               />
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400/20 via-blue-400/20 to-red-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-ping"></div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/20 via-teal-400/20 to-cyan-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-bold bg-gradient-to-r from-green-500 via-blue-500 to-red-500 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold sei-text-primary">
                 Seifun
               </span>
-              <span className="text-xs text-gray-500 -mt-1">Launch Platform</span>
+              <span className="text-xs sei-text-muted -mt-1">Launch Platform</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
+            <Link to="/" className="sei-nav-link">
               Home
             </Link>
-            <Link to="/launchpad" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
+            <Link to="/launchpad" className="sei-nav-link">
               Launchpad
             </Link>
-            <Link to="/seifun-launch" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
-              Discover
+            <Link to="/seifun-launch" className="sei-nav-link">
+              Seifun.launch
             </Link>
-            <Link to="/token-pulse" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
-              Analytics
+            <Link to="/token-pulse" className="sei-nav-link">
+              Token Pulse
             </Link>
-            <Link to="/dev-plus" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
+            <Link to="/dev-plus" className="sei-nav-link">
               Dev Plus
             </Link>
           </nav>
@@ -131,7 +131,7 @@ const Header = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowWalletDropdown(!showWalletDropdown)}
-                    className="p-2 text-gray-600 hover:text-[#FF3C3C] transition-colors"
+                    className="p-2 text-gray-600 hover:text-[#526FFF] transition-colors"
                     title="Wallet Options"
                   >
                     <ChevronDown className="w-4 h-4" />
@@ -299,59 +299,8 @@ const Header = () => {
                 )}
               </div>
             )}
-
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-[#FF3C3C] transition-colors"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200">
-            <nav className="flex flex-col space-y-4">
-              <Link 
-                to="/" 
-                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link 
-                to="/launchpad" 
-                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Launchpad
-              </Link>
-              <Link 
-                to="/seifun-launch" 
-                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Discover
-              </Link>
-              <Link 
-                to="/token-pulse" 
-                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Analytics
-              </Link>
-              <Link 
-                to="/dev-plus" 
-                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Dev Plus
-              </Link>
-            </nav>
-          </div>
-        )}
       </div>
     </header>
   );

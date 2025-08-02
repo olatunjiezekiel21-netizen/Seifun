@@ -25,7 +25,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen sei-bg-secondary">
+      <div className="min-h-screen sei-bg-primary">
         <Header />
         <Routes>
           <Route path="/" element={

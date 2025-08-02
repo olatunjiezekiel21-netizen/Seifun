@@ -1,16 +1,25 @@
-/* Sei Ecosystem Theme */
+/* Sei Ecosystem Theme - Sophisticated Dark UI */
 :root {
-  /* Sei Brand Colors */
-  --sei-red: #FF0000;
-  --sei-red-light: #FF3333;
-  --sei-red-dark: #CC0000;
+  /* Sei Brand Colors - Subtle & Professional */
+  --sei-primary: #526FFF; /* Axiom-inspired blue */
+  --sei-primary-light: #7A8FFF;
+  --sei-primary-dark: #3A4FCC;
   
-  /* Sei Logo Colors for Morphistic Theme */
-  --sei-logo-primary: #FF6B35; /* Orange from Sei logo */
-  --sei-logo-secondary: #4ECDC4; /* Teal from Sei logo */
-  --sei-logo-accent: #45B7D1; /* Blue accent */
-  --sei-logo-gradient: linear-gradient(135deg, #FF6B35 0%, #4ECDC4 50%, #45B7D1 100%);
-  --sei-morphistic-gradient: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(78, 205, 196, 0.1) 50%, rgba(69, 183, 209, 0.1) 100%);
+  /* Sei Logo Colors for Morphistic Theme - Subtle */
+  --sei-logo-primary: #526FFF;
+  --sei-logo-secondary: #4ECDC4;
+  --sei-logo-accent: #45B7D1;
+  --sei-logo-gradient: linear-gradient(135deg, #526FFF 0%, #4ECDC4 50%, #45B7D1 100%);
+  --sei-morphistic-gradient: linear-gradient(135deg, rgba(82, 111, 255, 0.1) 0%, rgba(78, 205, 196, 0.1) 50%, rgba(69, 183, 209, 0.1) 100%);
+  
+  /* Dark Theme Colors - Axiom-inspired */
+  --sei-dark-bg: #0A0A0A;
+  --sei-dark-surface: #1A1A1A;
+  --sei-dark-card: #2A2A2A;
+  --sei-dark-border: #333333;
+  --sei-dark-text: #FFFFFF;
+  --sei-dark-text-secondary: #A0A0A0;
+  --sei-dark-text-muted: #666666;
   
   /* Sei Grays - Professional & Clean */
   --sei-gray-50: #FAFAFA;
@@ -24,45 +33,36 @@
   --sei-gray-800: #262626;
   --sei-gray-900: #171717;
   
-  /* Dark Theme Colors (Jupiter Pro inspired) */
-  --sei-dark-bg: #0A0A0A;
-  --sei-dark-surface: #1A1A1A;
-  --sei-dark-card: #2A2A2A;
-  --sei-dark-border: #333333;
-  --sei-dark-text: #FFFFFF;
-  --sei-dark-text-secondary: #A0A0A0;
-  --sei-dark-text-muted: #666666;
-  
-  /* Sei Backgrounds */
-  --sei-bg-primary: #FFFFFF;
-  --sei-bg-secondary: var(--sei-gray-50);
-  --sei-bg-tertiary: var(--sei-gray-100);
+  /* Sei Backgrounds - Dark Theme */
+  --sei-bg-primary: var(--sei-dark-bg);
+  --sei-bg-secondary: var(--sei-dark-surface);
+  --sei-bg-tertiary: var(--sei-dark-card);
   --sei-bg-dark: var(--sei-gray-900);
   
-  /* Sei Text Colors */
-  --sei-text-primary: var(--sei-gray-900);
-  --sei-text-secondary: var(--sei-gray-600);
-  --sei-text-muted: var(--sei-gray-500);
+  /* Sei Text Colors - Dark Theme */
+  --sei-text-primary: var(--sei-dark-text);
+  --sei-text-secondary: var(--sei-dark-text-secondary);
+  --sei-text-muted: var(--sei-dark-text-muted);
   --sei-text-inverse: #FFFFFF;
   
-  /* Sei Borders */
-  --sei-border-light: var(--sei-gray-200);
-  --sei-border-medium: var(--sei-gray-300);
-  --sei-border-dark: var(--sei-gray-400);
+  /* Sei Borders - Dark Theme */
+  --sei-border-light: var(--sei-dark-border);
+  --sei-border-medium: #444444;
+  --sei-border-dark: #555555;
   
-  /* Sei Status Colors */
+  /* Sei Status Colors - Subtle */
   --sei-success: #10B981;
   --sei-warning: #F59E0B;
   --sei-error: #EF4444;
   --sei-info: #3B82F6;
   
-  /* Sei Gradients */
-  --sei-gradient-primary: linear-gradient(135deg, var(--sei-red) 0%, var(--sei-red-light) 100%);
-  --sei-gradient-subtle: linear-gradient(135deg, var(--sei-gray-50) 0%, var(--sei-gray-100) 100%);
+  /* Sei Gradients - Subtle */
+  --sei-gradient-primary: linear-gradient(135deg, var(--sei-primary) 0%, var(--sei-primary-light) 100%);
+  --sei-gradient-subtle: linear-gradient(135deg, var(--sei-dark-surface) 0%, var(--sei-dark-card) 100%);
   --sei-gradient-dark: linear-gradient(135deg, var(--sei-gray-800) 0%, var(--sei-gray-900) 100%);
 }
 
-/* Base Sei Theme Classes */
+/* Base Sei Theme Classes - Dark Theme */
 .sei-bg-primary { background-color: var(--sei-bg-primary); }
 .sei-bg-secondary { background-color: var(--sei-bg-secondary); }
 .sei-bg-tertiary { background-color: var(--sei-bg-tertiary); }
@@ -77,22 +77,22 @@
 .sei-border-medium { border-color: var(--sei-border-medium); }
 .sei-border-dark { border-color: var(--sei-border-dark); }
 
-.sei-red { color: var(--sei-red); }
-.sei-bg-red { background-color: var(--sei-red); }
+.sei-primary { color: var(--sei-primary); }
+.sei-bg-primary-color { background-color: var(--sei-primary); }
 .sei-gradient-primary { background: var(--sei-gradient-primary); }
 
-/* Morphistic Theme Classes for Launchpad */
+/* Morphistic Theme Classes - Subtle */
 .sei-morphistic-bg { 
   background: var(--sei-morphistic-gradient);
   backdrop-filter: blur(20px);
 }
 
 .sei-morphistic-card {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .sei-morphistic-gradient { background: var(--sei-logo-gradient); }
@@ -100,7 +100,7 @@
 .sei-logo-secondary { color: var(--sei-logo-secondary); }
 .sei-logo-accent { color: var(--sei-logo-accent); }
 
-/* Dark Theme Classes (Jupiter Pro inspired) */
+/* Dark Theme Classes */
 .sei-dark-bg { background-color: var(--sei-dark-bg); }
 .sei-dark-surface { background-color: var(--sei-dark-surface); }
 .sei-dark-card { background-color: var(--sei-dark-card); }
@@ -129,18 +129,19 @@
   line-height: 1.6;
 }
 
-/* Sei Card Styles */
+/* Sei Card Styles - Dark Theme */
 .sei-card {
-  background: var(--sei-bg-primary);
+  background: var(--sei-dark-card);
   border: 1px solid var(--sei-border-light);
   border-radius: 12px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
+  color: var(--sei-dark-text);
 }
 
 .sei-card:hover {
   border-color: var(--sei-border-medium);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
 }
 
 .sei-card-dark {
@@ -149,7 +150,7 @@
   color: var(--sei-text-inverse);
 }
 
-/* Sei Button Styles */
+/* Sei Button Styles - Professional */
 .sei-btn {
   display: inline-flex;
   align-items: center;
@@ -170,7 +171,7 @@
 
 .sei-btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(82, 111, 255, 0.3);
 }
 
 .sei-btn-secondary {
@@ -180,7 +181,7 @@
 }
 
 .sei-btn-secondary:hover {
-  background: var(--sei-gray-200);
+  background: var(--sei-gray-700);
   border-color: var(--sei-border-medium);
 }
 
@@ -195,7 +196,7 @@
   color: var(--sei-text-primary);
 }
 
-/* Morphistic Button Styles */
+/* Morphistic Button Styles - Subtle */
 .sei-btn-morphistic {
   background: var(--sei-logo-gradient);
   color: white;
@@ -216,7 +217,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   transition: left 0.5s;
 }
 
@@ -226,16 +227,16 @@
 
 .sei-btn-morphistic:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 8px 25px rgba(82, 111, 255, 0.3);
 }
 
-/* Sei Input Styles */
+/* Sei Input Styles - Dark Theme */
 .sei-input {
   width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid var(--sei-border-light);
   border-radius: 8px;
-  background: var(--sei-bg-primary);
+  background: var(--sei-dark-card);
   color: var(--sei-text-primary);
   font-size: 0.875rem;
   transition: all 0.2s ease;
@@ -243,15 +244,15 @@
 
 .sei-input:focus {
   outline: none;
-  border-color: var(--sei-red);
-  box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.1);
+  border-color: var(--sei-primary);
+  box-shadow: 0 0 0 3px rgba(82, 111, 255, 0.1);
 }
 
 .sei-input::placeholder {
   color: var(--sei-text-muted);
 }
 
-/* Sei Navigation */
+/* Sei Navigation - Dark Theme */
 .sei-nav {
   background: var(--sei-bg-primary);
   border-bottom: 1px solid var(--sei-border-light);
@@ -265,14 +266,14 @@
 }
 
 .sei-nav-link:hover {
-  color: var(--sei-red);
+  color: var(--sei-primary);
 }
 
 .sei-nav-link.active {
-  color: var(--sei-red);
+  color: var(--sei-primary);
 }
 
-/* Sei Status Indicators */
+/* Sei Status Indicators - Subtle */
 .sei-status-safe {
   color: var(--sei-success);
   background: rgba(16, 185, 129, 0.1);
@@ -288,17 +289,17 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
-/* Sei Animations */
+/* Sei Animations - Subtle */
 @keyframes sei-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.7; }
 }
 
 @keyframes sei-bounce {
   0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
-  40%, 43% { transform: translate3d(0, -30px, 0); }
-  70% { transform: translate3d(0, -15px, 0); }
-  90% { transform: translate3d(0, -4px, 0); }
+  40%, 43% { transform: translate3d(0, -10px, 0); }
+  70% { transform: translate3d(0, -5px, 0); }
+  90% { transform: translate3d(0, -2px, 0); }
 }
 
 @keyframes sei-fade-in {
@@ -307,8 +308,8 @@
 }
 
 @keyframes sei-morphistic-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(78, 205, 196, 0.4); }
+  0%, 100% { box-shadow: 0 0 20px rgba(82, 111, 255, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(78, 205, 196, 0.3); }
 }
 
 .sei-pulse { animation: sei-pulse 2s infinite; }
@@ -331,17 +332,17 @@
   padding: 2rem 0;
 }
 
-/* Sei Typography */
+/* Sei Typography - Professional */
 .sei-heading-xl {
   font-size: 3rem;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.1;
   color: var(--sei-text-primary);
 }
 
 .sei-heading-lg {
   font-size: 2.25rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   color: var(--sei-text-primary);
 }
@@ -378,74 +379,159 @@
   }
 }
 
-/* Sei Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  .sei-auto-dark {
-    --sei-bg-primary: var(--sei-gray-900);
-    --sei-bg-secondary: var(--sei-gray-800);
-    --sei-bg-tertiary: var(--sei-gray-700);
-    --sei-text-primary: #FFFFFF;
-    --sei-text-secondary: var(--sei-gray-300);
-    --sei-text-muted: var(--sei-gray-400);
-    --sei-border-light: var(--sei-gray-700);
-    --sei-border-medium: var(--sei-gray-600);
-  }
+/* Token Grid Styles - Professional */
+.sei-token-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem 0;
 }
 
-/* Motion Logo Animation */
-.sei-motion-logo {
-  background: linear-gradient(45deg, #00ff88, #0088ff, #ff0088);
-  background-size: 300% 300%;
-  animation: sei-logo-gradient 3s ease infinite;
-  position: relative;
+.sei-token-card {
+  background: var(--sei-dark-card);
+  border: 1px solid var(--sei-border-light);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+  color: var(--sei-dark-text);
+}
+
+.sei-token-card:hover {
+  border-color: var(--sei-border-medium);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.sei-token-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sei-gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
   color: white;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
 }
 
-.sei-logo-text {
+.sei-token-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.sei-token-details {
+  flex: 1;
+}
+
+.sei-token-name {
+  font-weight: 600;
+  color: var(--sei-text-primary);
+  font-size: 0.875rem;
+}
+
+.sei-token-symbol {
+  color: var(--sei-text-secondary);
+  font-size: 0.75rem;
+}
+
+.sei-token-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.sei-token-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sei-token-stat-label {
+  color: var(--sei-text-muted);
+}
+
+.sei-token-stat-value {
+  color: var(--sei-text-primary);
+  font-weight: 500;
+}
+
+.sei-token-change {
+  font-weight: 600;
+}
+
+.sei-token-change.positive {
+  color: var(--sei-success);
+}
+
+.sei-token-change.negative {
+  color: var(--sei-error);
+}
+
+/* Category Tabs - Professional */
+.sei-category-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.sei-category-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: var(--sei-dark-card);
+  color: var(--sei-text-secondary);
+  border: 1px solid var(--sei-border-light);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.sei-category-tab:hover {
+  background: var(--sei-dark-surface);
+  color: var(--sei-text-primary);
+}
+
+.sei-category-tab.active {
+  background: var(--sei-primary);
+  color: white;
+  border-color: var(--sei-primary);
+}
+
+/* Search Bar - Professional */
+.sei-search-bar {
   position: relative;
-  z-index: 2;
-  font-weight: 900;
-  letter-spacing: -1px;
+  margin-bottom: 1.5rem;
 }
 
-.sei-logo-glow {
+.sei-search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid var(--sei-border-light);
+  border-radius: 8px;
+  background: var(--sei-dark-card);
+  color: var(--sei-text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.sei-search-input:focus {
+  outline: none;
+  border-color: var(--sei-primary);
+  box-shadow: 0 0 0 3px rgba(82, 111, 255, 0.1);
+}
+
+.sei-search-icon {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-  animation: sei-logo-pulse 2s ease-in-out infinite;
-  z-index: 1;
-}
-
-@keyframes sei-logo-gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes sei-logo-pulse {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(1.1);
-  }
-}
-
-/* Hover effect for motion logo */
-.sei-motion-logo:hover {
-  animation: sei-logo-gradient 1s ease infinite, sei-logo-pulse 1s ease-in-out infinite;
-  transform: scale(1.05);
-  transition: transform 0.2s ease;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--sei-text-muted);
+  width: 1rem;
+  height: 1rem;
 }

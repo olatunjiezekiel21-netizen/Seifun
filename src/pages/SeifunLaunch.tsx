@@ -132,13 +132,13 @@ const SeifunLaunch = () => {
     setFilters(newFilters);
   };
 
-  // Categories with Seifun styling
+  // Categories with professional styling
   const categories = [
-    { id: 'all', label: 'All Tokens', icon: Sparkles, color: 'from-green-500 to-blue-500' },
-    { id: 'trending', label: 'Trending', icon: TrendingUp, color: 'from-orange-500 to-red-500' },
-    { id: 'new', label: 'Fresh Drops', icon: Zap, color: 'from-green-500 to-emerald-500' },
-    { id: 'verified', label: 'Verified', icon: Shield, color: 'from-blue-500 to-cyan-500' },
-    { id: 'community', label: 'Community', icon: Users, color: 'from-violet-500 to-purple-500' }
+    { id: 'all', label: 'All Tokens', icon: Sparkles, color: 'from-blue-500 to-cyan-500' },
+    { id: 'trending', label: 'Trending', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+    { id: 'new', label: 'Fresh Drops', icon: Zap, color: 'from-purple-500 to-pink-500' },
+    { id: 'verified', label: 'Verified', icon: Shield, color: 'from-blue-500 to-indigo-500' },
+    { id: 'community', label: 'Community', icon: Users, color: 'from-orange-500 to-red-500' }
   ];
 
   const filteredTokens = seiTokens.filter(token => {
@@ -155,18 +155,18 @@ const SeifunLaunch = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Unique Seifun Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen sei-bg-primary">
+      {/* Professional Header */}
+      <div className="sei-bg-secondary border-b sei-border">
+        <div className="sei-container py-8">
           {/* Hero Section */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center space-x-3 mb-4">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-green-500 via-blue-500 to-red-500 bg-clip-text text-transparent">
-                Seifun Discover
+              <h1 className="sei-heading-xl sei-text-primary">
+                Seifun.launch
               </h1>
             </div>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            <p className="sei-text-lg max-w-2xl mx-auto">
               Discover the latest and most promising tokens on the Sei blockchain. 
               Launch, trade, and explore with confidence.
             </p>
@@ -174,210 +174,109 @@ const SeifunLaunch = () => {
 
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-8">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="sei-search-bar">
+              <Search className="sei-search-icon" />
               <input
                 type="text"
                 placeholder="Search tokens by name or symbol..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="sei-search-input"
               />
             </div>
           </div>
 
           {/* Category Navigation */}
-          <div className="flex flex-wrap justify-center gap-3 mb-6">
+          <div className="sei-category-tabs">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setActiveCategory(category.id as any)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-200 ${
-                  activeCategory === category.id
-                    ? 'bg-gradient-to-r ' + category.color + ' text-white shadow-lg'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                className={`sei-category-tab ${
+                  activeCategory === category.id ? 'active' : ''
                 }`}
               >
-                <category.icon className="w-4 h-4" />
-                <span className="font-medium">{category.label}</span>
+                <category.icon className="w-4 h-4 mr-2" />
+                {category.label}
               </button>
             ))}
-          </div>
-
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-xl">
-              <div className="text-2xl font-bold">{filteredTokens.length}</div>
-              <div className="text-sm opacity-90">Total Tokens</div>
-            </div>
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-xl">
-              <div className="text-2xl font-bold">
-                {filteredTokens.filter(t => t.change24h.includes('+')).length}
-              </div>
-              <div className="text-sm opacity-90">Gaining</div>
-            </div>
-            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-xl">
-              <div className="text-2xl font-bold">
-                {filteredTokens.filter(t => t.verified).length}
-              </div>
-              <div className="text-sm opacity-90">Verified</div>
-            </div>
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-xl">
-              <div className="text-2xl font-bold">
-                {filteredTokens.filter(t => t.trending === 'up').length}
-              </div>
-              <div className="text-sm opacity-90">Trending</div>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* View Controls */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'grid' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-              }`}
-            >
-              <Grid className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'list' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-              }`}
-            >
-              <List className="w-5 h-5" />
-            </button>
-          </div>
-          
-          <div className="text-sm text-gray-500">
-            Showing {filteredTokens.length} tokens
-          </div>
-        </div>
-
-        {/* Token Grid/List */}
+      <div className="sei-container py-8">
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-lg text-gray-600">Loading tokens...</span>
-            </div>
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="ml-3 sei-text-secondary">Loading tokens...</span>
           </div>
         ) : error ? (
-          <div className="text-center py-20">
-            <div className="text-red-500 mb-4">{error}</div>
+          <div className="text-center py-12">
+            <div className="sei-text-secondary mb-4">{error}</div>
             <button 
               onClick={loadSeiTokens}
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+              className="sei-btn sei-btn-primary"
             >
               Retry
             </button>
           </div>
         ) : (
-          <div className="grid gap-6">
-            {filteredTokens.map((token) => (
-              <div key={token.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {token.image === '🪙' ? token.symbol.charAt(0) : '🪙'}
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{token.name}</h3>
-                        {token.verified && (
-                          <CheckCircle className="w-5 h-5 text-blue-500" />
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-500">{token.symbol} • {token.creator}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900">{token.price}</div>
-                    <div className={`text-sm font-medium ${
-                      token.change24h.includes('+') ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {token.change24h}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
-                  <div>
-                    <div className="text-sm text-gray-500">Market Cap</div>
-                    <div className="font-semibold">{token.marketCap}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Volume 24h</div>
-                    <div className="font-semibold">{token.volume24h}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Holders</div>
-                    <div className="font-semibold">{token.holders.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Seifun Score</div>
-                    <div className="font-semibold text-blue-600">{token.score}/100</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <div className="flex items-center space-x-1">
-                      <Eye className="w-4 h-4" />
-                      <span>{token.views}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Heart className="w-4 h-4" />
-                      <span>{token.likes}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <MessageCircle className="w-4 h-4" />
-                      <span>{token.comments}</span>
-                    </div>
-                  </div>
-                  
-                  <button className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-blue-600 transition-all">
-                    <span>Trade</span>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          <>
+            {/* Stats Bar */}
+            <div className="mb-8">
+              <TrendingStats tokens={filteredTokens} />
+            </div>
 
-      {/* Information Areas */}
-      <div className="bg-black text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-2xl font-bold mb-4">Enhanced Token Discovery</h3>
-              <p className="text-gray-300 leading-relaxed">
-                Seifun Discover provides comprehensive token analysis with real-time market data, 
-                safety scores, and community insights. Find the next big token before everyone else.
-              </p>
+            {/* Token Grid */}
+            <div className="sei-token-grid">
+              {filteredTokens.map((token) => (
+                <div key={token.id} className="sei-token-card">
+                  <div className="sei-token-info">
+                    <div className="sei-token-icon">
+                      {token.symbol.charAt(0)}
+                    </div>
+                    <div className="sei-token-details">
+                      <div className="sei-token-name">{token.name}</div>
+                      <div className="sei-token-symbol">{token.symbol}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="sei-token-change positive">+{token.score}</div>
+                      <div className="sei-text-muted text-xs">Score</div>
+                    </div>
+                  </div>
+                  
+                  <div className="sei-token-stats">
+                    <div className="sei-token-stat">
+                      <span className="sei-token-stat-label">Price</span>
+                      <span className="sei-token-stat-value">{token.price}</span>
+                    </div>
+                    <div className="sei-token-stat">
+                      <span className="sei-token-stat-label">24h</span>
+                      <span className={`sei-token-change ${token.trending === 'up' ? 'positive' : 'negative'}`}>
+                        {token.change24h}
+                      </span>
+                    </div>
+                    <div className="sei-token-stat">
+                      <span className="sei-token-stat-label">Market Cap</span>
+                      <span className="sei-token-stat-value">{token.marketCap}</span>
+                    </div>
+                    <div className="sei-token-stat">
+                      <span className="sei-token-stat-label">Volume</span>
+                      <span className="sei-token-stat-value">{token.volume24h}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-4">Seifun Security Features</h3>
-              <p className="text-gray-300 leading-relaxed">
-                Our advanced scanning technology helps identify potential risks while highlighting 
-                verified and community-trusted tokens. Trade with confidence on Sei.
-              </p>
-            </div>
-          </div>
-        </div>
+
+            {filteredTokens.length === 0 && (
+              <div className="text-center py-12">
+                <div className="sei-text-secondary">No tokens found matching your criteria.</div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
