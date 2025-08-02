@@ -28,34 +28,69 @@ const SeifunLaunch = () => {
       const trendingTokens = await seiRegistry.getTrendingTokens();
       
       // Convert SeiTokenInfo to the format expected by MemeTokenGrid
-      const formattedTokens = trendingTokens.map((token, index) => ({
-        id: index + 1,
-        name: token.name,
-        symbol: token.symbol,
-        image: token.logoUrl || '🪙', // Use logo or fallback emoji
-        score: token.verified ? 95 : Math.floor(Math.random() * 40) + 60, // Higher score for verified tokens
-        creator: token.address.slice(0, 8), // Use part of address as creator
-        price: token.marketData?.price ? `$${token.marketData.price.toFixed(6)}` : '$0.000000',
-        change24h: token.marketData?.priceChange24h ? 
-          `${token.marketData.priceChange24h > 0 ? '+' : ''}${token.marketData.priceChange24h.toFixed(1)}%` : 
-          '+0.0%',
-        volume24h: token.marketData?.volume24h ? 
-          `$${(token.marketData.volume24h / 1000).toFixed(0)}K` : 
-          '$0K',
-        marketCap: token.marketData?.marketCap ? 
-          `$${(token.marketData.marketCap / 1000000).toFixed(1)}M` : 
-          '$0M',
-        holders: Math.floor(Math.random() * 2000) + 100, // Placeholder - would need DEX data
-        trending: 'up' as const,
-        category: token.verified ? 'verified' : 'community',
-        likes: Math.floor(Math.random() * 500) + 50,
-        comments: Math.floor(Math.random() * 100) + 10,
-        views: Math.floor(Math.random() * 3000) + 500,
-        launchDate: 'Recent', // Placeholder
-        description: token.description || `${token.name} token on Sei blockchain with ${token.verified ? 'verified' : 'community'} status.`,
-        verified: token.verified,
-        website: token.website
-      }));
+      const formattedTokens = trendingTokens.map((token, index) => {
+        // Calculate proper market cap and price change
+        const price = token.marketData?.price || 0.000001;
+        const priceChange24h = token.marketData?.priceChange24h || 0;
+        const volume24h = token.marketData?.volume24h || 0;
+        const totalSupply = token.marketData?.totalSupply || 1000000000; // Default 1B supply
+        
+        // Calculate market cap: price * total supply
+        const marketCap = price * totalSupply;
+        
+        // Format market cap display
+        let marketCapDisplay = '$0';
+        if (marketCap >= 1000000000) {
+          marketCapDisplay = `$${(marketCap / 1000000000).toFixed(2)}B`;
+        } else if (marketCap >= 1000000) {
+          marketCapDisplay = `$${(marketCap / 1000000).toFixed(2)}M`;
+        } else if (marketCap >= 1000) {
+          marketCapDisplay = `$${(marketCap / 1000).toFixed(2)}K`;
+        } else {
+          marketCapDisplay = `$${marketCap.toFixed(2)}`;
+        }
+        
+        // Format volume display
+        let volumeDisplay = '$0';
+        if (volume24h >= 1000000) {
+          volumeDisplay = `$${(volume24h / 1000000).toFixed(2)}M`;
+        } else if (volume24h >= 1000) {
+          volumeDisplay = `$${(volume24h / 1000).toFixed(2)}K`;
+        } else {
+          volumeDisplay = `$${volume24h.toFixed(2)}`;
+        }
+        
+        // Format price display
+        const priceDisplay = price < 0.01 ? `$${price.toFixed(8)}` : `$${price.toFixed(6)}`;
+        
+        // Format 24h change
+        const changeDisplay = priceChange24h >= 0 ? 
+          `+${priceChange24h.toFixed(2)}%` : 
+          `${priceChange24h.toFixed(2)}%`;
+
+        return {
+          id: index + 1,
+          name: token.name,
+          symbol: token.symbol,
+          image: token.logoUrl || '🪙', // Use logo or fallback emoji
+          score: token.verified ? 95 : Math.floor(Math.random() * 40) + 60, // Higher score for verified tokens
+          creator: token.address.slice(0, 8), // Use part of address as creator
+          price: priceDisplay,
+          change24h: changeDisplay,
+          volume24h: volumeDisplay,
+          marketCap: marketCapDisplay,
+          holders: Math.floor(Math.random() * 2000) + 100, // Placeholder - would need DEX data
+          trending: priceChange24h > 0 ? 'up' as const : 'down' as const,
+          category: token.verified ? 'verified' : 'community',
+          likes: Math.floor(Math.random() * 500) + 50,
+          comments: Math.floor(Math.random() * 100) + 10,
+          views: Math.floor(Math.random() * 3000) + 500,
+          launchDate: 'Recent', // Placeholder
+          description: token.description || `${token.name} token on Sei blockchain with ${token.verified ? 'verified' : 'community'} status.`,
+          verified: token.verified,
+          website: token.website
+        };
+      });
 
       setSeiTokens(formattedTokens);
     } catch (err) {

@@ -151,7 +151,23 @@ const Header = () => {
             ) : (
               <div className="relative">
                 <button
-                  onClick={() => availableWallets.length === 1 ? connectWallet() : setShowWalletDropdown(!showWalletDropdown)}
+                  onClick={() => {
+                    if (availableWallets.length === 0) {
+                      // Show helpful message when no wallets are available
+                      alert(`No Sei-compatible wallets detected. Please install one of these wallets:
+
+• Sei Wallet: https://sei.io/wallet
+• Compass Wallet: https://compass.keplr.app/
+• Keplr: https://keplr.app/
+• MetaMask: https://metamask.io/
+
+After installing, refresh the page and try again.`);
+                    } else if (availableWallets.length === 1) {
+                      connectWallet();
+                    } else {
+                      setShowWalletDropdown(!showWalletDropdown);
+                    }
+                  }}
                   disabled={isConnecting}
                   className="flex items-center space-x-2 sei-btn sei-btn-primary px-6 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -182,22 +198,42 @@ const Header = () => {
                             connectWallet(wallet);
                             setShowWalletDropdown(false);
                           }}
-                          className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 transition-colors flex items-center space-x-3"
+                          className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-50 transition-colors flex items-center space-x-2"
                         >
-                          <div className="w-8 h-8 bg-gradient-to-r from-[#FF3C3C] to-[#FF6B6B] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                            {wallet.charAt(0).toUpperCase()}
+                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">{wallet.charAt(0).toUpperCase()}</span>
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-900 capitalize">{wallet} Wallet</div>
-                            <div className="text-xs text-gray-500">
-                              {wallet === 'sei' && 'Official Sei Wallet'}
-                              {wallet === 'compass' && 'Cosmos ecosystem wallet'}
-                              {wallet === 'keplr' && 'Multi-chain Cosmos wallet'}
-                              {wallet === 'metamask' && 'Ethereum & EVM chains'}
-                            </div>
-                          </div>
+                          <span className="capitalize">{wallet} Wallet</span>
                         </button>
                       ))}
+                    </div>
+                    <div className="p-3 border-t border-gray-100 bg-gray-50">
+                      <p className="text-xs text-gray-500">
+                        Don't have a wallet? 
+                        <a 
+                          href="https://sei.io/wallet" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 ml-1"
+                        >
+                          Get Sei Wallet
+                        </a>
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {availableWallets.length === 0 && (
+                  <div className="absolute right-0 mt-2 w-80 bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-lg z-50">
+                    <div className="text-yellow-800 text-sm">
+                      <p className="font-medium mb-2">No wallet detected</p>
+                      <p className="mb-2">Please install a Sei-compatible wallet:</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• <a href="https://sei.io/wallet" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Sei Wallet</a></li>
+                        <li>• <a href="https://compass.keplr.app/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Compass Wallet</a></li>
+                        <li>• <a href="https://keplr.app/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Keplr</a></li>
+                        <li>• <a href="https://metamask.io/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">MetaMask</a></li>
+                      </ul>
                     </div>
                   </div>
                 )}

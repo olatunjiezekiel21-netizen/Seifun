@@ -6,7 +6,7 @@ import HowItWorks from './components/HowItWorks';
 import TokenScanner from './components/TokenScanner';
 import SeifuMasterAI from './components/SeifuMasterAI';
 import LiveTokens from './components/LiveTokens';
-import TrustedCreators from './components/TrustedCreators';
+
 import Footer from './components/Footer';
 import Launchpad from './pages/Launchpad';
 import SeifunLaunch from './pages/SeifunLaunch';
@@ -35,7 +35,6 @@ function App() {
               <TokenScanner />
               <SeifuMasterAI />
               <LiveTokens />
-              <TrustedCreators />
             </main>
           } />
           <Route path="/launchpad" element={<Launchpad />} />
