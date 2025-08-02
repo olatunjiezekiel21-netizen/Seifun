@@ -1,80 +1,67 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Wallet, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Menu, X, Wallet, ChevronDown, LogOut, Settings } from 'lucide-react';
 import { useSeiWallet } from '../utils/seiWalletConnection';
+import MotionLogo from './MotionLogo';
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const location = useLocation();
-  const { isConnected, address, balance, isConnecting, error, walletType, connectWallet, disconnectWallet, switchWallet, availableWallets, clearError } = useSeiWallet();
-  const [showWalletDropdown, setShowWalletDropdown] = React.useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showWalletDropdown, setShowWalletDropdown] = useState(false);
+  
+  const {
+    isConnected,
+    address,
+    balance,
+    isConnecting,
+    error,
+    walletType,
+    availableWallets,
+    connectWallet,
+    disconnectWallet,
+    switchWallet,
+    clearError
+  } = useSeiWallet();
 
   const truncateAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
   return (
-    <header className="sei-nav sticky top-0 z-50">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/Seifu.png" 
-                alt="Seifu Logo" 
-                className="w-8 h-8 rounded-full"
-              />
-              <span className="text-2xl font-bold sei-red">seifun</span>
-            </Link>
-          </div>
+          <Link to="/" className="flex items-center space-x-3 group">
+            <MotionLogo size={40} />
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold bg-gradient-to-r from-green-500 via-blue-500 to-red-500 bg-clip-text text-transparent">
+                Seifun
+              </span>
+              <span className="text-xs text-gray-500 -mt-1">Launch Platform</span>
+            </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/launchpad" 
-              className={`sei-nav-link font-medium ${
-                location.pathname === '/launchpad' ? 'active' : ''
-              }`}
-            >
+            <Link to="/" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
+              Home
+            </Link>
+            <Link to="/launchpad" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
               Launchpad
             </Link>
-            <Link 
-              to="/seifun-launch" 
-              className={`sei-nav-link font-medium ${
-                location.pathname === '/seifun-launch' ? 'active' : ''
-              }`}
-            >
-              seifun.launch
+            <Link to="/seifun-launch" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
+              Discover
             </Link>
-            <Link 
-              to="/token-pulse" 
-              className={`sei-nav-link font-medium ${
-                location.pathname === '/token-pulse' ? 'active' : ''
-              }`}
-            >
-              Token Pulse
+            <Link to="/token-pulse" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
+              Analytics
             </Link>
-                                  <Link 
-                        to="/docs" 
-                        className={`sei-nav-link font-medium ${
-                          location.pathname === '/docs' ? 'active' : ''
-                        }`}
-                      >
-                        Docs
-                      </Link>
-                      <Link 
-                        to="/dev-plus" 
-                        className={`sei-nav-link font-medium ${
-                          location.pathname === '/dev-plus' ? 'active' : ''
-                        }`}
-                      >
-                        Dev Plus
-                      </Link>
+            <Link to="/dev-plus" className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium">
+              Dev Plus
+            </Link>
           </nav>
 
-          {/* Connect Wallet Button */}
-          <div className="hidden md:flex items-center space-x-2">
+          {/* Wallet Connection */}
+          <div className="flex items-center space-x-4">
             {error && (
               <div className="relative">
                 <div className="absolute right-0 top-12 w-80 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50">
@@ -239,15 +226,15 @@ After installing, refresh the page and try again.`);
                 )}
               </div>
             )}
-          </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-[#FF3C3C] transition-colors"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -255,92 +242,40 @@ After installing, refresh the page and try again.`);
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
               <Link 
+                to="/" 
+                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link 
                 to="/launchpad" 
-                className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                  location.pathname === '/launchpad' ? 'text-[#FF3C3C]' : 'text-gray-700'
-                }`}
+                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Launchpad
               </Link>
               <Link 
                 to="/seifun-launch" 
-                className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                  location.pathname === '/seifun-launch' ? 'text-[#FF3C3C]' : 'text-gray-700'
-                }`}
+                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                seifun.launch
-              </Link>
-                              <Link 
-                  to="/token-pulse" 
-                  className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                    location.pathname === '/token-pulse' ? 'text-[#FF3C3C]' : 'text-gray-700'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Token Pulse
-                </Link>
-              <Link 
-                to="/docs" 
-                className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                  location.pathname === '/docs' ? 'text-[#FF3C3C]' : 'text-gray-700'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Docs
+                Discover
               </Link>
               <Link 
-                to="/ai-chat" 
-                className={`hover:text-[#FF3C3C] transition-colors font-medium ${
-                  location.pathname === '/ai-chat' ? 'text-[#FF3C3C]' : 'text-gray-700'
-                }`}
+                to="/token-pulse" 
+                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                AI Chat
+                Analytics
               </Link>
-              
-              {/* Mobile Wallet Connection */}
-              {error && (
-                <div className="text-red-500 text-sm">
-                  {error}
-                </div>
-              )}
-              {isConnected ? (
-                <div className="flex flex-col space-y-2">
-                  <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm text-center">
-                    Balance: {balance} SEI
-                  </div>
-                  <div className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg text-sm font-mono text-center">
-                    {address ? truncateAddress(address) : ''}
-                  </div>
-                  <button 
-                    onClick={disconnectWallet}
-                    className="flex items-center justify-center space-x-2 bg-red-500 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-red-600 transition-colors w-fit"
-                  >
-                    <LogOut size={18} />
-                    <span>Disconnect</span>
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={connectWallet}
-                  disabled={isConnecting}
-                  className="flex items-center space-x-2 sei-btn sei-btn-primary px-6 py-2.5 w-fit disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isConnecting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Connecting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Wallet size={18} />
-                      <span>Connect Wallet</span>
-                    </>
-                  )}
-                </button>
-              )}
+              <Link 
+                to="/dev-plus" 
+                className="text-gray-700 hover:text-[#FF3C3C] transition-colors font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Dev Plus
+              </Link>
             </nav>
           </div>
         )}

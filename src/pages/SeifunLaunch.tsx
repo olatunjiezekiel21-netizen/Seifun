@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, List, Flame, Star, Filter, Zap, TrendingUp, Users, Sparkles, Rocket, Shield, Search, Settings, Home, Plus, Smile, CheckCircle } from 'lucide-react';
+import { Grid, List, Flame, Star, Filter, Zap, TrendingUp, Users, Sparkles, Rocket, Shield, Search, Settings, Home, Plus, Smile, CheckCircle, Eye, Heart, MessageCircle, ArrowUpRight } from 'lucide-react';
 import SeifunLaunchFilters from '../components/SeifunLaunchFilters';
 import MemeTokenGrid from '../components/MemeTokenGrid';
 import TrendingStats from '../components/TrendingStats';
 import { SeiTokenRegistry, SeiTokenInfo } from '../utils/seiTokenRegistry';
+import MotionLogo from '../components/MotionLogo';
 
 const SeifunLaunch = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -12,6 +13,7 @@ const SeifunLaunch = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<'all' | 'trending' | 'new' | 'verified' | 'community'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const seiRegistry = new SeiTokenRegistry(false); // Use mainnet for real tokens
 
@@ -131,9 +133,9 @@ const SeifunLaunch = () => {
     setFilters(newFilters);
   };
 
-  // Categories with morphistic styling
+  // Categories with Seifun styling
   const categories = [
-    { id: 'all', label: 'All Tokens', icon: Sparkles, color: 'from-sei-logo-primary to-sei-logo-secondary' },
+    { id: 'all', label: 'All Tokens', icon: Sparkles, color: 'from-green-500 to-blue-500' },
     { id: 'trending', label: 'Trending', icon: TrendingUp, color: 'from-orange-500 to-red-500' },
     { id: 'new', label: 'Fresh Drops', icon: Zap, color: 'from-green-500 to-emerald-500' },
     { id: 'verified', label: 'Verified', icon: Shield, color: 'from-blue-500 to-cyan-500' },
@@ -147,214 +149,233 @@ const SeifunLaunch = () => {
     if (activeCategory === 'verified') return token.verified;
     if (activeCategory === 'community') return !token.verified;
     return true;
-  });
+  }).filter(token => 
+    searchQuery === '' || 
+    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen sei-dark-bg">
-      {/* Jupiter Pro-inspired Header */}
-      <div className="sei-dark-surface border-b sei-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {/* Status Bar */}
-          <div className="flex justify-between items-center text-sm sei-dark-text-muted mb-4">
-            <span>7:01</span>
-            <div className="flex items-center space-x-2">
-              <span>4G</span>
-              <span>WiFi</span>
-              <span>Battery</span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Unique Seifun Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Hero Section */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center space-x-3 mb-4">
+              <MotionLogo size={48} />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-green-500 via-blue-500 to-red-500 bg-clip-text text-transparent">
+                Seifun Discover
+              </h1>
             </div>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Discover the latest and most promising tokens on the Sei blockchain. 
+              Launch, trade, and explore with confidence.
+            </p>
           </div>
-          
-          {/* Browser Bar */}
-          <div className="flex items-center space-x-2 bg-sei-dark-card rounded-lg p-2 mb-4">
-            <Home className="w-4 h-4 sei-dark-text-muted" />
-            <span className="flex-1 text-sm sei-dark-text">seifun.launch/pro?tab=cooking</span>
-            <Plus className="w-4 h-4 sei-dark-text-muted" />
-            <Smile className="w-4 h-4 sei-dark-text-muted" />
-          </div>
-          
-          {/* Main Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 sei-morphistic-gradient rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">S</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 sei-dark-text-muted">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-                  </svg>
-                </div>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sei-dark-text-muted" />
-                  <input
-                    type="text"
-                    placeholder="Search tokens..."
-                    className="pl-10 pr-4 py-2 bg-sei-dark-card border sei-dark-border rounded-lg text-sm sei-dark-text focus:outline-none focus:border-sei-logo-primary"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Settings className="w-5 h-5 sei-dark-text-muted" />
-              <button className="sei-btn-morphistic">
-                Connect
-              </button>
-            </div>
-          </div>
-          
-          {/* Market Data Bar */}
-          <div className="flex items-center space-x-6 mt-4 text-sm">
-            <div className="sei-dark-text">
-              <span className="sei-dark-text-muted">SOL</span> $166.77
-            </div>
-            <div className="sei-dark-text">
-              <span className="sei-dark-text-muted">JUP</span> $0.46392
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="sei-dark-surface border-b sei-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-8">
-            <button className="px-4 py-3 text-sm font-medium sei-dark-text bg-green-500 text-black rounded-lg">
-              Cooking
-            </button>
-            <button className="px-4 py-3 text-sm font-medium sei-dark-text-muted hover:sei-dark-text">
-              Launchpads
-              <span className="ml-1 text-xs bg-sei-dark-card px-1 rounded">v2</span>
-            </button>
-            <button className="px-4 py-3 text-sm font-medium sei-dark-text-muted hover:sei-dark-text">
-              AlphaScan
-            </button>
-            <button className="px-4 py-3 text-sm font-medium sei-dark-text-muted hover:sei-dark-text">
-              Stocks
-            </button>
-            <div className="flex-1"></div>
-            <div className="w-4 h-4 sei-dark-text-muted">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-              </svg>
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto mb-8">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search tokens by name or symbol..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Action Bar */}
-      <div className="sei-dark-surface border-b sei-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <select className="bg-sei-dark-card border sei-dark-border rounded px-3 py-1 text-sm sei-dark-text">
-                <option>24h</option>
-              </select>
-              <button className="flex items-center space-x-2 bg-sei-dark-card border sei-dark-border rounded px-3 py-1 text-sm sei-dark-text">
-                <Filter className="w-4 h-4" />
-                <span>Filters</span>
+          {/* Category Navigation */}
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setActiveCategory(category.id as any)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                  activeCategory === category.id
+                    ? 'bg-gradient-to-r ' + category.color + ' text-white shadow-lg'
+                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                }`}
+              >
+                <category.icon className="w-4 h-4" />
+                <span className="font-medium">{category.label}</span>
               </button>
+            ))}
+          </div>
+
+          {/* Stats Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-xl">
+              <div className="text-2xl font-bold">{filteredTokens.length}</div>
+              <div className="text-sm opacity-90">Total Tokens</div>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <button className="sei-btn-morphistic flex items-center space-x-2">
-                <Zap className="w-4 h-4" />
-                <span>BUY</span>
-              </button>
-              <div className="flex items-center space-x-2 bg-sei-dark-card border sei-dark-border rounded px-3 py-1">
-                <span className="text-sm sei-dark-text">0.01</span>
-                <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-xl">
+              <div className="text-2xl font-bold">
+                {filteredTokens.filter(t => t.change24h.includes('+')).length}
               </div>
+              <div className="text-sm opacity-90">Gaining</div>
+            </div>
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-xl">
+              <div className="text-2xl font-bold">
+                {filteredTokens.filter(t => t.verified).length}
+              </div>
+              <div className="text-sm opacity-90">Verified</div>
+            </div>
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-xl">
+              <div className="text-2xl font-bold">
+                {filteredTokens.filter(t => t.trending === 'up').length}
+              </div>
+              <div className="text-sm opacity-90">Trending</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="sei-dark-bg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Token List Header */}
-          <div className="sei-info-area mb-6">
-            <div className="grid grid-cols-4 gap-4 text-sm font-medium">
-              <div className="flex items-center space-x-2">
-                <Star className="w-4 h-4" />
-                <span>Token</span>
-              </div>
-              <div>Price/%Δ</div>
-              <div>MC/FD</div>
-              <div>Buy</div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* View Controls */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'grid' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              <Grid className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              <List className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="text-sm text-gray-500">
+            Showing {filteredTokens.length} tokens
+          </div>
+        </div>
+
+        {/* Token Grid/List */}
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="flex items-center space-x-3">
+              <MotionLogo size={32} />
+              <span className="text-lg text-gray-600">Loading tokens...</span>
             </div>
           </div>
-
-          {/* Token List */}
-          <div className="space-y-2">
-            {filteredTokens.slice(0, 7).map((token, index) => (
-              <div key={token.id} className="sei-dark-card p-4 rounded-lg border sei-dark-border">
-                <div className="grid grid-cols-4 gap-4 items-center">
-                  <div className="flex items-center space-x-3">
-                    <Star className="w-4 h-4 sei-dark-text-muted" />
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-                      {token.symbol.charAt(0)}
+        ) : error ? (
+          <div className="text-center py-20">
+            <div className="text-red-500 mb-4">{error}</div>
+            <button 
+              onClick={loadSeiTokens}
+              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {filteredTokens.map((token) => (
+              <div key={token.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {token.image === '🪙' ? token.symbol.charAt(0) : '🪙'}
                     </div>
                     <div>
-                      <div className="sei-dark-text font-medium">{token.symbol}</div>
-                      <div className="text-xs sei-dark-text-muted">{index === 0 ? '33m' : index === 1 ? '247d' : index === 2 ? '19h' : index === 3 ? '80d' : index === 4 ? '18h' : index === 5 ? '73d' : '15h'}</div>
-                    </div>
-                    <div className="flex space-x-1">
-                      <Search className="w-3 h-3 sei-dark-text-muted" />
-                      {index === 1 && <CheckCircle className="w-3 h-3 text-green-500" />}
-                      {index === 5 && <CheckCircle className="w-3 h-3 text-green-500" />}
-                      <svg className="w-3 h-3 sei-dark-text-muted" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                      {(index === 0 || index === 2 || index === 3 || index === 5 || index === 6) && (
-                        <svg className="w-3 h-3 sei-dark-text-muted" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                        </svg>
-                      )}
-                      {(index === 1 || index === 5) && (
-                        <svg className="w-3 h-3 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                        </svg>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{token.name}</h3>
+                        {token.verified && (
+                          <CheckCircle className="w-5 h-5 text-blue-500" />
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">{token.symbol} • {token.creator}</p>
                     </div>
                   </div>
                   
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-900">{token.price}</div>
+                    <div className={`text-sm font-medium ${
+                      token.change24h.includes('+') ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {token.change24h}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-gray-100">
                   <div>
-                    <div className="sei-dark-text font-medium">{token.price}</div>
-                    <div className="text-sm text-green-500">
-                      {index === 0 ? '+468x' : index === 1 ? '+1.45%' : index === 2 ? '+158.01%' : index === 3 ? '+18.17%' : index === 4 ? '+450.88%' : index === 5 ? '+205.44%' : '+77x'}
+                    <div className="text-sm text-gray-500">Market Cap</div>
+                    <div className="font-semibold">{token.marketCap}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Volume 24h</div>
+                    <div className="font-semibold">{token.volume24h}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Holders</div>
+                    <div className="font-semibold">{token.holders.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Seifun Score</div>
+                    <div className="font-semibold text-blue-600">{token.score}/100</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex items-center space-x-1">
+                      <Eye className="w-4 h-4" />
+                      <span>{token.views}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Heart className="w-4 h-4" />
+                      <span>{token.likes}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <MessageCircle className="w-4 h-4" />
+                      <span>{token.comments}</span>
                     </div>
                   </div>
                   
-                  <div className="sei-dark-text-muted text-sm">
-                    {index === 0 ? '$1.68M' : index === 1 ? '$162M' : index === 2 ? '$481' : index === 3 ? '$21.7M' : index === 4 ? '$2.86M' : index === 5 ? '$5.22M' : '$335'}
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Zap className="w-4 h-4 sei-dark-text-muted" />
-                  </div>
+                  <button className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-blue-600 transition-all">
+                    <span>Trade</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
           </div>
+        )}
+      </div>
 
-          {/* Information Areas with Black Background */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <div className="sei-info-area">
-              <h3 className="text-lg font-semibold mb-3">Enhanced Honeypot Detection</h3>
-              <p className="text-sm">
-                Our improved algorithm now uses multiple layers of analysis including transfer simulation, 
-                ownership patterns, and advanced bytecode analysis to reduce false positives and provide 
-                more accurate security assessments.
+      {/* Information Areas */}
+      <div className="bg-black text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-2xl font-bold mb-4">Enhanced Token Discovery</h3>
+              <p className="text-gray-300 leading-relaxed">
+                Seifun Discover provides comprehensive token analysis with real-time market data, 
+                safety scores, and community insights. Find the next big token before everyone else.
               </p>
             </div>
-            
-            <div className="sei-info-area">
-              <h3 className="text-lg font-semibold mb-3">Seifun Launch Platform</h3>
-              <p className="text-sm">
-                Professional token discovery and analysis on Sei Network with morphistic design elements 
-                and enhanced security features. Built for the future of decentralized trading.
+            <div>
+              <h3 className="text-2xl font-bold mb-4">Seifun Security Features</h3>
+              <p className="text-gray-300 leading-relaxed">
+                Our advanced scanning technology helps identify potential risks while highlighting 
+                verified and community-trusted tokens. Trade with confidence on Sei.
               </p>
             </div>
           </div>

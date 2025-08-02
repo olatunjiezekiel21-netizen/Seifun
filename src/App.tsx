@@ -12,7 +12,7 @@ import Launchpad from './pages/Launchpad';
 import SeifunLaunch from './pages/SeifunLaunch';
 import TokenPulse from './pages/TokenPulse';
 import Docs from './pages/Docs';
-import DevPlus from './pages/AIChat';
+import DevPlus from './pages/DevPlus';
 
 function App() {
   React.useEffect(() => {

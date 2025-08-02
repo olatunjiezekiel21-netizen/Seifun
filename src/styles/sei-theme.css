@@ -391,3 +391,61 @@
     --sei-border-medium: var(--sei-gray-600);
   }
 }
+
+/* Motion Logo Animation */
+.sei-motion-logo {
+  background: linear-gradient(45deg, #00ff88, #0088ff, #ff0088);
+  background-size: 300% 300%;
+  animation: sei-logo-gradient 3s ease infinite;
+  position: relative;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.sei-logo-text {
+  position: relative;
+  z-index: 2;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.sei-logo-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  animation: sei-logo-pulse 2s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes sei-logo-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes sei-logo-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+/* Hover effect for motion logo */
+.sei-motion-logo:hover {
+  animation: sei-logo-gradient 1s ease infinite, sei-logo-pulse 1s ease-in-out infinite;
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
