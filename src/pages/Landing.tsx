@@ -19,8 +19,8 @@ const Landing = () => {
   return (
     <div className="min-h-screen landing-bg-primary">
       {/* Navigation */}
-      <nav className="elegant-nav sticky top-0 z-50">
-        <div className="elegant-container">
+      <nav className="landing-nav sticky top-0 z-50">
+        <div className="landing-container">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-3">
               <div className="relative">
@@ -39,12 +39,12 @@ const Landing = () => {
             </Link>
 
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="elegant-nav-link">Features</a>
-              <a href="#about" className="elegant-nav-link">About</a>
-              <a href="#contact" className="elegant-nav-link">Contact</a>
+              <a href="#features" className="landing-nav-link">Features</a>
+              <a href="#about" className="landing-nav-link">About</a>
+              <a href="#contact" className="landing-nav-link">Contact</a>
             </div>
 
-            <Link to="/app" className="elegant-btn elegant-btn-primary">
+            <Link to="/app" className="landing-btn landing-btn-primary">
               Launch App
             </Link>
           </div>
@@ -52,14 +52,14 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="elegant-section">
-        <div className="elegant-container">
-          <div className="text-center elegant-fade-in">
-            <h1 className="elegant-heading-xl mb-6">
+      <section className="landing-section">
+        <div className="landing-container">
+          <div className="text-center landing-fade-in">
+            <h1 className="landing-heading-xl mb-6">
               Launch Safe Meme Tokens on{' '}
-              <span className="landing-blue">Sei</span>
+              <span className="landing-sei-blue">Sei</span>
             </h1>
-            <p className="elegant-text-lg max-w-3xl mx-auto mb-8">
+            <p className="landing-text-lg max-w-3xl mx-auto mb-8">
               Discover, launch, and trade tokens on the fastest Layer 1 blockchain. 
               Built for developers, traders, and creators who want to build the future of DeFi.
             </p>
@@ -68,7 +68,7 @@ const Landing = () => {
                 <Rocket className="w-5 h-5 mr-2" />
                 Launch App
               </Link>
-              <button className="elegant-btn elegant-btn-secondary">
+              <button className="landing-btn landing-btn-secondary">
                 <Play className="w-5 h-5 mr-2" />
                 Watch Demo
               </button>
@@ -78,71 +78,71 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="elegant-section-sm">
-        <div className="elegant-container">
-          <div className="text-center mb-16 elegant-slide-up">
-            <h2 className="elegant-heading-lg mb-4">Why Choose Seifun?</h2>
-            <p className="elegant-text-lg max-w-2xl mx-auto">
+      <section id="features" className="landing-section-sm">
+        <div className="landing-container">
+          <div className="text-center mb-16 landing-slide-up">
+            <h2 className="landing-heading-lg mb-4">Why Choose Seifun?</h2>
+            <p className="landing-text-lg max-w-2xl mx-auto">
               Experience the next generation of token launching with advanced features and security.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="elegant-card p-6 elegant-fade-in">
-              <div className="w-12 h-12 landing-gradient-blue rounded-lg flex items-center justify-center mb-4">
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
                 <Rocket className="w-6 h-6 text-white" />
               </div>
-              <h3 className="elegant-heading-md mb-3">Instant Token Launch</h3>
+              <h3 className="landing-heading-md mb-3">Instant Token Launch</h3>
               <p className="landing-text-secondary">
                 Launch your token in minutes with our streamlined process. No coding required.
               </p>
             </div>
 
-            <div className="elegant-card p-6 elegant-fade-in">
-              <div className="w-12 h-12 landing-gradient-blue rounded-lg flex items-center justify-center mb-4">
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
                 <Shield className="w-6 h-6 text-white" />
               </div>
-              <h3 className="elegant-heading-md mb-3">Advanced Security</h3>
+              <h3 className="landing-heading-md mb-3">Advanced Security</h3>
               <p className="landing-text-secondary">
                 Built-in honeypot detection and security scanning to protect your investments.
               </p>
             </div>
 
-            <div className="elegant-card p-6 elegant-fade-in">
-              <div className="w-12 h-12 landing-gradient-blue rounded-lg flex items-center justify-center mb-4">
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
-              <h3 className="elegant-heading-md mb-3">Real-time Analytics</h3>
+              <h3 className="landing-heading-md mb-3">Real-time Analytics</h3>
               <p className="landing-text-secondary">
                 Track token performance with comprehensive analytics and market insights.
               </p>
             </div>
 
-            <div className="elegant-card p-6 elegant-fade-in">
-              <div className="w-12 h-12 landing-gradient-blue rounded-lg flex items-center justify-center mb-4">
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
                 <Users className="w-6 h-6 text-white" />
               </div>
-              <h3 className="elegant-heading-md mb-3">Community Driven</h3>
+              <h3 className="landing-heading-md mb-3">Community Driven</h3>
               <p className="landing-text-secondary">
                 Join a vibrant community of creators, traders, and developers.
               </p>
             </div>
 
-            <div className="elegant-card p-6 elegant-fade-in">
-              <div className="w-12 h-12 landing-gradient-blue rounded-lg flex items-center justify-center mb-4">
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <h3 className="elegant-heading-md mb-3">Lightning Fast</h3>
+              <h3 className="landing-heading-md mb-3">Lightning Fast</h3>
               <p className="landing-text-secondary">
                 Built on Sei's high-performance blockchain for instant transactions.
               </p>
             </div>
 
-            <div className="elegant-card p-6 elegant-fade-in">
-              <div className="w-12 h-12 landing-gradient-blue rounded-lg flex items-center justify-center mb-4">
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              <h3 className="elegant-heading-md mb-3">Developer Tools</h3>
+              <h3 className="landing-heading-md mb-3">Developer Tools</h3>
               <p className="landing-text-secondary">
                 Advanced tools for developers to build and manage their tokens.
               </p>
@@ -152,23 +152,23 @@ const Landing = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="elegant-section-sm">
-        <div className="elegant-container">
+      <section className="landing-section-sm">
+        <div className="landing-container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center elegant-fade-in">
-              <div className="elegant-heading-xl landing-blue mb-2">$50M+</div>
+            <div className="text-center landing-fade-in">
+              <div className="landing-heading-xl landing-sei-blue mb-2">$50M+</div>
               <div className="landing-text-secondary">Total Volume</div>
             </div>
-            <div className="text-center elegant-fade-in">
-              <div className="elegant-heading-xl landing-blue mb-2">1,247</div>
+            <div className="text-center landing-fade-in">
+              <div className="landing-heading-xl landing-sei-blue mb-2">1,247</div>
               <div className="landing-text-secondary">Tokens Launched</div>
             </div>
-            <div className="text-center elegant-fade-in">
-              <div className="elegant-heading-xl landing-blue mb-2">8,920</div>
+            <div className="text-center landing-fade-in">
+              <div className="landing-heading-xl landing-sei-blue mb-2">8,920</div>
               <div className="landing-text-secondary">Active Users</div>
             </div>
-            <div className="text-center elegant-fade-in">
-              <div className="elegant-heading-xl landing-blue mb-2">99.9%</div>
+            <div className="text-center landing-fade-in">
+              <div className="landing-heading-xl landing-sei-blue mb-2">99.9%</div>
               <div className="landing-text-secondary">Uptime</div>
             </div>
           </div>
@@ -176,11 +176,11 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="elegant-section-sm">
-        <div className="elegant-container">
-          <div className="elegant-card p-12 text-center elegant-slide-up">
-            <h2 className="elegant-heading-lg mb-4">Ready to Launch Your Token?</h2>
-            <p className="elegant-text-lg mb-8 max-w-2xl mx-auto">
+      <section className="landing-section-sm">
+        <div className="landing-container">
+          <div className="landing-card p-12 text-center landing-slide-up">
+            <h2 className="landing-heading-lg mb-4">Ready to Launch Your Token?</h2>
+            <p className="landing-text-lg mb-8 max-w-2xl mx-auto">
               Join thousands of creators who have already launched their tokens on Seifun. 
               Start your journey today and be part of the future of DeFi.
             </p>
@@ -195,7 +195,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="landing-bg-secondary border-t landing-border">
-        <div className="elegant-container py-12">
+        <div className="landing-container py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-3 mb-4">
@@ -208,7 +208,7 @@ const Landing = () => {
             </div>
             
             <div>
-              <h4 className="elegant-heading-md mb-4">Platform</h4>
+              <h4 className="landing-heading-md mb-4">Platform</h4>
               <ul className="space-y-2">
                 <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Launchpad</a></li>
                 <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Token Discovery</a></li>
@@ -218,7 +218,7 @@ const Landing = () => {
             </div>
             
             <div>
-              <h4 className="elegant-heading-md mb-4">Resources</h4>
+              <h4 className="landing-heading-md mb-4">Resources</h4>
               <ul className="space-y-2">
                 <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Documentation</a></li>
                 <li><a href="#" className="landing-text-secondary hover:landing-text-primary">API Reference</a></li>
@@ -228,7 +228,7 @@ const Landing = () => {
             </div>
             
             <div>
-              <h4 className="elegant-heading-md mb-4">Connect</h4>
+              <h4 className="landing-heading-md mb-4">Connect</h4>
               <ul className="space-y-2">
                 <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Twitter</a></li>
                 <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Discord</a></li>
