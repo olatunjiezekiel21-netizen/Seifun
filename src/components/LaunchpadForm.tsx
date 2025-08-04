@@ -40,10 +40,8 @@ const LaunchpadForm = () => {
   const useTestnet = import.meta.env.VITE_USE_TESTNET_FOR_LAUNCHPAD === 'true';
   const devWallet = import.meta.env.VITE_DEV_WALLET;
   
-  // Use real wallet connection for production, dev wallet for testing
-  const { isConnected: realIsConnected, address: realAddress, connectWallet } = useSeiWallet();
-  const isConnected = useTestnet ? true : realIsConnected; // Always connected in testnet mode
-  const address = useTestnet ? devWallet : realAddress;
+  // Use real wallet connection for all modes
+  const { isConnected, address, connectWallet } = useSeiWallet();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -199,19 +197,10 @@ const LaunchpadForm = () => {
           }
           
         } else {
-          console.log('⚠️  No private key - simulating token creation');
-          
-          // Simulate the transaction for testing UI
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          const mockTokenAddress = '0x' + Math.random().toString(16).substr(2, 40);
-          setVerificationStatus('verified');
-          setCreatedTokenAddress(mockTokenAddress);
-          
-          console.log('🧪 Simulated token created:', mockTokenAddress);
-          console.log('💡 Add VITE_DEV_WALLET_PRIVATE_KEY to create real tokens');
+          throw new Error('Development private key not configured. Please connect a wallet to create tokens.');
         }
         
+        // Token creation completed successfully
         setIsSubmitting(false);
         
         // Move to success step

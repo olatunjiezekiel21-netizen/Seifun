@@ -1,25 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Wallet, ChevronDown, LogOut, User, Settings } from 'lucide-react';
+import { useReownWallet } from '../utils/reownWalletConnection';
 
 const AppHeader = () => {
   const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
   const location = useLocation();
+  
+  // Use real wallet connection instead of mock
+  const {
+    isConnected,
+    address,
+    balance,
+    isConnecting,
+    error,
+    walletType,
+    connectWallet,
+    disconnectWallet,
+    getAvailableWallets
+  } = useReownWallet();
 
-  // Mock wallet connection
-  const connectWallet = () => {
-    setIsConnected(true);
-    setWalletAddress('0x1234...5678');
-    setIsWalletDropdownOpen(false);
+  // Format address for display
+  const walletAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
+
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet();
+      setIsWalletDropdownOpen(false);
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
+    }
   };
 
-  const disconnectWallet = () => {
-    setIsConnected(false);
-    setWalletAddress('');
-    setIsWalletDropdownOpen(false);
+  const handleDisconnectWallet = async () => {
+    try {
+      await disconnectWallet();
+      setIsWalletDropdownOpen(false);
+    } catch (error) {
+      console.error('Failed to disconnect wallet:', error);
+    }
   };
 
   // Close dropdowns when clicking outside
@@ -128,7 +148,7 @@ const AppHeader = () => {
                       
                       <div className="border-t app-border pt-2">
                         <button 
-                          onClick={disconnectWallet}
+                          onClick={handleDisconnectWallet}
                           className="w-full flex items-center space-x-2 p-2 rounded-lg hover:app-bg-secondary transition-colors"
                         >
                           <LogOut className="w-4 h-4 app-text-muted" />
@@ -141,11 +161,12 @@ const AppHeader = () => {
               </div>
             ) : (
               <button
-                onClick={connectWallet}
+                onClick={handleConnectWallet}
+                disabled={isConnecting}
                 className="app-btn app-btn-primary"
               >
                 <Wallet className="w-4 h-4 mr-2" />
-                Connect Wallet
+                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
               </button>
             )}
 

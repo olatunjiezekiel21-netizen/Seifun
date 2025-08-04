@@ -33,42 +33,9 @@ import {
   Lock,
   Unlock
 } from 'lucide-react';
+import { AIChatDataService, TokenWatch, BadActor, Airdrop } from '../utils/aiChatDataService';
 
-interface TokenWatch {
-  id: string;
-  tokenAddress: string;
-  tokenName: string;
-  tokenSymbol: string;
-  watchType: 'price' | 'volume' | 'holders' | 'transactions';
-  threshold: string;
-  status: 'active' | 'paused' | 'triggered';
-  lastAlert: Date;
-  alerts: number;
-}
-
-interface BadActor {
-  id: string;
-  address: string;
-  name: string;
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
-  flags: string[];
-  firstSeen: Date;
-  lastActivity: Date;
-  tokensAffected: number;
-  totalDamage: string;
-}
-
-interface Airdrop {
-  id: string;
-  tokenAddress: string;
-  tokenName: string;
-  tokenSymbol: string;
-  amount: string;
-  recipients: number;
-  status: 'pending' | 'active' | 'completed' | 'failed';
-  createdAt: Date;
-  completedAt?: Date;
-}
+// Using interfaces from AIChatDataService
 
 interface DevMetrics {
   watchedTokens: number;
@@ -94,84 +61,36 @@ const DevPlus = () => {
   });
 
   useEffect(() => {
-    // Simulate data loading
-    const mockWatchedTokens: TokenWatch[] = [
-      {
-        id: '1',
-        tokenAddress: '0x1234567890abcdef',
-        tokenName: 'SafeMoon',
-        tokenSymbol: 'SAFE',
-        watchType: 'price',
-        threshold: '$0.001',
-        status: 'active',
-        lastAlert: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        alerts: 3
-      },
-      {
-        id: '2',
-        tokenAddress: '0xabcdef1234567890',
-        tokenName: 'RocketToken',
-        tokenSymbol: 'ROCKET',
-        watchType: 'volume',
-        threshold: '1000 SEI',
-        status: 'triggered',
-        lastAlert: new Date(Date.now() - 30 * 60 * 1000),
-        alerts: 1
-      }
-    ];
+    // Load real data from the data service
+    const loadRealData = async () => {
+      try {
+        const dataService = new AIChatDataService();
+        
+        const [watchedTokensData, badActorsData, airdropsData] = await Promise.all([
+          dataService.getWatchedTokens(),
+          dataService.getBadActors(),
+          dataService.getAirdrops()
+        ]);
 
-    const mockBadActors: BadActor[] = [
-      {
-        id: '1',
-        address: '0x742d35Cc6635C0532925a3b8D41c4e9E4532D3eE',
-        name: 'Suspicious Trader #1',
-        riskLevel: 'high',
-        flags: ['Wash Trading', 'Price Manipulation', 'Multiple Accounts'],
-        firstSeen: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-        lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        tokensAffected: 5,
-        totalDamage: '$45,230'
-      },
-      {
-        id: '2',
-        address: '0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e',
-        name: 'Rug Pull Artist',
-        riskLevel: 'critical',
-        flags: ['Rug Pull', 'Liquidity Removal', 'Contract Pause'],
-        firstSeen: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-        lastActivity: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        tokensAffected: 3,
-        totalDamage: '$123,450'
+        setWatchedTokens(watchedTokensData);
+        setBadActors(badActorsData);
+        setAirdrops(airdropsData);
+        
+        console.log('✅ Real data loaded for AI Chat:', {
+          watchedTokens: watchedTokensData.length,
+          badActors: badActorsData.length,
+          airdrops: airdropsData.length
+        });
+      } catch (error) {
+        console.error('❌ Failed to load real data:', error);
+        // Fallback to empty arrays rather than mock data
+        setWatchedTokens([]);
+        setBadActors([]);
+        setAirdrops([]);
       }
-    ];
+    };
 
-    const mockAirdrops: Airdrop[] = [
-      {
-        id: '1',
-        tokenAddress: '0x1234567890abcdef',
-        tokenName: 'Community Token',
-        tokenSymbol: 'COMM',
-        amount: '1000 COMM',
-        recipients: 250,
-        status: 'completed',
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        completedAt: new Date(Date.now() - 23 * 60 * 60 * 1000)
-      },
-      {
-        id: '2',
-        tokenAddress: '0xabcdef1234567890',
-        tokenName: 'Reward Token',
-        tokenSymbol: 'REWARD',
-        amount: '500 REWARD',
-        recipients: 100,
-        status: 'active',
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
-      }
-    ];
-
-    setWatchedTokens(mockWatchedTokens);
-    setBadActors(mockBadActors);
-    setAirdrops(mockAirdrops);
+    loadRealData();
   }, []);
 
   const getRiskColor = (risk: string) => {
