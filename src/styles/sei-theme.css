@@ -14,18 +14,18 @@
   --landing-text-muted: #9CA3AF;
   --landing-border: #374151;
   
-  /* Main App Colors (Blue + Deep Blue + Black) */
+  /* Main App Colors (Darker Blue + Deep Blue + Black - Cursor Inspired) */
   --app-bg-primary: #0A0A0A;
-  --app-bg-secondary: #1A1A1A;
-  --app-bg-tertiary: #2A2A2A;
-  --app-blue-primary: #3B82F6;
-  --app-blue-secondary: #1D4ED8;
-  --app-blue-dark: #1E3A8A;
-  --app-blue-light: #60A5FA;
+  --app-bg-secondary: #0F0F0F;
+  --app-bg-tertiary: #1A1A1A;
+  --app-blue-primary: #1E40AF;
+  --app-blue-secondary: #1E3A8A;
+  --app-blue-dark: #0F172A;
+  --app-blue-light: #3B82F6;
   --app-text-primary: #FFFFFF;
-  --app-text-secondary: #E5E7EB;
-  --app-text-muted: #9CA3AF;
-  --app-border: #374151;
+  --app-text-secondary: #E2E8F0;
+  --app-text-muted: #94A3B8;
+  --app-border: #1E293B;
   
   /* Sei Grays - Professional */
   --sei-gray-50: #F9FAFB;
@@ -64,7 +64,7 @@
 .landing-gradient-sei { background: linear-gradient(135deg, var(--landing-sei-red) 0%, var(--landing-sei-blue) 50%, var(--landing-sei-black) 100%); }
 .landing-gradient-sei-blue { background: linear-gradient(135deg, var(--landing-sei-blue) 0%, var(--landing-sei-red) 100%); }
 
-/* Main App Classes - Blue Theme */
+/* Main App Classes - Darker Blue Theme */
 .app-bg-primary { background-color: var(--app-bg-primary); }
 .app-bg-secondary { background-color: var(--app-bg-secondary); }
 .app-bg-tertiary { background-color: var(--app-bg-tertiary); }
@@ -93,7 +93,7 @@
   background: var(--app-bg-tertiary);
   border: 1px solid var(--app-border);
   border-radius: 12px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
 /* Landing Page Button Styles */
@@ -155,7 +155,7 @@
 
 .app-btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
 }
 
 .app-btn-secondary {
@@ -206,7 +206,7 @@
 .app-input:focus {
   outline: none;
   border-color: var(--app-blue-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
 }
 
 .app-input::placeholder {
@@ -443,7 +443,7 @@
 
 .app-token-card:hover {
   border-color: var(--app-blue-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* Landing Page Category Tabs */
@@ -565,7 +565,7 @@
 .app-search-input:focus {
   outline: none;
   border-color: var(--app-blue-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
 }
 
 .app-search-icon {

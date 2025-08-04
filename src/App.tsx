@@ -3,12 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import AppHeader from './components/AppHeader';
 import AppFooter from './components/AppFooter';
-import Hero from './components/Hero';
-import HowItWorks from './components/HowItWorks';
-import TokenScanner from './components/TokenScanner';
-import SeifuMasterAI from './components/SeifuMasterAI';
-import LiveTokens from './components/LiveTokens';
-
+import SafeChecker from './pages/SafeChecker';
 import Launchpad from './pages/Launchpad';
 import SeifunLaunch from './pages/SeifunLaunch';
 import TokenPulse from './pages/TokenPulse';
@@ -30,17 +25,19 @@ function App() {
         {/* Landing Page Route */}
         <Route path="/" element={<Landing />} />
         
-        {/* App Routes - All with white UI and Sei colors */}
+        {/* App Routes - All with darker blue UI and Sei colors */}
         <Route path="/app" element={
           <div className="min-h-screen app-bg-primary">
             <AppHeader />
-            <main>
-              <Hero />
-              <HowItWorks />
-              <TokenScanner />
-              <SeifuMasterAI />
-              <LiveTokens />
-            </main>
+            <SafeChecker />
+            <AppFooter />
+          </div>
+        } />
+        
+        <Route path="/app/safechecker" element={
+          <div className="min-h-screen app-bg-primary">
+            <AppHeader />
+            <SafeChecker />
             <AppFooter />
           </div>
         } />

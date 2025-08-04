@@ -66,7 +66,7 @@ const AppHeader = () => {
               to="/app" 
               className={`app-nav-link ${isActive('/app') ? 'active' : ''}`}
             >
-              Home
+              SafeChecker
             </Link>
             <Link 
               to="/app/launchpad" 
@@ -174,7 +174,7 @@ const AppHeader = () => {
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Home
+                SafeChecker
               </Link>
               <Link 
                 to="/app/launchpad" 
