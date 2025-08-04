@@ -90,7 +90,7 @@ export class ReownWalletConnection {
 
   private async connectFinWallet(): Promise<WalletConnectionResult> {
     // @ts-ignore - Fin wallet global
-    if (typeof window.fin === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.fin === 'undefined') {
       throw new Error('Fin Wallet not installed');
     }
 
@@ -127,7 +127,7 @@ export class ReownWalletConnection {
 
   private async connectCompassWallet(): Promise<WalletConnectionResult> {
     // @ts-ignore - Compass wallet global
-    if (typeof window.compass === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.compass === 'undefined') {
       throw new Error('Compass Wallet not installed');
     }
 
@@ -157,7 +157,7 @@ export class ReownWalletConnection {
 
   private async connectKeplrWallet(): Promise<WalletConnectionResult> {
     // @ts-ignore - Keplr wallet global
-    if (typeof window.keplr === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.keplr === 'undefined') {
       throw new Error('Keplr Wallet not installed');
     }
 
@@ -190,7 +190,7 @@ export class ReownWalletConnection {
 
   private async connectMetaMaskWallet(): Promise<WalletConnectionResult> {
     // @ts-ignore - MetaMask global
-    if (typeof window.ethereum === 'undefined' || !window.ethereum.isMetaMask) {
+    if (typeof window === 'undefined' || typeof window.ethereum === 'undefined' || !window.ethereum.isMetaMask) {
       throw new Error('MetaMask not installed');
     }
 
@@ -227,7 +227,7 @@ export class ReownWalletConnection {
 
   private async connectSeiWallet(): Promise<WalletConnectionResult> {
     // @ts-ignore - Sei wallet global
-    if (typeof window.sei === 'undefined') {
+    if (typeof window === 'undefined' || typeof window.sei === 'undefined') {
       throw new Error('Sei Wallet Extension not installed');
     }
 
@@ -309,6 +309,17 @@ export class ReownWalletConnection {
   }
 
   getAvailableWallets(): SeiWallet[] {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') {
+      return [
+        { name: 'Fin Wallet', id: 'fin', icon: '🦈', installed: false },
+        { name: 'Compass Wallet', id: 'compass', icon: '🧭', installed: false },
+        { name: 'Sei Wallet', id: 'sei', icon: '⚡', installed: false },
+        { name: 'Keplr Wallet', id: 'keplr', icon: '🔮', installed: false },
+        { name: 'MetaMask', id: 'metamask', icon: '🦊', installed: false }
+      ];
+    }
+
     const wallets: SeiWallet[] = [
       {
         name: 'Fin Wallet',
@@ -363,8 +374,10 @@ export class ReownWalletConnection {
   }
 
   async disconnect(): Promise<void> {
-    // Clear any stored connection data
-    localStorage.removeItem('reown_wallet_connection');
+    // Clear any stored connection data (only in browser)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('reown_wallet_connection');
+    }
     this.provider = null;
   }
 
@@ -389,7 +402,11 @@ export const useReownWallet = () => {
   const [walletConnection] = useState(() => new ReownWalletConnection(false));
 
   useEffect(() => {
-    // Check for existing connection on mount
+    // Check for existing connection on mount (only in browser)
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return;
+    }
+
     const savedConnection = localStorage.getItem('reown_wallet_connection');
     if (savedConnection) {
       try {
@@ -405,6 +422,8 @@ export const useReownWallet = () => {
         // Refresh balance
         walletConnection.getBalance(connectionData.address).then(balance => {
           setWalletState(prev => ({ ...prev, balance }));
+        }).catch(error => {
+          console.error('Error refreshing balance:', error);
         });
       } catch (error) {
         console.error('Error restoring wallet connection:', error);
@@ -431,12 +450,14 @@ export const useReownWallet = () => {
 
       setWalletState(newState);
 
-      // Save connection for persistence
-      localStorage.setItem('reown_wallet_connection', JSON.stringify({
-        address: result.address,
-        walletType: result.walletType,
-        chainId: result.chainId,
-      }));
+      // Save connection for persistence (only in browser)
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('reown_wallet_connection', JSON.stringify({
+          address: result.address,
+          walletType: result.walletType,
+          chainId: result.chainId,
+        }));
+      }
 
       return result;
     } catch (error: any) {
