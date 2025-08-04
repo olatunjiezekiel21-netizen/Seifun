@@ -24,9 +24,9 @@ const AppHeader = () => {
   // Format address for display
   const walletAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
-  const handleConnectWallet = async () => {
+  const handleConnectWallet = async (preferredWallet?: string) => {
     try {
-      await connectWallet();
+      await connectWallet(preferredWallet);
       setIsWalletDropdownOpen(false);
     } catch (error) {
       console.error('Failed to connect wallet:', error);
@@ -160,14 +160,55 @@ const AppHeader = () => {
                 )}
               </div>
             ) : (
-              <button
-                onClick={handleConnectWallet}
-                disabled={isConnecting}
-                className="app-btn app-btn-primary"
-              >
-                <Wallet className="w-4 h-4 mr-2" />
-                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-              </button>
+              <div className="relative" ref={walletDropdownRef}>
+                <button
+                  onClick={() => setIsWalletDropdownOpen(!isWalletDropdownOpen)}
+                  disabled={isConnecting}
+                  className="app-btn app-btn-primary"
+                >
+                  <Wallet className="w-4 h-4 mr-2" />
+                  {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+
+                {isWalletDropdownOpen && !isConnected && (
+                  <div className="absolute right-0 mt-2 w-72 app-card p-4 z-50">
+                    <h3 className="text-sm font-medium app-text-primary mb-3">Choose Wallet</h3>
+                    <div className="space-y-2">
+                      {getAvailableWallets().map((wallet) => (
+                        <button
+                          key={wallet.id}
+                          onClick={() => handleConnectWallet(wallet.id)}
+                          disabled={!wallet.installed || isConnecting}
+                          className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                            wallet.installed 
+                              ? 'app-bg-secondary hover:app-bg-tertiary border-gray-200' 
+                              : 'app-bg-muted border-gray-100 opacity-50 cursor-not-allowed'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span className="text-2xl">{wallet.icon}</span>
+                            <div className="text-left">
+                              <div className="app-text-primary font-medium">{wallet.name}</div>
+                              <div className="text-xs app-text-muted">
+                                {wallet.installed ? 'Ready to connect' : 'Not installed'}
+                              </div>
+                            </div>
+                          </div>
+                          {wallet.installed && (
+                            <ChevronDown className="w-4 h-4 app-text-muted rotate-[-90deg]" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-3 pt-3 border-t app-border">
+                      <p className="text-xs app-text-muted">
+                        New to Sei? Install <a href="https://finwallet.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Fin Wallet</a> or <a href="https://compass.keplr.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Compass</a>
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Mobile Menu Button */}

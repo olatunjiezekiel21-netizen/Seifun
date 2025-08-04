@@ -31,6 +31,36 @@ const EXTENDED_ABI = [
   'function _sellTax() view returns (uint256)'
 ];
 
+// Enhanced interfaces with market data
+export interface TokenBasicInfo {
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSupply: string;
+  formattedTotalSupply: string;
+  marketCap?: string;
+  price?: string;
+  logo?: string;
+  contractAddress: string;
+}
+
+export interface TokenMarketData {
+  price: number;
+  marketCap: number;
+  volume24h?: number;
+  priceChange24h?: number;
+  marketCapRank?: number;
+  circulatingSupply?: number;
+  totalSupply: number;
+  maxSupply?: number;
+}
+
+export interface TokenLogoInfo {
+  logoUrl: string;
+  source: 'coingecko' | 'dexscreener' | 'trustwallet' | 'generic' | 'fallback';
+  verified: boolean;
+}
+
 export interface TokenInfo {
   address: string;
   name: string;
@@ -86,6 +116,8 @@ export class TokenScanner {
   private provider: ethers.JsonRpcProvider;
   private seiRegistry: SeiTokenRegistry;
   private readonly SEI_RPC_URL = import.meta.env.VITE_SEI_MAINNET_RPC || 'https://evm-rpc.sei-apis.com';
+  private readonly COINGECKO_API_KEY = import.meta.env.VITE_COINGECKO_API_KEY;
+  private readonly DEXSCREENER_API_KEY = import.meta.env.VITE_DEXSCREENER_API_KEY;
 
   constructor() {
     this.provider = new ethers.JsonRpcProvider(this.SEI_RPC_URL);
@@ -744,23 +776,47 @@ export class TokenScanner {
 
     async analyzeToken(address: string): Promise<TokenAnalysis> {
     try {
-      console.log(`🔍 Starting universal analysis for: ${address}`);
+      console.log(`🔍 Starting enhanced analysis for: ${address}`);
       
       // Get basic token information with enhanced validation
       const basicInfo = await this.getTokenBasicInfo(address);
       console.log(`✅ Token info retrieved: ${basicInfo.name} (${basicInfo.symbol})`);
       
-      // Perform safety analysis using the new method
-      const safetyChecks = await this.performSafetyAnalysis(basicInfo);
+      // Fetch market data and logo in parallel with safety analysis
+      const [safetyChecks, marketData, logoInfo] = await Promise.all([
+        this.performSafetyAnalysis(basicInfo),
+        this.fetchMarketData(address, basicInfo.symbol).catch(() => null),
+        this.fetchTokenLogo(address, basicInfo.symbol, basicInfo.name).catch(() => ({
+          logoUrl: `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${basicInfo.symbol.slice(0, 3)}`,
+          source: 'fallback' as const,
+          verified: false
+        }))
+      ]);
 
-      const riskScore = this.calculateRiskScore(safetyChecks);
+      // Use dynamic safety score calculation
+      const riskScore = this.calculateDynamicSafetyScore(safetyChecks);
       const riskFactors = this.getRiskFactors(safetyChecks);
       const isSafe = riskScore >= 70 && !safetyChecks.honeypot.isHoneypot;
 
-      console.log(`📊 Analysis complete. Risk Score: ${riskScore}, Safe: ${isSafe}`);
+      // Enhance basic info with market data and logo
+      const enhancedBasicInfo = {
+        ...basicInfo,
+        marketData: marketData ? {
+          price: marketData.price,
+          marketCap: marketData.marketCap,
+          volume24h: marketData.volume24h,
+          priceChange24h: marketData.priceChange24h,
+        } : undefined,
+        logoUrl: logoInfo.logoUrl,
+        formattedTotalSupply: this.formatTokenSupply(basicInfo.totalSupply, basicInfo.decimals),
+      };
+
+      console.log(`📊 Enhanced analysis complete. Risk Score: ${riskScore}, Safe: ${isSafe}`);
+      console.log(`💰 Market Cap: ${marketData ? this.formatNumber(marketData.marketCap) : 'N/A'}`);
+      console.log(`🖼️ Logo: ${logoInfo.source} (${logoInfo.verified ? 'verified' : 'unverified'})`);
 
       return {
-        basicInfo,
+        basicInfo: enhancedBasicInfo,
         safetyChecks,
         riskScore,
         isSafe,
@@ -836,6 +892,278 @@ export class TokenScanner {
         isVerified: false
       };
     }
+  }
+
+  // Enhanced market data fetching with multiple sources
+  async fetchMarketData(tokenAddress: string, symbol: string): Promise<TokenMarketData | null> {
+    try {
+      // Try CoinGecko first (most reliable)
+      const coingeckoData = await this.fetchCoinGeckoData(tokenAddress, symbol);
+      if (coingeckoData) return coingeckoData;
+
+      // Fallback to DexScreener
+      const dexScreenerData = await this.fetchDexScreenerData(tokenAddress);
+      if (dexScreenerData) return dexScreenerData;
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching market data:', error);
+      return null;
+    }
+  }
+
+  private async fetchCoinGeckoData(tokenAddress: string, symbol: string): Promise<TokenMarketData | null> {
+    try {
+      const headers: Record<string, string> = {
+        'accept': 'application/json',
+      };
+      
+      if (this.COINGECKO_API_KEY) {
+        headers['X-CG-Pro-API-Key'] = this.COINGECKO_API_KEY;
+      }
+
+      // Search for token by contract address
+      const searchUrl = `https://api.coingecko.com/api/v3/coins/sei-network/contract/${tokenAddress.toLowerCase()}`;
+      const response = await fetch(searchUrl, { headers });
+
+      if (!response.ok) {
+        throw new Error(`CoinGecko API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      return {
+        price: data.market_data?.current_price?.usd || 0,
+        marketCap: data.market_data?.market_cap?.usd || 0,
+        volume24h: data.market_data?.total_volume?.usd,
+        priceChange24h: data.market_data?.price_change_percentage_24h,
+        marketCapRank: data.market_cap_rank,
+        circulatingSupply: data.market_data?.circulating_supply,
+        totalSupply: data.market_data?.total_supply || 0,
+        maxSupply: data.market_data?.max_supply,
+      };
+    } catch (error) {
+      console.log('CoinGecko fetch failed:', error);
+      return null;
+    }
+  }
+
+  private async fetchDexScreenerData(tokenAddress: string): Promise<TokenMarketData | null> {
+    try {
+      const url = `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`;
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`DexScreener API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.pairs || data.pairs.length === 0) {
+        return null;
+      }
+
+      // Use the pair with highest liquidity
+      const bestPair = data.pairs.reduce((best: any, current: any) => {
+        return (current.liquidity?.usd || 0) > (best.liquidity?.usd || 0) ? current : best;
+      });
+
+      const price = parseFloat(bestPair.priceUsd) || 0;
+      const totalSupply = parseFloat(bestPair.info?.totalSupply) || 0;
+
+      return {
+        price,
+        marketCap: price * totalSupply,
+        volume24h: parseFloat(bestPair.volume?.h24) || 0,
+        priceChange24h: parseFloat(bestPair.priceChange?.h24),
+        totalSupply,
+      };
+    } catch (error) {
+      console.log('DexScreener fetch failed:', error);
+      return null;
+    }
+  }
+
+  // Enhanced logo fetching with multiple sources and fallbacks
+  async fetchTokenLogo(tokenAddress: string, symbol: string, name: string): Promise<TokenLogoInfo> {
+    const sources = [
+      () => this.fetchCoinGeckoLogo(tokenAddress),
+      () => this.fetchTrustWalletLogo(tokenAddress),
+      () => this.fetchDexScreenerLogo(tokenAddress),
+      () => this.generateGenericLogo(symbol, name),
+    ];
+
+    for (const fetchSource of sources) {
+      try {
+        const logo = await fetchSource();
+        if (logo) return logo;
+      } catch (error) {
+        console.log('Logo fetch attempt failed:', error);
+        continue;
+      }
+    }
+
+    // Ultimate fallback
+    return {
+      logoUrl: `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${symbol.slice(0, 3)}`,
+      source: 'fallback',
+      verified: false
+    };
+  }
+
+  private async fetchCoinGeckoLogo(tokenAddress: string): Promise<TokenLogoInfo | null> {
+    try {
+      const headers: Record<string, string> = {
+        'accept': 'application/json',
+      };
+      
+      if (this.COINGECKO_API_KEY) {
+        headers['X-CG-Pro-API-Key'] = this.COINGECKO_API_KEY;
+      }
+
+      const url = `https://api.coingecko.com/api/v3/coins/sei-network/contract/${tokenAddress.toLowerCase()}`;
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      
+      if (data.image?.large || data.image?.small || data.image?.thumb) {
+        return {
+          logoUrl: data.image.large || data.image.small || data.image.thumb,
+          source: 'coingecko',
+          verified: true
+        };
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async fetchTrustWalletLogo(tokenAddress: string): Promise<TokenLogoInfo | null> {
+    try {
+      const checksumAddress = ethers.getAddress(tokenAddress);
+      const logoUrl = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/sei/assets/${checksumAddress}/logo.png`;
+      
+      // Test if the image exists
+      const response = await fetch(logoUrl, { method: 'HEAD' });
+      
+      if (response.ok) {
+        return {
+          logoUrl,
+          source: 'trustwallet',
+          verified: true
+        };
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async fetchDexScreenerLogo(tokenAddress: string): Promise<TokenLogoInfo | null> {
+    try {
+      const url = `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`;
+      const response = await fetch(url);
+
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      
+      if (data.pairs && data.pairs.length > 0) {
+        const pair = data.pairs[0];
+        if (pair.info?.imageUrl) {
+          return {
+            logoUrl: pair.info.imageUrl,
+            source: 'dexscreener',
+            verified: false
+          };
+        }
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private generateGenericLogo(symbol: string, name: string): TokenLogoInfo {
+    // Create a deterministic color based on symbol
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+      '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+    ];
+    
+    const colorIndex = symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+    const bgColor = colors[colorIndex].replace('#', '');
+    
+    return {
+      logoUrl: `https://via.placeholder.com/64/${bgColor}/FFFFFF?text=${symbol.slice(0, 3)}`,
+      source: 'generic',
+      verified: false
+    };
+  }
+
+  // Format large numbers for display
+  formatNumber(num: number): string {
+    if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
+    if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
+    if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
+    return num.toFixed(2);
+  }
+
+  // Format token supply with proper decimals
+  formatTokenSupply(supply: string, decimals: number): string {
+    try {
+      const supplyBigInt = BigInt(supply);
+      const divisor = BigInt(10 ** decimals);
+      const formattedSupply = Number(supplyBigInt) / Number(divisor);
+      return this.formatNumber(formattedSupply);
+    } catch {
+      return 'Unknown';
+    }
+  }
+
+  // Calculate dynamic safety score based on all risk factors
+  calculateDynamicSafetyScore(safetyChecks: TokenAnalysis['safetyChecks']): number {
+    let baseScore = 100;
+    const checks = Object.values(safetyChecks);
+
+    for (const check of checks) {
+      switch (check.risk) {
+        case 'CRITICAL':
+          baseScore -= 30;
+          break;
+        case 'HIGH':
+          baseScore -= 20;
+          break;
+        case 'MEDIUM':
+          baseScore -= 10;
+          break;
+        case 'LOW':
+          baseScore -= 2;
+          break;
+        case 'UNKNOWN':
+          baseScore -= 5;
+          break;
+      }
+
+      // Additional penalties for specific risks
+      if ('isHoneypot' in check && check.isHoneypot) baseScore -= 40;
+      if ('hasBlacklist' in check && check.hasBlacklist) baseScore -= 25;
+      if ('hasExcessiveFees' in check && check.hasExcessiveFees) baseScore -= 20;
+      if ('topHolderPercentage' in check && (check.topHolderPercentage || 0) > 50) baseScore -= 15;
+    }
+
+    // Bonus for verified tokens
+    if (safetyChecks.verified.isVerified) baseScore += 10;
+    if (safetyChecks.ownership.isRenounced) baseScore += 5;
+
+    return Math.max(0, Math.min(100, baseScore));
   }
 
 

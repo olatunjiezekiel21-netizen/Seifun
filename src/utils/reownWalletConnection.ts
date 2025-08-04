@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { reownConfig, getSeiNetworkConfig } from '../config/reown';
 
-// For now, we'll use a simplified approach until Reown packages are installed
-// This provides the interface and fallback to existing wallet connections
-
+// Enhanced Sei wallet support with proper detection
 export interface ReownWalletState {
   isConnected: boolean;
   address: string | null;
@@ -22,6 +20,14 @@ export interface WalletConnectionResult {
   balance?: string;
 }
 
+export interface SeiWallet {
+  name: string;
+  id: string;
+  icon: string;
+  installed: boolean;
+  provider?: any;
+}
+
 export class ReownWalletConnection {
   private provider: ethers.JsonRpcProvider | null = null;
   private isMainnet: boolean;
@@ -32,195 +38,343 @@ export class ReownWalletConnection {
     this.provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
   }
 
-  async connect(): Promise<WalletConnectionResult> {
+  async connect(preferredWallet?: string): Promise<WalletConnectionResult> {
     try {
-      // For now, fallback to existing wallet detection until Reown is fully integrated
+      // Try to connect with preferred wallet first
+      if (preferredWallet) {
+        return await this.connectSpecificWallet(preferredWallet);
+      }
+      
+      // Otherwise, try available wallets in order of preference
       return await this.connectWithFallback();
     } catch (error) {
-      console.error('Reown connection failed, trying fallback:', error);
-      return await this.connectWithFallback();
+      console.error('Wallet connection failed:', error);
+      throw error;
     }
   }
 
-  private async connectWithFallback(): Promise<WalletConnectionResult> {
-    // Try different wallet types in order of preference
-    const wallets = this.getAvailableWallets();
-    
-    if (wallets.length === 0) {
-      throw new Error('No compatible wallets found. Please install a Sei-compatible wallet or use Reown.');
-    }
-
-    // Try to connect to the first available wallet
-    for (const walletType of wallets) {
-      try {
-        const result = await this.connectToWallet(walletType);
-        if (result) {
-          return result;
-        }
-      } catch (error) {
-        console.warn(`Failed to connect to ${walletType}:`, error);
-        continue;
-      }
-    }
-
-    throw new Error('Failed to connect to any available wallet');
-  }
-
-  private getAvailableWallets(): string[] {
-    const wallets: string[] = [];
-    
-    if (typeof window !== 'undefined') {
-      // Check for Sei wallets
-      if ((window as any).sei) wallets.push('sei');
-      if ((window as any).compass) wallets.push('compass');
-      if ((window as any).keplr) wallets.push('keplr');
-      if ((window as any).ethereum) wallets.push('metamask');
-      
-      // Always add Reown as an option (will show connection modal)
-      wallets.push('reown');
-    }
-    
-    return wallets;
-  }
-
-  private async connectToWallet(walletType: string): Promise<WalletConnectionResult | null> {
-    switch (walletType) {
-      case 'sei':
-        return await this.connectSeiWallet();
+  private async connectSpecificWallet(walletId: string): Promise<WalletConnectionResult> {
+    switch (walletId) {
+      case 'fin':
+        return await this.connectFinWallet();
       case 'compass':
         return await this.connectCompassWallet();
       case 'keplr':
         return await this.connectKeplrWallet();
       case 'metamask':
         return await this.connectMetaMaskWallet();
-      case 'reown':
-        return await this.connectReownWallet();
+      case 'sei':
+        return await this.connectSeiWallet();
       default:
-        return null;
+        throw new Error(`Unsupported wallet: ${walletId}`);
+    }
+  }
+
+  private async connectWithFallback(): Promise<WalletConnectionResult> {
+    // Try different wallet types in order of preference for Sei
+    const walletPreference = ['fin', 'compass', 'sei', 'keplr', 'metamask'];
+    
+    for (const walletType of walletPreference) {
+      try {
+        const result = await this.connectSpecificWallet(walletType);
+        console.log(`✅ Connected with ${walletType}:`, result);
+        return result;
+      } catch (error) {
+        console.log(`❌ ${walletType} connection failed:`, error);
+        continue;
+      }
+    }
+
+    throw new Error('No compatible wallets found. Please install Fin, Compass, Keplr, or MetaMask.');
+  }
+
+  private async connectFinWallet(): Promise<WalletConnectionResult> {
+    // @ts-ignore - Fin wallet global
+    if (typeof window.fin === 'undefined') {
+      throw new Error('Fin Wallet not installed');
+    }
+
+    try {
+      // @ts-ignore
+      const accounts = await window.fin.request({
+        method: 'eth_requestAccounts',
+      });
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found in Fin Wallet');
+      }
+
+      // @ts-ignore
+      const chainId = await window.fin.request({ method: 'eth_chainId' });
+      const targetChainId = this.isMainnet ? 1329 : 1328;
+
+      if (parseInt(chainId, 16) !== targetChainId) {
+        await this.switchToSeiNetwork('fin');
+      }
+
+      const balance = await this.getBalance(accounts[0]);
+
+      return {
+        address: accounts[0],
+        chainId: parseInt(chainId, 16),
+        walletType: 'Fin Wallet',
+        balance
+      };
+    } catch (error) {
+      throw new Error(`Fin Wallet connection failed: ${error}`);
+    }
+  }
+
+  private async connectCompassWallet(): Promise<WalletConnectionResult> {
+    // @ts-ignore - Compass wallet global
+    if (typeof window.compass === 'undefined') {
+      throw new Error('Compass Wallet not installed');
+    }
+
+    try {
+      // @ts-ignore
+      await window.compass.enable(['sei']);
+      // @ts-ignore
+      const accounts = await window.compass.getAccounts('sei');
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found in Compass Wallet');
+      }
+
+      const account = accounts[0];
+      const balance = await this.getBalance(account.address);
+
+      return {
+        address: account.address,
+        chainId: this.isMainnet ? 1329 : 1328,
+        walletType: 'Compass Wallet',
+        balance
+      };
+    } catch (error) {
+      throw new Error(`Compass Wallet connection failed: ${error}`);
+    }
+  }
+
+  private async connectKeplrWallet(): Promise<WalletConnectionResult> {
+    // @ts-ignore - Keplr wallet global
+    if (typeof window.keplr === 'undefined') {
+      throw new Error('Keplr Wallet not installed');
+    }
+
+    try {
+      const chainId = this.isMainnet ? 'sei-network' : 'atlantic-2';
+      
+      // @ts-ignore
+      await window.keplr.enable(chainId);
+      // @ts-ignore
+      const offlineSigner = window.keplr.getOfflineSigner(chainId);
+      const accounts = await offlineSigner.getAccounts();
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found in Keplr Wallet');
+      }
+
+      const account = accounts[0];
+      const balance = await this.getBalance(account.address);
+
+      return {
+        address: account.address,
+        chainId: this.isMainnet ? 1329 : 1328,
+        walletType: 'Keplr Wallet',
+        balance
+      };
+    } catch (error) {
+      throw new Error(`Keplr Wallet connection failed: ${error}`);
+    }
+  }
+
+  private async connectMetaMaskWallet(): Promise<WalletConnectionResult> {
+    // @ts-ignore - MetaMask global
+    if (typeof window.ethereum === 'undefined' || !window.ethereum.isMetaMask) {
+      throw new Error('MetaMask not installed');
+    }
+
+    try {
+      // @ts-ignore
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found in MetaMask');
+      }
+
+      // @ts-ignore
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const targetChainId = this.isMainnet ? 1329 : 1328;
+
+      if (parseInt(chainId, 16) !== targetChainId) {
+        await this.switchToSeiNetwork('metamask');
+      }
+
+      const balance = await this.getBalance(accounts[0]);
+
+      return {
+        address: accounts[0],
+        chainId: parseInt(chainId, 16),
+        walletType: 'MetaMask',
+        balance
+      };
+    } catch (error) {
+      throw new Error(`MetaMask connection failed: ${error}`);
     }
   }
 
   private async connectSeiWallet(): Promise<WalletConnectionResult> {
-    const seiWallet = (window as any).sei;
-    if (!seiWallet) throw new Error('Sei wallet not found');
-
-    const accounts = await seiWallet.request({
-      method: 'sei_requestAccounts'
-    });
-
-    if (!accounts || accounts.length === 0) {
-      throw new Error('No accounts found');
+    // @ts-ignore - Sei wallet global
+    if (typeof window.sei === 'undefined') {
+      throw new Error('Sei Wallet Extension not installed');
     }
 
-    const address = accounts[0];
-    const balance = await this.getBalance(address);
-
-    return {
-      address,
-      chainId: this.isMainnet ? 1329 : 1328,
-      walletType: 'sei',
-      balance
-    };
-  }
-
-  private async connectCompassWallet(): Promise<WalletConnectionResult> {
-    const compassWallet = (window as any).compass;
-    if (!compassWallet) throw new Error('Compass wallet not found');
-
-    const accounts = await compassWallet.request({
-      method: 'sei_requestAccounts'
-    });
-
-    if (!accounts || accounts.length === 0) {
-      throw new Error('No accounts found');
-    }
-
-    const address = accounts[0];
-    const balance = await this.getBalance(address);
-
-    return {
-      address,
-      chainId: this.isMainnet ? 1329 : 1328,
-      walletType: 'compass',
-      balance
-    };
-  }
-
-  private async connectKeplrWallet(): Promise<WalletConnectionResult> {
-    const keplr = (window as any).keplr;
-    if (!keplr) throw new Error('Keplr wallet not found');
-
-    const chainId = this.isMainnet ? 'sei-network' : 'sei-devnet-3';
-    await keplr.enable(chainId);
-    
-    const key = await keplr.getKey(chainId);
-    const address = key.bech32Address;
-    const balance = await this.getBalance(address);
-
-    return {
-      address,
-      chainId: this.isMainnet ? 1329 : 1328,
-      walletType: 'keplr',
-      balance
-    };
-  }
-
-  private async connectMetaMaskWallet(): Promise<WalletConnectionResult> {
-    const ethereum = (window as any).ethereum;
-    if (!ethereum) throw new Error('MetaMask not found');
-
-    const accounts = await ethereum.request({
-      method: 'eth_requestAccounts'
-    });
-
-    if (!accounts || accounts.length === 0) {
-      throw new Error('No accounts found');
-    }
-
-    const address = accounts[0];
-    const chainId = await ethereum.request({ method: 'eth_chainId' });
-    const balance = await this.getBalance(address);
-
-    return {
-      address,
-      chainId: parseInt(chainId, 16),
-      walletType: 'metamask',
-      balance
-    };
-  }
-
-  private async connectReownWallet(): Promise<WalletConnectionResult> {
-    // This will be implemented once Reown packages are installed
-    // For now, show a helpful message
-    throw new Error('Reown wallet connection is being set up. Please use an existing wallet for now or check back soon!');
-  }
-
-  private async getBalance(address: string): Promise<string> {
     try {
-      if (!this.provider) return '0.0000';
-      
+      // @ts-ignore
+      const accounts = await window.sei.request({
+        method: 'eth_requestAccounts',
+      });
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found in Sei Wallet');
+      }
+
+      // @ts-ignore
+      const chainId = await window.sei.request({ method: 'eth_chainId' });
+      const balance = await this.getBalance(accounts[0]);
+
+      return {
+        address: accounts[0],
+        chainId: parseInt(chainId, 16),
+        walletType: 'Sei Wallet',
+        balance
+      };
+    } catch (error) {
+      throw new Error(`Sei Wallet connection failed: ${error}`);
+    }
+  }
+
+  private async switchToSeiNetwork(walletType: string): Promise<void> {
+    const networkConfig = getSeiNetworkConfig(this.isMainnet);
+    const chainIdHex = `0x${networkConfig.chainId.toString(16)}`;
+
+    const networkParams = {
+      chainId: chainIdHex,
+      chainName: networkConfig.networkName,
+      nativeCurrency: networkConfig.nativeCurrency,
+      rpcUrls: [networkConfig.rpcUrl],
+      blockExplorerUrls: [networkConfig.blockExplorerUrl],
+    };
+
+    try {
+      let provider;
+      switch (walletType) {
+        case 'fin':
+          // @ts-ignore
+          provider = window.fin;
+          break;
+        case 'metamask':
+          // @ts-ignore
+          provider = window.ethereum;
+          break;
+        case 'sei':
+          // @ts-ignore
+          provider = window.sei;
+          break;
+        default:
+          throw new Error(`Network switching not supported for ${walletType}`);
+      }
+
+      try {
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: chainIdHex }],
+        });
+      } catch (switchError: any) {
+        // If chain doesn't exist, add it
+        if (switchError.code === 4902) {
+          await provider.request({
+            method: 'wallet_addEthereumChain',
+            params: [networkParams],
+          });
+        } else {
+          throw switchError;
+        }
+      }
+    } catch (error) {
+      throw new Error(`Failed to switch to Sei network: ${error}`);
+    }
+  }
+
+  getAvailableWallets(): SeiWallet[] {
+    const wallets: SeiWallet[] = [
+      {
+        name: 'Fin Wallet',
+        id: 'fin',
+        icon: '🦈',
+        // @ts-ignore
+        installed: typeof window.fin !== 'undefined'
+      },
+      {
+        name: 'Compass Wallet',
+        id: 'compass',
+        icon: '🧭',
+        // @ts-ignore
+        installed: typeof window.compass !== 'undefined'
+      },
+      {
+        name: 'Sei Wallet',
+        id: 'sei',
+        icon: '⚡',
+        // @ts-ignore
+        installed: typeof window.sei !== 'undefined'
+      },
+      {
+        name: 'Keplr Wallet',
+        id: 'keplr',
+        icon: '🔮',
+        // @ts-ignore
+        installed: typeof window.keplr !== 'undefined'
+      },
+      {
+        name: 'MetaMask',
+        id: 'metamask',
+        icon: '🦊',
+        // @ts-ignore
+        installed: typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask
+      }
+    ];
+
+    return wallets;
+  }
+
+  async getBalance(address: string): Promise<string> {
+    if (!this.provider) return '0';
+    
+    try {
       const balance = await this.provider.getBalance(address);
       return ethers.formatEther(balance);
     } catch (error) {
-      console.warn('Failed to get balance:', error);
-      return '0.0000';
+      console.error('Error fetching balance:', error);
+      return '0';
     }
   }
 
   async disconnect(): Promise<void> {
-    // Clear any stored connection state
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('seifu_wallet_type');
-      localStorage.removeItem('seifu_wallet_address');
-    }
+    // Clear any stored connection data
+    localStorage.removeItem('reown_wallet_connection');
+    this.provider = null;
   }
 
-  async signTransaction(transaction: any): Promise<any> {
-    // This would be implemented based on the connected wallet type
+  async signTransaction(transaction: any): Promise<string> {
+    // Implementation for transaction signing
     throw new Error('Transaction signing not implemented yet');
   }
 }
 
+// Enhanced React hook with better wallet management
 export const useReownWallet = () => {
   const [walletState, setWalletState] = useState<ReownWalletState>({
     isConnected: false,
@@ -229,48 +383,75 @@ export const useReownWallet = () => {
     isConnecting: false,
     error: null,
     walletType: null,
-    chainId: null
+    chainId: null,
   });
 
-  const reownConnection = new ReownWalletConnection();
+  const [walletConnection] = useState(() => new ReownWalletConnection(false));
 
-  const connectWallet = async (preferredWalletType?: string) => {
+  useEffect(() => {
+    // Check for existing connection on mount
+    const savedConnection = localStorage.getItem('reown_wallet_connection');
+    if (savedConnection) {
+      try {
+        const connectionData = JSON.parse(savedConnection);
+        setWalletState(prev => ({
+          ...prev,
+          isConnected: true,
+          address: connectionData.address,
+          walletType: connectionData.walletType,
+          chainId: connectionData.chainId,
+        }));
+        
+        // Refresh balance
+        walletConnection.getBalance(connectionData.address).then(balance => {
+          setWalletState(prev => ({ ...prev, balance }));
+        });
+      } catch (error) {
+        console.error('Error restoring wallet connection:', error);
+        localStorage.removeItem('reown_wallet_connection');
+      }
+    }
+  }, [walletConnection]);
+
+  const connectWallet = async (preferredWallet?: string) => {
     setWalletState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      const result = await reownConnection.connect();
+      const result = await walletConnection.connect(preferredWallet);
       
-      setWalletState({
+      const newState = {
         isConnected: true,
         address: result.address,
-        balance: result.balance || '0.0000',
+        balance: result.balance || '0',
         isConnecting: false,
         error: null,
         walletType: result.walletType,
-        chainId: result.chainId
-      });
+        chainId: result.chainId,
+      };
 
-      // Store connection info
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('seifu_wallet_type', result.walletType);
-        localStorage.setItem('seifu_wallet_address', result.address);
-      }
+      setWalletState(newState);
 
-      console.log('✅ Wallet connected:', result);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to connect wallet';
+      // Save connection for persistence
+      localStorage.setItem('reown_wallet_connection', JSON.stringify({
+        address: result.address,
+        walletType: result.walletType,
+        chainId: result.chainId,
+      }));
+
+      return result;
+    } catch (error: any) {
       setWalletState(prev => ({
         ...prev,
         isConnecting: false,
-        error: errorMessage
+        error: error.message || 'Failed to connect wallet',
       }));
-      console.error('❌ Wallet connection failed:', error);
+      throw error;
     }
   };
 
   const disconnectWallet = async () => {
     try {
-      await reownConnection.disconnect();
+      await walletConnection.disconnect();
       setWalletState({
         isConnected: false,
         address: null,
@@ -278,57 +459,36 @@ export const useReownWallet = () => {
         isConnecting: false,
         error: null,
         walletType: null,
-        chainId: null
+        chainId: null,
       });
-      console.log('👋 Wallet disconnected');
-    } catch (error) {
-      console.error('Error disconnecting wallet:', error);
+    } catch (error: any) {
+      setWalletState(prev => ({
+        ...prev,
+        error: error.message || 'Failed to disconnect wallet',
+      }));
     }
   };
 
-  const getAvailableWallets = (): string[] => {
-    const wallets: string[] = [];
-    
-    if (typeof window !== 'undefined') {
-      if ((window as any).sei) wallets.push('sei');
-      if ((window as any).compass) wallets.push('compass');
-      if ((window as any).keplr) wallets.push('keplr');
-      if ((window as any).ethereum) wallets.push('metamask');
-      wallets.push('reown'); // Always available
-    }
-    
-    return wallets;
+  const getAvailableWallets = () => {
+    return walletConnection.getAvailableWallets();
   };
 
-  // Check for existing connection on mount
-  useEffect(() => {
-    const checkExistingConnection = async () => {
-      if (typeof window !== 'undefined') {
-        const savedWalletType = localStorage.getItem('seifu_wallet_type');
-        const savedAddress = localStorage.getItem('seifu_wallet_address');
-        
-        if (savedWalletType && savedAddress) {
-          // Try to reconnect
-          try {
-            await connectWallet(savedWalletType);
-          } catch (error) {
-            console.log('Failed to reconnect to saved wallet:', error);
-            // Clear saved data if reconnection fails
-            localStorage.removeItem('seifu_wallet_type');
-            localStorage.removeItem('seifu_wallet_address');
-          }
-        }
+  const refreshBalance = async () => {
+    if (walletState.address) {
+      try {
+        const balance = await walletConnection.getBalance(walletState.address);
+        setWalletState(prev => ({ ...prev, balance }));
+      } catch (error) {
+        console.error('Error refreshing balance:', error);
       }
-    };
-
-    const timer = setTimeout(checkExistingConnection, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  };
 
   return {
     ...walletState,
     connectWallet,
     disconnectWallet,
-    getAvailableWallets
+    getAvailableWallets,
+    refreshBalance,
   };
 };

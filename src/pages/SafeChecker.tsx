@@ -51,11 +51,13 @@ const SafeChecker = () => {
       'Validating token address...',
       'Connecting to Sei network...',
       'Fetching token information...',
+      'Loading market data and logo...',
       'Analyzing contract security...',
       'Checking for honeypot patterns...',
       'Evaluating liquidity safety...',
       'Scanning holder distribution...',
-      'Generating safety report...'
+      'Calculating dynamic safety score...',
+      'Generating comprehensive report...'
     ];
 
     try {
@@ -80,7 +82,7 @@ const SafeChecker = () => {
         console.log('Token not found in registry, using scan data only');
       }
 
-      // Compose comprehensive scan result
+      // Compose comprehensive scan result with enhanced data
       const scanResult = {
         // Basic token info
         address: tokenAddress,
@@ -89,19 +91,20 @@ const SafeChecker = () => {
         decimals: analysis.basicInfo.decimals,
         totalSupply: analysis.basicInfo.totalSupply,
         verified: registryInfo?.verified || analysis.safetyChecks.verified.isVerified || false,
+        logo: analysis.basicInfo.logoUrl,
         
-        // Safety analysis
+        // Safety analysis with dynamic scoring
         isHoneypot: analysis.safetyChecks.honeypot.isHoneypot || false,
         isVerified: analysis.safetyChecks.verified.isVerified || false,
         riskLevel: analysis.isSafe ? 'LOW' : (analysis.riskScore > 70 ? 'HIGH' : 'MEDIUM'),
-        securityScore: Math.max(0, 100 - analysis.riskScore),
+        securityScore: analysis.riskScore, // Use the dynamic risk score directly
         
         // Detailed safety checks
         safetyChecks: analysis.safetyChecks,
         riskFactors: analysis.riskFactors,
         riskScore: analysis.riskScore,
         
-        // Additional details
+        // Enhanced details with market data
         details: {
           owner: analysis.safetyChecks.ownership.owner || 'Unknown',
           isRenounced: analysis.safetyChecks.ownership.isRenounced || false,
@@ -110,6 +113,13 @@ const SafeChecker = () => {
           topHolderPercentage: analysis.safetyChecks.holderDistribution.topHolderPercentage || 0,
           buyTax: analysis.safetyChecks.fees.buyTax || 0,
           sellTax: analysis.safetyChecks.fees.sellTax || 0,
+          formattedTotalSupply: analysis.basicInfo.formattedTotalSupply,
+          
+          // Market data from enhanced analysis
+          price: analysis.basicInfo.marketData?.price ? tokenScanner.formatNumber(analysis.basicInfo.marketData.price) : undefined,
+          marketCap: analysis.basicInfo.marketData?.marketCap ? tokenScanner.formatNumber(analysis.basicInfo.marketData.marketCap) : undefined,
+          volume24h: analysis.basicInfo.marketData?.volume24h ? tokenScanner.formatNumber(analysis.basicInfo.marketData.volume24h) : undefined,
+          priceChange24h: analysis.basicInfo.marketData?.priceChange24h ? Number(analysis.basicInfo.marketData.priceChange24h.toFixed(2)) : undefined,
         },
         
         // Warnings
@@ -295,54 +305,112 @@ const SafeChecker = () => {
         {/* Scan Results */}
         {scanResult && (
           <div className="app-card p-8 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="app-heading-md">Scan Results</h2>
-              <div className="flex items-center space-x-2">
+            {/* Enhanced Header with Token Logo */}
+            <div className="flex items-start justify-between mb-8">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <img 
+                    src={scanResult.logo || `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${scanResult.symbol.slice(0, 3)}`}
+                    alt={`${scanResult.name} logo`}
+                    className="w-16 h-16 rounded-full border-2 border-gray-200 bg-white"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${scanResult.symbol.slice(0, 3)}`;
+                    }}
+                  />
+                  {scanResult.verified && (
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h2 className="app-heading-lg mb-1">{scanResult.name}</h2>
+                  <div className="flex items-center space-x-2">
+                    <span className="app-text-muted">{scanResult.symbol}</span>
+                    {scanResult.verified && (
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Verified</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
                 {getStatusIcon(scanResult.isHoneypot ? 'dangerous' : 'safe')}
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(scanResult.riskLevel)}`}>
+                <span className={`px-4 py-2 rounded-full text-sm font-medium ${getRiskColor(scanResult.riskLevel)}`}>
                   {scanResult.riskLevel} RISK
                 </span>
               </div>
             </div>
+
+            {/* Market Data Banner */}
+            {(scanResult.details?.marketCap || scanResult.details?.price) && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+                {scanResult.details?.price && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-800">${scanResult.details.price}</div>
+                    <div className="text-sm text-gray-600">Price</div>
+                  </div>
+                )}
+                {scanResult.details?.marketCap && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-800">${scanResult.details.marketCap}</div>
+                    <div className="text-sm text-gray-600">Market Cap</div>
+                  </div>
+                )}
+                {scanResult.details?.formattedTotalSupply && (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-800">{scanResult.details.formattedTotalSupply}</div>
+                    <div className="text-sm text-gray-600">Total Supply</div>
+                  </div>
+                )}
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-800">{scanResult.securityScore}/100</div>
+                  <div className="text-sm text-gray-600">Safety Score</div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Token Info */}
               <div>
                 <h3 className="app-heading-md mb-4">Token Information</h3>
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 app-bg-tertiary rounded-lg">
-                    <span className="app-text-muted">Name</span>
+                  <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                    <span className="app-text-muted font-medium">Contract Address</span>
                     <div className="flex items-center space-x-2">
-                      <span className="app-text-primary font-medium">{scanResult.name}</span>
-                      {scanResult.verified && (
-                        <CheckCircle className="w-4 h-4 text-green-500" title="Verified Token" />
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center p-3 app-bg-tertiary rounded-lg">
-                    <span className="app-text-muted">Symbol</span>
-                    <span className="app-text-primary font-medium">{scanResult.symbol}</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 app-bg-tertiary rounded-lg">
-                    <span className="app-text-muted">Address</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="app-text-primary font-mono text-sm">{scanResult.address}</span>
+                      <span className="app-text-primary font-mono text-sm">{scanResult.address.slice(0, 10)}...{scanResult.address.slice(-8)}</span>
                       <button
                         onClick={() => window.open(`https://seitrace.com/address/${scanResult.address}`, '_blank')}
-                        className="text-blue-500 hover:text-blue-600"
+                        className="text-blue-500 hover:text-blue-600 p-1 rounded hover:bg-blue-50"
                         title="View on Explorer"
                       >
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center p-3 app-bg-tertiary rounded-lg">
-                    <span className="app-text-muted">Security Score</span>
-                    <div className="flex items-center space-x-2">
-                      <span className="app-text-primary font-medium">{scanResult.securityScore}/100</span>
-                      <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  
+                  <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                    <span className="app-text-muted font-medium">Decimals</span>
+                    <span className="app-text-primary font-medium">{scanResult.decimals || 18}</span>
+                  </div>
+
+                  {scanResult.totalSupply && (
+                    <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                      <span className="app-text-muted font-medium">Total Supply</span>
+                      <div className="text-right">
+                        <div className="app-text-primary font-medium">{scanResult.details?.formattedTotalSupply || 'Unknown'}</div>
+                        <div className="text-xs app-text-muted">{scanResult.symbol}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                    <span className="app-text-muted font-medium">Dynamic Safety Score</span>
+                    <div className="flex items-center space-x-3">
+                      <span className="app-text-primary font-bold text-lg">{scanResult.securityScore}/100</span>
+                      <div className="w-20 h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full transition-all ${
+                          className={`h-full transition-all duration-1000 ${
                             scanResult.securityScore >= 80 ? 'bg-green-500' :
                             scanResult.securityScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                           }`}
@@ -351,11 +419,19 @@ const SafeChecker = () => {
                       </div>
                     </div>
                   </div>
-                  {scanResult.totalSupply && (
-                    <div className="flex justify-between items-center p-3 app-bg-tertiary rounded-lg">
-                      <span className="app-text-muted">Total Supply</span>
-                      <span className="app-text-primary font-medium">
-                        {parseFloat(scanResult.totalSupply).toLocaleString()} {scanResult.symbol}
+
+                  {scanResult.details?.volume24h && (
+                    <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                      <span className="app-text-muted font-medium">24h Volume</span>
+                      <span className="app-text-primary font-medium">${scanResult.details.volume24h}</span>
+                    </div>
+                  )}
+
+                  {scanResult.details?.priceChange24h && (
+                    <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                      <span className="app-text-muted font-medium">24h Change</span>
+                      <span className={`font-medium ${scanResult.details.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {scanResult.details.priceChange24h >= 0 ? '+' : ''}{scanResult.details.priceChange24h}%
                       </span>
                     </div>
                   )}
