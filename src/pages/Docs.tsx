@@ -45,8 +45,8 @@ const Docs = () => {
       ]
     },
     {
-      id: 'launchpad',
-      title: 'Token Launchpad',
+              id: 'seilist',
+        title: 'SeiList',
       icon: Rocket,
       subsections: [
         { id: 'creating-tokens', title: 'Creating Tokens' },
@@ -114,7 +114,7 @@ const Docs = () => {
             <div>
               <h1 className="text-4xl font-bold text-white mb-6">Welcome to Seifu</h1>
               <p className="text-xl text-gray-300 leading-relaxed mb-8">
-                Seifu is the premier decentralized token verification and launchpad platform built specifically for the Sei blockchain ecosystem. 
+                Seifu is the premier decentralized token verification and listing platform built specifically for the Sei blockchain ecosystem. 
                 Our mission is to create a safe, transparent, and innovative environment for meme token creation, verification, and trading.
               </p>
             </div>
@@ -269,11 +269,11 @@ const Docs = () => {
           </div>
         );
 
-      case 'launchpad':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-6">Token Launchpad</h1>
+              case 'seilist':
+          return (
+            <div className="space-y-8">
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-6">SeiList</h1>
               <p className="text-xl text-gray-300 leading-relaxed mb-8">
                 Create and launch your meme tokens with built-in safety features, automatic verification, 
                 and comprehensive launch management tools.
@@ -487,7 +487,7 @@ const Docs = () => {
                   <div>
                     <h4 className="font-semibold text-[#FF6B35] mb-2">What is Seifu?</h4>
                     <p className="text-gray-300 text-sm">
-                      Seifu is a decentralized token verification and launchpad platform built for the Sei blockchain, 
+                      Seifu is a decentralized token verification and listing platform built for the Sei blockchain, 
                       focusing on safe meme token creation and trading.
                     </p>
                   </div>

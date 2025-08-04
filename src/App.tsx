@@ -4,7 +4,7 @@ import Landing from './pages/Landing';
 import AppHeader from './components/AppHeader';
 import AppFooter from './components/AppFooter';
 import SafeChecker from './pages/SafeChecker';
-import Launchpad from './pages/Launchpad';
+import SeiList from './pages/SeiList';
 import SeifunLaunch from './pages/SeifunLaunch';
 import TokenPulse from './pages/TokenPulse';
 import Docs from './pages/Docs';
@@ -42,10 +42,10 @@ function App() {
           </div>
         } />
         
-        <Route path="/app/launchpad" element={
+        <Route path="/app/seilist" element={
           <div className="min-h-screen app-bg-primary">
             <AppHeader />
-            <Launchpad />
+            <SeiList />
             <AppFooter />
           </div>
         } />

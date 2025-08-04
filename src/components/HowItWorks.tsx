@@ -5,7 +5,7 @@ const HowItWorks = () => {
   const steps = [
     {
       number: 1,
-      title: 'Use our Launchpad',
+      title: 'Use SeiList',
       description: 'Fill in the token details',
       icon: Upload,
       color: 'from-blue-500 to-blue-600'

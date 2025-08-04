@@ -26,7 +26,7 @@ const Hero = () => {
                 on Sei
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
-                The decentralized token verifier and launchpad built for the Sei ecosystem. 
+                The decentralized token verifier and listing platform built for the Sei ecosystem. 
                 Verify, launch, and trade with confidence.
               </p>
             </div>
@@ -34,7 +34,7 @@ const Hero = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button 
-                onClick={() => navigate('/launchpad')}
+                                  onClick={() => navigate('/app/seilist')}
                 className="bg-gradient-to-r from-[#FF6B35] to-[#FF8E53] text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg hover:shadow-[#FF6B35]/25 transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 transition-all"
               >
                 <Rocket size={20} />

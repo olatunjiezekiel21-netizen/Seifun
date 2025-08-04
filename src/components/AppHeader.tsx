@@ -88,11 +88,11 @@ const AppHeader = () => {
             >
               SafeChecker
             </Link>
-            <Link 
-              to="/app/launchpad" 
-              className={`app-nav-link ${isActive('/app/launchpad') ? 'active' : ''}`}
+                        <Link 
+              to="/app/seilist"
+              className={`app-nav-link ${isActive('/app/seilist') ? 'active' : ''}`}
             >
-              Launchpad
+              SeiList
             </Link>
             <Link 
               to="/app/seifun-launch" 
@@ -198,13 +198,13 @@ const AppHeader = () => {
                 SafeChecker
               </Link>
               <Link 
-                to="/app/launchpad" 
+                to="/app/seilist" 
                 className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/launchpad') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                  isActive('/app/seilist') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Launchpad
+                SeiList
               </Link>
               <Link 
                 to="/app/seifun-launch" 

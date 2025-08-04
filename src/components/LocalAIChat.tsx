@@ -86,10 +86,10 @@ const LocalAIChat: React.FC = () => {
       };
     }
     
-    // Launchpad patterns
-    if (input.includes('launch') || input.includes('create token') || input.includes('deploy')) {
+    // SeiList patterns
+    if (input.includes('launch') || input.includes('create token') || input.includes('deploy') || input.includes('list') || input.includes('seilist')) {
       return {
-        text: 'Our launchpad allows easy token creation on Sei Network. Features: 1) One-click deployment, 2) 2 SEI creation fee, 3) Automatic verification, 4) Built-in safety checks. Tokens are ERC20 compatible and tradeable immediately.',
+        text: 'SeiList allows easy token creation and listing on Sei Network. Features: 1) Create & List new tokens, 2) List existing tokens with ownership verification, 3) Automatic security scanning, 4) Built-in safety checks. All tokens are ERC20 compatible and tradeable immediately.',
         type: 'success'
       };
     }
@@ -113,7 +113,7 @@ const LocalAIChat: React.FC = () => {
     // General help patterns
     if (input.includes('help') || input.includes('how') || input.includes('what') || input.includes('explain')) {
       return {
-        text: 'I can help with: 🔍 Token analysis, 📊 Trading strategies, 🌐 Sei ecosystem info, 💰 DeFi guidance, 🚀 Launchpad assistance, ⚠️ Risk assessment, 💼 Wallet setup. What specific topic interests you?',
+        text: 'I can help with: 🔍 Token analysis, 📊 Trading strategies, 🌐 Sei ecosystem info, 💰 DeFi guidance, 🚀 SeiList assistance, ⚠️ Risk assessment, 💼 Wallet setup. What specific topic interests you?',
         type: 'info'
       };
     }

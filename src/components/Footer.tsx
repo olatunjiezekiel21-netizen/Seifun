@@ -20,7 +20,7 @@ const Footer = () => {
               <span className="text-2xl font-bold">seifun</span>
             </div>
             <p className="text-gray-400 leading-relaxed">
-              The decentralized token verifier and launchpad built for the Sei ecosystem. 
+              The decentralized token verifier and listing platform built for the Sei ecosystem. 
               Launch safe, trade smart.
             </p>
             <div className="flex space-x-4 pt-4">
@@ -41,7 +41,7 @@ const Footer = () => {
             <h3 className="text-lg font-bold">Product</h3>
             <ul className="space-y-3">
                               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">SeifunGuard</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Token Launchpad</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">SeiList</a></li>
                               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">seifun.fun</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">DAO Governance</a></li>
             </ul>
