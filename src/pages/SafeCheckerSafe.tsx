@@ -422,26 +422,295 @@ const SafeCheckerSafe = () => {
             )}
           </div>
 
-          {/* Scan Results - Using the same UI as SafeCheckerSimple for now */}
+          {/* Enhanced Scan Results with Detailed Breakdown */}
           {scanResult && (
-            <div className="app-card p-8 mb-8">
-              <div className="text-center">
-                <h3 className="text-xl font-semibold text-white mb-4">Scan Results</h3>
-                <div className="bg-gray-800 rounded-lg p-6">
-                  <div className="flex items-center justify-center space-x-2 mb-4">
+            <>
+              {/* Token Header with Logo and Basic Info */}
+              <div className="app-card p-8 mb-8">
+                <div className="flex items-start justify-between mb-8">
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <img 
+                        src={scanResult.logo || `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${scanResult.symbol.slice(0, 3)}`}
+                        alt={`${scanResult.name} logo`}
+                        className="w-16 h-16 rounded-full border-2 border-gray-200 bg-white"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${scanResult.symbol.slice(0, 3)}`;
+                        }}
+                      />
+                      {scanResult.verified && (
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h2 className="app-heading-lg mb-1">{scanResult.name}</h2>
+                      <div className="flex items-center space-x-2">
+                        <span className="app-text-muted">{scanResult.symbol}</span>
+                        {scanResult.verified && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Verified</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
                     {getStatusIcon(scanResult.isHoneypot ? 'dangerous' : 'safe')}
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(scanResult.riskLevel)}`}>
+                    <span className={`px-4 py-2 rounded-full text-sm font-medium ${getRiskColor(scanResult.riskLevel)}`}>
                       {scanResult.riskLevel} RISK
                     </span>
                   </div>
-                  <h4 className="text-lg font-medium text-white mb-2">{scanResult.name} ({scanResult.symbol})</h4>
-                  <p className="text-gray-400 text-sm mb-4">Security Score: {scanResult.securityScore}/100</p>
-                  <p className="text-gray-300">
-                    Token analysis completed. {scanResult.warnings?.length || 0} potential issues found.
+                </div>
+
+                {/* Market Data Banner */}
+                {(scanResult.details?.marketCap || scanResult.details?.price) && (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+                    {scanResult.details?.price && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-800">${scanResult.details.price}</div>
+                        <div className="text-sm text-gray-600">Price</div>
+                      </div>
+                    )}
+                    {scanResult.details?.marketCap && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-800">${scanResult.details.marketCap}</div>
+                        <div className="text-sm text-gray-600">Market Cap</div>
+                      </div>
+                    )}
+                    {scanResult.details?.formattedTotalSupply && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-800">{scanResult.details.formattedTotalSupply}</div>
+                        <div className="text-sm text-gray-600">Total Supply</div>
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-800">{scanResult.securityScore}/100</div>
+                      <div className="text-sm text-gray-600">Safety Score</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Detailed Safety Score Breakdown */}
+              <div className="app-card p-8 mb-8">
+                <h3 className="app-heading-md mb-6">Safety Score Breakdown</h3>
+                <p className="app-text-muted mb-6">
+                  Our dynamic scoring system analyzes multiple risk factors to provide a comprehensive safety assessment. Here's how we calculated this token's score:
+                </p>
+
+                {/* Overall Score Display */}
+                <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-2xl font-bold text-gray-800">{scanResult.securityScore}/100</h4>
+                      <p className="text-gray-600">Overall Safety Score</p>
+                    </div>
+                    <div className="w-32 h-4 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-1000 ${
+                          scanResult.securityScore >= 80 ? 'bg-green-500' :
+                          scanResult.securityScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${scanResult.securityScore}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    {scanResult.securityScore >= 80 ? '✅ This token appears to be safe based on our analysis' :
+                     scanResult.securityScore >= 60 ? '⚠️ This token has some risk factors to consider' :
+                     '🚨 This token has significant risk factors - proceed with caution'}
                   </p>
                 </div>
+
+                {/* Individual Risk Factors */}
+                <div className="space-y-4">
+                  <h4 className="app-heading-sm mb-4">Risk Factor Analysis</h4>
+                  
+                  {/* Honeypot Check */}
+                  <div className="flex items-center justify-between p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                    <div className="flex items-center space-x-3">
+                      {scanResult.isHoneypot ? (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      ) : (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      )}
+                      <div>
+                        <div className="app-text-primary font-medium">Honeypot Detection</div>
+                        <div className="text-xs app-text-muted">
+                          {scanResult.isHoneypot ? 'Token may be a honeypot (-40 points)' : 'No honeypot patterns detected (+0 points)'}
+                        </div>
+                      </div>
+                    </div>
+                    <span className={scanResult.isHoneypot ? 'text-red-500 font-medium' : 'text-green-500 font-medium'}>
+                      {scanResult.isHoneypot ? 'DANGEROUS' : 'SAFE'}
+                    </span>
+                  </div>
+
+                  {/* Contract Verification */}
+                  <div className="flex items-center justify-between p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                    <div className="flex items-center space-x-3">
+                      {scanResult.isVerified ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                      )}
+                      <div>
+                        <div className="app-text-primary font-medium">Contract Verification</div>
+                        <div className="text-xs app-text-muted">
+                          {scanResult.isVerified ? 'Contract is verified (+10 points)' : 'Contract not verified (-5 points)'}
+                        </div>
+                      </div>
+                    </div>
+                    <span className={scanResult.isVerified ? 'text-green-500 font-medium' : 'text-yellow-500 font-medium'}>
+                      {scanResult.isVerified ? 'VERIFIED' : 'UNVERIFIED'}
+                    </span>
+                  </div>
+
+                  {/* Ownership Analysis */}
+                  {scanResult.details && (
+                    <div className="flex items-center justify-between p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        {scanResult.details.isRenounced ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                        )}
+                        <div>
+                          <div className="app-text-primary font-medium">Ownership Status</div>
+                          <div className="text-xs app-text-muted">
+                            {scanResult.details.isRenounced ? 'Ownership renounced (+5 points)' : 'Owner can modify contract (-10 points)'}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={scanResult.details.isRenounced ? 'text-green-500 font-medium' : 'text-yellow-500 font-medium'}>
+                        {scanResult.details.isRenounced ? 'RENOUNCED' : 'OWNED'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Trading Fees */}
+                  {scanResult.details && (scanResult.details.buyTax > 0 || scanResult.details.sellTax > 0) && (
+                    <div className="flex items-center justify-between p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        {(scanResult.details.buyTax > 10 || scanResult.details.sellTax > 10) ? (
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        ) : (
+                          <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                        )}
+                        <div>
+                          <div className="app-text-primary font-medium">Trading Fees</div>
+                          <div className="text-xs app-text-muted">
+                            Buy: {scanResult.details.buyTax}% | Sell: {scanResult.details.sellTax}%
+                            {(scanResult.details.buyTax > 10 || scanResult.details.sellTax > 10) ? ' (Excessive fees -20 points)' : ' (Moderate fees -5 points)'}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={(scanResult.details.buyTax > 10 || scanResult.details.sellTax > 10) ? 'text-red-500 font-medium' : 'text-yellow-500 font-medium'}>
+                        {(scanResult.details.buyTax > 10 || scanResult.details.sellTax > 10) ? 'HIGH' : 'MODERATE'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Holder Distribution */}
+                  {scanResult.details && scanResult.details.topHolderPercentage > 0 && (
+                    <div className="flex items-center justify-between p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        {scanResult.details.topHolderPercentage > 50 ? (
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        ) : scanResult.details.topHolderPercentage > 20 ? (
+                          <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                        ) : (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        )}
+                        <div>
+                          <div className="app-text-primary font-medium">Holder Distribution</div>
+                          <div className="text-xs app-text-muted">
+                            Top holder owns {scanResult.details.topHolderPercentage}% of supply
+                            {scanResult.details.topHolderPercentage > 50 ? ' (High concentration -15 points)' : 
+                             scanResult.details.topHolderPercentage > 20 ? ' (Moderate concentration -5 points)' : 
+                             ' (Good distribution +0 points)'}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={
+                        scanResult.details.topHolderPercentage > 50 ? 'text-red-500 font-medium' :
+                        scanResult.details.topHolderPercentage > 20 ? 'text-yellow-500 font-medium' :
+                        'text-green-500 font-medium'
+                      }>
+                        {scanResult.details.topHolderPercentage > 50 ? 'CONCENTRATED' :
+                         scanResult.details.topHolderPercentage > 20 ? 'MODERATE' : 'DISTRIBUTED'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Market Data Impact */}
+                  {scanResult.details?.priceChange24h && (
+                    <div className="flex items-center justify-between p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                      <div className="flex items-center space-x-3">
+                        {scanResult.details.priceChange24h < -20 ? (
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        ) : scanResult.details.priceChange24h < -10 ? (
+                          <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                        ) : (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        )}
+                        <div>
+                          <div className="app-text-primary font-medium">24h Price Performance</div>
+                          <div className="text-xs app-text-muted">
+                            {scanResult.details.priceChange24h >= 0 ? '+' : ''}{scanResult.details.priceChange24h}% change
+                            {scanResult.details.priceChange24h < -20 ? ' (Major decline -10 points)' : 
+                             scanResult.details.priceChange24h < -10 ? ' (Significant decline -5 points)' : 
+                             ' (Stable/positive +0 points)'}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={
+                        scanResult.details.priceChange24h < -20 ? 'text-red-500 font-medium' :
+                        scanResult.details.priceChange24h < -10 ? 'text-yellow-500 font-medium' :
+                        scanResult.details.priceChange24h >= 0 ? 'text-green-500 font-medium' : 'text-yellow-500 font-medium'
+                      }>
+                        {scanResult.details.priceChange24h >= 0 ? '+' : ''}{scanResult.details.priceChange24h}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Risk Warnings */}
+                {scanResult.warnings && scanResult.warnings.length > 0 && (
+                  <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h5 className="text-yellow-800 font-medium mb-2">Risk Warnings</h5>
+                        <ul className="text-yellow-700 text-sm space-y-1">
+                          {scanResult.warnings.map((warning, index) => (
+                            <li key={index}>• {warning}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Scoring Methodology */}
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h5 className="text-blue-800 font-medium mb-2">How We Calculate Safety Scores</h5>
+                  <p className="text-blue-700 text-sm mb-2">
+                    Our scoring system starts at 100 points and deducts points based on risk factors:
+                  </p>
+                                     <ul className="text-blue-700 text-sm space-y-1">
+                     <li>• <strong>Honeypot Detection:</strong> -40 points if detected</li>
+                     <li>• <strong>Blacklist Functions:</strong> -25 points if present</li>
+                     <li>• <strong>Excessive Fees:</strong> -20 points if buy/sell tax &gt; 10%</li>
+                     <li>• <strong>High Concentration:</strong> -15 points if top holder &gt; 50%</li>
+                     <li>• <strong>Owner Control:</strong> -10 points if not renounced</li>
+                     <li>• <strong>Verification Bonus:</strong> +10 points if verified</li>
+                     <li>• <strong>Renounced Bonus:</strong> +5 points if ownership renounced</li>
+                   </ul>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* Recent Scans */}
