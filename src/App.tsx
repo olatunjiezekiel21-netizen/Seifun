@@ -1,12 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
-import AppHeader from './components/AppHeader';
-import AppHeaderSimple from './components/AppHeaderSimple';
 import AppHeaderSafe from './components/AppHeaderSafe';
 import AppFooter from './components/AppFooter';
-import SafeChecker from './pages/SafeChecker';
-import SafeCheckerSimple from './pages/SafeCheckerSimple';
 import SafeCheckerSafe from './pages/SafeCheckerSafe';
 import SeiList from './pages/SeiList';
 import SeifunLaunch from './pages/SeifunLaunch';
