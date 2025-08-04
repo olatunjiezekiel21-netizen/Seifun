@@ -8,7 +8,8 @@ import {
   Wallet,
   RefreshCw,
   ExternalLink,
-  Info
+  Info,
+  BarChart3
 } from 'lucide-react';
 
 // Lazy load heavy dependencies
@@ -710,6 +711,34 @@ const SafeCheckerSafe = () => {
                    </ul>
                 </div>
               </div>
+
+              {/* Trading View Link */}
+              {scanResult && scanResult.details && (
+                <div className="app-card p-6 mt-6">
+                  <h3 className="app-heading-sm mb-4">Advanced Token Analysis</h3>
+                  <p className="app-text-muted mb-4">
+                    View comprehensive trading data, price charts, and market metrics for this token.
+                  </p>
+                  <button
+                    onClick={() => {
+                      // Navigate to trading search with token parameter
+                      const chainId = 'ethereum'; // Default to Ethereum, could be dynamic based on token
+                      const tokenAddress = scanResult.contractAddress;
+                      
+                      // Open in new tab to preserve the current scan results
+                      window.open(`/app/trading/${chainId}/search?token=${tokenAddress}`, '_blank');
+                    }}
+                    className="flex items-center space-x-2 app-button-primary"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    <span>View Trading Data & Charts</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                  <div className="mt-3 text-xs app-text-muted">
+                    Opens real-time trading view with price charts, volume, liquidity, and market data
+                  </div>
+                </div>
+              )}
             </>
           )}
 

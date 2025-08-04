@@ -8,6 +8,7 @@ import SeiList from './pages/SeiList';
 import SeifunLaunch from './pages/SeifunLaunch';
 import TokenPulse from './pages/TokenPulse';
 import TradingView from './pages/TradingView';
+import TradingSearch from './pages/TradingSearch';
 import Docs from './pages/Docs';
 import DevPlus from './pages/DevPlus';
 
@@ -71,6 +72,14 @@ function App() {
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSafe />
             <TradingView />
+            <AppFooter />
+          </div>
+        } />
+        
+        <Route path="/app/trading/:chainId/search" element={
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <TradingSearch />
             <AppFooter />
           </div>
         } />

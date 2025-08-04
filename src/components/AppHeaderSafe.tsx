@@ -208,27 +208,41 @@ const AppHeaderSafe = () => {
                               : 'app-bg-muted border-gray-100 opacity-50 cursor-not-allowed'
                           }`}
                         >
-                          <div className="flex items-center space-x-3">
-                            <span className="text-2xl">{wallet.icon}</span>
-                            <div className="text-left">
-                              <div className="app-text-primary font-medium flex items-center space-x-2">
-                                <span>{wallet.name}</span>
-                                {wallet.isMobile && (
-                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                    QR Code
-                                  </span>
+                                                      <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 flex items-center justify-center">
+                                {wallet.icon.startsWith('http') ? (
+                                  <img 
+                                    src={wallet.icon} 
+                                    alt={`${wallet.name} icon`}
+                                    className="w-6 h-6 rounded-sm"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.src = `https://via.placeholder.com/24/4F46E5/FFFFFF?text=${wallet.name.slice(0, 2)}`;
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="text-2xl">{wallet.icon}</span>
                                 )}
                               </div>
-                              <div className="text-xs app-text-muted">
-                                {wallet.isMobile 
-                                  ? 'Scan QR code with mobile wallet' 
-                                  : wallet.installed 
-                                    ? 'Ready to connect' 
-                                    : 'Not installed'
-                                }
+                              <div className="text-left">
+                                <div className="app-text-primary font-medium flex items-center space-x-2">
+                                  <span>{wallet.name}</span>
+                                  {wallet.isMobile && (
+                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                      QR Code
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs app-text-muted">
+                                  {wallet.isMobile 
+                                    ? 'Scan QR code with mobile wallet' 
+                                    : wallet.installed 
+                                      ? 'Ready to connect' 
+                                      : 'Not installed'
+                                  }
+                                </div>
                               </div>
                             </div>
-                          </div>
                           {wallet.installed && !wallet.isMobile && (
                             <ChevronDown className="w-4 h-4 app-text-muted rotate-[-90deg]" />
                           )}

@@ -71,21 +71,25 @@ export class ReownWalletConnection {
 
     try {
       const reownModules = await loadReownAppKit();
-      if (!reownModules) return;
+      if (!reownModules) {
+        console.warn('⚠️ Reown AppKit modules not available');
+        return;
+      }
 
       const { createAppKit, ethersAdapter } = reownModules;
       const networkConfig = getSeiNetworkConfig(this.isMainnet);
 
-      // Define Sei network for Reown
+      // Define Sei network for Reown with proper configuration
       const seiNetwork = {
         chainId: networkConfig.chainId,
         name: networkConfig.networkName,
         currency: networkConfig.nativeCurrency.symbol,
         explorerUrl: networkConfig.blockExplorerUrl,
-        rpcUrl: networkConfig.rpcUrl
+        rpcUrl: networkConfig.rpcUrl,
+        chainNamespace: 'eip155'
       };
 
-      // Create the AppKit instance
+      // Create the AppKit instance with enhanced mobile support
       this.appKit = createAppKit({
         adapters: [ethersAdapter],
         projectId: reownConfig.projectId,
@@ -96,14 +100,27 @@ export class ReownWalletConnection {
           analytics: true,
           email: false,
           socials: [],
-          emailShowWallets: true
-        }
+          emailShowWallets: true,
+          swaps: false,
+          onramp: false
+        },
+        themeMode: 'light',
+        themeVariables: {
+          '--w3m-font-family': 'Inter, system-ui, sans-serif',
+          '--w3m-accent': '#4F46E5'
+        },
+        enableWalletConnect: true,
+        enableInjected: true,
+        enableEIP6963: true,
+        enableCoinbase: false
       });
 
       this.reownInitialized = true;
-      console.log('✅ Reown AppKit initialized successfully');
+      console.log('✅ Reown AppKit initialized successfully for mobile and desktop');
     } catch (error) {
-      console.warn('⚠️ Failed to initialize Reown AppKit:', error);
+      console.error('❌ Failed to initialize Reown AppKit:', error);
+      // Set a flag to show that Reown is not available
+      this.reownInitialized = false;
     }
   }
 
@@ -158,47 +175,106 @@ export class ReownWalletConnection {
     throw new Error('No compatible wallet found. Please install Fin, Compass, Keplr, MetaMask, Sei Wallet, or use a mobile wallet via QR code.');
   }
 
-  // New Reown mobile wallet connection
+  // Enhanced Reown mobile wallet connection
   private async connectReownWallet(): Promise<WalletConnectionResult> {
-    if (!this.appKit) {
-      await this.initializeReownAppKit();
-      if (!this.appKit) {
-        throw new Error('Reown AppKit not available');
-      }
-    }
-
     try {
+      // Initialize if not already done
+      if (!this.appKit) {
+        await this.initializeReownAppKit();
+      }
+
+      if (!this.appKit) {
+        throw new Error('Reown AppKit not available. Please install a mobile wallet app or use a desktop wallet.');
+      }
+
+      // Check if already connected
+      const currentState = this.appKit.getState?.();
+      if (currentState?.address) {
+        const balance = await this.getBalance(currentState.address);
+        return {
+          address: currentState.address,
+          chainId: currentState.selectedNetworkId || (this.isMainnet ? 1329 : 1328),
+          walletType: 'Mobile Wallet (WalletConnect)',
+          balance
+        };
+      }
+
       // Open the Reown modal for wallet selection
+      console.log('🔗 Opening Reown wallet selection...');
       await this.appKit.open();
       
-      // Wait for connection
+      // Wait for connection with enhanced error handling
       return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-          reject(new Error('Connection timeout'));
-        }, 60000); // 60 second timeout
+          reject(new Error('Connection timeout. Please try again or use a desktop wallet.'));
+        }, 90000); // 90 second timeout for mobile
+
+        let isResolved = false;
 
         const unsubscribe = this.appKit.subscribeState((state: any) => {
-          if (state.open === false && state.selectedNetworkId) {
+          console.log('🔄 Reown state update:', { 
+            open: state.open, 
+            address: state.address, 
+            selectedNetworkId: state.selectedNetworkId 
+          });
+
+          // Connection successful
+          if (state.address && !isResolved) {
+            isResolved = true;
             clearTimeout(timeout);
             unsubscribe();
 
-            if (state.address) {
-              this.getBalance(state.address).then(balance => {
-                resolve({
-                  address: state.address,
-                  chainId: state.selectedNetworkId,
-                  walletType: 'Mobile Wallet (Reown)',
-                  balance
-                });
+            this.getBalance(state.address).then(balance => {
+              resolve({
+                address: state.address,
+                chainId: state.selectedNetworkId || (this.isMainnet ? 1329 : 1328),
+                walletType: `Mobile Wallet (${state.connectorType || 'WalletConnect'})`,
+                balance: balance || '0'
               });
-            } else {
-              reject(new Error('No address received from Reown'));
-            }
+            }).catch(balanceError => {
+              console.warn('⚠️ Balance fetch failed:', balanceError);
+              resolve({
+                address: state.address,
+                chainId: state.selectedNetworkId || (this.isMainnet ? 1329 : 1328),
+                walletType: `Mobile Wallet (${state.connectorType || 'WalletConnect'})`,
+                balance: '0'
+              });
+            });
+          }
+
+          // Modal closed without connection
+          if (state.open === false && !state.address && !isResolved) {
+            isResolved = true;
+            clearTimeout(timeout);
+            unsubscribe();
+            reject(new Error('Connection cancelled by user'));
           }
         });
+
+        // Fallback: Check connection after a short delay
+        setTimeout(() => {
+          if (!isResolved) {
+            const currentState = this.appKit.getState?.();
+            if (currentState?.address) {
+              isResolved = true;
+              clearTimeout(timeout);
+              unsubscribe();
+              
+              this.getBalance(currentState.address).then(balance => {
+                resolve({
+                  address: currentState.address,
+                  chainId: currentState.selectedNetworkId || (this.isMainnet ? 1329 : 1328),
+                  walletType: 'Mobile Wallet (WalletConnect)',
+                  balance: balance || '0'
+                });
+              });
+            }
+          }
+        }, 5000); // Check after 5 seconds
       });
     } catch (error) {
-      throw new Error(`Reown connection failed: ${error}`);
+      console.error('❌ Reown connection error:', error);
+      throw new Error(`Mobile wallet connection failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please ensure you have a compatible mobile wallet installed.`);
     }
   }
 
@@ -436,42 +512,47 @@ export class ReownWalletConnection {
       {
         name: 'Fin Wallet',
         id: 'fin',
-        icon: '🦈',
+        icon: 'https://finwallet.com/favicon.ico',
         // @ts-ignore
-        installed: typeof window.fin !== 'undefined'
+        installed: typeof window.fin !== 'undefined',
+        provider: typeof window !== 'undefined' ? (window as any).fin : undefined
       },
       {
         name: 'Compass Wallet',
         id: 'compass',
-        icon: '🧭',
+        icon: 'https://compass.xyz/favicon.ico',
         // @ts-ignore
-        installed: typeof window.compass !== 'undefined'
+        installed: typeof window.compass !== 'undefined',
+        provider: typeof window !== 'undefined' ? (window as any).compass : undefined
       },
       {
         name: 'Sei Wallet',
         id: 'sei',
-        icon: '⚡',
+        icon: 'https://www.seiwallet.xyz/favicon.ico',
         // @ts-ignore
-        installed: typeof window.sei !== 'undefined'
+        installed: typeof window.sei !== 'undefined',
+        provider: typeof window !== 'undefined' ? (window as any).sei : undefined
       },
       {
         name: 'Keplr Wallet',
         id: 'keplr',
-        icon: '🔐',
+        icon: 'https://wallet.keplr.app/favicon.ico',
         // @ts-ignore
-        installed: typeof window.keplr !== 'undefined'
+        installed: typeof window.keplr !== 'undefined',
+        provider: typeof window !== 'undefined' ? (window as any).keplr : undefined
       },
       {
         name: 'MetaMask',
         id: 'metamask',
-        icon: '🦊',
+        icon: 'https://metamask.io/images/favicon.ico',
         // @ts-ignore
-        installed: typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask
+        installed: typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask,
+        provider: typeof window !== 'undefined' && (window as any).ethereum?.isMetaMask ? (window as any).ethereum : undefined
       },
       {
         name: 'Mobile Wallets',
         id: 'reown',
-        icon: '📱',
+        icon: 'https://walletconnect.com/favicon.ico',
         installed: true, // Always available via Reown
         isMobile: true
       }
