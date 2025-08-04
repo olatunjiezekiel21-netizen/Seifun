@@ -6,6 +6,7 @@ import AppHeaderSimple from './components/AppHeaderSimple';
 import AppFooter from './components/AppFooter';
 import SafeChecker from './pages/SafeChecker';
 import SafeCheckerSimple from './pages/SafeCheckerSimple';
+import SafeCheckerSafe from './pages/SafeCheckerSafe';
 import SeiList from './pages/SeiList';
 import SeifunLaunch from './pages/SeifunLaunch';
 import TokenPulse from './pages/TokenPulse';
@@ -31,7 +32,7 @@ function App() {
         <Route path="/app" element={
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSimple />
-            <SafeCheckerSimple />
+            <SafeCheckerSafe />
             <AppFooter />
           </div>
         } />
@@ -39,7 +40,7 @@ function App() {
         <Route path="/app/safechecker" element={
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSimple />
-            <SafeCheckerSimple />
+            <SafeCheckerSafe />
             <AppFooter />
           </div>
         } />

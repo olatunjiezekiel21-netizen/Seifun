@@ -387,7 +387,7 @@ export class ReownWalletConnection {
   }
 }
 
-// Enhanced React hook with better wallet management
+// Enhanced React hook with better wallet management and error handling
 export const useReownWallet = () => {
   const [walletState, setWalletState] = useState<ReownWalletState>({
     isConnected: false,
@@ -399,40 +399,74 @@ export const useReownWallet = () => {
     chainId: null,
   });
 
-  const [walletConnection] = useState(() => new ReownWalletConnection(false));
+  const [walletConnection, setWalletConnection] = useState<ReownWalletConnection | null>(null);
+
+  // Initialize wallet connection safely
+  useEffect(() => {
+    try {
+      const connection = new ReownWalletConnection(false);
+      setWalletConnection(connection);
+    } catch (error) {
+      console.error('Failed to initialize wallet connection:', error);
+      setWalletState(prev => ({
+        ...prev,
+        error: 'Failed to initialize wallet system'
+      }));
+    }
+  }, []);
 
   useEffect(() => {
-    // Check for existing connection on mount (only in browser)
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    // Only proceed if wallet connection is initialized and we're in browser
+    if (!walletConnection || typeof window === 'undefined' || typeof localStorage === 'undefined') {
       return;
     }
 
-    const savedConnection = localStorage.getItem('reown_wallet_connection');
-    if (savedConnection) {
+    // Check for existing connection on mount (only in browser)
+    const restoreConnection = async () => {
       try {
-        const connectionData = JSON.parse(savedConnection);
-        setWalletState(prev => ({
-          ...prev,
-          isConnected: true,
-          address: connectionData.address,
-          walletType: connectionData.walletType,
-          chainId: connectionData.chainId,
-        }));
-        
-        // Refresh balance
-        walletConnection.getBalance(connectionData.address).then(balance => {
-          setWalletState(prev => ({ ...prev, balance }));
-        }).catch(error => {
-          console.error('Error refreshing balance:', error);
-        });
+        const savedConnection = localStorage.getItem('reown_wallet_connection');
+        if (savedConnection) {
+          const connectionData = JSON.parse(savedConnection);
+          setWalletState(prev => ({
+            ...prev,
+            isConnected: true,
+            address: connectionData.address,
+            walletType: connectionData.walletType,
+            chainId: connectionData.chainId,
+          }));
+          
+          // Refresh balance safely
+          try {
+            const balance = await walletConnection.getBalance(connectionData.address);
+            setWalletState(prev => ({ ...prev, balance }));
+          } catch (balanceError) {
+            console.warn('Could not refresh balance:', balanceError);
+            // Don't fail the whole connection for balance issues
+          }
+        }
       } catch (error) {
         console.error('Error restoring wallet connection:', error);
-        localStorage.removeItem('reown_wallet_connection');
+        // Clear invalid saved data
+        try {
+          localStorage.removeItem('reown_wallet_connection');
+        } catch (storageError) {
+          console.warn('Could not clear invalid connection data:', storageError);
+        }
       }
-    }
+    };
+
+    restoreConnection();
   }, [walletConnection]);
 
   const connectWallet = async (preferredWallet?: string) => {
+    if (!walletConnection) {
+      setWalletState(prev => ({
+        ...prev,
+        error: 'Wallet system not initialized'
+      }));
+      return;
+    }
+
     setWalletState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
@@ -451,16 +485,22 @@ export const useReownWallet = () => {
       setWalletState(newState);
 
       // Save connection for persistence (only in browser)
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('reown_wallet_connection', JSON.stringify({
-          address: result.address,
-          walletType: result.walletType,
-          chainId: result.chainId,
-        }));
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('reown_wallet_connection', JSON.stringify({
+            address: result.address,
+            walletType: result.walletType,
+            chainId: result.chainId,
+          }));
+        }
+      } catch (storageError) {
+        console.warn('Could not save connection data:', storageError);
+        // Don't fail the connection for storage issues
       }
 
       return result;
     } catch (error: any) {
+      console.error('Wallet connection failed:', error);
       setWalletState(prev => ({
         ...prev,
         isConnecting: false,
@@ -471,6 +511,10 @@ export const useReownWallet = () => {
   };
 
   const disconnectWallet = async () => {
+    if (!walletConnection) {
+      return;
+    }
+
     try {
       await walletConnection.disconnect();
       setWalletState({
@@ -483,25 +527,50 @@ export const useReownWallet = () => {
         chainId: null,
       });
     } catch (error: any) {
-      setWalletState(prev => ({
-        ...prev,
-        error: error.message || 'Failed to disconnect wallet',
-      }));
+      console.error('Disconnect failed:', error);
+      // Still update state even if disconnect fails
+      setWalletState({
+        isConnected: false,
+        address: null,
+        balance: null,
+        isConnecting: false,
+        error: null,
+        walletType: null,
+        chainId: null,
+      });
     }
   };
 
   const getAvailableWallets = () => {
-    return walletConnection.getAvailableWallets();
+    if (!walletConnection) {
+      return [
+        { name: 'Fin Wallet', id: 'fin', icon: '🦈', installed: false },
+        { name: 'Compass Wallet', id: 'compass', icon: '🧭', installed: false },
+        { name: 'Sei Wallet', id: 'sei', icon: '⚡', installed: false },
+        { name: 'Keplr Wallet', id: 'keplr', icon: '🔮', installed: false },
+        { name: 'MetaMask', id: 'metamask', icon: '🦊', installed: false }
+      ];
+    }
+
+    try {
+      return walletConnection.getAvailableWallets();
+    } catch (error) {
+      console.error('Error getting available wallets:', error);
+      return [];
+    }
   };
 
   const refreshBalance = async () => {
-    if (walletState.address) {
-      try {
-        const balance = await walletConnection.getBalance(walletState.address);
-        setWalletState(prev => ({ ...prev, balance }));
-      } catch (error) {
-        console.error('Error refreshing balance:', error);
-      }
+    if (!walletConnection || !walletState.address) {
+      return;
+    }
+
+    try {
+      const balance = await walletConnection.getBalance(walletState.address);
+      setWalletState(prev => ({ ...prev, balance }));
+    } catch (error) {
+      console.error('Error refreshing balance:', error);
+      // Don't update error state for balance refresh failures
     }
   };
 
