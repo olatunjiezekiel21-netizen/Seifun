@@ -11,6 +11,7 @@ import {
   Info
 } from 'lucide-react';
 
+// Ensure correct import paths for build
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 import { TokenScanner } from '../utils/tokenScanner';
 import { useReownWallet } from '../utils/reownWalletConnection';
