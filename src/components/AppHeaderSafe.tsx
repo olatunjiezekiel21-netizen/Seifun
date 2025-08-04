@@ -211,14 +211,37 @@ const AppHeaderSafe = () => {
                           <div className="flex items-center space-x-3">
                             <span className="text-2xl">{wallet.icon}</span>
                             <div className="text-left">
-                              <div className="app-text-primary font-medium">{wallet.name}</div>
+                              <div className="app-text-primary font-medium flex items-center space-x-2">
+                                <span>{wallet.name}</span>
+                                {wallet.isMobile && (
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                    QR Code
+                                  </span>
+                                )}
+                              </div>
                               <div className="text-xs app-text-muted">
-                                {wallet.installed ? 'Ready to connect' : 'Not installed'}
+                                {wallet.isMobile 
+                                  ? 'Scan QR code with mobile wallet' 
+                                  : wallet.installed 
+                                    ? 'Ready to connect' 
+                                    : 'Not installed'
+                                }
                               </div>
                             </div>
                           </div>
-                          {wallet.installed && (
+                          {wallet.installed && !wallet.isMobile && (
                             <ChevronDown className="w-4 h-4 app-text-muted rotate-[-90deg]" />
+                          )}
+                          {wallet.isMobile && (
+                            <div className="text-blue-500">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <rect x="7" y="7" width="4" height="4"></rect>
+                                <rect x="7" y="13" width="4" height="4"></rect>
+                                <rect x="13" y="7" width="4" height="4"></rect>
+                                <rect x="13" y="13" width="4" height="4"></rect>
+                              </svg>
+                            </div>
                           )}
                         </button>
                       ))}
@@ -226,6 +249,9 @@ const AppHeaderSafe = () => {
                     <div className="mt-3 pt-3 border-t app-border">
                       <p className="text-xs app-text-muted">
                         New to Sei? Install <a href="https://finwallet.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Fin Wallet</a> or <a href="https://compass.keplr.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Compass</a>
+                      </p>
+                      <p className="text-xs app-text-muted mt-1">
+                        📱 Mobile users: Click "Mobile Wallets" to scan QR code with Trust Wallet, Rainbow, Coinbase Wallet, or any WalletConnect-compatible app
                       </p>
                     </div>
                   </div>

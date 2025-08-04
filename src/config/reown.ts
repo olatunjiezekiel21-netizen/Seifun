@@ -1,12 +1,15 @@
 export const reownConfig = {
-  projectId: import.meta.env.VITE_REOWN_PROJECT_ID || 'your_project_id',
-  appId: import.meta.env.VITE_REOWN_APP_ID || 'your_app_id',
-  relayUrl: import.meta.env.VITE_REOWN_RELAY_URL || 'wss://relay.reown.com',
-  chains: ['sei:atlantic-2'], // Sei testnet - change to 'sei:sei-network' for mainnet
+  projectId: import.meta.env.VITE_REOWN_PROJECT_ID || '8e9c0a8e42b574886bd130cfadc084f7',
   appName: 'Seifun',
   appDescription: 'The ultimate Sei token launchpad and trading platform',
-  appUrl: 'https://seifun.io',
-  appIcon: '/Seifu.png'
+  appUrl: 'https://seifun.netlify.app',
+  appIcon: '/Seifu.png',
+  metadata: {
+    name: 'Seifun',
+    description: 'The ultimate Sei token launchpad and trading platform',
+    url: 'https://seifun.netlify.app',
+    icons: ['/Seifu.png']
+  }
 };
 
 export const getSeiNetworkConfig = (isMainnet = false) => {
