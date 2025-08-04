@@ -4,86 +4,69 @@ import {
   Shield, 
   AlertTriangle, 
   CheckCircle, 
-  XCircle, 
-  Info,
-  Zap,
-  Eye,
-  BarChart3,
-  Clock,
-  TrendingUp,
-  TrendingDown
+  XCircle 
 } from 'lucide-react';
+
+import { getTokenInfo } from '../utils/SeiTokenRegistry';
+import { scanTokenAddress } from '../utils/tokenScanner';
 
 const SafeChecker = () => {
   const [tokenAddress, setTokenAddress] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<any>(null);
-  const [recentScans, setRecentScans] = useState([
-    {
-      address: '0x1234...5678',
-      name: 'SeiDoge',
-      status: 'safe',
-      timestamp: '2 minutes ago',
-      risk: 'LOW'
-    },
-    {
-      address: '0xabcd...efgh',
-      name: 'SeiScam',
-      status: 'dangerous',
-      timestamp: '5 minutes ago',
-      risk: 'HIGH'
-    },
-    {
-      address: '0x9999...0000',
-      name: 'SeiCat',
-      status: 'safe',
-      timestamp: '10 minutes ago',
-      risk: 'LOW'
-    }
-  ]);
+  const [recentScans, setRecentScans] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const scanToken = async () => {
     if (!tokenAddress.trim()) return;
-    
     setIsScanning(true);
-    
-    // Simulate scanning
-    setTimeout(() => {
-      const mockResult = {
+    setScanResult(null);
+    setError(null);
+
+    try {
+      // Fetch basic token info (optional, for name/symbol)
+      let registryInfo = {};
+      try {
+        registryInfo = await getTokenInfo(tokenAddress);
+      } catch (e) {
+        // If not found, that's fine—continue with scan only
+      }
+
+      // Scan the token (must return: isHoneypot, isVerified, riskLevel, securityScore, warnings, details, etc.)
+      const scanData = await scanTokenAddress(tokenAddress);
+
+      // Compose the final scan result
+      const scanResult = {
+        ...registryInfo,
+        ...scanData,
         address: tokenAddress,
-        name: 'TestToken',
-        symbol: 'TEST',
-        isHoneypot: Math.random() > 0.7,
-        isVerified: Math.random() > 0.5,
-        riskLevel: Math.random() > 0.7 ? 'HIGH' : 'LOW',
-        securityScore: Math.floor(Math.random() * 40) + 60,
-        warnings: [
-          'Owner has high percentage of tokens',
-          'Liquidity locked for less than 1 year',
-          'No contract verification'
-        ],
-        details: {
-          totalSupply: '1,000,000,000',
-          circulatingSupply: '500,000,000',
-          marketCap: '$1,250,000',
-          liquidity: '$850,000',
-          holders: '1,247',
-          price: '$0.000123'
-        }
+        name:
+          (registryInfo as any)?.name ||
+          (scanData as any)?.name ||
+          'Unknown',
+        symbol:
+          (registryInfo as any)?.symbol ||
+          (scanData as any)?.symbol ||
+          '',
       };
-      
-      setScanResult(mockResult);
+
+      setScanResult(scanResult);
+
+      setRecentScans(prev => [
+        {
+          address: tokenAddress.slice(0, 8) + '...' + tokenAddress.slice(-4),
+          name: scanResult.name,
+          status: scanResult.isHoneypot ? 'dangerous' : 'safe',
+          timestamp: 'Just now',
+          risk: scanResult.riskLevel
+        },
+        ...prev.slice(0, 4)
+      ]);
+    } catch (err: any) {
+      setError('Failed to scan token: ' + (err?.message || err));
+    } finally {
       setIsScanning(false);
-      
-      // Add to recent scans
-      setRecentScans(prev => [{
-        address: tokenAddress.slice(0, 8) + '...' + tokenAddress.slice(-4),
-        name: mockResult.name,
-        status: mockResult.isHoneypot ? 'dangerous' : 'safe',
-        timestamp: 'Just now',
-        risk: mockResult.riskLevel
-      }, ...prev.slice(0, 4)]);
-    }, 2000);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -156,6 +139,9 @@ const SafeChecker = () => {
               )}
             </button>
           </div>
+          {error && (
+            <div className="mt-4 text-red-500 text-sm">{error}</div>
+          )}
         </div>
 
         {/* Scan Results */}
@@ -228,7 +214,7 @@ const SafeChecker = () => {
                 </div>
 
                 {/* Warnings */}
-                {scanResult.warnings.length > 0 && (
+                {scanResult.warnings && scanResult.warnings.length > 0 && (
                   <div className="mt-6">
                     <h4 className="app-text-primary font-medium mb-3">Warnings</h4>
                     <div className="space-y-2">
@@ -245,17 +231,19 @@ const SafeChecker = () => {
             </div>
 
             {/* Token Details */}
-            <div className="mt-8">
-              <h3 className="app-heading-md mb-4">Token Details</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {Object.entries(scanResult.details).map(([key, value]) => (
-                  <div key={key} className="p-3 app-bg-tertiary rounded-lg text-center">
-                    <div className="app-text-muted text-xs mb-1">{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
-                    <div className="app-text-primary font-medium">{value}</div>
-                  </div>
-                ))}
+            {scanResult.details && (
+              <div className="mt-8">
+                <h3 className="app-heading-md mb-4">Token Details</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {Object.entries(scanResult.details).map(([key, value]) => (
+                    <div key={key} className="p-3 app-bg-tertiary rounded-lg text-center">
+                      <div className="app-text-muted text-xs mb-1">{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+                      <div className="app-text-primary font-medium">{value}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
