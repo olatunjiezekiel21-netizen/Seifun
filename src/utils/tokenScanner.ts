@@ -192,16 +192,7 @@ export class TokenScanner {
     }
   }
 
-  async fetchTokenLogo(address: string, symbol: string): Promise<string | null> {
-    try {
-      // Use Sei registry to get real token logo
-      const tokenInfo = await this.seiRegistry.getTokenInfo(address);
-      return tokenInfo?.logoUrl || null;
-    } catch (error) {
-      console.error('Error fetching token logo:', error);
-      return null;
-    }
-  }
+
 
     async getTokenBasicInfo(address: string): Promise<TokenInfo> {
     try {
@@ -247,7 +238,14 @@ export class TokenScanner {
       const contract = new ethers.Contract(address, EXTENDED_ABI, this.provider);
       const tokenInfo = await this.getTokenInfoWithFallbacks(contract, address, contractType);
       
-      const logoUrl = await this.fetchTokenLogo(address, tokenInfo.symbol);
+      // Try to get logo from registry first, then use enhanced logo fetching
+      let logoUrl: string | undefined;
+      try {
+        const registryInfo = await this.seiRegistry.getTokenInfo(address);
+        logoUrl = registryInfo?.logoUrl;
+      } catch {
+        // If not in registry, we'll fetch logo later in the analysis process
+      }
 
       return {
         address: ethers.getAddress(address),
