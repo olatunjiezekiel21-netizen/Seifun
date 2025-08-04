@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import AppHeader from './components/AppHeader';
 import AppHeaderSimple from './components/AppHeaderSimple';
+import AppHeaderSafe from './components/AppHeaderSafe';
 import AppFooter from './components/AppFooter';
 import SafeChecker from './pages/SafeChecker';
 import SafeCheckerSimple from './pages/SafeCheckerSimple';
@@ -31,7 +32,7 @@ function App() {
         {/* App Routes - All with darker blue UI and Sei colors */}
         <Route path="/app" element={
           <div className="min-h-screen app-bg-primary">
-            <AppHeaderSimple />
+            <AppHeaderSafe />
             <SafeCheckerSafe />
             <AppFooter />
           </div>
@@ -39,7 +40,7 @@ function App() {
         
         <Route path="/app/safechecker" element={
           <div className="min-h-screen app-bg-primary">
-            <AppHeaderSimple />
+            <AppHeaderSafe />
             <SafeCheckerSafe />
             <AppFooter />
           </div>
@@ -47,7 +48,7 @@ function App() {
         
         <Route path="/app/seilist" element={
           <div className="min-h-screen app-bg-primary">
-            <AppHeaderSimple />
+            <AppHeaderSafe />
             <SeiList />
             <AppFooter />
           </div>
@@ -55,7 +56,7 @@ function App() {
         
         <Route path="/app/seifun-launch" element={
           <div className="min-h-screen app-bg-primary">
-            <AppHeaderSimple />
+            <AppHeaderSafe />
             <SeifunLaunch />
             <AppFooter />
           </div>
@@ -63,7 +64,7 @@ function App() {
         
         <Route path="/app/token-pulse" element={
           <div className="min-h-screen app-bg-primary">
-            <AppHeaderSimple />
+            <AppHeaderSafe />
             <TokenPulse />
             <AppFooter />
           </div>
@@ -71,7 +72,7 @@ function App() {
         
         <Route path="/app/docs" element={
           <div className="min-h-screen app-bg-primary">
-            <AppHeaderSimple />
+            <AppHeaderSafe />
             <Docs />
             <AppFooter />
           </div>
@@ -79,7 +80,7 @@ function App() {
         
         <Route path="/app/dev-plus" element={
           <div className="min-h-screen app-bg-primary">
-            <AppHeaderSimple />
+            <AppHeaderSafe />
             <DevPlus />
             <AppFooter />
           </div>
