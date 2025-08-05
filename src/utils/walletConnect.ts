@@ -92,59 +92,93 @@ export const useWalletConnect = () => {
   // Initialize AppKit and set up listeners
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
+    let mounted = true;
 
     const setupWallet = async () => {
       try {
         const kit = await initializeAppKit();
         
-        // Subscribe to account changes
+        if (!mounted) return;
+
+        // Subscribe to account changes with better state management
         unsubscribe = kit.subscribeAccount((account: any) => {
           console.log('👛 Account changed:', account);
           
+          if (!mounted) return;
+
+          // Handle connection state
           if (account.isConnected && account.address) {
             setWalletState(prev => ({
               ...prev,
               isConnected: true,
               address: account.address,
-              chainId: account.chainId,
+              chainId: account.chainId || prev.chainId,
               isConnecting: false,
               error: null
             }));
             
-            // Fetch balance
-            fetchBalance(account.address);
+            // Fetch balance with retry logic
+            fetchBalance(account.address).catch(err => {
+              console.warn('Balance fetch failed, retrying...', err);
+              setTimeout(() => fetchBalance(account.address), 2000);
+            });
           } else {
-            setWalletState(prev => ({
-              ...prev,
-              isConnected: false,
-              address: null,
-              balance: null,
-              chainId: null,
-              isConnecting: false,
-              error: null
-            }));
+            // Only clear state if we're actually disconnected
+            if (account.isConnected === false) {
+              setWalletState(prev => ({
+                ...prev,
+                isConnected: false,
+                address: null,
+                balance: null,
+                chainId: null,
+                isConnecting: false,
+                error: null
+              }));
+            }
           }
         });
 
-        // Check initial connection state
-        const account = kit.getAccount();
-        if (account && account.isConnected) {
-          setWalletState(prev => ({
-            ...prev,
-            isConnected: true,
-            address: account.address,
-            chainId: account.chainId
-          }));
-          fetchBalance(account.address);
-        }
+        // Check initial connection state with retry
+        const checkInitialState = async (retries = 3) => {
+          try {
+            const account = kit.getAccount();
+            console.log('🔍 Checking initial account state:', account);
+            
+            if (account && account.isConnected && account.address) {
+              if (mounted) {
+                setWalletState(prev => ({
+                  ...prev,
+                  isConnected: true,
+                  address: account.address,
+                  chainId: account.chainId || prev.chainId,
+                  isConnecting: false,
+                  error: null
+                }));
+                fetchBalance(account.address);
+              }
+            } else if (retries > 0) {
+              // Retry after a short delay for redirect scenarios
+              setTimeout(() => checkInitialState(retries - 1), 1000);
+            }
+          } catch (error) {
+            console.warn('Initial state check failed:', error);
+            if (retries > 0) {
+              setTimeout(() => checkInitialState(retries - 1), 1000);
+            }
+          }
+        };
+
+        checkInitialState();
 
       } catch (error) {
         console.error('Failed to setup wallet:', error);
-        setWalletState(prev => ({
-          ...prev,
-          error: 'Failed to initialize wallet connection',
-          isConnecting: false
-        }));
+        if (mounted) {
+          setWalletState(prev => ({
+            ...prev,
+            error: 'Failed to initialize wallet connection',
+            isConnecting: false
+          }));
+        }
       }
     };
 
@@ -152,6 +186,7 @@ export const useWalletConnect = () => {
 
     // Cleanup
     return () => {
+      mounted = false;
       if (unsubscribe) {
         unsubscribe();
       }
