@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, TrendingUp, Zap, Target, Globe, Sparkles, Bot, ChevronRight, ExternalLink, Star, Users, DollarSign, Calendar, AlertCircle, Info } from 'lucide-react';
+import { 
+  Brain, TrendingUp, Zap, Target, Globe, Sparkles, Bot, ChevronRight, ExternalLink, 
+  Star, Users, DollarSign, Calendar, AlertCircle, Info, Activity, BarChart3, 
+  Filter, Search, ArrowUpDown, Eye, MessageCircle, Send, Copy, Bookmark 
+} from 'lucide-react';
 import { getSeiDApps, getAlphaInsights, getSeiNetworkStats, getDAppCategories, type SeiDApp, type AlphaInsight } from '../utils/seiEcosystemData';
 
 const Seilor = () => {
   const [activeTab, setActiveTab] = useState('discover');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('tvl');
   const [aiChat, setAiChat] = useState('');
   const [seiDApps, setSeiDApps] = useState<SeiDApp[]>([]);
   const [alphaInsights, setAlphaInsights] = useState<AlphaInsight[]>([]);
@@ -18,7 +24,7 @@ const Seilor = () => {
   const [chatMessages, setChatMessages] = useState([
     {
       type: 'ai',
-      message: "👋 Welcome to Seilor 0! I'm your AI guide for the Sei ecosystem. Ask me about dApps, alpha opportunities, or how to navigate DeFi safely!",
+      message: "👋 **Welcome to Seilor 0!** I'm your AI-powered navigator for the Sei ecosystem.\n\nI can help you:\n• **Discover** top dApps and protocols\n• **Analyze** market opportunities\n• **Navigate** DeFi safely\n• **Track** alpha insights\n\nWhat would you like to explore?",
       timestamp: new Date()
     }
   ]);
@@ -49,10 +55,7 @@ const Seilor = () => {
     loadData();
   }, []);
 
-  const filteredDApps = selectedCategory === 'All' 
-    ? seiDApps 
-    : seiDApps.filter(dapp => dapp.category === selectedCategory);
-
+  // Enhanced AI chat handler with sophisticated responses
   const handleAiChat = () => {
     if (!aiChat.trim()) return;
 
@@ -72,7 +75,7 @@ const Seilor = () => {
         "**SEILOR Token**: Kryptonite's native token already listed on Bybit - rare pre-mainnet listing!\n" +
         "**Ecosystem Growth**: 37+ projects building, major Ethereum protocols migrating to Sei v2\n" +
         "**Infrastructure**: Backpack integration, native USDC coming, Circle Mint support\n" +
-        "**DeFi Expansion**: $30M+ TVL growing rapidly across Astroport, Silo, Kryptonite\n\n" +
+        "**DeFi Expansion**: $42M+ TVL growing rapidly across Astroport, Silo, Kryptonite\n\n" +
         "💡 Early positioning in liquid staking and parallelized EVM dApps could be key!";
     } else if (query.includes('dapp') || query.includes('discover') || query.includes('project')) {
       aiResponse = "🚀 **Top Sei dApps by Category**:\n\n" +
@@ -93,7 +96,7 @@ const Seilor = () => {
         "**Silo Finance** ($9.6M TVL):\n• Stake SEI → Get iSEI tokens\n• Use iSEI in DeFi strategies\n\n" +
         "**Benefits**: Keep earning staking rewards while staying liquid for DeFi opportunities!";
     } else if (query.includes('defi') || query.includes('trading') || query.includes('yield') || query.includes('astroport')) {
-      aiResponse = "⚡ **Sei DeFi Ecosystem** ($30M+ Total TVL):\n\n" +
+      aiResponse = "⚡ **Sei DeFi Ecosystem** ($42M+ Total TVL):\n\n" +
         "**Astroport** - Leading DEX with concentrated liquidity, fee sharing\n" +
         "**Dragonswap** - Leverages parallelized EVM for ultra-fast swaps\n" +
         "**Yei Finance** - Lending/borrowing with competitive yields\n\n" +
@@ -152,356 +155,514 @@ const Seilor = () => {
     setAiChat('');
   };
 
+  // Filter and sort dApps
+  const filteredDApps = seiDApps
+    .filter(dapp => {
+      const matchesCategory = selectedCategory === 'All' || dapp.category === selectedCategory;
+      const matchesSearch = dapp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           dapp.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      if (sortBy === 'category') return a.category.localeCompare(b.category);
+      return 0; // Default TVL sorting would require parsing
+    });
+
+  const featuredDApps = seiDApps.filter(dapp => dapp.featured);
+
+  const tabs = [
+    { id: 'discover', label: 'dApp Discovery', icon: Globe },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'alpha', label: 'Alpha Insights', icon: Target },
+    { id: 'ai', label: 'AI Assistant', icon: Bot }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-      {/* Header with Beta Badge */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-blue-500/10"></div>
-        <div className="relative app-container py-8">
-          <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Professional Header */}
+      <div className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl">
-                  <Brain className="w-8 h-8 text-white" />
+                <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    Seilor 0
-                  </h1>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="px-3 py-1 bg-red-500/20 border border-red-500/30 rounded-full text-red-400 text-sm font-medium">
-                      BETA
-                    </span>
-                    <span className="text-gray-400 text-sm">AI-Powered Sei Navigator</span>
-                  </div>
+                  <h1 className="text-xl font-bold text-white">Seilor 0</h1>
+                  <p className="text-xs text-slate-400">AI-Powered Sei Navigator</p>
                 </div>
               </div>
+              <div className="hidden md:flex items-center space-x-1 bg-slate-800/50 rounded-lg p-1">
+                <span className="px-2 py-1 text-xs font-medium text-red-400 bg-red-500/10 rounded">BETA</span>
+                <span className="px-2 py-1 text-xs text-slate-400">v0.1.0</span>
+              </div>
             </div>
-            <div className="flex items-center space-x-2 text-gray-400">
-              <Sparkles className="w-5 h-5 text-red-400" />
-              <span className="text-sm">Powered by Advanced AI</span>
+            
+            {/* Network Stats Bar */}
+            <div className="hidden lg:flex items-center space-x-6 text-sm">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="w-4 h-4 text-green-400" />
+                <span className="text-slate-300">TVL: <span className="font-semibold text-green-400">{networkStats.totalTvl}</span></span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-blue-400" />
+                <span className="text-slate-300">Users: <span className="font-semibold text-blue-400">{networkStats.activeUsers}</span></span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Activity className="w-4 h-4 text-purple-400" />
+                <span className="text-slate-300">TPS: <span className="font-semibold text-purple-400">{networkStats.transactions}</span></span>
+              </div>
             </div>
-          </div>
-
-          {/* Navigation Tabs */}
-          <div className="flex space-x-1 bg-slate-800/50 p-1 rounded-xl mb-8">
-            {[
-              { id: 'discover', label: 'dApp Discovery', icon: Globe },
-              { id: 'alpha', label: 'Alpha Insights', icon: Target },
-              { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-              { id: 'ai', label: 'AI Assistant', icon: Bot }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
-                }`}
-              >
-                <tab.icon className="w-5 h-5" />
-                <span>{tab.label}</span>
-              </button>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="app-container pb-12">
+      {/* Professional Tab Navigation */}
+      <div className="border-b border-slate-700/30 bg-slate-900/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex items-center space-x-2 px-6 py-4 text-sm font-medium transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? 'text-red-400 bg-slate-800/50 border-b-2 border-red-500'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+                {activeTab === tab.id && (
+                  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-red-500 to-red-600" />
+                )}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
         {/* dApp Discovery Tab */}
         {activeTab === 'discover' && (
-          <div>
-            {/* Category Filter */}
-            <div className="flex space-x-2 mb-8">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    selectedCategory === category
-                      ? 'bg-red-500 text-white'
-                      : 'bg-slate-800 text-gray-400 hover:text-white hover:bg-slate-700'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+          <div className="space-y-8">
+            {/* Search and Filters */}
+            <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                <div className="flex-1 max-w-md">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search dApps, protocols, or descriptions..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Filter className="w-4 h-4 text-slate-400" />
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500"
+                    >
+                      {categories.map(category => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <ArrowUpDown className="w-4 h-4 text-slate-400" />
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500"
+                    >
+                      <option value="tvl">Sort by TVL</option>
+                      <option value="name">Sort by Name</option>
+                      <option value="category">Sort by Category</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Featured dApps */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
-                <Star className="w-6 h-6 text-red-400 mr-2" />
-                Featured dApps
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredDApps.filter(dapp => dapp.featured).map(dapp => (
-                  <div key={dapp.id} className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700 hover:border-red-500/50 transition-all group">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-4">
-                        <img 
-                          src={dapp.image} 
-                          alt={dapp.name}
-                          className="w-16 h-16 rounded-xl"
-                        />
-                        <div>
-                          <h3 className="text-xl font-bold text-white group-hover:text-red-400 transition-colors">
-                            {dapp.name}
-                          </h3>
-                          <p className="text-gray-400 text-sm">{dapp.description}</p>
-                          <div className="flex items-center space-x-4 mt-2">
-                            <span className="text-green-400 font-medium">{dapp.tvl}</span>
-                            <span className="text-blue-400">{dapp.users} users</span>
+            {/* Featured Projects */}
+            {featuredDApps.length > 0 && (
+              <div>
+                <div className="flex items-center space-x-2 mb-6">
+                  <Star className="w-5 h-5 text-yellow-400" />
+                  <h2 className="text-2xl font-bold text-white">Featured Projects</h2>
+                  <span className="px-2 py-1 text-xs font-medium text-yellow-400 bg-yellow-500/10 rounded-full">
+                    {featuredDApps.length} projects
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {featuredDApps.map(dapp => (
+                    <div key={dapp.id} className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl border border-slate-700/50 p-6 hover:border-red-500/50 transition-all duration-300 hover:transform hover:scale-105">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <img 
+                            src={dapp.image} 
+                            alt={dapp.name}
+                            className="w-12 h-12 rounded-xl border border-slate-600"
+                          />
+                          <div>
+                            <h3 className="font-bold text-white group-hover:text-red-400 transition-colors">
+                              {dapp.name}
+                            </h3>
+                            <span className="text-xs font-medium px-2 py-1 bg-slate-700/50 text-slate-300 rounded-full">
+                              {dapp.category}
+                            </span>
                           </div>
                         </div>
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                          <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
+                        </div>
                       </div>
-                      <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-red-400 transition-colors" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
-                        {dapp.category}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        dapp.status === 'Live' 
-                          ? 'bg-green-500/20 text-green-400' 
-                          : 'bg-yellow-500/20 text-yellow-400'
-                      }`}>
-                        {dapp.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* All dApps Grid */}
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-4">All dApps</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredDApps.map(dapp => (
-                  <div key={dapp.id} className="bg-slate-800 rounded-lg p-4 border border-slate-700 hover:border-red-500/50 transition-all group cursor-pointer">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <img 
-                        src={dapp.image} 
-                        alt={dapp.name}
-                        className="w-12 h-12 rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white group-hover:text-red-400 transition-colors">
-                          {dapp.name}
-                        </h3>
-                        <p className="text-gray-400 text-sm">{dapp.category}</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-red-400 transition-colors" />
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-green-400">{dapp.tvl}</span>
-                      <span className="text-blue-400">{dapp.users}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Alpha Insights Tab */}
-        {activeTab === 'alpha' && (
-          <div>
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
-                <Target className="w-6 h-6 text-red-400 mr-2" />
-                Alpha Insights
-              </h2>
-              <p className="text-gray-400">AI-powered insights on upcoming opportunities in the Sei ecosystem</p>
-            </div>
-
-            <div className="space-y-6">
-              {loading ? (
-                <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 text-center">
-                  <div className="animate-pulse">
-                    <div className="h-4 bg-slate-700 rounded w-3/4 mx-auto mb-4"></div>
-                    <div className="h-3 bg-slate-700 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-slate-700 rounded w-2/3"></div>
-                  </div>
-                </div>
-              ) : alphaInsights.length === 0 ? (
-                <div className="bg-slate-800 rounded-xl p-8 border border-slate-700 text-center">
-                  <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2">Alpha Insights Coming Soon</h3>
-                  <p className="text-gray-400">
-                    Our AI is being trained to provide real-time alpha insights for the Sei ecosystem. 
-                    Check back soon for market intelligence and opportunities!
-                  </p>
-                </div>
-              ) : (
-                alphaInsights.map(insight => (
-                <div key={insight.id} className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-xl font-bold text-white">{insight.title}</h3>
-                        <span className={`px-3 py-1 rounded-full text-sm ${
-                          insight.type === 'upcoming' ? 'bg-blue-500/20 text-blue-400' :
-                          insight.type === 'cex' ? 'bg-green-500/20 text-green-400' :
-                          'bg-purple-500/20 text-purple-400'
+                      
+                      <p className="text-slate-300 text-sm mb-4 line-clamp-2">{dapp.description}</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4 text-xs">
+                          <div className="flex items-center space-x-1">
+                            <DollarSign className="w-3 h-3 text-green-400" />
+                            <span className="text-green-400 font-medium">{dapp.tvl}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Users className="w-3 h-3 text-blue-400" />
+                            <span className="text-blue-400 font-medium">{dapp.users}</span>
+                          </div>
+                        </div>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          dapp.status === 'Live' 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-yellow-500/20 text-yellow-400'
                         }`}>
-                          {insight.category}
+                          {dapp.status}
                         </span>
                       </div>
-                      <p className="text-gray-300 mb-4">{insight.description}</p>
-                      <div className="flex items-center space-x-6">
-                        <div className="flex items-center space-x-2">
-                          <TrendingUp className="w-4 h-4 text-green-400" />
-                          <span className="text-sm text-gray-400">Confidence: {insight.confidence}%</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="w-4 h-4 text-blue-400" />
-                          <span className="text-sm text-gray-400">{insight.timeframe}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Zap className="w-4 h-4 text-red-400" />
-                          <span className="text-sm text-gray-400">Impact: {insight.impact}</span>
-                        </div>
-                      </div>
                     </div>
-                    <div className="ml-4">
-                      <div className={`w-3 h-3 rounded-full ${
-                        insight.confidence > 90 ? 'bg-green-400' :
-                        insight.confidence > 70 ? 'bg-yellow-400' :
-                        'bg-red-400'
-                      }`}>                       </div>
-                     </div>
-                   </div>
-                 </div>
-                ))
-              )}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Professional Data Table */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">All Projects</h2>
+                <span className="text-slate-400 text-sm">
+                  Showing {filteredDApps.length} of {seiDApps.length} projects
+                </span>
+              </div>
+              
+              <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-900/50 border-b border-slate-700/50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          Project
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          Category
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          TVL / Volume
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          Users
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/30">
+                      {filteredDApps.map(dapp => (
+                        <tr key={dapp.id} className="hover:bg-slate-700/20 transition-colors group">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-3">
+                              <img 
+                                src={dapp.image} 
+                                alt={dapp.name}
+                                className="w-10 h-10 rounded-lg border border-slate-600"
+                              />
+                              <div>
+                                <div className="font-semibold text-white group-hover:text-red-400 transition-colors">
+                                  {dapp.name}
+                                </div>
+                                <div className="text-sm text-slate-400 line-clamp-1">
+                                  {dapp.description}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-700/50 text-slate-300">
+                              {dapp.category}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-1">
+                              <DollarSign className="w-4 h-4 text-green-400" />
+                              <span className="text-green-400 font-medium">{dapp.tvl}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-1">
+                              <Users className="w-4 h-4 text-blue-400" />
+                              <span className="text-blue-400 font-medium">{dapp.users}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              dapp.status === 'Live' 
+                                ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                            }`}>
+                              <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                                dapp.status === 'Live' ? 'bg-green-400' : 'bg-yellow-400'
+                              }`} />
+                              {dapp.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end space-x-2">
+                              <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors">
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors">
+                                <Bookmark className="w-4 h-4" />
+                              </button>
+                              <button className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                                <ExternalLink className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
-          <div>
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
-                <TrendingUp className="w-6 h-6 text-red-400 mr-2" />
-                Sei Ecosystem Analytics
-              </h2>
-              <p className="text-gray-400">Real-time metrics and insights for the Sei blockchain</p>
-            </div>
-
-            {/* Analytics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { label: 'Total TVL', value: networkStats.totalTvl, change: 'Coming Soon', color: 'green' },
-                { label: 'Active Users', value: networkStats.activeUsers, change: 'Coming Soon', color: 'blue' },
-                { label: 'Transactions', value: networkStats.transactions, change: 'Coming Soon', color: 'purple' },
-                { label: 'dApps Live', value: networkStats.dAppsLive, change: 'Growing', color: 'red' }
-              ].map((metric, index) => (
-                <div key={index} className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-                  <h3 className="text-gray-400 text-sm mb-2">{metric.label}</h3>
+                { label: 'Total TVL', value: networkStats.totalTvl, icon: DollarSign, color: 'green' },
+                { label: 'Active Users', value: networkStats.activeUsers, icon: Users, color: 'blue' },
+                { label: 'Transactions/sec', value: networkStats.transactions, icon: Activity, color: 'purple' },
+                { label: 'Live dApps', value: networkStats.dAppsLive, icon: Globe, color: 'red' }
+              ].map((stat, index) => (
+                <div key={index} className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-white">{metric.value}</span>
-                    <span className={`text-sm font-medium ${
-                      metric.color === 'green' ? 'text-green-400' :
-                      metric.color === 'blue' ? 'text-blue-400' :
-                      metric.color === 'purple' ? 'text-purple-400' :
-                      'text-red-400'
-                    }`}>
-                      {metric.change}
-                    </span>
+                    <div>
+                      <p className="text-slate-400 text-sm font-medium">{stat.label}</p>
+                      <p className={`text-2xl font-bold text-${stat.color}-400 mt-1`}>{stat.value}</p>
+                    </div>
+                    <div className={`p-3 bg-${stat.color}-500/10 rounded-xl`}>
+                      <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Coming Soon Notice */}
-            <div className="bg-gradient-to-r from-red-500/10 to-blue-500/10 rounded-xl p-8 border border-red-500/20 text-center">
-              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+            
+            <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-8 text-center">
+              <BarChart3 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Advanced Analytics Coming Soon</h3>
-              <p className="text-gray-400">
-                Detailed charts, historical data, and predictive analytics are being developed. 
-                Stay tuned for the full analytics suite!
+              <p className="text-slate-400">Real-time charts, TVL tracking, and protocol analytics are being developed.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Alpha Insights Tab */}
+        {activeTab === 'alpha' && (
+          <div className="space-y-8">
+            <div className="text-center">
+              <Target className="w-16 h-16 text-red-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-2">Alpha Insights</h2>
+              <p className="text-slate-400 max-w-2xl mx-auto">
+                AI-powered market intelligence and early opportunities in the Sei ecosystem. 
+                Get ahead of the curve with exclusive insights.
               </p>
             </div>
+            
+            {alphaInsights.length === 0 ? (
+              <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-8 text-center">
+                <Sparkles className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">Alpha Intelligence Loading...</h3>
+                <p className="text-slate-400">Our AI is analyzing market data and ecosystem developments.</p>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {alphaInsights.map(insight => (
+                  <div key={insight.id} className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-white mb-2">{insight.title}</h3>
+                        <p className="text-slate-300 mb-4">{insight.description}</p>
+                        <div className="flex items-center space-x-4 text-sm">
+                          <span className="text-green-400">Confidence: {insight.confidence}%</span>
+                          <span className="text-blue-400">Timeframe: {insight.timeframe}</span>
+                          <span className="text-purple-400">Impact: {insight.impact}</span>
+                        </div>
+                      </div>
+                      <span className="px-2 py-1 text-xs font-medium bg-red-500/20 text-red-400 rounded-full">
+                        {insight.type}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* AI Assistant Tab */}
         {activeTab === 'ai' && (
-          <div>
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
-                <Bot className="w-6 h-6 text-red-400 mr-2" />
-                AI Assistant
-              </h2>
-              <p className="text-gray-400">Your intelligent guide to the Sei ecosystem</p>
+          <div className="space-y-6">
+            <div className="text-center">
+              <Bot className="w-16 h-16 text-red-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-2">Seilor AI Assistant</h2>
+              <p className="text-slate-400 max-w-2xl mx-auto">
+                Your intelligent guide to the Sei ecosystem. Ask about dApps, DeFi strategies, 
+                alpha opportunities, or get help navigating the blockchain.
+              </p>
             </div>
 
-            {/* Chat Interface */}
-            <div className="bg-slate-800 rounded-xl border border-slate-700">
+            {/* Enhanced Chat Interface */}
+            <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 overflow-hidden">
               {/* Chat Messages */}
               <div className="h-96 overflow-y-auto p-6 space-y-4">
                 {chatMessages.map((msg, index) => (
                   <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    <div className={`max-w-2xl ${msg.type === 'user' ? 'order-2' : 'order-1'}`}>
+                      <div className={`px-4 py-3 rounded-2xl ${
+                        msg.type === 'user' 
+                          ? 'bg-red-500 text-white ml-4' 
+                          : 'bg-slate-700/50 text-slate-200 mr-4'
+                      }`}>
+                        <div className="text-sm whitespace-pre-line">{msg.message}</div>
+                      </div>
+                      <div className={`text-xs text-slate-500 mt-1 ${
+                        msg.type === 'user' ? 'text-right mr-4' : 'ml-4'
+                      }`}>
+                        {msg.timestamp.toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                       msg.type === 'user' 
-                        ? 'bg-red-500 text-white' 
-                        : 'bg-slate-700 text-gray-200'
+                        ? 'bg-red-500 order-1' 
+                        : 'bg-slate-600 order-2'
                     }`}>
-                      <p className="text-sm">{msg.message}</p>
+                      {msg.type === 'user' ? (
+                        <Users className="w-4 h-4 text-white" />
+                      ) : (
+                        <Bot className="w-4 h-4 text-slate-300" />
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Chat Input */}
-              <div className="border-t border-slate-700 p-4">
-                <div className="flex space-x-3">
-                  <input
-                    type="text"
-                    value={aiChat}
-                    onChange={(e) => setAiChat(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
-                    placeholder="Ask about dApps, alpha opportunities, or DeFi strategies..."
-                    className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-red-500"
-                  />
+              {/* Enhanced Chat Input */}
+              <div className="border-t border-slate-700/50 p-6 bg-slate-900/50">
+                <div className="flex items-end space-x-3">
+                  <div className="flex-1">
+                    <textarea
+                      value={aiChat}
+                      onChange={(e) => setAiChat(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAiChat();
+                        }
+                      }}
+                      placeholder="Ask about dApps, alpha opportunities, DeFi strategies, or anything about Sei..."
+                      className="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors resize-none"
+                      rows={3}
+                    />
+                  </div>
                   <button
                     onClick={handleAiChat}
-                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                    disabled={!aiChat.trim()}
+                    className="bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl font-medium transition-colors flex items-center space-x-2"
                   >
-                    Send
+                    <Send className="w-5 h-5" />
                   </button>
+                </div>
+                
+                {/* Quick Actions */}
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {[
+                    'Show me top DeFi projects',
+                    'What are the best staking options?',
+                    'How do I bridge assets to Sei?',
+                    'Tell me about gaming on Sei',
+                    'What are the alpha opportunities?'
+                  ].map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setAiChat(suggestion)}
+                      className="px-3 py-1.5 text-xs bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white rounded-lg transition-colors"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* AI Features */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* AI Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
                   title: 'Smart Analysis',
-                  description: 'Get AI-powered insights on tokens, dApps, and market trends',
-                  icon: Brain
+                  description: 'Get AI-powered insights on tokens, dApps, and market trends with real-time data',
+                  icon: Brain,
+                  color: 'blue'
                 },
                 {
                   title: 'Risk Assessment',
-                  description: 'Evaluate investment risks with advanced algorithms',
-                  icon: AlertCircle
+                  description: 'Evaluate investment risks with advanced algorithms and safety recommendations',
+                  icon: AlertCircle,
+                  color: 'yellow'
                 },
                 {
                   title: 'Learning Guide',
-                  description: 'Learn DeFi concepts with personalized tutorials',
-                  icon: Info
+                  description: 'Learn DeFi concepts with personalized tutorials and step-by-step guidance',
+                  icon: Info,
+                  color: 'green'
                 }
               ].map((feature, index) => (
-                <div key={index} className="bg-slate-800 rounded-lg p-6 border border-slate-700">
-                  <feature.icon className="w-8 h-8 text-red-400 mb-3" />
+                <div key={index} className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6 hover:border-slate-600/50 transition-colors">
+                  <div className={`w-12 h-12 bg-${feature.color}-500/10 rounded-xl flex items-center justify-center mb-4`}>
+                    <feature.icon className={`w-6 h-6 text-${feature.color}-400`} />
+                  </div>
                   <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-400 text-sm">{feature.description}</p>
+                  <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
                 </div>
               ))}
             </div>
