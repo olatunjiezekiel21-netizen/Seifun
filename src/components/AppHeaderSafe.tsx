@@ -86,10 +86,10 @@ const AppHeaderSafe = () => {
               SeiFun Launch
             </Link>
             <Link 
-              to="/app/seilor" 
-              className={`app-nav-link ${isActive('/app/seilor') ? 'active' : ''}`}
+              to="/app/token-pulse" 
+              className={`app-nav-link ${isActive('/app/token-pulse') ? 'active' : ''}`}
             >
-              Seilor 0
+              TokenPulse
             </Link>
             <Link 
               to="/app/docs" 
@@ -223,13 +223,13 @@ const AppHeaderSafe = () => {
                 SeiFun Launch
               </Link>
               <Link 
-                to="/app/seilor"
+                to="/app/token-pulse"
                 className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/seilor') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                  isActive('/app/token-pulse') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Seilor 0
+                TokenPulse
               </Link>
               <Link 
                 to="/app/docs"
