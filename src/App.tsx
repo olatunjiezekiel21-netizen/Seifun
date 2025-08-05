@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import AppHeaderSafe from './components/AppHeaderSafe';
 import AppFooter from './components/AppFooter';
-import AppDashboard from './pages/AppDashboard';
 import SafeCheckerSafe from './pages/SafeCheckerSafe';
 import SeiList from './pages/SeiList';
 import SeifunLaunch from './pages/SeifunLaunch';
@@ -12,7 +11,6 @@ import TradingView from './pages/TradingView';
 import TradingSearch from './pages/TradingSearch';
 import Docs from './pages/Docs';
 import DevPlus from './pages/DevPlus';
-import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   React.useEffect(() => {
@@ -31,53 +29,43 @@ function App() {
         
         {/* App Routes - All with darker blue UI and Sei colors */}
         <Route path="/app" element={
-          <ErrorBoundary>
-            <div className="min-h-screen app-bg-primary">
-              <AppHeaderSafe />
-              <AppDashboard />
-              <AppFooter />
-            </div>
-          </ErrorBoundary>
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <SafeCheckerSafe />
+            <AppFooter />
+          </div>
         } />
         
         <Route path="/app/safechecker" element={
-          <ErrorBoundary>
-            <div className="min-h-screen app-bg-primary">
-              <AppHeaderSafe />
-              <SafeCheckerSafe />
-              <AppFooter />
-            </div>
-          </ErrorBoundary>
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <SafeCheckerSafe />
+            <AppFooter />
+          </div>
         } />
         
         <Route path="/app/seilist" element={
-          <ErrorBoundary>
-            <div className="min-h-screen app-bg-primary">
-              <AppHeaderSafe />
-              <SeiList />
-              <AppFooter />
-            </div>
-          </ErrorBoundary>
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <SeiList />
+            <AppFooter />
+          </div>
         } />
         
         <Route path="/app/seifun-launch" element={
-          <ErrorBoundary>
-            <div className="min-h-screen app-bg-primary">
-              <AppHeaderSafe />
-              <SeifunLaunch />
-              <AppFooter />
-            </div>
-          </ErrorBoundary>
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <SeifunLaunch />
+            <AppFooter />
+          </div>
         } />
         
         <Route path="/app/seilor" element={
-          <ErrorBoundary>
-            <div className="min-h-screen app-bg-primary">
-              <AppHeaderSafe />
-              <Seilor />
-              <AppFooter />
-            </div>
-          </ErrorBoundary>
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <Seilor />
+            <AppFooter />
+          </div>
         } />
         
         <Route path="/app/trading/:chainId/:pairAddress" element={
