@@ -12,14 +12,9 @@ import {
   BarChart3
 } from 'lucide-react';
 
-// Lazy load heavy dependencies
-const TokenScanner = React.lazy(() => 
-  import('../utils/tokenScanner').then(module => ({ default: module.TokenScanner }))
-);
-
-const SeiTokenRegistry = React.lazy(() => 
-  import('../utils/seiTokenRegistry').then(module => ({ default: module.SeiTokenRegistry }))
-);
+// Import dependencies directly to prevent lazy loading issues
+import { TokenScanner } from '../utils/tokenScanner';
+import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 
 // Import wallet hook directly to prevent lazy loading issues
 import { useReownWallet } from '../utils/reownWalletConnection';
@@ -121,9 +116,8 @@ const SafeCheckerSafe = () => {
         await new Promise(resolve => setTimeout(resolve, 300));
       }
 
-      // Try to load and use the TokenScanner
+      // Use the TokenScanner directly
       try {
-        const { TokenScanner } = await import('../utils/tokenScanner');
         const tokenScanner = new TokenScanner();
         
         const analysis = await tokenScanner.analyzeToken(tokenAddress);
@@ -158,11 +152,11 @@ const SafeCheckerSafe = () => {
             formattedTotalSupply: analysis.basicInfo.formattedTotalSupply,
             
             price: analysis.basicInfo.marketData?.price ? 
-              (await import('../utils/tokenScanner')).TokenScanner.prototype.formatNumber?.call(null, analysis.basicInfo.marketData.price) : undefined,
+              tokenScanner.formatNumber(analysis.basicInfo.marketData.price) : undefined,
             marketCap: analysis.basicInfo.marketData?.marketCap ? 
-              (await import('../utils/tokenScanner')).TokenScanner.prototype.formatNumber?.call(null, analysis.basicInfo.marketData.marketCap) : undefined,
+              tokenScanner.formatNumber(analysis.basicInfo.marketData.marketCap) : undefined,
             volume24h: analysis.basicInfo.marketData?.volume24h ? 
-              (await import('../utils/tokenScanner')).TokenScanner.prototype.formatNumber?.call(null, analysis.basicInfo.marketData.volume24h) : undefined,
+              tokenScanner.formatNumber(analysis.basicInfo.marketData.volume24h) : undefined,
             priceChange24h: analysis.basicInfo.marketData?.priceChange24h ? 
               Number(analysis.basicInfo.marketData.priceChange24h.toFixed(2)) : undefined,
           },
