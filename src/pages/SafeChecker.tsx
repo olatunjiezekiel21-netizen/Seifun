@@ -14,7 +14,7 @@ import {
 // Ensure correct import paths for build
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 import { TokenScanner } from '../utils/tokenScanner';
-import { useReownWallet } from '../utils/reownWalletConnection';
+import { useWalletConnect as useReownWallet } from '../utils/walletConnect';
 
 const SafeChecker = () => {
   const [tokenAddress, setTokenAddress] = useState('');

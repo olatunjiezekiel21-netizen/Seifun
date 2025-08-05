@@ -23,7 +23,7 @@ const SeiTokenRegistry = React.lazy(() =>
 
 // Safe wallet hook import with error boundary
 const useReownWallet = React.lazy(() =>
-  import('../utils/reownWalletConnection').then(module => ({ default: module.useReownWallet }))
+      import('../utils/walletConnect').then(module => ({ default: module.useWalletConnect }))
 );
 
 // Error Boundary Component
@@ -97,7 +97,7 @@ const SafeWalletProvider: React.FC<{ children: (walletData: any) => React.ReactN
   useEffect(() => {
     const loadWalletHook = async () => {
       try {
-        const { useReownWallet } = await import('../utils/reownWalletConnection');
+        const { useWalletConnect: useReownWallet } = await import('../utils/walletConnect');
         // This would need to be handled differently in a real implementation
         // For now, we'll use a fallback
         setIsLoading(false);
