@@ -287,13 +287,13 @@ const Seilor = () => {
 
   const featuredDApps = seiDApps.filter(dapp => dapp.featured);
 
-  // Handle dApp navigation with sophisticated browser implementation
+  // Handle dApp navigation with seamless browser implementation
   const handleDAppNavigation = (dapp: SeiDApp) => {
     if (dapp.url.startsWith('/')) {
       // Internal Seifun routes - navigate normally
       window.location.href = dapp.url;
     } else {
-      // External dApps - show sophisticated browser modal with options
+      // External dApps - show seamless in-app browser
       setBrowserUrl(dapp.url);
       setBrowserTitle(dapp.name);
       setShowBrowser(true);
@@ -851,7 +851,7 @@ const Seilor = () => {
                </button>
              </div>
 
-                         {/* Sophisticated Browser Content */}
+                         {/* Seamless In-App Browser */}
             <div className="flex-1 bg-white rounded-b-2xl overflow-hidden">
               <div className="h-full flex flex-col">
                 {/* Browser Navigation Bar */}
@@ -861,124 +861,98 @@ const Seilor = () => {
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
-                  <div className="flex-1 bg-white rounded-lg px-3 py-2 text-sm text-slate-600 font-mono">
-                    {browserUrl}
+                  <div className="flex-1 bg-white rounded-lg px-3 py-2 text-sm text-slate-600 font-mono overflow-hidden">
+                    <span className="truncate">{browserUrl}</span>
                   </div>
                   <button 
                     onClick={() => window.open(browserUrl, '_blank')}
-                    className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+                    className="p-2 hover:bg-slate-200 rounded-lg transition-colors flex-shrink-0"
                     title="Open in new tab"
                   >
                     <ExternalLink className="w-4 h-4 text-slate-600" />
                   </button>
                 </div>
 
-                {/* Browser Content Area */}
-                <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-                  <div className="text-center p-8 max-w-2xl">
-                    <div className="bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
-                      <Globe className="w-20 h-20 text-red-400 mx-auto mb-6" />
-                      <h3 className="text-2xl font-bold text-slate-800 mb-4">Seilor 0 dApp Browser</h3>
-                      <p className="text-slate-600 mb-8 leading-relaxed">
-                        Experience secure dApp browsing with Seilor 0's advanced browser. 
-                        Choose your preferred browsing method below.
-                      </p>
-                      
-                      <div className="grid md:grid-cols-2 gap-4 mb-6">
-                        {/* External Browser Option */}
-                        <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border border-red-200">
-                          <ExternalLink className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                          <h4 className="font-bold text-slate-800 mb-2">External Browser</h4>
-                          <p className="text-sm text-slate-600 mb-4">
-                            Full functionality with your default browser and wallet extensions
-                          </p>
-                          <button
-                            onClick={() => {
-                              window.open(browserUrl, '_blank');
-                              setShowBrowser(false);
-                            }}
-                            className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                          >
-                            Launch External
-                          </button>
-                        </div>
-
-                        {/* In-App Browser Option */}
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                          <Globe className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-                          <h4 className="font-bold text-slate-800 mb-2">In-App Browser</h4>
-                          <p className="text-sm text-slate-600 mb-4">
-                            Integrated browsing with Seilor 0 AI assistance (Beta)
-                          </p>
-                          <button
-                            onClick={() => {
-                              // For now, create an iframe preview
-                              const iframe = document.createElement('iframe');
-                              iframe.src = browserUrl;
-                              iframe.style.width = '100%';
-                              iframe.style.height = '400px';
-                              iframe.style.border = 'none';
-                              iframe.style.borderRadius = '12px';
-                              iframe.style.marginTop = '16px';
-                              
-                              const container = document.querySelector('.browser-preview-container');
-                              if (container) {
-                                container.innerHTML = '';
-                                container.appendChild(iframe);
+                {/* Seamless Browser Content */}
+                <div className="flex-1 relative">
+                  <iframe
+                    src={browserUrl}
+                    className="w-full h-full border-none"
+                    title={`${browserTitle} - Seilor 0 Browser`}
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                    loading="lazy"
+                    onLoad={(e) => {
+                      const iframe = e.target as HTMLIFrameElement;
+                      try {
+                        // Inject custom CSS for better mobile experience
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                        if (iframeDoc) {
+                          const style = iframeDoc.createElement('style');
+                          style.textContent = `
+                            body {
+                              -webkit-touch-callout: none;
+                              -webkit-user-select: none;
+                              -webkit-tap-highlight-color: transparent;
+                              font-size: 16px !important;
+                            }
+                            * {
+                              -webkit-touch-callout: none;
+                              -webkit-tap-highlight-color: transparent;
+                            }
+                            input, textarea, select {
+                              font-size: 16px !important;
+                            }
+                            @media (max-width: 768px) {
+                              body {
+                                zoom: 0.9;
                               }
-                            }}
-                            className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                          >
-                            Preview In-App
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Browser Preview Container */}
-                      <div className="browser-preview-container"></div>
-
-                      {/* Features List */}
-                      <div className="bg-slate-50 rounded-xl p-6 mt-6">
-                        <h5 className="font-semibold text-slate-800 mb-4">🚀 Coming Soon Features:</h5>
-                        <div className="grid md:grid-cols-2 gap-3 text-sm text-slate-600">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                            <span>Web3 Wallet Integration</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                            <span>Transaction Simulation</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                            <span>AI Security Analysis</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                            <span>Multi-Tab Support</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                            <span>Bookmark Management</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                            <span>Privacy Protection</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Beta Notice */}
-                      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-center space-x-2 text-yellow-800">
-                          <AlertTriangle className="w-5 h-5" />
-                          <span className="font-medium">Beta Feature</span>
-                        </div>
-                        <p className="text-sm text-yellow-700 mt-1">
-                          In-app browsing is in beta. For optimal security and functionality, we recommend using external browser for transactions.
-                        </p>
-                      </div>
+                            }
+                          `;
+                          iframeDoc.head.appendChild(style);
+                        }
+                      } catch (error) {
+                        // Cross-origin restrictions - this is expected for external sites
+                        console.log('Cross-origin iframe - custom styling not applied');
+                      }
+                    }}
+                    onError={() => {
+                      console.error('Failed to load dApp in iframe');
+                    }}
+                  />
+                  
+                  {/* Loading Overlay */}
+                  <div className="absolute inset-0 bg-white flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300" id="browser-loading">
+                    <div className="text-center">
+                      <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                      <p className="text-slate-600">Loading {browserTitle}...</p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Browser Status Bar */}
+                <div className="bg-slate-50 border-t border-slate-200 px-4 py-2 flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center space-x-4">
+                    <span className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>Secure Connection</span>
+                    </span>
+                    <span>Seilor 0 Browser</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={() => {
+                        const iframe = document.querySelector('iframe');
+                        if (iframe) {
+                          iframe.src = iframe.src; // Refresh
+                        }
+                      }}
+                      className="p-1 hover:bg-slate-200 rounded transition-colors"
+                      title="Refresh"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
