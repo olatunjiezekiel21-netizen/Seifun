@@ -490,16 +490,16 @@ const analysis = await seifun.seilor.analyzeMarket({
 
   return (
     <div className={`min-h-screen ${t.bg} transition-colors duration-200`}>
-      {/* Header */}
-      <header className={`sticky top-0 z-50 ${t.bgSecondary} ${t.border} border-b backdrop-blur-sm`}>
+      {/* Header - Fixed with proper z-index */}
+      <header className={`fixed top-0 left-0 right-0 z-50 ${t.bgSecondary} ${t.border} border-b backdrop-blur-md bg-opacity-95`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className={`lg:hidden ${t.text} hover:${t.textSecondary}`}
+                className={`lg:hidden ${t.text} hover:${t.textSecondary} p-2 rounded-lg ${t.bgTertiary}`}
               >
-                <Menu size={24} />
+                {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
@@ -559,56 +559,68 @@ const analysis = await seifun.seilor.analyzeMarket({
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-8">
-          {/* Sidebar */}
-          <aside className={`${isSidebarOpen ? 'block' : 'hidden'} lg:block w-64 shrink-0`}>
-            <div className={`sticky top-24 ${t.sidebar} ${t.border} border rounded-xl p-4 backdrop-blur-sm`}>
-              <nav className="space-y-6">
-                {navigation.map((section) => (
-                  <div key={section.title}>
-                    <h3 className={`text-sm font-semibold ${t.textMuted} uppercase tracking-wider mb-3`}>
-                      {section.title}
-                    </h3>
-                    <ul className="space-y-1">
-                      {section.items.map((item) => (
-                        <li key={item.id}>
-                          <button
-                            onClick={() => {
-                              setActiveSection(item.id);
-                              setIsSidebarOpen(false);
-                            }}
-                            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                              activeSection === item.id
-                                ? `${t.accentBg} ${t.accent} font-medium`
-                                : `${t.textSecondary} hover:${t.accentHover} hover:${t.accent}`
-                            }`}
-                          >
-                            <item.icon size={16} />
-                            <span className="text-sm">{item.title}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </nav>
-            </div>
-          </aside>
+      {/* Main Content - With proper top padding to account for fixed header */}
+      <div className="pt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex gap-8">
+            {/* Sidebar - Fixed positioning for desktop, overlay for mobile */}
+            <aside className={`
+              ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+              lg:translate-x-0 
+              fixed lg:static 
+              top-16 left-0 
+              w-64 h-screen lg:h-auto 
+              z-40 lg:z-auto 
+              transition-transform duration-300 ease-in-out
+              lg:shrink-0
+            `}>
+              <div className={`h-full lg:h-auto overflow-y-auto lg:overflow-visible ${t.sidebar} ${t.border} border rounded-none lg:rounded-xl p-4 backdrop-blur-sm`}>
+                <nav className="space-y-6">
+                  {navigation.map((section) => (
+                    <div key={section.title}>
+                      <h3 className={`text-sm font-semibold ${t.textMuted} uppercase tracking-wider mb-3`}>
+                        {section.title}
+                      </h3>
+                      <ul className="space-y-1">
+                        {section.items.map((item) => (
+                          <li key={item.id}>
+                            <button
+                              onClick={() => {
+                                setActiveSection(item.id);
+                                setIsSidebarOpen(false);
+                              }}
+                              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                                activeSection === item.id
+                                  ? `${t.accentBg} ${t.accent} font-medium`
+                                  : `${t.textSecondary} hover:${t.accentHover} hover:${t.accent}`
+                              }`}
+                            >
+                              <item.icon size={16} />
+                              <span className="text-sm">{item.title}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </nav>
+              </div>
+            </aside>
 
-          {/* Main Content */}
-          <main className="flex-1 min-w-0">
-            <div className="prose prose-lg max-w-none">
-              {renderContent()}
-            </div>
-          </main>
+            {/* Main Content - With proper margin for sidebar */}
+            <main className="flex-1 min-w-0 lg:ml-0">
+              <div className="prose prose-lg max-w-none">
+                {renderContent()}
+              </div>
+            </main>
+          </div>
         </div>
       </div>
 
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
