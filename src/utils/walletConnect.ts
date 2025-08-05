@@ -74,14 +74,13 @@ export const useWalletConnect = () => {
 
   // Initialize AppKit on component mount
   useEffect(() => {
-    const kit = initializeAppKit();
-    if (!kit) {
-      setWalletState(prev => ({
-        ...prev,
-        error: 'Failed to initialize wallet connection'
-      }));
-      return;
-    }
+    // Add try-catch to prevent the app from crashing
+    try {
+      const kit = initializeAppKit();
+      if (!kit) {
+        console.warn('AppKit initialization failed, continuing without wallet connection');
+        return;
+      }
 
     // Subscribe to account changes
     const unsubscribeAccount = kit.subscribeAccount((account: any) => {
@@ -117,10 +116,14 @@ export const useWalletConnect = () => {
       }));
     });
 
-    return () => {
-      unsubscribeAccount?.();
-      unsubscribeChain?.();
-    };
+      return () => {
+        unsubscribeAccount?.();
+        unsubscribeChain?.();
+      };
+    } catch (error) {
+      console.error('Error initializing wallet connection:', error);
+      // Don't crash the app, just log the error
+    }
   }, []);
 
   // Function to get balance
