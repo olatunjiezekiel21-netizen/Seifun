@@ -1,34 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Wallet, ChevronDown, LogOut, User, Settings } from 'lucide-react';
-import { useReownWallet } from '../utils/reownWalletConnection';
+import { Menu, X, Wallet, LogOut, User, Settings } from 'lucide-react';
+import { useWalletConnect } from '../utils/walletConnect';
 
 const AppHeaderSafe = () => {
-  const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const walletDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Use enhanced wallet connection with error handling
+  // Use simplified WalletConnect functionality
   const {
     isConnected,
     address,
     balance,
     isConnecting,
     error,
-    walletType,
     connectWallet,
-    disconnectWallet,
-    getAvailableWallets
-  } = useReownWallet();
+    disconnectWallet
+  } = useWalletConnect();
 
   // Format address for display
   const walletAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
-  const handleConnectWallet = async (preferredWallet?: string) => {
+  const handleConnectWallet = async () => {
     try {
-      await connectWallet(preferredWallet);
-      setIsWalletDropdownOpen(false);
+      await connectWallet();
     } catch (error) {
       console.error('Failed to connect wallet:', error);
       // Error is already handled by the hook
@@ -38,23 +33,12 @@ const AppHeaderSafe = () => {
   const handleDisconnectWallet = async () => {
     try {
       await disconnectWallet();
-      setIsWalletDropdownOpen(false);
     } catch (error) {
       console.error('Failed to disconnect wallet:', error);
     }
   };
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (walletDropdownRef.current && !walletDropdownRef.current.contains(event.target as Node)) {
-        setIsWalletDropdownOpen(false);
-      }
-    };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -175,99 +159,19 @@ const AppHeaderSafe = () => {
                 )}
               </div>
             ) : (
-              <div className="relative" ref={walletDropdownRef}>
+              <div className="relative">
                 <button
-                  onClick={() => setIsWalletDropdownOpen(!isWalletDropdownOpen)}
+                  onClick={handleConnectWallet}
                   disabled={isConnecting}
                   className="app-btn app-btn-primary"
                 >
                   <Wallet className="w-4 h-4 mr-2" />
                   {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-                  <ChevronDown className="w-4 h-4 ml-1" />
                 </button>
-
-                {isWalletDropdownOpen && !isConnected && (
-                  <div className="absolute right-0 mt-2 w-72 app-card p-4 z-50">
-                    <h3 className="text-sm font-medium app-text-primary mb-3">Choose Wallet</h3>
-                    
-                    {error && (
-                      <div className="mb-3 p-2 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <p className="text-red-400 text-xs">{error}</p>
-                      </div>
-                    )}
-                    
-                    <div className="space-y-2">
-                      {getAvailableWallets().map((wallet) => (
-                        <button
-                          key={wallet.id}
-                          onClick={() => handleConnectWallet(wallet.id)}
-                          disabled={!wallet.installed || isConnecting}
-                          className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                            wallet.installed 
-                              ? 'app-bg-secondary hover:app-bg-tertiary border-gray-200' 
-                              : 'app-bg-muted border-gray-100 opacity-50 cursor-not-allowed'
-                          }`}
-                        >
-                                                      <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 flex items-center justify-center">
-                                {wallet.icon.startsWith('http') ? (
-                                  <img 
-                                    src={wallet.icon} 
-                                    alt={`${wallet.name} icon`}
-                                    className="w-6 h-6 rounded-sm"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.src = `https://via.placeholder.com/24/4F46E5/FFFFFF?text=${wallet.name.slice(0, 2)}`;
-                                    }}
-                                  />
-                                ) : (
-                                  <span className="text-2xl">{wallet.icon}</span>
-                                )}
-                              </div>
-                              <div className="text-left">
-                                <div className="app-text-primary font-medium flex items-center space-x-2">
-                                  <span>{wallet.name}</span>
-                                  {wallet.isMobile && (
-                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                      QR Code
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs app-text-muted">
-                                  {wallet.isMobile 
-                                    ? 'Scan QR code with mobile wallet' 
-                                    : wallet.installed 
-                                      ? 'Ready to connect' 
-                                      : 'Not installed'
-                                  }
-                                </div>
-                              </div>
-                            </div>
-                          {wallet.installed && !wallet.isMobile && (
-                            <ChevronDown className="w-4 h-4 app-text-muted rotate-[-90deg]" />
-                          )}
-                          {wallet.isMobile && (
-                            <div className="text-blue-500">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <rect x="7" y="7" width="4" height="4"></rect>
-                                <rect x="7" y="13" width="4" height="4"></rect>
-                                <rect x="13" y="7" width="4" height="4"></rect>
-                                <rect x="13" y="13" width="4" height="4"></rect>
-                              </svg>
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="mt-3 pt-3 border-t app-border">
-                      <p className="text-xs app-text-muted">
-                        New to Sei? Install <a href="https://finwallet.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Fin Wallet</a> or <a href="https://compass.keplr.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Compass</a>
-                      </p>
-                      <p className="text-xs app-text-muted mt-1">
-                        📱 Mobile users: Click "Mobile Wallets" to scan QR code with Trust Wallet, Rainbow, Coinbase Wallet, or any WalletConnect-compatible app
-                      </p>
-                    </div>
+                
+                {error && (
+                  <div className="absolute right-0 mt-2 w-64 app-card p-3 z-50">
+                    <p className="text-red-400 text-xs">{error}</p>
                   </div>
                 )}
               </div>

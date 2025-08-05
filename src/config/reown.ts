@@ -1,5 +1,5 @@
 export const reownConfig = {
-  projectId: import.meta.env.VITE_REOWN_PROJECT_ID || '8e9c0a8e42b574886bd130cfadc084f7',
+  projectId: '8e9c0a8e42b574886bd130cfadc084f7',
   appName: 'Seifun',
   appDescription: 'The ultimate Sei token launchpad and trading platform',
   appUrl: 'https://seifun.netlify.app',
