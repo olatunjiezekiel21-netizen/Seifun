@@ -40,6 +40,37 @@ const Docs = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isSidebarOpen && window.innerWidth < 1024) {
+        const target = event.target as Element;
+        const sidebar = document.querySelector('[data-sidebar]');
+        const menuButton = document.querySelector('[data-menu-button]');
+        
+        if (sidebar && !sidebar.contains(target) && menuButton && !menuButton.contains(target)) {
+          setIsSidebarOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSidebarOpen]);
+
+  // Prevent body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (isSidebarOpen && window.innerWidth < 1024) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isSidebarOpen]);
+
   // Theme classes
   const themeClasses = {
     light: {
@@ -149,18 +180,18 @@ const Docs = () => {
         return (
           <div className="space-y-8">
             <div>
-              <h1 className={`text-4xl font-bold ${t.text} mb-4`}>Seifun Documentation</h1>
-              <p className={`text-xl ${t.textSecondary} leading-relaxed mb-8`}>
+              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Seifun Documentation</h1>
+              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
                 Welcome to Seifun, the ultimate Sei blockchain toolkit. Build, analyze, and trade tokens safely with our comprehensive suite of tools and AI-powered features.
               </p>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>What is Seifun?</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>What is Seifun?</h2>
               <p className={`${t.textSecondary} mb-4`}>
                 Seifun is a comprehensive platform that combines advanced token analysis, AI-powered insights, and professional trading tools specifically designed for the Sei blockchain ecosystem.
               </p>
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className={`${t.accentBg} rounded-lg p-4`}>
                   <Shield className={`${t.accent} mb-2`} size={24} />
                   <h3 className={`font-semibold ${t.text} mb-2`}>Security First</h3>
@@ -179,11 +210,11 @@ const Docs = () => {
               </div>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Key Features</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Key Features</h2>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <div className={`${t.accent} mt-1`}>
+                  <div className={`${t.accent} mt-1 flex-shrink-0`}>
                     <ChevronRight size={16} />
                   </div>
                   <div>
@@ -192,7 +223,7 @@ const Docs = () => {
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className={`${t.accent} mt-1`}>
+                  <div className={`${t.accent} mt-1 flex-shrink-0`}>
                     <ChevronRight size={16} />
                   </div>
                   <div>
@@ -201,7 +232,7 @@ const Docs = () => {
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className={`${t.accent} mt-1`}>
+                  <div className={`${t.accent} mt-1 flex-shrink-0`}>
                     <ChevronRight size={16} />
                   </div>
                   <div>
@@ -210,7 +241,7 @@ const Docs = () => {
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <div className={`${t.accent} mt-1`}>
+                  <div className={`${t.accent} mt-1 flex-shrink-0`}>
                     <ChevronRight size={16} />
                   </div>
                   <div>
@@ -227,26 +258,26 @@ const Docs = () => {
         return (
           <div className="space-y-8">
             <div>
-              <h1 className={`text-4xl font-bold ${t.text} mb-4`}>Installation</h1>
-              <p className={`text-xl ${t.textSecondary} leading-relaxed mb-8`}>
+              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Installation</h1>
+              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
                 Get started with Seifun by installing our SDK or using our web interface directly.
               </p>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Web Interface</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Web Interface</h2>
               <p className={`${t.textSecondary} mb-4`}>
                 The easiest way to get started is by using our web interface directly at:
               </p>
               <div className={`${t.accentBg} rounded-lg p-4 mb-4`}>
-                <a href="https://seifun.netlify.app" className={`${t.accent} font-mono font-semibold`}>
+                <a href="https://seifun.netlify.app" className={`${t.accent} font-mono font-semibold break-all`}>
                   https://seifun.netlify.app
                 </a>
               </div>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>JavaScript SDK</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>JavaScript SDK</h2>
               <p className={`${t.textSecondary} mb-4`}>
                 Install the Seifun SDK for programmatic access to our features:
               </p>
@@ -263,8 +294,8 @@ pnpm add @seifun/sdk`}
               />
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Requirements</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Requirements</h2>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className={`w-2 h-2 rounded-full ${t.accent.replace('text-', 'bg-')}`}></div>
@@ -287,14 +318,14 @@ pnpm add @seifun/sdk`}
         return (
           <div className="space-y-8">
             <div>
-              <h1 className={`text-4xl font-bold ${t.text} mb-4`}>Quick Start</h1>
-              <p className={`text-xl ${t.textSecondary} leading-relaxed mb-8`}>
+              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Quick Start</h1>
+              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
                 Get up and running with Seifun in minutes.
               </p>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Basic Usage</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Basic Usage</h2>
               <p className={`${t.textSecondary} mb-4`}>
                 Here's how to get started with the Seifun SDK:
               </p>
@@ -326,9 +357,9 @@ console.log('AI Response:', insights.response);`}
               />
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Next Steps</h2>
-              <div className="grid md:grid-cols-2 gap-4">
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Next Steps</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className={`${t.bgSecondary} rounded-lg p-4`}>
                   <Bot className={`${t.accent} mb-2`} size={24} />
                   <h3 className={`font-semibold ${t.text} mb-2`}>Explore Seilor 0 AI</h3>
@@ -354,31 +385,31 @@ console.log('AI Response:', insights.response);`}
         return (
           <div className="space-y-8">
             <div>
-              <h1 className={`text-4xl font-bold ${t.text} mb-4`}>Seilor 0 AI</h1>
-              <p className={`text-xl ${t.textSecondary} leading-relaxed mb-8`}>
+              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Seilor 0 AI</h1>
+              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
                 Seilor 0 is our advanced AI assistant that provides intelligent insights, dApp discovery, and real-time analysis of the Sei ecosystem.
               </p>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Features</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Features</h2>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <Bot className={`${t.accent} mt-1`} size={20} />
+                  <Bot className={`${t.accent} mt-1 flex-shrink-0`} size={20} />
                   <div>
                     <h3 className={`font-semibold ${t.text}`}>Intelligent Analysis</h3>
                     <p className={`${t.textSecondary} text-sm`}>AI-powered token analysis and market insights</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <Globe className={`${t.accent} mt-1`} size={20} />
+                  <Globe className={`${t.accent} mt-1 flex-shrink-0`} size={20} />
                   <div>
                     <h3 className={`font-semibold ${t.text}`}>dApp Discovery</h3>
                     <p className={`${t.textSecondary} text-sm`}>Discover and navigate Sei ecosystem dApps</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <TrendingUp className={`${t.accent} mt-1`} size={20} />
+                  <TrendingUp className={`${t.accent} mt-1 flex-shrink-0`} size={20} />
                   <div>
                     <h3 className={`font-semibold ${t.text}`}>Market Analytics</h3>
                     <p className={`${t.textSecondary} text-sm`}>Real-time market data and trend analysis</p>
@@ -387,8 +418,8 @@ console.log('AI Response:', insights.response);`}
               </div>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>API Usage</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>API Usage</h2>
               <CodeBlock
                 code={`// Get AI insights
 const response = await seifun.seilor.chat({
@@ -418,21 +449,21 @@ const analysis = await seifun.seilor.analyzeMarket({
         return (
           <div className="space-y-8">
             <div>
-              <h1 className={`text-4xl font-bold ${t.text} mb-4`}>REST API</h1>
-              <p className={`text-xl ${t.textSecondary} leading-relaxed mb-8`}>
+              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>REST API</h1>
+              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
                 Access Seifun's features through our RESTful API endpoints.
               </p>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Base URL</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Base URL</h2>
               <div className={`${t.accentBg} rounded-lg p-4 mb-4`}>
-                <code className={`${t.accent} font-mono`}>https://api.seifun.app/v1</code>
+                <code className={`${t.accent} font-mono text-sm break-all`}>https://api.seifun.app/v1</code>
               </div>
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Authentication</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Authentication</h2>
               <p className={`${t.textSecondary} mb-4`}>
                 Include your API key in the Authorization header:
               </p>
@@ -445,27 +476,27 @@ const analysis = await seifun.seilor.analyzeMarket({
               />
             </div>
 
-            <div className={`${t.card} rounded-xl p-6`}>
-              <h2 className={`text-2xl font-bold ${t.text} mb-4`}>Endpoints</h2>
+            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
+              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Endpoints</h2>
               <div className="space-y-4">
                 <div className={`${t.bgSecondary} rounded-lg p-4`}>
-                  <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-2">
                     <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-mono">GET</span>
-                    <code className={`${t.text} font-mono`}>/tokens/{address}/scan</code>
+                    <code className={`${t.text} font-mono text-sm break-all`}>/tokens/{address}/scan</code>
                   </div>
                   <p className={`${t.textMuted} text-sm`}>Scan a token for security issues</p>
                 </div>
                 <div className={`${t.bgSecondary} rounded-lg p-4`}>
-                  <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-2">
                     <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-mono">POST</span>
-                    <code className={`${t.text} font-mono`}>/seilor/chat</code>
+                    <code className={`${t.text} font-mono text-sm break-all`}>/seilor/chat</code>
                   </div>
                   <p className={`${t.textMuted} text-sm`}>Chat with Seilor 0 AI assistant</p>
                 </div>
                 <div className={`${t.bgSecondary} rounded-lg p-4`}>
-                  <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-2">
                     <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-mono">GET</span>
-                    <code className={`${t.text} font-mono`}>/dapps</code>
+                    <code className={`${t.text} font-mono text-sm break-all`}>/dapps</code>
                   </div>
                   <p className={`${t.textMuted} text-sm`}>Get list of Sei ecosystem dApps</p>
                 </div>
@@ -478,8 +509,8 @@ const analysis = await seifun.seilor.analyzeMarket({
         return (
           <div className="space-y-8">
             <div>
-              <h1 className={`text-4xl font-bold ${t.text} mb-4`}>Documentation</h1>
-              <p className={`text-xl ${t.textSecondary} leading-relaxed`}>
+              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Documentation</h1>
+              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed`}>
                 Select a section from the navigation to view detailed documentation.
               </p>
             </div>
@@ -496,8 +527,9 @@ const analysis = await seifun.seilor.analyzeMarket({
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <button
+                data-menu-button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className={`lg:hidden ${t.text} hover:${t.textSecondary} p-2 rounded-lg ${t.bgTertiary}`}
+                className={`lg:hidden ${t.text} hover:${t.textSecondary} p-2 rounded-lg ${t.bgTertiary} transition-colors`}
               >
                 {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -512,8 +544,8 @@ const analysis = await seifun.seilor.analyzeMarket({
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              {/* Search */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Search - Hidden on small screens */}
               <div className="hidden md:flex items-center space-x-2">
                 <div className="relative">
                   <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${t.textMuted}`} size={16} />
@@ -522,7 +554,7 @@ const analysis = await seifun.seilor.analyzeMarket({
                     placeholder="Search docs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`pl-10 pr-4 py-2 rounded-lg ${t.bgTertiary} ${t.text} ${t.border} border focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent`}
+                    className={`pl-10 pr-4 py-2 rounded-lg ${t.bgTertiary} ${t.text} ${t.border} border focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-48 lg:w-64`}
                   />
                 </div>
               </div>
@@ -535,8 +567,8 @@ const analysis = await seifun.seilor.analyzeMarket({
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
               </button>
 
-              {/* External Links */}
-              <div className="flex items-center space-x-2">
+              {/* External Links - Hidden on small screens */}
+              <div className="hidden sm:flex items-center space-x-2">
                 <a
                   href="https://github.com/Seifun1/Seifun"
                   target="_blank"
@@ -561,20 +593,24 @@ const analysis = await seifun.seilor.analyzeMarket({
 
       {/* Main Content - With proper top padding to account for fixed header */}
       <div className="pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="flex gap-4 lg:gap-8">
             {/* Sidebar - Fixed positioning for desktop, overlay for mobile */}
-            <aside className={`
-              ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-              lg:translate-x-0 
-              fixed lg:static 
-              top-16 left-0 
-              w-64 h-screen lg:h-auto 
-              z-40 lg:z-auto 
-              transition-transform duration-300 ease-in-out
-              lg:shrink-0
-            `}>
-              <div className={`h-full lg:h-auto overflow-y-auto lg:overflow-visible ${t.sidebar} ${t.border} border rounded-none lg:rounded-xl p-4 backdrop-blur-sm`}>
+            <aside 
+              data-sidebar
+              className={`
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+                lg:translate-x-0 
+                fixed lg:static 
+                top-16 left-0 
+                w-72 lg:w-64 h-[calc(100vh-4rem)] lg:h-auto 
+                z-40 lg:z-auto 
+                transition-transform duration-300 ease-in-out
+                lg:shrink-0
+                overflow-y-auto lg:overflow-visible
+              `}
+            >
+              <div className={`h-full lg:h-auto ${t.sidebar} ${t.border} border rounded-none lg:rounded-xl p-4 backdrop-blur-sm`}>
                 <nav className="space-y-6">
                   {navigation.map((section) => (
                     <div key={section.title}>
@@ -589,13 +625,13 @@ const analysis = await seifun.seilor.analyzeMarket({
                                 setActiveSection(item.id);
                                 setIsSidebarOpen(false);
                               }}
-                              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                              className={`w-full flex items-center space-x-3 px-3 py-3 lg:py-2 rounded-lg text-left transition-colors ${
                                 activeSection === item.id
                                   ? `${t.accentBg} ${t.accent} font-medium`
                                   : `${t.textSecondary} hover:${t.accentHover} hover:${t.accent}`
                               }`}
                             >
-                              <item.icon size={16} />
+                              <item.icon size={16} className="flex-shrink-0" />
                               <span className="text-sm">{item.title}</span>
                             </button>
                           </li>
@@ -608,7 +644,7 @@ const analysis = await seifun.seilor.analyzeMarket({
             </aside>
 
             {/* Main Content - With proper margin for sidebar */}
-            <main className="flex-1 min-w-0 lg:ml-0">
+            <main className="flex-1 min-w-0">
               <div className="prose prose-lg max-w-none">
                 {renderContent()}
               </div>
