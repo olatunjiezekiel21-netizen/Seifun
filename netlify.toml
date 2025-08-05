@@ -6,7 +6,7 @@
   NODE_VERSION = "18"
   SECRETS_SCAN_ENABLED = "false"
   FORCE_REBUILD = "true"
-  DEPLOY_TIMESTAMP = "2025-01-27"
+  DEPLOY_TIMESTAMP = "2025-01-27-19:56"
 
 [[redirects]]
   from = "/*"
