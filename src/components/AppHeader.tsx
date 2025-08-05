@@ -85,10 +85,10 @@ const AppHeader = () => {
               Seifun.launch
             </Link>
             <Link 
-              to="/app/token-pulse" 
-              className={`app-nav-link ${isActive('/app/token-pulse') ? 'active' : ''}`}
+              to="/app/seilor" 
+              className={`app-nav-link ${isActive('/app/seilor') ? 'active' : ''}`}
             >
-              Token Pulse
+              Seilor 0
             </Link>
             <Link 
               to="/app/dev-plus" 
@@ -208,13 +208,13 @@ const AppHeader = () => {
                 Seifun.launch
               </Link>
               <Link 
-                to="/app/token-pulse" 
+                to="/app/seilor" 
                 className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/token-pulse') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                  isActive('/app/seilor') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Token Pulse
+                Seilor 0
               </Link>
               <Link 
                 to="/app/dev-plus" 

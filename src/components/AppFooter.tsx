@@ -22,7 +22,7 @@ const AppFooter = () => {
             <ul className="space-y-2">
                               <li><Link to="/app/seilist" className="app-text-secondary hover:app-text-primary">SeiList</Link></li>
               <li><Link to="/app/seifun-launch" className="app-text-secondary hover:app-text-primary">Token Discovery</Link></li>
-              <li><Link to="/app/token-pulse" className="app-text-secondary hover:app-text-primary">Analytics</Link></li>
+                              <li><Link to="/app/seilor" className="app-text-secondary hover:app-text-primary">Seilor 0</Link></li>
               <li><Link to="/app/dev-plus" className="app-text-secondary hover:app-text-primary">Developer Tools</Link></li>
             </ul>
           </div>

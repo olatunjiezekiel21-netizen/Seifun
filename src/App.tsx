@@ -6,7 +6,7 @@ import AppFooter from './components/AppFooter';
 import SafeCheckerSafe from './pages/SafeCheckerSafe';
 import SeiList from './pages/SeiList';
 import SeifunLaunch from './pages/SeifunLaunch';
-import TokenPulse from './pages/TokenPulse';
+import Seilor from './pages/Seilor';
 import TradingView from './pages/TradingView';
 import TradingSearch from './pages/TradingSearch';
 import Docs from './pages/Docs';
@@ -60,10 +60,10 @@ function App() {
           </div>
         } />
         
-        <Route path="/app/token-pulse" element={
+        <Route path="/app/seilor" element={
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSafe />
-            <TokenPulse />
+            <Seilor />
             <AppFooter />
           </div>
         } />
