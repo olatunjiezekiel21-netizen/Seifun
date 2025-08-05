@@ -458,7 +458,7 @@ const analysis = await seifun.seilor.analyzeMarket({
                 <div className={`${t.bgSecondary} rounded-lg p-4`}>
                   <div className="flex items-center space-x-2 mb-2">
                     <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-mono">POST</span>
-                    <code className={`${t.text} font-mono`}/seilor/chat</code>
+                    <code className={`${t.text} font-mono`}>/seilor/chat</code>
                   </div>
                   <p className={`${t.textMuted} text-sm`}>Chat with Seilor 0 AI assistant</p>
                 </div>
