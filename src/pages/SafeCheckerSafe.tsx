@@ -21,10 +21,8 @@ const SeiTokenRegistry = React.lazy(() =>
   import('../utils/seiTokenRegistry').then(module => ({ default: module.SeiTokenRegistry }))
 );
 
-// Safe wallet hook import with error boundary
-const useReownWallet = React.lazy(() =>
-  import('../utils/reownWalletConnection').then(module => ({ default: module.useReownWallet }))
-);
+// Import wallet hook directly to prevent lazy loading issues
+import { useReownWallet } from '../utils/reownWalletConnection';
 
 // Error Boundary Component
 class SafeCheckerErrorBoundary extends React.Component<
@@ -80,44 +78,8 @@ class SafeCheckerErrorBoundary extends React.Component<
 
 // Safe Wallet Connection Hook
 const SafeWalletProvider: React.FC<{ children: (walletData: any) => React.ReactNode }> = ({ children }) => {
-  const [walletData, setWalletData] = useState({
-    isConnected: false,
-    address: null,
-    balance: null,
-    isConnecting: false,
-    error: null,
-    walletType: null,
-    connectWallet: async () => {},
-    disconnectWallet: async () => {},
-    getAvailableWallets: () => []
-  });
-
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadWalletHook = async () => {
-      try {
-        const { useReownWallet } = await import('../utils/reownWalletConnection');
-        // This would need to be handled differently in a real implementation
-        // For now, we'll use a fallback
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Failed to load wallet hook:', error);
-        setIsLoading(false);
-      }
-    };
-
-    loadWalletHook();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <RefreshCw className="w-6 h-6 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-400">Loading wallet system...</span>
-      </div>
-    );
-  }
+  // Use the wallet hook directly - no more async loading
+  const walletData = useReownWallet();
 
   return <>{children(walletData)}</>;
 };
