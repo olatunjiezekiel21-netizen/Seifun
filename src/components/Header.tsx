@@ -85,8 +85,8 @@ const Header = () => {
             <Link to="/seifun-launch" className="sei-nav-link">
               Seifun.launch
             </Link>
-            <Link to="/token-pulse" className="sei-nav-link">
-              Token Pulse
+            <Link to="/seilor" className="sei-nav-link">
+              Seilor 0
             </Link>
             <Link to="/dev-plus" className="sei-nav-link">
               Dev Plus
@@ -335,11 +335,11 @@ const Header = () => {
                 Seifun.launch
               </Link>
               <Link 
-                to="/token-pulse" 
+                to="/seilor" 
                 className="sei-mobile-menu-item"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Token Pulse
+                Seilor 0
               </Link>
               <Link 
                 to="/dev-plus" 

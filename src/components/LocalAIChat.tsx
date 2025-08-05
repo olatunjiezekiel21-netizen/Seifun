@@ -105,7 +105,7 @@ const LocalAIChat: React.FC = () => {
     // Price and market patterns
     if (input.includes('price') || input.includes('market') || input.includes('cap') || input.includes('volume')) {
       return {
-        text: 'For accurate price data, check: 1) SeiTrace explorer, 2) DEX aggregators, 3) Our Token Pulse feature, 4) Multiple sources for verification. Market cap = Price × Circulating Supply. Volume indicates trading activity.',
+        text: 'For accurate price data, check: 1) SeiTrace explorer, 2) DEX aggregators, 3) Our Seilor 0 feature, 4) Multiple sources for verification. Market cap = Price × Circulating Supply. Volume indicates trading activity.',
         type: 'analysis'
       };
     }
