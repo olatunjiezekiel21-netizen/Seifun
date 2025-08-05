@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Wallet, LogOut, User, Settings } from 'lucide-react';
-import { useSafeWalletConnect as useWalletConnect } from '../utils/walletConnectSafe';
+import { useWalletConnect } from '../utils/walletConnect';
 
 const AppHeaderSafe = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

@@ -1,108 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, TrendingUp, Zap, Target, Globe, Sparkles, Bot, ChevronRight, ExternalLink, Star, Users, DollarSign, Calendar, AlertCircle, Info } from 'lucide-react';
-
-// Mock data for dApps on Sei blockchain
-const seiDApps = [
-  {
-    id: 1,
-    name: 'Seifun',
-    description: 'The ultimate Sei token launchpad and trading platform',
-    image: '/Seifu.png',
-    category: 'DeFi',
-    tvl: '$2.4M',
-    users: '12.5K',
-    url: '/app',
-    featured: true,
-    status: 'Live'
-  },
-  {
-    id: 2,
-    name: 'Sei Swap',
-    description: 'Decentralized exchange for seamless token swapping',
-    image: 'https://via.placeholder.com/80/1e293b/ef4444?text=SS',
-    category: 'DeFi',
-    tvl: '$8.7M',
-    users: '34.2K',
-    url: 'https://seiswap.io',
-    featured: true,
-    status: 'Live'
-  },
-  {
-    id: 3,
-    name: 'Sei Lend',
-    description: 'Lending and borrowing protocol on Sei',
-    image: 'https://via.placeholder.com/80/1e293b/ef4444?text=SL',
-    category: 'DeFi',
-    tvl: '$5.1M',
-    users: '8.9K',
-    url: 'https://seilend.finance',
-    featured: false,
-    status: 'Live'
-  },
-  {
-    id: 4,
-    name: 'Sei NFT Marketplace',
-    description: 'Premier NFT marketplace for Sei ecosystem',
-    image: 'https://via.placeholder.com/80/1e293b/ef4444?text=SNM',
-    category: 'NFT',
-    tvl: '$1.2M',
-    users: '15.7K',
-    url: 'https://seinft.market',
-    featured: false,
-    status: 'Live'
-  },
-  {
-    id: 5,
-    name: 'Sei Games Hub',
-    description: 'Gaming platform with P2E mechanics',
-    image: 'https://via.placeholder.com/80/1e293b/ef4444?text=SGH',
-    category: 'Gaming',
-    tvl: '$890K',
-    users: '22.1K',
-    url: 'https://seigames.io',
-    featured: false,
-    status: 'Beta'
-  }
-];
-
-// Mock alpha insights data
-const alphaInsights = [
-  {
-    id: 1,
-    title: 'New DeFi Protocol Launching on Sei',
-    description: 'Revolutionary yield farming protocol with 200%+ APY expected',
-    confidence: 95,
-    category: 'DeFi Launch',
-    timeframe: '2-3 days',
-    impact: 'High',
-    type: 'upcoming'
-  },
-  {
-    id: 2,
-    title: 'Major CEX Listing Announcement',
-    description: 'Top 5 exchange preparing to list 3 Sei-based tokens',
-    confidence: 87,
-    category: 'CEX Listing',
-    timeframe: '1 week',
-    impact: 'Very High',
-    type: 'cex'
-  },
-  {
-    id: 3,
-    title: 'Token Sale: Next Unicorn Project',
-    description: 'Stealth mode project with tier-1 VC backing opening public sale',
-    confidence: 78,
-    category: 'Token Sale',
-    timeframe: '5-7 days',
-    impact: 'High',
-    type: 'sale'
-  }
-];
+import { getSeiDApps, getAlphaInsights, getSeiNetworkStats, getDAppCategories, type SeiDApp, type AlphaInsight } from '../utils/seiEcosystemData';
 
 const Seilor = () => {
   const [activeTab, setActiveTab] = useState('discover');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [aiChat, setAiChat] = useState('');
+  const [seiDApps, setSeiDApps] = useState<SeiDApp[]>([]);
+  const [alphaInsights, setAlphaInsights] = useState<AlphaInsight[]>([]);
+  const [networkStats, setNetworkStats] = useState({
+    totalTvl: 'Loading...',
+    activeUsers: 'Loading...',
+    transactions: 'Loading...',
+    dAppsLive: 'Loading...'
+  });
+  const [loading, setLoading] = useState(true);
   const [chatMessages, setChatMessages] = useState([
     {
       type: 'ai',
@@ -111,7 +23,31 @@ const Seilor = () => {
     }
   ]);
 
-  const categories = ['All', 'DeFi', 'NFT', 'Gaming', 'Infrastructure'];
+  const categories = getDAppCategories();
+
+  // Load real data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [dApps, insights, stats] = await Promise.all([
+          getSeiDApps(),
+          getAlphaInsights(),
+          getSeiNetworkStats()
+        ]);
+        
+        setSeiDApps(dApps);
+        setAlphaInsights(insights);
+        setNetworkStats(stats);
+      } catch (error) {
+        console.error('Failed to load Seilor data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const filteredDApps = selectedCategory === 'All' 
     ? seiDApps 
@@ -315,7 +251,25 @@ const Seilor = () => {
             </div>
 
             <div className="space-y-6">
-              {alphaInsights.map(insight => (
+              {loading ? (
+                <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 text-center">
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-slate-700 rounded w-3/4 mx-auto mb-4"></div>
+                    <div className="h-3 bg-slate-700 rounded w-full mb-2"></div>
+                    <div className="h-3 bg-slate-700 rounded w-2/3"></div>
+                  </div>
+                </div>
+              ) : alphaInsights.length === 0 ? (
+                <div className="bg-slate-800 rounded-xl p-8 border border-slate-700 text-center">
+                  <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">Alpha Insights Coming Soon</h3>
+                  <p className="text-gray-400">
+                    Our AI is being trained to provide real-time alpha insights for the Sei ecosystem. 
+                    Check back soon for market intelligence and opportunities!
+                  </p>
+                </div>
+              ) : (
+                alphaInsights.map(insight => (
                 <div key={insight.id} className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -350,11 +304,12 @@ const Seilor = () => {
                         insight.confidence > 90 ? 'bg-green-400' :
                         insight.confidence > 70 ? 'bg-yellow-400' :
                         'bg-red-400'
-                      }`}></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                      }`}>                       </div>
+                     </div>
+                   </div>
+                 </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -373,10 +328,10 @@ const Seilor = () => {
             {/* Analytics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {[
-                { label: 'Total TVL', value: '$18.3M', change: '+12.4%', color: 'green' },
-                { label: 'Active Users', value: '93.4K', change: '+8.7%', color: 'blue' },
-                { label: 'Transactions', value: '2.1M', change: '+15.2%', color: 'purple' },
-                { label: 'dApps Live', value: '47', change: '+3', color: 'red' }
+                { label: 'Total TVL', value: networkStats.totalTvl, change: 'Coming Soon', color: 'green' },
+                { label: 'Active Users', value: networkStats.activeUsers, change: 'Coming Soon', color: 'blue' },
+                { label: 'Transactions', value: networkStats.transactions, change: 'Coming Soon', color: 'purple' },
+                { label: 'dApps Live', value: networkStats.dAppsLive, change: 'Growing', color: 'red' }
               ].map((metric, index) => (
                 <div key={index} className="bg-slate-800 rounded-xl p-6 border border-slate-700">
                   <h3 className="text-gray-400 text-sm mb-2">{metric.label}</h3>
