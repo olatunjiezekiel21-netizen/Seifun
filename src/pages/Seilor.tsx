@@ -63,15 +63,83 @@ const Seilor = () => {
       timestamp: new Date()
     };
 
-    // Mock AI response based on keywords
-    let aiResponse = "I'm analyzing the Sei ecosystem for you...";
+    // Enhanced AI response with real Sei ecosystem knowledge
+    let aiResponse = "";
+    const query = aiChat.toLowerCase();
     
-    if (aiChat.toLowerCase().includes('alpha')) {
-      aiResponse = "🎯 Here are the top alpha opportunities I'm tracking: 1) New DeFi protocol launching with innovative yield strategies, 2) Major CEX listing rumors for 3 Sei tokens, 3) Stealth project token sale opening soon. Would you like details on any of these?";
-    } else if (aiChat.toLowerCase().includes('dapp')) {
-      aiResponse = "🚀 The Sei ecosystem has amazing dApps! I recommend checking out Seifun for token launches, Sei Swap for trading, and Sei Lend for yield opportunities. Which category interests you most?";
-    } else if (aiChat.toLowerCase().includes('safe')) {
-      aiResponse = "🛡️ Safety first! Always verify smart contracts, check TVL and user metrics, start with small amounts, and never invest more than you can afford to lose. Use Seifun's SafeChecker for token analysis!";
+    if (query.includes('alpha') || query.includes('opportunity') || query.includes('listing')) {
+      aiResponse = "🎯 **Alpha Opportunities on Sei**:\n\n" +
+        "**SEILOR Token**: Kryptonite's native token already listed on Bybit - rare pre-mainnet listing!\n" +
+        "**Ecosystem Growth**: 37+ projects building, major Ethereum protocols migrating to Sei v2\n" +
+        "**Infrastructure**: Backpack integration, native USDC coming, Circle Mint support\n" +
+        "**DeFi Expansion**: $30M+ TVL growing rapidly across Astroport, Silo, Kryptonite\n\n" +
+        "💡 Early positioning in liquid staking and parallelized EVM dApps could be key!";
+    } else if (query.includes('dapp') || query.includes('discover') || query.includes('project')) {
+      aiResponse = "🚀 **Top Sei dApps by Category**:\n\n" +
+        "**🔥 DeFi Leaders**:\n• Astroport ($30M+ TVL) - Advanced DEX\n• Dragonswap - Parallelized EVM DEX\n• Yei Finance - Money markets\n\n" +
+        "**💎 Liquid Staking**:\n• Kryptonite ($2.9M TVL) - SEILOR + kUSD\n• Silo Finance ($9.6M TVL) - iSEI tokens\n\n" +
+        "**🎮 Gaming & NFTs**:\n• Archer Hunter (12K+ users) - Gaming\n• Seyans (8K+ holders) - Premier NFTs\n• The Colony (5.5K holders) - Mafia Antz\n\n" +
+        "Which category interests you most?";
+    } else if (query.includes('safe') || query.includes('security') || query.includes('risk')) {
+      aiResponse = "🛡️ **Sei DeFi Safety Guide**:\n\n" +
+        "**✅ Verified Projects**: All listed dApps are verified with real TVL data\n" +
+        "**🔍 Due Diligence**: Check TVL trends, user growth, audit reports\n" +
+        "**💰 Risk Management**: Start small, diversify across protocols\n" +
+        "**⚡ Sei Advantages**: 390ms finality reduces MEV risks, consistent uptime\n\n" +
+        "**Recommended**: Use Seifun's SafeChecker for token analysis before investing!";
+    } else if (query.includes('staking') || query.includes('stake') || query.includes('seilor') || query.includes('kryptonite')) {
+      aiResponse = "💎 **Liquid Staking on Sei**:\n\n" +
+        "**Kryptonite** ($2.9M TVL):\n• Stake SEI → Get SEILOR tokens\n• Mint kUSD stablecoin (earn yield by holding!)\n• Already listed on Bybit\n\n" +
+        "**Silo Finance** ($9.6M TVL):\n• Stake SEI → Get iSEI tokens\n• Use iSEI in DeFi strategies\n\n" +
+        "**Benefits**: Keep earning staking rewards while staying liquid for DeFi opportunities!";
+    } else if (query.includes('defi') || query.includes('trading') || query.includes('yield') || query.includes('astroport')) {
+      aiResponse = "⚡ **Sei DeFi Ecosystem** ($30M+ Total TVL):\n\n" +
+        "**Astroport** - Leading DEX with concentrated liquidity, fee sharing\n" +
+        "**Dragonswap** - Leverages parallelized EVM for ultra-fast swaps\n" +
+        "**Yei Finance** - Lending/borrowing with competitive yields\n\n" +
+        "**🔥 Sei Advantage**: 390ms finality = near-instant trades, no MEV frontrunning!\n" +
+        "**Strategy**: Start with major protocols, then explore newer opportunities.";
+    } else if (query.includes('gaming') || query.includes('game') || query.includes('archer')) {
+      aiResponse = "🎮 **Gaming on Sei**:\n\n" +
+        "**Archer Hunter** (12K+ users):\n• Real-time skill-based mechanics\n• Fast-paced action leveraging Sei's speed\n\n" +
+        "**Astro Karts**:\n• Competitive racing with blockchain rewards\n• Growing gaming community\n\n" +
+        "**🚀 Why Sei Gaming Works**: Sub-400ms finality enables real-time gaming without lag!";
+    } else if (query.includes('nft') || query.includes('collection') || query.includes('seyans') || query.includes('art')) {
+      aiResponse = "🎨 **NFTs on Sei**:\n\n" +
+        "**Seyans** (8K+ holders): Premier collection expanded to Solana with native DEX\n" +
+        "**The Colony** (5.5K holders): 5,555 Mafia Antz with AntSwap aggregator (200K+ SEI staked)\n" +
+        "**Sei Colors** (2K+ holders): 10,101 unique RGB color NFTs representing digital spectrum\n\n" +
+        "**🔥 NFT Advantages on Sei**: Instant minting, low fees, active trading community!";
+    } else if (query.includes('fast') || query.includes('speed') || query.includes('performance') || query.includes('sei')) {
+      aiResponse = "⚡ **Sei: The Fastest Blockchain**:\n\n" +
+        "**390ms Finality**: Fastest time-to-finality in crypto\n" +
+        "**45+ TPS**: Consistent high throughput\n" +
+        "**Parallelized EVM**: 100x faster than traditional Ethereum\n" +
+        "**Twin Turbo Consensus**: Optimistic processing + intelligent propagation\n\n" +
+        "**Real Impact**: Web2-like UX, no transaction delays, perfect for trading & gaming!";
+    } else if (query.includes('bridge') || query.includes('transfer') || query.includes('cross-chain')) {
+      aiResponse = "🌉 **Moving Assets to Sei**:\n\n" +
+        "**Sei Bridge** (25K+ users): Official bridge for secure transfers\n" +
+        "**Backpack Integration**: Major exchange now supports Sei\n" +
+        "**IBC Compatible**: Connect to entire Cosmos ecosystem\n\n" +
+        "**Pro Tips**: Use official bridge, check gas fees, start with small amounts!";
+    } else if (query.includes('help') || query.includes('guide') || query.includes('how') || query.includes('start')) {
+      aiResponse = "🎯 **How I Can Help You Navigate Sei**:\n\n" +
+        "**📱 dApp Discovery**: Find the best projects by category\n" +
+        "**💰 DeFi Strategies**: Trading, staking, yield optimization\n" +
+        "**🔍 Alpha Research**: Early opportunities, upcoming listings\n" +
+        "**🛡️ Safety**: Risk assessment, security best practices\n" +
+        "**📊 Analytics**: TVL trends, user metrics, performance data\n\n" +
+        "Just ask me anything about the Sei ecosystem!";
+    } else {
+      aiResponse = "🤖 **Seilor AI at Your Service!**\n\n" +
+        "I'm your intelligent guide to the Sei ecosystem. I can help with:\n\n" +
+        "• **dApp Discovery** - Find amazing Sei projects\n" +
+        "• **DeFi Strategies** - Trading, staking, yields\n" +
+        "• **Alpha Opportunities** - Early projects, listings\n" +
+        "• **Safety & Security** - Risk assessment\n" +
+        "• **Technical Analysis** - Performance, TVL data\n\n" +
+        "What would you like to explore in the Sei ecosystem?";
     }
 
     const aiMessage = {

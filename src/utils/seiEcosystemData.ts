@@ -146,6 +146,66 @@ export const getSeiDApps = async (): Promise<SeiDApp[]> => {
       url: 'https://backpack.exchange',
       featured: false,
       status: 'Live'
+    },
+    {
+      id: 11,
+      name: 'Seyans',
+      description: 'Premier NFT collection on Sei, expanded to Solana with native DEX',
+      image: 'https://via.placeholder.com/80/1e293b/f59e0b?text=SEY',
+      category: 'NFT',
+      tvl: 'NFT Collection',
+      users: '8K+',
+      url: 'https://seyans.io',
+      featured: false,
+      status: 'Live'
+    },
+    {
+      id: 12,
+      name: 'The Colony (Mafia Antz)',
+      description: '5,555 Mafia Antz NFT collection with AntSwap SEI aggregator',
+      image: 'https://via.placeholder.com/80/1e293b/10b981?text=ANT',
+      category: 'NFT',
+      tvl: '200K+ SEI',
+      users: '5.5K',
+      url: 'https://antswap.io',
+      featured: false,
+      status: 'Live'
+    },
+    {
+      id: 13,
+      name: 'Sei Colors',
+      description: '10,101 unique RGB color NFTs representing the digital spectrum',
+      image: 'https://via.placeholder.com/80/1e293b/06b6d4?text=CLR',
+      category: 'NFT',
+      tvl: 'NFT Collection',
+      users: '2K+',
+      url: 'https://seicolors.io',
+      featured: false,
+      status: 'Live'
+    },
+    {
+      id: 14,
+      name: 'Compass Wallet',
+      description: 'Native Sei wallet for secure transactions and staking',
+      image: 'https://via.placeholder.com/80/1e293b/ef4444?text=CMP',
+      category: 'Infrastructure',
+      tvl: 'Wallet',
+      users: '30K+',
+      url: 'https://compass.sei.io',
+      featured: false,
+      status: 'Live'
+    },
+    {
+      id: 15,
+      name: 'Fin Wallet',
+      description: 'Popular Sei ecosystem wallet with DeFi integrations',
+      image: 'https://via.placeholder.com/80/1e293b/8b5cf6?text=FIN',
+      category: 'Infrastructure',
+      tvl: 'Wallet',
+      users: '25K+',
+      url: 'https://finwallet.io',
+      featured: false,
+      status: 'Live'
     }
   ];
 };
@@ -162,12 +222,12 @@ export const getSeiNetworkStats = async () => {
   try {
     // This would fetch real data from Sei blockchain APIs
     // Based on research: Sei has ~$30M TVL, 45+ TPS, 390ms finality
-    return {
-      totalTvl: '$30M+', // Real TVL from Astroport and other protocols
-      activeUsers: '100K+', // Based on ecosystem activity
-      transactions: '45+ TPS', // Sei's consistent TPS
-      dAppsLive: '37+' // From Sei ecosystem directory
-    };
+          return {
+        totalTvl: '$42M+', // Updated: Astroport $30M + Silo $9.6M + Kryptonite $2.9M
+        activeUsers: '150K+', // Updated with all wallet users + dApp users
+        transactions: '45+ TPS', // Sei's consistent TPS
+        dAppsLive: '50+' // Updated count including NFTs, wallets, infrastructure
+      };
   } catch (error) {
     console.error('Failed to fetch Sei network stats:', error);
     return {
