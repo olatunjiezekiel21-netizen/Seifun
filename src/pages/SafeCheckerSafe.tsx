@@ -71,10 +71,33 @@ class SafeCheckerErrorBoundary extends React.Component<
   }
 }
 
-// Safe Wallet Connection Hook
+// Safe Wallet Connection Hook with Error Boundary
 const SafeWalletProvider: React.FC<{ children: (walletData: any) => React.ReactNode }> = ({ children }) => {
-  // Use the wallet hook directly - no more async loading
-  const walletData = useReownWallet();
+  // Fallback wallet data in case of errors
+  const fallbackWalletData = {
+    isConnected: false,
+    address: null,
+    balance: null,
+    isConnecting: false,
+    error: null,
+    walletType: null,
+    chainId: null,
+    connectWallet: async () => {
+      console.warn('Wallet connection not available - using fallback');
+    },
+    disconnectWallet: async () => {
+      console.warn('Wallet disconnection not available - using fallback');
+    },
+    getAvailableWallets: () => []
+  };
+
+  let walletData;
+  try {
+    walletData = useReownWallet();
+  } catch (error) {
+    console.warn('Wallet hook failed, using fallback:', error);
+    walletData = fallbackWalletData;
+  }
 
   return <>{children(walletData)}</>;
 };
