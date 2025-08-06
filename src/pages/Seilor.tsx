@@ -9,6 +9,7 @@ import { getSeiDApps, getAlphaInsights, getSeiNetworkStats, getDAppCategories, t
 import { AIChatDataService } from '../utils/aiChatDataService';
 import { TokenScanner } from '../utils/tokenScanner';
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
+import { IntelligentAIChat } from '../utils/intelligentAIChat';
 import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
 
 const Seilor = () => {
@@ -29,6 +30,7 @@ const Seilor = () => {
   const [aiDataService] = useState(() => new AIChatDataService());
   const [tokenScanner] = useState(() => new TokenScanner());
   const [seiRegistry] = useState(() => new SeiTokenRegistry(false));
+  const [intelligentAI] = useState(() => new IntelligentAIChat());
   
   // Enhanced browser state
   const [showBrowser, setShowBrowser] = useState(false);
@@ -78,245 +80,40 @@ const Seilor = () => {
     loadData();
   }, []);
 
-  // Enhanced AI chat handler with real SafeChecker integration
+  // Intelligent AI chat handler with memory and real analysis
   const handleAiChat = async () => {
     if (!aiChat.trim()) return;
 
     const userMessage = aiChat.trim();
     setAiChat('');
 
-    // Add user message
+    // Add user message to UI
     const newUserMessage = {
       type: 'user',
       message: userMessage,
       timestamp: new Date()
     };
-
     setChatMessages(prev => [...prev, newUserMessage]);
 
-    // Add enhanced typing indicator
+    // Add typing indicator
     const typingMessage = {
       type: 'ai',
-      message: "🤖 Seilor is analyzing your request with SafeChecker integration...",
+      message: "🤖 Thinking...",
       timestamp: new Date()
     };
     setChatMessages(prev => [...prev, typingMessage]);
 
     try {
-      let aiResponse = "";
-      const query = userMessage.toLowerCase();
+      // Get intelligent response with context
+      const context = {
+        walletConnected: isConnected,
+        walletAddress: address,
+        currentDapp: browserTitle || undefined
+      };
 
-      // Real token analysis with SafeChecker integration
-      const tokenAddressMatch = userMessage.match(/sei[a-zA-Z0-9]{39,}/i) || userMessage.match(/0x[a-fA-F0-9]{40}/);
-      
-      if (tokenAddressMatch) {
-        const tokenAddress = tokenAddressMatch[0];
-        try {
-          aiResponse = `🔍 **Analyzing Token**: \`${tokenAddress}\`\n\n⏳ Fetching real-time data from Sei blockchain...\n\n*Powered by Seifun's SafeChecker*`;
-          
-          // Update with initial response
-          setChatMessages(prev => prev.slice(0, -1).concat({
-            type: 'ai',
-            message: aiResponse,
-            timestamp: new Date()
-          }));
+      const aiResponse = await intelligentAI.generateResponse(userMessage, context);
 
-          // Real SafeChecker integration
-          const scanResult = await tokenScanner.scanToken(tokenAddress);
-          const registryData = await seiRegistry.getTokenInfo(tokenAddress);
-          
-          const safetyScore = scanResult.overallScore || 0;
-          const riskLevel = safetyScore >= 80 ? 'Low' : safetyScore >= 60 ? 'Medium' : 'High';
-          const riskColor = safetyScore >= 80 ? '🟢' : safetyScore >= 60 ? '🟡' : '🔴';
-          
-          aiResponse = `🎯 **Token Analysis Complete**
-
-**📊 Basic Info:**
-• Address: \`${tokenAddress}\`
-• Network: Sei Blockchain
-• Name: ${registryData?.name || 'Unknown'}
-• Symbol: ${registryData?.symbol || 'N/A'}
-
-**💰 Market Metrics:**
-• Current Price: ${registryData?.price || '$0.00'}
-• Market Cap: ${registryData?.marketCap || 'N/A'}
-• 24h Volume: ${registryData?.volume24h || 'N/A'}
-• Holders: ${scanResult.holderCount || 'N/A'}
-
-**🛡️ SafeChecker Analysis:**
-• **Safety Score: ${safetyScore}/100** ${riskColor}
-• Contract Verified: ${scanResult.isVerified ? '✅' : '❌'}
-• Liquidity Status: ${scanResult.liquidityLocked ? '✅ Locked' : '⚠️ Not Locked'}
-• Honeypot Check: ${scanResult.isHoneypot ? '❌ Warning' : '✅ Safe'}
-• Ownership: ${scanResult.ownershipRenounced ? '✅ Renounced' : '⚠️ Active'}
-
-**⚠️ Risk Assessment:**
-• **Risk Level: ${riskLevel}**
-• ${scanResult.warnings?.join('\n• ') || 'No major warnings detected'}
-
-**💡 Seilor's AI Recommendation:**
-${generateAIRecommendation(scanResult, safetyScore, riskLevel)}
-
-**🚀 Quick Actions:**
-• [Open in SafeChecker](/app/safechecker?token=${tokenAddress})
-• [View on SeiTrace](https://seitrace.com/address/${tokenAddress})
-• ${isConnected ? '[Add to Watchlist]' : '[Connect Wallet to Track]'}
-
-*Analysis powered by Seifun's advanced SafeChecker technology*`;
-        } catch (error) {
-          aiResponse = `⚠️ **Analysis Error**\n\nFailed to analyze token: \`${tokenAddress}\`\n\nError: ${error instanceof Error ? error.message : 'Network error'}\n\n**Alternative Options:**\n• Try [SafeChecker](/app/safechecker) directly\n• Check [SeiTrace](https://seitrace.com) for basic info\n• Verify the token address format`;
-        }
-      }
-      // dApp Discovery with enhanced recommendations
-      else if (query.includes('dapp') || query.includes('app') || query.includes('protocol')) {
-        const topDapps = seiDApps.slice(0, 5);
-        aiResponse = `🚀 **Top Sei dApps Right Now:**
-
-${topDapps.map(dapp => 
-  `**${dapp.name}** ${dapp.featured ? '⭐' : ''}
-  📈 TVL: ${dapp.tvl} | 👥 Users: ${dapp.users}
-  ${dapp.description}
-  [Launch in Seilor Browser](javascript:void(0)) | [Visit Directly](${dapp.url})`
-).join('\n\n')}
-
-**🎯 Personalized Recommendations:**
-Based on current market trends, I recommend:
-1. **Astroport** - Best liquidity and trading features
-2. **Dragonswap** - Growing DEX with competitive fees  
-3. **Nitro** - Advanced perpetual trading
-
-**💡 Pro Tips:**
-• Always check TVL and user activity before using new protocols
-• Use Seilor's Safe Browsing mode for enhanced security
-• Connect your wallet for personalized recommendations
-
-*Click any dApp above to launch in Seilor's secure browser*`;
-      }
-      // Trading and DeFi guidance
-      else if (query.includes('trade') || query.includes('swap') || query.includes('defi')) {
-        aiResponse = `📈 **DeFi Trading Guidance**
-
-**🏆 Best Trading Platforms on Sei:**
-1. **Astroport** - Advanced AMM with concentrated liquidity
-2. **Dragonswap** - Multi-chain DEX with competitive rates
-3. **Nitro** - Perpetual futures and leverage trading
-
-**💰 Current Market Opportunities:**
-• SEI/USDC pairs showing strong volume
-• New token launches on Seifun gaining traction
-• Arbitrage opportunities between DEXes
-
-**🛡️ Safe Trading Checklist:**
-✅ Always check token safety with SafeChecker first
-✅ Start with small amounts on new protocols  
-✅ Verify contract addresses before trading
-✅ Keep some SEI for gas fees
-✅ Use Seilor's browser for secure dApp access
-
-**🎯 Trading Strategy:**
-${isConnected ? 
-  `Connected wallet: ${address?.slice(0,6)}...${address?.slice(-4)}
-  • Your SEI balance enables trading on all major DEXes
-  • Consider dollar-cost averaging for volatile assets
-  • Use limit orders when available` :
-  `• [Connect Wallet] for personalized trading advice
-  • Get real-time portfolio analysis
-  • Access exclusive trading features`
-}
-
-Ready to start trading? I can help you navigate any specific platform!`;
-      }
-      // Staking and yield farming
-      else if (query.includes('stak') || query.includes('yield') || query.includes('farm')) {
-        aiResponse = `🌾 **Staking & Yield Farming on Sei**
-
-**🏅 Top Staking Opportunities:**
-1. **Native SEI Staking** - 8-12% APR, secure and liquid
-2. **Astroport LP Tokens** - 15-25% APR, higher risk/reward  
-3. **Kryptonite** - Liquid staking with additional rewards
-
-**💎 Current Hot Farms:**
-• SEI-USDC LP: ~18% APR
-• ASTRO-SEI LP: ~22% APR  
-• New project tokens: 30-100% APR (high risk)
-
-**⚠️ Risk Assessment:**
-• **Low Risk**: Native SEI staking, established protocols
-• **Medium Risk**: Major DEX LP tokens  
-• **High Risk**: New project farms, leveraged strategies
-
-**🧮 Yield Calculator:**
-$1,000 staked at 15% APR = ~$150 annual rewards
-$5,000 in LP farming = ~$750-1,250 potential annual yield
-
-**💡 Seilor's Strategy:**
-1. Start with native SEI staking (safest)
-2. Gradually move into LP farming  
-3. Always keep emergency funds liquid
-4. Monitor impermanent loss on volatile pairs
-
-Want specific recommendations for your portfolio size?`;
-      }
-      // Alpha insights and market analysis
-      else if (query.includes('alpha') || query.includes('insight') || query.includes('market')) {
-        const recentInsights = alphaInsights.slice(0, 3);
-        aiResponse = `🔮 **Alpha Insights & Market Analysis**
-
-**🚨 Latest Alpha Signals:**
-${recentInsights.map(insight => 
-  `**${insight.title}** (${insight.confidence}% confidence)
-  ${insight.description}
-  Impact: ${insight.impact} | Timeframe: ${insight.timeframe}`
-).join('\n\n')}
-
-**📊 Market Sentiment Analysis:**
-• **Sei Ecosystem**: Bullish momentum with increasing TVL
-• **DeFi Activity**: Growing 15% week-over-week
-• **New Projects**: High-quality launches on Seifun
-• **Trading Volume**: Above average, indicating healthy activity
-
-**🎯 Actionable Insights:**
-1. **Emerging Protocols**: Several new DEXes launching Q1 2024
-2. **Token Launches**: Quality meme coins gaining traction
-3. **Infrastructure**: Major bridges and tools being developed
-4. **Partnerships**: Tier-1 projects announcing Sei integration
-
-**⚡ Quick Alpha:**
-• Monitor new Seifun launches for early opportunities
-• Astroport introducing new features this month
-• Major CEX listings expected for top Sei projects
-
-*These insights are based on on-chain data and community sentiment*`;
-      }
-      // General help and features
-      else {
-        aiResponse = `🤖 **How can I help you navigate Sei?**
-
-**🔍 What I can analyze:**
-• **Token Safety**: Paste any token address for instant analysis
-• **dApp Discovery**: Find the best protocols for your needs  
-• **Trading Guidance**: Get personalized DeFi strategies
-• **Market Insights**: Access real-time alpha and trends
-
-**⚡ Quick Commands:**
-• "Analyze [token address]" - Full SafeChecker analysis
-• "Best dApps" - Curated protocol recommendations
-• "Trading tips" - DeFi strategy guidance  
-• "Alpha insights" - Latest market intelligence
-• "Staking options" - Yield farming opportunities
-
-**🛡️ Seilor Features:**
-• **Safe Browser**: Secure dApp interaction with built-in analysis
-• **AI Analysis**: Real-time token and protocol safety checks
-• **Portfolio Tracking**: Monitor your DeFi positions ${isConnected ? '(Connected)' : '(Connect wallet)'}
-• **Alpha Alerts**: Get notified of market opportunities
-
-**💡 Pro Tip**: Connect your wallet for personalized recommendations and portfolio analysis!
-
-What specific aspect of Sei would you like to explore?`;
-      }
-
-      // Update final response
+      // Update with real response
       setChatMessages(prev => prev.slice(0, -1).concat({
         type: 'ai',
         message: aiResponse,
@@ -326,7 +123,7 @@ What specific aspect of Sei would you like to explore?`;
     } catch (error) {
       setChatMessages(prev => prev.slice(0, -1).concat({
         type: 'ai',
-        message: `⚠️ **Error**: ${error instanceof Error ? error.message : 'Something went wrong. Please try again.'}`,
+        message: `I apologize, but I encountered an error: ${error instanceof Error ? error.message : 'Please try again.'}`,
         timestamp: new Date()
       }));
     }
@@ -1090,6 +887,8 @@ What specific aspect of Sei would you like to explore?`;
                         alt={currentDapp.name}
                         className="w-8 h-8 rounded-lg object-cover"
                         onError={(e) => {
+                          // Only use Seifun logo as fallback for non-Seifun dApps if their logo fails to load
+                          console.warn(`Failed to load logo for ${currentDapp.name}, using fallback`);
                           (e.target as HTMLImageElement).src = '/Seifu.png';
                         }}
                       />
@@ -1224,17 +1023,22 @@ What specific aspect of Sei would you like to explore?`;
               </div>
             ) : (
               <>
-                {/* Main iframe - completely seamless */}
+                {/* Main iframe - completely seamless with real site loading */}
                 <iframe
                   src={browserUrl}
                   className="w-full h-full border-none bg-white"
                   title={browserTitle}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-top-navigation-by-user-activation"
                   referrerPolicy="strict-origin-when-cross-origin"
-                  allow="camera; microphone; geolocation; payment"
-                  onLoad={() => setBrowserLoading(false)}
-                  onError={() => {
-                    setBrowserError('This dApp cannot be embedded due to security restrictions.');
+                  allow="camera; microphone; geolocation; payment; clipboard-read; clipboard-write; web-share"
+                  loading="eager"
+                  onLoad={() => {
+                    setBrowserLoading(false);
+                    console.log(`Successfully loaded: ${browserUrl}`);
+                  }}
+                  onError={(e) => {
+                    console.error(`Failed to load iframe: ${browserUrl}`, e);
+                    setBrowserError('This dApp cannot be embedded due to security restrictions. Try opening it externally.');
                     setBrowserLoading(false);
                   }}
                 />
