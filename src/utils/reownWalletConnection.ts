@@ -11,15 +11,34 @@ const loadReownAppKit = async () => {
   if (typeof window === 'undefined') return null;
   
   try {
+    console.log('🔄 Loading ReOWN AppKit modules...');
+    
+    // Test basic module loading first
     const reownModule = await import('@reown/appkit');
+    console.log('📦 Base ReOWN module loaded:', Object.keys(reownModule));
+    
     const ethersModule = await import('@reown/appkit-adapter-ethers');
+    console.log('📦 Ethers adapter module loaded:', Object.keys(ethersModule));
     
     createAppKit = reownModule.createAppKit;
     AppKit = reownModule.AppKit;
     
+    console.log('✅ ReOWN modules loaded successfully:', {
+      createAppKit: !!createAppKit,
+      AppKit: !!AppKit,
+      ethersAdapter: !!ethersModule.ethersAdapter,
+      reownModuleKeys: Object.keys(reownModule),
+      ethersModuleKeys: Object.keys(ethersModule)
+    });
+    
     return { createAppKit, AppKit, ethersAdapter: ethersModule.ethersAdapter };
   } catch (error) {
-    console.warn('Failed to load Reown AppKit:', error);
+    console.error('❌ Failed to load Reown AppKit modules:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return null;
   }
 };
@@ -70,6 +89,7 @@ export class ReownWalletConnection {
     if (typeof window === 'undefined' || this.reownInitialized) return;
 
     try {
+      console.log('🔄 Initializing ReOWN AppKit...');
       const reownModules = await loadReownAppKit();
       if (!reownModules) {
         console.warn('⚠️ Reown AppKit modules not available');
@@ -78,6 +98,17 @@ export class ReownWalletConnection {
 
       const { createAppKit, ethersAdapter } = reownModules;
       const networkConfig = getSeiNetworkConfig(this.isMainnet);
+
+      // Validate required components
+      if (!createAppKit) {
+        throw new Error('createAppKit function not available');
+      }
+      if (!ethersAdapter) {
+        throw new Error('ethersAdapter not available');
+      }
+      if (!reownConfig.projectId) {
+        throw new Error('ReOWN Project ID not configured');
+      }
 
       // Define Sei network for Reown with proper configuration
       const seiNetwork = {
@@ -89,18 +120,31 @@ export class ReownWalletConnection {
         chainNamespace: 'eip155'
       };
 
+      console.log('🌐 Creating ReOWN AppKit with config:', {
+        projectId: reownConfig.projectId,
+        network: seiNetwork,
+        isMainnet: this.isMainnet
+      });
+
+      // Create the ethers adapter instance
+      const adapter = ethersAdapter({
+        networks: [seiNetwork],
+        defaultNetwork: seiNetwork
+      });
+
+      console.log('🔧 Creating AppKit instance...');
+
       // Create the AppKit instance with enhanced mobile support
       this.appKit = createAppKit({
-        adapters: [ethersAdapter],
+        adapters: [adapter],
         projectId: reownConfig.projectId,
         networks: [seiNetwork],
         defaultNetwork: seiNetwork,
         metadata: reownConfig.metadata,
         features: {
-          analytics: true,
+          analytics: false, // Disable analytics for now
           email: false,
           socials: [],
-          emailShowWallets: true,
           swaps: false,
           onramp: false
         },
@@ -114,6 +158,8 @@ export class ReownWalletConnection {
         enableEIP6963: true,
         enableCoinbase: false
       });
+
+      console.log('✅ AppKit created successfully:', !!this.appKit);
 
       this.reownInitialized = true;
       console.log('✅ Reown AppKit initialized successfully for mobile and desktop');
@@ -197,14 +243,20 @@ export class ReownWalletConnection {
   // Enhanced Reown mobile wallet connection
   private async connectReownWallet(): Promise<WalletConnectionResult> {
     try {
+      console.log('🔗 Starting ReOWN wallet connection...');
+      
       // Initialize if not already done
       if (!this.appKit) {
+        console.log('🔄 AppKit not initialized, initializing now...');
         await this.initializeReownAppKit();
       }
 
       if (!this.appKit) {
-        throw new Error('WalletConnect not available. This might be due to network issues. Please check your connection and try again.');
+        console.error('❌ AppKit initialization failed');
+        throw new Error('WalletConnect initialization failed. This could be due to:\n• Network connectivity issues\n• Browser compatibility problems\n• Missing ReOWN configuration\n\nPlease refresh the page and try again.');
       }
+
+      console.log('✅ AppKit ready, proceeding with connection...');
 
       // Check if already connected
       const currentState = this.appKit.getState?.();
