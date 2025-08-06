@@ -70,9 +70,14 @@ const Seilor = () => {
       console.log('✅ Wallet connected successfully:', { address, walletType });
     } catch (error) {
       console.error('❌ ReOWN wallet connection failed:', error);
-      // Don't throw - let the hook handle error state
+      // Error is handled by the hook's state management
     }
   };
+
+  // Get available wallets for display
+  const availableWallets = getAvailableWallets();
+  const installedWallets = availableWallets.filter(w => w.installed);
+  const hasInstalledWallets = installedWallets.length > 0;
   
   const [chatMessages, setChatMessages] = useState([
     {
@@ -290,12 +295,72 @@ const Seilor = () => {
                 </div>
               ) : (
                 <button
-                  onClick={connectWallet}
-                  className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  onClick={() => connectWallet()}
+                  disabled={isConnecting}
+                  className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   <Wallet className="w-4 h-4" />
-                  <span>Connect</span>
+                  <span>
+                    {isConnecting 
+                      ? 'Connecting...' 
+                      : hasInstalledWallets 
+                        ? 'Connect' 
+                        : 'Mobile Wallet'
+                    }
+                  </span>
                 </button>
+              )}
+              
+              {/* Wallet Connection Guidance */}
+              {walletError && !hasInstalledWallets && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mt-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Wallet className="w-3 h-3 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-blue-400 font-medium mb-2">No Desktop Wallets Detected</h4>
+                      <p className="text-slate-300 text-sm mb-3">
+                        No problem! You can still connect using any mobile wallet that supports WalletConnect.
+                      </p>
+                      <div className="space-y-2 text-sm">
+                        <div className="text-slate-400">
+                          <strong className="text-slate-300">Option 1:</strong> Use any mobile wallet (Trust Wallet, MetaMask Mobile, Rainbow, etc.)
+                        </div>
+                        <div className="text-slate-400">
+                          <strong className="text-slate-300">Option 2:</strong> Install a desktop wallet:
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <a 
+                            href="https://finwallet.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 text-xs flex items-center space-x-1"
+                          >
+                            <span>🔗</span>
+                            <span>Fin Wallet</span>
+                          </a>
+                          <a 
+                            href="https://metamask.io" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 text-xs flex items-center space-x-1"
+                          >
+                            <span>🦊</span>
+                            <span>MetaMask</span>
+                          </a>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => connectWallet()}
+                        disabled={isConnecting}
+                        className="mt-3 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        {isConnecting ? 'Opening...' : 'Connect Mobile Wallet'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -1103,10 +1168,16 @@ const Seilor = () => {
                           <span className="text-sm">Not Connected</span>
                         </div>
                         <button
-                          onClick={connectWallet}
-                          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm transition-colors"
+                          onClick={() => connectWallet()}
+                          disabled={isConnecting}
+                          className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white py-2 px-4 rounded-lg text-sm transition-colors"
                         >
-                          Connect Wallet
+                          {isConnecting 
+                            ? 'Connecting...' 
+                            : hasInstalledWallets 
+                              ? 'Connect Wallet' 
+                              : 'Connect Mobile Wallet'
+                          }
                         </button>
                         <p className="text-xs text-slate-400">
                           Connect your wallet here, then launch the dApp for seamless integration.

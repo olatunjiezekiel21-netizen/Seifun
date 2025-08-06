@@ -134,8 +134,18 @@ export class ReownWalletConnection {
         return await this.connectSpecificWallet(preferredWallet);
       }
       
-      // Otherwise, try available wallets in order of preference
-      return await this.connectWithFallback();
+      // Check if any desktop wallets are available first
+      const availableWallets = this.getAvailableWallets();
+      const installedDesktopWallets = availableWallets.filter(w => w.installed && !w.isMobile);
+      
+      if (installedDesktopWallets.length > 0) {
+        // Try desktop wallets if available
+        return await this.connectWithFallback();
+      } else {
+        // No desktop wallets installed, use ReOWN for mobile wallet connection
+        console.log('No desktop wallets detected, opening ReOWN for mobile wallet connection...');
+        return await this.connectReownWallet();
+      }
     } catch (error) {
       throw new Error(`Connection failed: ${error}`);
     }
@@ -161,18 +171,27 @@ export class ReownWalletConnection {
   }
 
   private async connectWithFallback(): Promise<WalletConnectionResult> {
-    const walletPreference = ['fin', 'compass', 'sei', 'keplr', 'metamask', 'reown'];
+    const availableWallets = this.getAvailableWallets();
+    const installedWallets = availableWallets.filter(w => w.installed && !w.isMobile);
     
-    for (const walletId of walletPreference) {
+    // Try installed desktop wallets first
+    for (const wallet of installedWallets) {
       try {
-        return await this.connectSpecificWallet(walletId);
+        console.log(`Attempting to connect with ${wallet.name}...`);
+        return await this.connectSpecificWallet(wallet.id);
       } catch (error) {
-        console.log(`Failed to connect with ${walletId}:`, error);
+        console.log(`Failed to connect with ${wallet.name}:`, error);
         continue;
       }
     }
     
-    throw new Error('No compatible wallet found. Please install Fin, Compass, Keplr, MetaMask, Sei Wallet, or use a mobile wallet via QR code.');
+    // If no desktop wallets work, fall back to ReOWN
+    console.log('Desktop wallet connections failed, trying ReOWN for mobile wallets...');
+    try {
+      return await this.connectReownWallet();
+    } catch (error) {
+      throw new Error('No compatible wallet found. Please install a Sei-compatible wallet extension or use a mobile wallet that supports WalletConnect.');
+    }
   }
 
   // Enhanced Reown mobile wallet connection
@@ -184,7 +203,7 @@ export class ReownWalletConnection {
       }
 
       if (!this.appKit) {
-        throw new Error('Reown AppKit not available. Please install a mobile wallet app or use a desktop wallet.');
+        throw new Error('WalletConnect not available. This might be due to network issues. Please check your connection and try again.');
       }
 
       // Check if already connected
