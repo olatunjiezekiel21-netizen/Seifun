@@ -193,25 +193,87 @@ const Seilor = () => {
     setBrowserHistory(newHistory);
     setBrowserHistoryIndex(newHistory.length - 1);
 
-    // Perform safety analysis
+    // Perform real safety analysis based on dApp data
     if (isSafeBrowsingMode) {
       try {
-        // Simulate dApp safety analysis
+        // Real safety analysis based on dApp characteristics
+        let safetyScore = 50; // Base score
+        const warnings = [];
+        const recommendations = [
+          'Always verify transaction details before signing',
+          'Keep your wallet secure and never share private keys',
+          'Start with small amounts when using new protocols'
+        ];
+
+        // SSL/HTTPS check
+        const hasSSL = dapp.url.startsWith('https://');
+        if (hasSSL) safetyScore += 15;
+        else warnings.push('Site does not use HTTPS encryption');
+
+        // Featured/verified protocols get higher scores
+        if (dapp.featured) safetyScore += 20;
+        
+        // Status check
+        if (dapp.status === 'Live') safetyScore += 10;
+        else warnings.push('Protocol status is not fully live');
+
+        // TVL-based scoring (higher TVL = more established)
+        const tvlValue = parseFloat(dapp.tvl.replace(/[^0-9.]/g, ''));
+        if (tvlValue > 100) safetyScore += 15;
+        else if (tvlValue > 10) safetyScore += 10;
+        else if (tvlValue > 1) safetyScore += 5;
+        else warnings.push('Low total value locked (TVL)');
+
+        // User count scoring
+        const userCount = parseFloat(dapp.users.replace(/[^0-9.]/g, ''));
+        if (userCount > 10000) safetyScore += 10;
+        else if (userCount > 1000) safetyScore += 5;
+        else warnings.push('Limited user base');
+
+        // Category-specific checks
+        if (dapp.category === 'DeFi') {
+          recommendations.push('Review smart contract audits before providing liquidity');
+          recommendations.push('Understand impermanent loss risks in liquidity pools');
+        } else if (dapp.category === 'NFT') {
+          recommendations.push('Verify NFT authenticity and creator reputation');
+          recommendations.push('Be aware of gas fees for minting and trading');
+        }
+
+        // Domain reputation (basic check)
+        const knownSafeDomains = ['astroport.fi', 'dragonswap.app'];
+        const domain = new URL(dapp.url).hostname;
+        if (knownSafeDomains.some(safeDomain => domain.includes(safeDomain))) {
+          safetyScore += 10;
+        }
+
+        // Cap the score at 100
+        safetyScore = Math.min(100, safetyScore);
+
         const analysis = {
-          safetyScore: Math.floor(Math.random() * 40) + 60, // 60-100 range
-          isVerified: Math.random() > 0.3,
-          hasSSL: dapp.url.startsWith('https://'),
-          reputation: dapp.featured ? 'Excellent' : 'Good',
-          warnings: [],
-          recommendations: [
-            'Always verify transaction details before signing',
-            'Keep your wallet secure and never share private keys',
-            'Start with small amounts when using new protocols'
-          ]
+          safetyScore,
+          isVerified: dapp.featured && hasSSL && safetyScore >= 80,
+          hasSSL,
+          reputation: safetyScore >= 90 ? 'Excellent' : safetyScore >= 75 ? 'Very Good' : safetyScore >= 60 ? 'Good' : 'Caution Advised',
+          warnings,
+          recommendations
         };
+        
         setDAppAnalysis(analysis);
       } catch (error) {
         console.warn('Failed to analyze dApp:', error);
+        // Fallback analysis
+        setDAppAnalysis({
+          safetyScore: 70,
+          isVerified: false,
+          hasSSL: dapp.url.startsWith('https://'),
+          reputation: 'Unknown',
+          warnings: ['Unable to perform complete safety analysis'],
+          recommendations: [
+            'Exercise extra caution with this protocol',
+            'Verify all transaction details carefully',
+            'Consider using smaller amounts initially'
+          ]
+        });
       }
     }
 
@@ -1060,15 +1122,15 @@ const Seilor = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex">
+            <div className="flex-1 flex flex-col lg:flex-row">
               {/* Left Panel - dApp Info & Actions */}
-              <div className="w-96 bg-slate-800/50 border-r border-slate-700 p-6 overflow-y-auto">
+              <div className="w-full lg:w-96 bg-slate-800/50 border-b lg:border-b-0 lg:border-r border-slate-700 p-4 lg:p-6 overflow-y-auto">
                 <div className="space-y-6">
                   {/* dApp Stats */}
                   {(() => {
                     const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
                     return currentDapp ? (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
                         <div className="bg-slate-700/50 rounded-lg p-3 text-center">
                           <div className="text-sm text-slate-400">TVL</div>
                           <div className="text-lg font-semibold text-green-400">{currentDapp.tvl}</div>
@@ -1294,18 +1356,18 @@ const Seilor = () => {
               {/* Right Panel - Preview & Analytics */}
               <div className="flex-1 bg-slate-900/50 flex flex-col">
                 {/* Preview Header */}
-                <div className="bg-slate-800/30 border-b border-slate-700 px-6 py-4">
-                  <div className="flex items-center justify-between">
+                <div className="bg-slate-800/30 border-b border-slate-700 px-4 lg:px-6 py-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-2 lg:space-y-0">
                     <h3 className="text-lg font-semibold text-white">Protocol Overview</h3>
                     <div className="flex items-center space-x-2 text-sm text-slate-400">
                       <Globe className="w-4 h-4" />
-                      <span className="font-mono">{new URL(browserUrl).hostname}</span>
+                      <span className="font-mono text-xs lg:text-sm break-all lg:break-normal">{new URL(browserUrl).hostname}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Preview Content */}
-                <div className="flex-1 flex items-center justify-center p-8">
+                <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
                   <div className="text-center max-w-md">
                     {(() => {
                       const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);

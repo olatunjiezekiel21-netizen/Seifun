@@ -55,12 +55,16 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   // Use ReOWN wallet for production
   const reownWallet = useReownWallet();
   
-  // For now, use private key wallet for easy testing (always connected)
-  const isConnected = privateKeyWallet.isConnected;
-  const address = privateKeyWallet.address;
-  const connectWallet = () => {
-    // Private key wallet is always connected, so this is just for UI consistency
-    console.log('Private key wallet is already connected:', address);
+  // Use ReOWN wallet for consistent connection across app, fallback to private key for dev
+  const isConnected = reownWallet.isConnected || privateKeyWallet.isConnected;
+  const address = reownWallet.address || privateKeyWallet.address;
+  const connectWallet = async () => {
+    if (reownWallet.error) {
+      reownWallet.clearError();
+    }
+    if (!reownWallet.isConnected) {
+      await reownWallet.connectWallet();
+    }
   };
   
   const [currentStep, setCurrentStep] = useState(1);
@@ -274,12 +278,17 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
       }
       
       // Real implementation using connected wallet (production)
-      if (!window.ethereum) {
-        throw new Error('Please install MetaMask or use a compatible wallet');
+      if (reownWallet.isConnected) {
+        // Use ReOWN wallet connection
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+      } else if (privateKeyWallet.isConnected) {
+        // Fallback to private key wallet for development
+        signer = privateKeyWallet.getSigner();
+        provider = signer.provider;
+      } else {
+        throw new Error('Please connect your wallet first');
       }
-      
-      provider = new ethers.BrowserProvider(window.ethereum);
-      signer = await provider.getSigner();
       
       const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS_MAINNET;
       const FACTORY_ABI = [
@@ -774,22 +783,44 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
             {!isConnected ? (
               <div className="text-center py-12">
                 <Shield className="w-16 h-16 app-text-muted mx-auto mb-4" />
-                <h3 className="app-heading-md app-text-primary mb-4">Dev Wallet Ready</h3>
+                <h3 className="app-heading-md app-text-primary mb-4">Connect Your Wallet</h3>
                 <p className="app-text-muted mb-6">
-                  Using development wallet for SeiList token creation
+                  Connect your wallet to create and list tokens on SeiList
                 </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                
+                {reownWallet.error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-red-700">
+                      <strong>Connection Error:</strong> {reownWallet.error}
+                    </p>
+                    <button
+                      onClick={reownWallet.clearError}
+                      className="text-xs text-red-600 underline mt-1"
+                    >
+                      Clear Error
+                    </button>
+                  </div>
+                )}
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                   <p className="text-sm text-blue-700">
-                    <strong>Development Mode:</strong> SeiList uses a pre-configured wallet for testing. 
-                    Your tokens will be created on Sei testnet.
+                    <strong>SeiList:</strong> Connect your wallet to create real tokens on Sei testnet.
+                    Your wallet will be used for transactions and token ownership.
                   </p>
                 </div>
+                
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={connectWallet}
+                  disabled={reownWallet.isConnecting}
                   className="app-btn app-btn-primary"
                 >
-                  Refresh Page
+                  {reownWallet.isConnecting ? 'Connecting...' : 'Connect Wallet'}
                 </button>
+                
+                {/* Dev wallet info */}
+                <div className="mt-4 text-xs text-slate-500">
+                  <p>Development fallback available for testing</p>
+                </div>
               </div>
             ) : (
               <>

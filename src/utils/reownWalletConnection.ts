@@ -799,12 +799,13 @@ export const useReownWallet = () => {
     try {
       const result = await walletConnection.connect(preferredWallet);
       
+      // Clear any previous errors and set connected state
       setWalletState({
         isConnected: true,
         address: result.address,
         balance: result.balance || '0',
         isConnecting: false,
-        error: null,
+        error: null, // Explicitly clear errors
         walletType: result.walletType,
         chainId: result.chainId,
       });
@@ -822,12 +823,17 @@ export const useReownWallet = () => {
         }
       }
     } catch (error) {
+      console.error('Wallet connection error:', error);
       setWalletState(prev => ({
         ...prev,
         isConnecting: false,
         error: error instanceof Error ? error.message : 'Connection failed',
       }));
     }
+  };
+
+  const clearError = () => {
+    setWalletState(prev => ({ ...prev, error: null }));
   };
 
   const disconnectWallet = async () => {
@@ -902,6 +908,7 @@ export const useReownWallet = () => {
     ...walletState,
     connectWallet,
     disconnectWallet,
+    clearError,
     refreshBalance,
     getAvailableWallets,
     resetWalletState, // For troubleshooting
