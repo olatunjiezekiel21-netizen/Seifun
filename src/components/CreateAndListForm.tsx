@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ethers } from 'ethers';
 import { useReownWallet } from '../utils/reownWalletConnection';
+import { usePrivateKeyWallet } from '../utils/privateKeyWallet';
 
 interface TokenFormData {
   name: string;
@@ -43,8 +44,14 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   const useTestnet = import.meta.env.VITE_USE_TESTNET_FOR_SEILIST === 'true';
   const devWallet = import.meta.env.VITE_DEV_WALLET;
   
-  // Use unified wallet connection for all modes
-  const { isConnected, address, connectWallet } = useReownWallet();
+  // Use private key wallet for testing
+  const privateKeyWallet = usePrivateKeyWallet();
+  
+  // Use ReOWN wallet for production
+  const reownWallet = useReownWallet();
+  
+  // For now, use private key wallet for easy testing
+  const { isConnected, address, connectWallet } = privateKeyWallet;
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

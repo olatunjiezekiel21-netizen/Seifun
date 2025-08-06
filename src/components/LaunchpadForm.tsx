@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Upload, Shield, Rocket, Lock, Users, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { ethers } from 'ethers';
 import { useReownWallet } from '../utils/reownWalletConnection';
+import { usePrivateKeyWallet } from '../utils/privateKeyWallet';
 
 // Factory contract ABI (simplified)
 const FACTORY_ABI = [
@@ -40,8 +41,14 @@ const LaunchpadForm = () => {
   const useTestnet = import.meta.env.VITE_USE_TESTNET_FOR_LAUNCHPAD === 'true';
   const devWallet = import.meta.env.VITE_DEV_WALLET;
   
-  // Use unified wallet connection for all modes
-  const { isConnected, address, connectWallet } = useReownWallet();
+  // Use private key wallet for testing
+  const privateKeyWallet = usePrivateKeyWallet();
+  
+  // Use ReOWN wallet for production
+  const reownWallet = useReownWallet();
+  
+  // For now, use private key wallet for easy testing
+  const { isConnected, address, connectWallet } = privateKeyWallet;
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

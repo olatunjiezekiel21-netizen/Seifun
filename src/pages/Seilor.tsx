@@ -453,14 +453,9 @@ const Seilor = () => {
                       >
                         <div className="flex items-start space-x-4">
                           <div className="relative">
-                            <img 
-                              src={dapp.image} 
-                              alt={dapp.name}
-                              className="w-14 h-14 rounded-xl object-cover border-2 border-slate-600 group-hover:border-red-500/50 transition-colors"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/Seifu.png';
-                              }}
-                            />
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-slate-600 group-hover:border-red-500/50 transition-colors">
+                              <Globe className="w-7 h-7 text-white" />
+                            </div>
                             {dapp.status === 'Live' && (
                               <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-800"></div>
                             )}
@@ -535,14 +530,9 @@ const Seilor = () => {
                         <tr key={dapp.id} className="hover:bg-slate-700/20 transition-colors group">
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
-                              <img 
-                                src={dapp.image} 
-                                alt={dapp.name}
-                                className="w-10 h-10 rounded-lg object-cover border border-slate-600"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = '/Seifu.png';
-                                }}
-                              />
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-slate-600">
+                                <Globe className="w-5 h-5 text-white" />
+                              </div>
                               <div>
                                 <div className="flex items-center space-x-2">
                                   <div className="font-medium text-white">{dapp.name}</div>
@@ -597,14 +587,9 @@ const Seilor = () => {
                       className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-700/50 transition-colors cursor-pointer"
                     >
                       <div className="flex items-start space-x-3">
-                        <img 
-                          src={dapp.image} 
-                          alt={dapp.name}
-                          className="w-12 h-12 rounded-lg object-cover border border-slate-600"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/Seifu.png';
-                          }}
-                        />
+                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-slate-600">
+                          <Globe className="w-6 h-6 text-white" />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
                             <h3 className="font-medium text-white">{dapp.name}</h3>
@@ -975,14 +960,9 @@ const Seilor = () => {
                     const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
                     return currentDapp ? (
                       <>
-                        <img 
-                          src={currentDapp.image} 
-                          alt={currentDapp.name}
-                          className="w-12 h-12 rounded-xl object-cover border-2 border-slate-600"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/Seifu.png';
-                          }}
-                        />
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-slate-600">
+                          <Globe className="w-6 h-6 text-white" />
+                        </div>
                         <div>
                           <div className="flex items-center space-x-2">
                             <h2 className="text-xl font-bold text-white">{currentDapp.name}</h2>
@@ -1084,10 +1064,19 @@ const Seilor = () => {
                     {/* Primary Launch Button */}
                     <button
                       onClick={() => {
-                        // Track launch for analytics
-                        console.log(`Launching ${browserTitle} externally`);
-                        window.open(browserUrl, '_blank', 'noopener,noreferrer');
-                        setShowBrowser(false);
+                        // Show consent dialog
+                        const confirmed = window.confirm(
+                          `You are about to leave Seifun and visit ${browserTitle}.\n\n` +
+                          `This will open ${browserUrl} in a new tab.\n\n` +
+                          `Seifun is not responsible for the content or security of external websites.\n\n` +
+                          `Do you want to continue?`
+                        );
+                        
+                        if (confirmed) {
+                          console.log(`User consented to launch ${browserTitle} externally`);
+                          window.open(browserUrl, '_blank', 'noopener,noreferrer');
+                          setShowBrowser(false);
+                        }
                       }}
                       className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-3"
                     >

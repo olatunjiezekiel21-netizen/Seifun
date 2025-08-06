@@ -11,34 +11,23 @@ const loadReownAppKit = async () => {
   if (typeof window === 'undefined') return null;
   
   try {
-    console.log('🔄 Loading ReOWN AppKit modules...');
+    console.log('🔄 Loading simplified ReOWN WalletConnect...');
     
-    // Test basic module loading first
+    // Only load the basic WalletConnect modal
     const reownModule = await import('@reown/appkit');
-    console.log('📦 Base ReOWN module loaded:', Object.keys(reownModule));
-    
-    const ethersModule = await import('@reown/appkit-adapter-ethers');
-    console.log('📦 Ethers adapter module loaded:', Object.keys(ethersModule));
+    console.log('📦 ReOWN WalletConnect loaded');
     
     createAppKit = reownModule.createAppKit;
     AppKit = reownModule.AppKit;
     
-    console.log('✅ ReOWN modules loaded successfully:', {
+    console.log('✅ ReOWN WalletConnect ready:', {
       createAppKit: !!createAppKit,
-      AppKit: !!AppKit,
-      ethersAdapter: !!ethersModule.ethersAdapter,
-      reownModuleKeys: Object.keys(reownModule),
-      ethersModuleKeys: Object.keys(ethersModule)
+      AppKit: !!AppKit
     });
     
-    return { createAppKit, AppKit, ethersAdapter: ethersModule.ethersAdapter };
+    return { createAppKit, AppKit };
   } catch (error) {
-    console.error('❌ Failed to load Reown AppKit modules:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
+    console.error('❌ Failed to load ReOWN WalletConnect:', error);
     return null;
   }
 };
@@ -100,64 +89,35 @@ export class ReownWalletConnection {
     }
 
     try {
-      console.log('🔄 Initializing ReOWN AppKit...');
+      console.log('🔄 Initializing simple WalletConnect...');
       
       // Clear any existing instance
       this.appKit = null;
       
       const reownModules = await loadReownAppKit();
       if (!reownModules) {
-        console.warn('⚠️ Reown AppKit modules not available');
-        throw new Error('ReOWN modules failed to load');
+        console.warn('⚠️ ReOWN WalletConnect not available');
+        throw new Error('ReOWN WalletConnect failed to load');
       }
 
-      const { createAppKit, ethersAdapter } = reownModules;
-      const networkConfig = getSeiNetworkConfig(this.isMainnet);
+      const { createAppKit } = reownModules;
 
       // Validate required components
       if (!createAppKit) {
         throw new Error('createAppKit function not available');
       }
-      if (!ethersAdapter) {
-        throw new Error('ethersAdapter not available');
-      }
       if (!reownConfig.projectId) {
         throw new Error('ReOWN Project ID not configured');
       }
 
-      // Define Sei network for Reown with proper configuration
-      const seiNetwork = {
-        chainId: networkConfig.chainId,
-        name: networkConfig.networkName,
-        currency: networkConfig.nativeCurrency.symbol,
-        explorerUrl: networkConfig.blockExplorerUrl,
-        rpcUrl: networkConfig.rpcUrl,
-        chainNamespace: 'eip155'
-      };
+      console.log('🔧 Creating simple WalletConnect modal...');
 
-      console.log('🌐 Creating ReOWN AppKit with config:', {
-        projectId: reownConfig.projectId,
-        network: seiNetwork,
-        isMainnet: this.isMainnet
-      });
-
-      // Create the ethers adapter instance
-      const adapter = ethersAdapter({
-        networks: [seiNetwork],
-        defaultNetwork: seiNetwork
-      });
-
-      console.log('🔧 Creating AppKit instance...');
-
-      // Create the AppKit instance with enhanced mobile support
+      // Create simple WalletConnect modal (no adapters, just pure WalletConnect)
       this.appKit = createAppKit({
-        adapters: [adapter],
         projectId: reownConfig.projectId,
-        networks: [seiNetwork],
-        defaultNetwork: seiNetwork,
         metadata: reownConfig.metadata,
         features: {
-          analytics: false, // Disable analytics for stability
+          analytics: false,
           email: false,
           socials: [],
           swaps: false,
@@ -167,14 +127,10 @@ export class ReownWalletConnection {
         themeVariables: {
           '--w3m-font-family': 'Inter, system-ui, sans-serif',
           '--w3m-accent': '#4F46E5'
-        },
-        enableWalletConnect: true,
-        enableInjected: true,
-        enableEIP6963: true,
-        enableCoinbase: false
+        }
       });
 
-      console.log('✅ AppKit created successfully:', !!this.appKit);
+      console.log('✅ Simple WalletConnect modal created:', !!this.appKit);
 
       // Only set initialized to true if AppKit was actually created
       if (this.appKit) {
