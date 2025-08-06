@@ -3,7 +3,7 @@ import {
   Brain, TrendingUp, Zap, Target, Globe, Sparkles, Bot, ChevronRight, ExternalLink, 
   Star, Users, DollarSign, Calendar, AlertCircle, AlertTriangle, Info, Activity, BarChart3, 
   Filter, Search, ArrowUpDown, Eye, MessageCircle, Send, Copy, Bookmark, Shield, X,
-  RefreshCw, ArrowLeft, ArrowRight, Home, Lock, Maximize2, Wallet
+  RefreshCw, ArrowLeft, ArrowRight, Home, Lock, Maximize2, Wallet, Heart
 } from 'lucide-react';
 import { getSeiDApps, getAlphaInsights, getSeiNetworkStats, getDAppCategories, type SeiDApp, type AlphaInsight } from '../utils/seiEcosystemData';
 import { AIChatDataService } from '../utils/aiChatDataService';
@@ -889,233 +889,293 @@ const Seilor = () => {
         </div>
       </div>
 
-            {/* Seamless In-App dApp Browser */}
+            {/* Enhanced dApp Launch Interface */}
       {showBrowser && (
-        <div className="fixed inset-0 bg-slate-900 z-50">
-          {/* Minimal Seilor Header */}
-          <div className="bg-slate-800/95 backdrop-blur-md border-b border-slate-700/50 px-4 py-3">
-            <div className="flex items-center justify-between">
-              {/* dApp Info with Logo */}
-              <div className="flex items-center space-x-3">
-                {(() => {
-                  const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
-                  return currentDapp ? (
-                    <>
-                      <img 
-                        src={currentDapp.image} 
-                        alt={currentDapp.name}
-                        className="w-8 h-8 rounded-lg object-cover"
-                        onError={(e) => {
-                          // Only use Seifun logo as fallback for non-Seifun dApps if their logo fails to load
-                          console.warn(`Failed to load logo for ${currentDapp.name}, using fallback`);
-                          (e.target as HTMLImageElement).src = '/Seifu.png';
-                        }}
-                      />
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-white font-medium">{currentDapp.name}</span>
-                          {currentDapp.featured && (
-                            <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                          )}
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-50">
+          <div className="h-full flex flex-col">
+            {/* Header */}
+            <div className="bg-slate-800/95 backdrop-blur-md border-b border-slate-700/50 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {(() => {
+                    const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
+                    return currentDapp ? (
+                      <>
+                        <img 
+                          src={currentDapp.image} 
+                          alt={currentDapp.name}
+                          className="w-12 h-12 rounded-xl object-cover border-2 border-slate-600"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/Seifu.png';
+                          }}
+                        />
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <h2 className="text-xl font-bold text-white">{currentDapp.name}</h2>
+                            {currentDapp.featured && (
+                              <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-slate-400">
+                            <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs">
+                              {currentDapp.category}
+                            </span>
+                            <span>TVL: {currentDapp.tvl}</span>
+                            <span>Users: {currentDapp.users}</span>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              currentDapp.status === 'Live' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'
+                            }`}>
+                              {currentDapp.status}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2 text-xs text-slate-400">
-                          <span>{currentDapp.category}</span>
-                          <span>•</span>
-                          <span>TVL: {currentDapp.tvl}</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                          <Globe className="w-6 h-6 text-white" />
                         </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <Globe className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <span className="text-white font-medium">{browserTitle}</span>
-                        <div className="text-xs text-slate-400">External dApp</div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Seilor Controls */}
-              <div className="flex items-center space-x-2">
-                {/* Safety Score */}
-                {isSafeBrowsingMode && dAppAnalysis && (
-                  <div className={`flex items-center space-x-2 px-2 py-1 rounded-lg text-xs ${
-                    dAppAnalysis.safetyScore >= 80 ? 'bg-green-500/20 text-green-400' : 
-                    dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
-                  }`}>
-                    <Shield className="w-3 h-3" />
-                    <span>{dAppAnalysis.safetyScore}/100</span>
-                  </div>
-                )}
-
-                {/* Navigation Controls */}
-                <button
-                  onClick={navigateBack}
-                  disabled={browserHistoryIndex <= 0}
-                  className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4 text-slate-300" />
-                </button>
-                <button
-                  onClick={navigateForward}
-                  disabled={browserHistoryIndex >= browserHistory.length - 1}
-                  className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                >
-                  <ArrowRight className="w-4 h-4 text-slate-300" />
-                </button>
-                <button
-                  onClick={refreshBrowser}
-                  className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                >
-                  <RefreshCw className={`w-4 h-4 text-slate-300 ${browserLoading ? 'animate-spin' : ''}`} />
-                </button>
-
-                {/* SafeChecker */}
-                <button
-                  onClick={() => window.open(`/app/safechecker?url=${encodeURIComponent(browserUrl)}`, '_blank')}
-                  className="flex items-center space-x-1 px-2 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs hover:bg-purple-500/30 transition-colors"
-                >
-                  <Shield className="w-3 h-3" />
-                  <span>Scan</span>
-                </button>
-
-                {/* External Browser */}
-                <button
-                  onClick={() => window.open(browserUrl, '_blank')}
-                  className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                  title="Open in external browser"
-                >
-                  <ExternalLink className="w-4 h-4 text-slate-400" />
-                </button>
-
-                {/* Close */}
+                        <div>
+                          <h2 className="text-xl font-bold text-white">{browserTitle}</h2>
+                          <p className="text-slate-400">External dApp</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                
                 <button
                   onClick={() => setShowBrowser(false)}
-                  className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                  className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
                 >
-                  <X className="w-4 h-4 text-slate-400" />
+                  <X className="w-6 h-6 text-slate-400" />
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Seamless dApp Content */}
-          <div className="h-[calc(100vh-60px)] relative">
-            {browserLoading && (
-              <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center z-10">
-                <div className="flex items-center space-x-3 text-white">
-                  <RefreshCw className="w-6 h-6 animate-spin" />
-                  <span>Loading {browserTitle}...</span>
-                </div>
-              </div>
-            )}
-            
-            {browserError ? (
-              <div className="h-full flex items-center justify-center bg-slate-900">
-                <div className="text-center p-8">
-                  <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2">Unable to Load dApp</h3>
-                  <p className="text-slate-400 mb-4 max-w-md">
-                    This dApp cannot be embedded due to security restrictions. 
-                    Try opening it in an external browser for full functionality.
-                  </p>
-                  <div className="flex items-center justify-center space-x-3">
+            {/* Main Content */}
+            <div className="flex-1 flex">
+              {/* Left Panel - dApp Info & Actions */}
+              <div className="w-96 bg-slate-800/50 border-r border-slate-700 p-6 overflow-y-auto">
+                <div className="space-y-6">
+                  {/* dApp Description */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-3">About This Protocol</h3>
+                    <p className="text-slate-300 leading-relaxed">
+                      {seiDApps.find(dapp => dapp.url === browserUrl)?.description || 
+                       "External decentralized application on the Sei blockchain ecosystem."}
+                    </p>
+                  </div>
+
+                  {/* Safety Analysis */}
+                  {dAppAnalysis && (
+                    <div className="bg-slate-700/50 rounded-xl p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Shield className={`w-5 h-5 ${
+                          dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
+                          dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+                        }`} />
+                        <h4 className="font-semibold text-white">Safety Analysis</h4>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-300">Safety Score</span>
+                          <span className={`font-medium ${
+                            dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
+                            dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+                          }`}>
+                            {dAppAnalysis.safetyScore}/100
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-300">Verified</span>
+                          <span className="text-slate-300">
+                            {dAppAnalysis.isVerified ? '✅' : '❌'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-300">SSL Secure</span>
+                          <span className="text-slate-300">
+                            {dAppAnalysis.hasSSL ? '✅' : '⚠️'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Launch Options */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-white">Launch Options</h3>
+                    
+                    {/* Primary Launch Button */}
                     <button
-                      onClick={refreshBrowser}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                      onClick={() => {
+                        // Track launch for analytics
+                        console.log(`Launching ${browserTitle} externally`);
+                        window.open(browserUrl, '_blank', 'noopener,noreferrer');
+                        setShowBrowser(false);
+                      }}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-3"
                     >
-                      Try Again
+                      <ExternalLink className="w-5 h-5" />
+                      <span>Launch {seiDApps.find(dapp => dapp.url === browserUrl)?.name || 'dApp'}</span>
                     </button>
+
+                    {/* Safety Check Button */}
                     <button
-                      onClick={() => window.open(browserUrl, '_blank')}
-                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                      onClick={() => {
+                        window.open(`/app/safechecker?url=${encodeURIComponent(browserUrl)}`, '_blank');
+                      }}
+                      className="w-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center space-x-2"
                     >
-                      <ExternalLink className="w-4 h-4" />
-                      <span>Open Externally</span>
+                      <Shield className="w-4 h-4" />
+                      <span>Run Safety Check</span>
+                    </button>
+
+                    {/* Add to Favorites */}
+                    <button
+                      onClick={() => {
+                        // Add to user favorites (implement later)
+                        console.log(`Added ${browserTitle} to favorites`);
+                      }}
+                      className="w-full bg-slate-700/50 hover:bg-slate-700 text-slate-300 font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <Heart className="w-4 h-4" />
+                      <span>Add to Favorites</span>
                     </button>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Main iframe - completely seamless with real site loading */}
-                <iframe
-                  src={browserUrl}
-                  className="w-full h-full border-none bg-white"
-                  title={browserTitle}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-top-navigation-by-user-activation"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allow="camera; microphone; geolocation; payment; clipboard-read; clipboard-write; web-share"
-                  loading="eager"
-                  onLoad={() => {
-                    setBrowserLoading(false);
-                    console.log(`Successfully loaded: ${browserUrl}`);
-                  }}
-                  onError={(e) => {
-                    console.error(`Failed to load iframe: ${browserUrl}`, e);
-                    setBrowserError('This dApp cannot be embedded due to security restrictions. Try opening it externally.');
-                    setBrowserLoading(false);
-                  }}
-                />
-                
-                {/* Seilor AI Assistant Overlay (Bottom Right) */}
-                <div className="absolute bottom-4 right-4 z-20">
-                  <button
-                    onClick={() => setActiveTab('ai')}
-                    className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-colors flex items-center space-x-2"
-                  >
-                    <Bot className="w-5 h-5" />
-                    <span className="hidden sm:inline text-sm font-medium">Ask Seilor AI</span>
-                  </button>
-                </div>
 
-                {/* Wallet Connection Prompt (Top Right) */}
-                {!isConnected && (
-                  <div className="absolute top-4 right-4 z-20">
-                    <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg border border-blue-400">
+                  {/* Why External Launch */}
+                  <div className="bg-slate-700/30 rounded-xl p-4">
+                    <h4 className="font-semibold text-white mb-3 flex items-center">
+                      <Info className="w-4 h-4 mr-2" />
+                      Why External Launch?
+                    </h4>
+                    <div className="space-y-2 text-sm text-slate-300">
                       <div className="flex items-center space-x-2">
-                        <Wallet className="w-4 h-4" />
-                        <span className="text-sm">Connect wallet for full dApp experience</span>
-                        <button
-                          onClick={connectWallet}
-                          className="ml-2 bg-white text-blue-500 px-2 py-1 rounded text-xs hover:bg-blue-50 transition-colors"
-                        >
-                          Connect
-                        </button>
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span>Full wallet integration & transaction signing</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span>Complete protocol functionality</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span>Optimal performance & security</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span>No embedding restrictions</span>
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* Safety Warning (if low score) */}
-                {isSafeBrowsingMode && dAppAnalysis && dAppAnalysis.safetyScore < 60 && (
-                  <div className="absolute top-4 left-4 right-4 z-20">
-                    <div className="bg-red-500/90 backdrop-blur-sm text-white px-4 py-3 rounded-lg shadow-lg border border-red-400">
-                      <div className="flex items-center space-x-3">
-                        <AlertTriangle className="w-5 h-5" />
-                        <div className="flex-1">
-                          <div className="font-medium">Safety Warning</div>
-                          <div className="text-sm opacity-90">
-                            This dApp has a low safety score ({dAppAnalysis.safetyScore}/100). 
-                            Proceed with caution and avoid large transactions.
-                          </div>
+                  {/* Wallet Status */}
+                  <div className="bg-slate-700/30 rounded-xl p-4">
+                    <h4 className="font-semibold text-white mb-3">Wallet Status</h4>
+                    {isConnected ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2 text-green-400">
+                          <Wallet className="w-4 h-4" />
+                          <span className="text-sm">Connected</span>
+                        </div>
+                        <div className="text-xs text-slate-400 font-mono">
+                          {address?.slice(0, 6)}...{address?.slice(-4)}
+                        </div>
+                        <p className="text-xs text-slate-400">
+                          Your wallet will be automatically available in the external dApp.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2 text-yellow-400">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span className="text-sm">Not Connected</span>
                         </div>
                         <button
-                          onClick={() => setDAppAnalysis(null)}
-                          className="text-white/80 hover:text-white"
+                          onClick={connectWallet}
+                          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm transition-colors"
                         >
-                          <X className="w-4 h-4" />
+                          Connect Wallet
                         </button>
+                        <p className="text-xs text-slate-400">
+                          Connect your wallet here, then launch the dApp for seamless integration.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Panel - Preview & Analytics */}
+              <div className="flex-1 bg-slate-900/50 flex flex-col">
+                {/* Preview Header */}
+                <div className="bg-slate-800/30 border-b border-slate-700 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white">Protocol Overview</h3>
+                    <div className="flex items-center space-x-2 text-sm text-slate-400">
+                      <Globe className="w-4 h-4" />
+                      <span className="font-mono">{new URL(browserUrl).hostname}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview Content */}
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <div className="text-center max-w-md">
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                      <ExternalLink className="w-12 h-12 text-blue-400" />
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold text-white mb-4">
+                      Ready to Launch {seiDApps.find(dapp => dapp.url === browserUrl)?.name || 'dApp'}
+                    </h3>
+                    
+                    <p className="text-slate-400 mb-6 leading-relaxed">
+                      This protocol will open in a new tab with full functionality, 
+                      wallet integration, and optimal performance. Seilor will track 
+                      your interactions for portfolio management.
+                    </p>
+
+                    <div className="flex items-center justify-center space-x-6 text-sm text-slate-500">
+                      <div className="flex items-center space-x-2">
+                        <Shield className="w-4 h-4" />
+                        <span>Secure</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Zap className="w-4 h-4" />
+                        <span>Fast</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Wallet className="w-4 h-4" />
+                        <span>Integrated</span>
                       </div>
                     </div>
                   </div>
-                )}
-              </>
-            )}
+                </div>
+
+                {/* Bottom Actions */}
+                <div className="bg-slate-800/30 border-t border-slate-700 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 text-sm text-slate-400">
+                      <span>🛡️ Protected by Seilor AI</span>
+                      <span>•</span>
+                      <span>📊 Transaction tracking enabled</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setActiveTab('ai')}
+                        className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-2 rounded-lg text-sm transition-colors flex items-center space-x-2"
+                      >
+                        <Bot className="w-4 h-4" />
+                        <span>Ask AI</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
