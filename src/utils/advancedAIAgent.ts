@@ -260,7 +260,7 @@ export class AdvancedAIAgent {
   private async performAdvancedTokenAnalysis(address: string): Promise<TokenAnalysis> {
     try {
       const [scanResult, registryData] = await Promise.all([
-        this.tokenScanner.scanToken(address),
+        this.tokenScanner.analyzeToken(address),
         this.tokenRegistry.getTokenInfo(address)
       ]);
 

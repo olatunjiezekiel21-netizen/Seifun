@@ -47,39 +47,21 @@ const Seilor = () => {
   const [dAppAnalysis, setDAppAnalysis] = useState<any>(null);
   
   // Wallet integration
-  // Primary wallet connection using ReOWN Kit
+  // ReOWN Kit wallet connection (no fallbacks)
   const { 
-    isConnected: reownConnected, 
-    address: reownAddress, 
+    isConnected, 
+    address, 
     connectWallet: connectReownWallet, 
-    disconnectWallet: disconnectReownWallet 
+    disconnectWallet 
   } = useReownWallet();
-  
-  // Fallback unified wallet connection
-  const { 
-    isConnected: unifiedConnected, 
-    address: unifiedAddress, 
-    connectWallet: connectUnifiedWallet, 
-    disconnectWallet: disconnectUnifiedWallet 
-  } = useUnifiedWallet();
 
-  // Use ReOWN as primary, unified as fallback
-  const isConnected = reownConnected || unifiedConnected;
-  const address = reownAddress || unifiedAddress;
+  // Connect wallet using ReOWN Kit only
   const connectWallet = async () => {
     try {
-      await connectReownWallet('reown');
+      await connectReownWallet(); // Let ReOWN detect compatible wallets automatically
     } catch (error) {
-      console.warn('ReOWN connection failed, trying unified wallet:', error);
-      await connectUnifiedWallet();
-    }
-  };
-  const disconnectWallet = async () => {
-    if (reownConnected) {
-      await disconnectReownWallet();
-    }
-    if (unifiedConnected) {
-      await disconnectUnifiedWallet();
+      console.error('ReOWN wallet connection failed:', error);
+      throw error; // Don't fall back, let user know ReOWN is required
     }
   };
   

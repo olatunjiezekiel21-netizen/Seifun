@@ -146,7 +146,7 @@ export class IntelligentAIChat {
   private async analyzeToken(address: string): Promise<TokenAnalysisResult> {
     try {
       const [scanResult, registryData] = await Promise.all([
-        this.tokenScanner.scanToken(address),
+        this.tokenScanner.analyzeToken(address),
         this.tokenRegistry.getTokenInfo(address)
       ]);
 
