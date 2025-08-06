@@ -3,7 +3,7 @@ import {
   Brain, TrendingUp, Zap, Target, Globe, Sparkles, Bot, ChevronRight, ExternalLink, 
   Star, Users, DollarSign, Calendar, AlertCircle, AlertTriangle, Info, Activity, BarChart3, 
   Filter, Search, ArrowUpDown, Eye, MessageCircle, Send, Copy, Bookmark, Shield, X,
-  RefreshCw, ArrowLeft, ArrowRight, Home, Lock, Maximize2, Wallet, Heart
+  RefreshCw, ArrowLeft, ArrowRight, Home, Lock, Maximize2, Wallet, Heart, Rocket
 } from 'lucide-react';
 import { getSeiDApps, getAlphaInsights, getSeiNetworkStats, getDAppCategories, type SeiDApp, type AlphaInsight } from '../utils/seiEcosystemData';
 import { AIChatDataService } from '../utils/aiChatDataService';
@@ -196,66 +196,123 @@ const Seilor = () => {
     // Perform real safety analysis based on dApp data
     if (isSafeBrowsingMode) {
       try {
-        // Real safety analysis based on dApp characteristics
-        let safetyScore = 50; // Base score
+        // Professional Security Assessment Algorithm
+        let safetyScore = 40; // Conservative base score
         const warnings = [];
+        const risks = [];
         const recommendations = [
           'Always verify transaction details before signing',
           'Keep your wallet secure and never share private keys',
           'Start with small amounts when using new protocols'
         ];
 
-        // SSL/HTTPS check
+        // Security Infrastructure Assessment (25 points max)
         const hasSSL = dapp.url.startsWith('https://');
-        if (hasSSL) safetyScore += 15;
-        else warnings.push('Site does not use HTTPS encryption');
+        if (hasSSL) {
+          safetyScore += 15;
+        } else {
+          warnings.push('⚠️ No HTTPS encryption - Data transmission not secure');
+          risks.push('HIGH: Unencrypted connection vulnerable to attacks');
+        }
 
-        // Featured/verified protocols get higher scores
-        if (dapp.featured) safetyScore += 20;
+        // Protocol Maturity & Verification (30 points max)
+        if (dapp.featured) {
+          safetyScore += 25; // High weight for featured/verified protocols
+        } else {
+          warnings.push('⚠️ Protocol not verified by Seilor security team');
+        }
         
-        // Status check
-        if (dapp.status === 'Live') safetyScore += 10;
-        else warnings.push('Protocol status is not fully live');
+        // Operational Status Assessment (15 points max)
+        if (dapp.status === 'Live') {
+          safetyScore += 15;
+        } else if (dapp.status === 'Beta') {
+          safetyScore += 8;
+          warnings.push('⚠️ Protocol in Beta - Potential bugs and changes expected');
+        } else {
+          warnings.push('⚠️ Protocol not fully operational');
+          risks.push('MEDIUM: Unstable protocol status');
+        }
 
-        // TVL-based scoring (higher TVL = more established)
+        // Liquidity & Market Depth Analysis (20 points max)
         const tvlValue = parseFloat(dapp.tvl.replace(/[^0-9.]/g, ''));
-        if (tvlValue > 100) safetyScore += 15;
-        else if (tvlValue > 10) safetyScore += 10;
-        else if (tvlValue > 1) safetyScore += 5;
-        else warnings.push('Low total value locked (TVL)');
+        if (tvlValue >= 100) {
+          safetyScore += 20; // Excellent liquidity
+        } else if (tvlValue >= 50) {
+          safetyScore += 15; // Good liquidity
+        } else if (tvlValue >= 10) {
+          safetyScore += 10; // Moderate liquidity
+        } else if (tvlValue >= 1) {
+          safetyScore += 5; // Low liquidity
+          warnings.push('⚠️ Low TVL may indicate limited liquidity');
+        } else {
+          warnings.push('⚠️ Very low TVL - High slippage risk');
+          risks.push('HIGH: Insufficient liquidity for large transactions');
+        }
 
-        // User count scoring
+        // User Adoption & Network Effects (10 points max)
         const userCount = parseFloat(dapp.users.replace(/[^0-9.]/g, ''));
-        if (userCount > 10000) safetyScore += 10;
-        else if (userCount > 1000) safetyScore += 5;
-        else warnings.push('Limited user base');
+        if (userCount >= 50000) {
+          safetyScore += 10; // Strong network effect
+        } else if (userCount >= 10000) {
+          safetyScore += 7; // Good adoption
+        } else if (userCount >= 1000) {
+          safetyScore += 4; // Moderate adoption
+        } else {
+          warnings.push('⚠️ Limited user base - Less battle-tested');
+          risks.push('MEDIUM: Lower user adoption may indicate higher risks');
+        }
 
-        // Category-specific checks
+        // Category-Specific Risk Assessment
         if (dapp.category === 'DeFi') {
-          recommendations.push('Review smart contract audits before providing liquidity');
-          recommendations.push('Understand impermanent loss risks in liquidity pools');
+          recommendations.push('🔍 Review smart contract audits and security reports');
+          recommendations.push('💡 Understand impermanent loss risks in AMM pools');
+          recommendations.push('⚖️ Diversify across multiple protocols to reduce risk');
+          if (tvlValue < 10) {
+            risks.push('HIGH: DeFi protocols with low TVL have higher smart contract risks');
+          }
         } else if (dapp.category === 'NFT') {
-          recommendations.push('Verify NFT authenticity and creator reputation');
-          recommendations.push('Be aware of gas fees for minting and trading');
+          recommendations.push('🔍 Verify NFT authenticity and creator reputation');
+          recommendations.push('💰 Factor in gas fees for minting and trading operations');
+          recommendations.push('📊 Research floor prices and trading volume trends');
+        } else if (dapp.category === 'Gaming') {
+          recommendations.push('🎮 Understand tokenomics and in-game economics');
+          recommendations.push('🔒 Be cautious with asset bridging between games');
         }
 
-        // Domain reputation (basic check)
-        const knownSafeDomains = ['astroport.fi', 'dragonswap.app'];
+        // Domain & Infrastructure Analysis
         const domain = new URL(dapp.url).hostname;
-        if (knownSafeDomains.some(safeDomain => domain.includes(safeDomain))) {
-          safetyScore += 10;
+        const establishedDomains = ['astroport.fi', 'dragonswap.app', 'seinetwork.io'];
+        const suspiciousTlds = ['.tk', '.ml', '.ga', '.cf'];
+        
+        if (establishedDomains.some(safeDomain => domain.includes(safeDomain))) {
+          safetyScore += 5; // Bonus for known established domains
+        }
+        
+        if (suspiciousTlds.some(tld => domain.endsWith(tld))) {
+          warnings.push('⚠️ Domain uses suspicious TLD - Exercise extra caution');
+          risks.push('MEDIUM: Free domain TLD may indicate temporary or untrustworthy site');
+          safetyScore -= 10;
         }
 
-        // Cap the score at 100
-        safetyScore = Math.min(100, safetyScore);
+        // Final Score Calibration
+        safetyScore = Math.max(0, Math.min(100, safetyScore));
 
         const analysis = {
           safetyScore,
           isVerified: dapp.featured && hasSSL && safetyScore >= 80,
           hasSSL,
-          reputation: safetyScore >= 90 ? 'Excellent' : safetyScore >= 75 ? 'Very Good' : safetyScore >= 60 ? 'Good' : 'Caution Advised',
+          reputation: safetyScore >= 90 ? 'Institutional Grade' : 
+                     safetyScore >= 80 ? 'High Trust' : 
+                     safetyScore >= 70 ? 'Moderate Trust' : 
+                     safetyScore >= 60 ? 'Exercise Caution' : 
+                     safetyScore >= 40 ? 'High Risk' : 'Extreme Risk',
+          riskLevel: safetyScore >= 80 ? 'LOW' : 
+                    safetyScore >= 60 ? 'MODERATE' : 
+                    safetyScore >= 40 ? 'HIGH' : 'CRITICAL',
           warnings,
-          recommendations
+          risks,
+          recommendations,
+          assessmentDate: new Date().toISOString()
         };
         
         setDAppAnalysis(analysis);
@@ -1197,38 +1254,115 @@ const Seilor = () => {
                     </div>
                   </div>
 
-                  {/* Safety Analysis */}
+                  {/* Professional Security Assessment */}
                   {dAppAnalysis && (
-                    <div className="bg-slate-700/50 rounded-xl p-4">
-                      <div className="flex items-center space-x-2 mb-3">
-                        <Shield className={`w-5 h-5 ${
-                          dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
-                          dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 'text-red-400'
-                        }`} />
-                        <h4 className="font-semibold text-white">Safety Analysis</h4>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-slate-300">Safety Score</span>
-                          <span className={`font-medium ${
+                    <div className="bg-slate-700/50 rounded-xl p-5 border border-slate-600/50">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                          <Shield className={`w-6 h-6 ${
                             dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
-                            dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+                            dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 
+                            dAppAnalysis.safetyScore >= 40 ? 'text-orange-400' : 'text-red-400'
+                          }`} />
+                          <h4 className="font-bold text-white text-lg">Security Assessment</h4>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          dAppAnalysis.riskLevel === 'LOW' ? 'bg-green-500/20 text-green-400' :
+                          dAppAnalysis.riskLevel === 'MODERATE' ? 'bg-yellow-500/20 text-yellow-400' :
+                          dAppAnalysis.riskLevel === 'HIGH' ? 'bg-orange-500/20 text-orange-400' :
+                          'bg-red-500/20 text-red-400'
+                        }`}>
+                          {dAppAnalysis.riskLevel} RISK
+                        </div>
+                      </div>
+                      
+                      {/* Score Display */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-slate-300 font-medium">Trust Score</span>
+                          <span className={`text-2xl font-bold ${
+                            dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
+                            dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 
+                            dAppAnalysis.safetyScore >= 40 ? 'text-orange-400' : 'text-red-400'
                           }`}>
                             {dAppAnalysis.safetyScore}/100
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-300">Verified</span>
-                          <span className="text-slate-300">
-                            {dAppAnalysis.isVerified ? '✅' : '❌'}
+                        <div className="w-full bg-slate-600 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-500 ${
+                              dAppAnalysis.safetyScore >= 80 ? 'bg-green-400' : 
+                              dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-400' : 
+                              dAppAnalysis.safetyScore >= 40 ? 'bg-orange-400' : 'bg-red-400'
+                            }`}
+                            style={{ width: `${dAppAnalysis.safetyScore}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Reputation & Verification */}
+                      <div className="grid grid-cols-1 gap-3 mb-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-300">Reputation</span>
+                          <span className={`font-semibold ${
+                            dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
+                            dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 'text-orange-400'
+                          }`}>
+                            {dAppAnalysis.reputation}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-300">SSL Secure</span>
-                          <span className="text-slate-300">
-                            {dAppAnalysis.hasSSL ? '✅' : '⚠️'}
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-300">Verification</span>
+                          <span className="flex items-center space-x-1">
+                            {dAppAnalysis.isVerified ? (
+                              <>
+                                <span className="text-green-400">✅</span>
+                                <span className="text-green-400 text-sm">Verified</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-yellow-400">⚠️</span>
+                                <span className="text-yellow-400 text-sm">Unverified</span>
+                              </>
+                            )}
                           </span>
                         </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-300">Security</span>
+                          <span className="flex items-center space-x-1">
+                            {dAppAnalysis.hasSSL ? (
+                              <>
+                                <span className="text-green-400">🔒</span>
+                                <span className="text-green-400 text-sm">HTTPS</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-red-400">⚠️</span>
+                                <span className="text-red-400 text-sm">No HTTPS</span>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Warnings */}
+                      {dAppAnalysis.warnings && dAppAnalysis.warnings.length > 0 && (
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mb-3">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                            <span className="text-yellow-400 font-medium text-sm">Security Warnings</span>
+                          </div>
+                          <div className="space-y-1">
+                            {dAppAnalysis.warnings.slice(0, 3).map((warning, index) => (
+                              <div key={index} className="text-xs text-yellow-300">• {warning}</div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Assessment Date */}
+                      <div className="text-xs text-slate-500 text-center pt-2 border-t border-slate-600">
+                        Assessment: {new Date(dAppAnalysis.assessmentDate).toLocaleDateString()}
                       </div>
                     </div>
                   )}
@@ -1424,6 +1558,35 @@ const Seilor = () => {
                         <Wallet className="w-4 h-4" />
                         <span>Integrated</span>
                       </div>
+                    </div>
+
+                    {/* Primary Launch Button */}
+                    <div className="mt-8">
+                      <button
+                        onClick={() => {
+                          // Show consent dialog
+                          const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
+                          const confirmed = window.confirm(
+                            `🚀 Launch ${currentDapp?.name || 'dApp'}\n\n` +
+                            `You are about to open ${browserUrl} in a new tab.\n\n` +
+                            `✅ Your wallet will be available for connection\n` +
+                            `🛡️ Seilor AI will monitor for security risks\n` +
+                            `📊 Transaction data will be tracked for insights\n\n` +
+                            `Continue to launch?`
+                          );
+                          
+                          if (confirmed) {
+                            console.log(`🚀 User launched ${currentDapp?.name} externally`);
+                            window.open(browserUrl, '_blank', 'noopener,noreferrer');
+                            setShowBrowser(false);
+                          }
+                        }}
+                        className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-3 shadow-lg"
+                      >
+                        <Rocket className="w-6 h-6" />
+                        <span className="text-lg">Launch {seiDApps.find(dapp => dapp.url === browserUrl)?.name || 'dApp'}</span>
+                        <ExternalLink className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
                 </div>

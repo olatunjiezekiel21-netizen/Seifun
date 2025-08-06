@@ -762,7 +762,7 @@ export const useReownWallet = () => {
     }
   }, [walletConnection]);
 
-  // Restore connection on mount
+  // Restore connection and set up event listeners
   useEffect(() => {
     if (!walletConnection || typeof window === 'undefined' || typeof localStorage === 'undefined') return;
 
@@ -788,7 +788,59 @@ export const useReownWallet = () => {
       }
     };
 
+    // Set up AppKit event listeners for real-time state updates
+    const setupEventListeners = () => {
+      if (walletConnection.appKit) {
+        try {
+          // Listen for account changes
+          walletConnection.appKit.subscribeAccount((account: any) => {
+            console.log('🔄 Account state changed:', account);
+            if (account.address && account.isConnected) {
+              // Update wallet state when account connects
+              walletConnection.getBalance(account.address).then(balance => {
+                setWalletState({
+                  isConnected: true,
+                  address: account.address,
+                  balance,
+                  isConnecting: false,
+                  error: null,
+                  walletType: 'ReOWN',
+                  chainId: account.chainId,
+                });
+                
+                // Save connection
+                localStorage.setItem('reown_wallet_connection', JSON.stringify({
+                  address: account.address,
+                  walletType: 'ReOWN',
+                  chainId: account.chainId,
+                }));
+              });
+            } else if (!account.isConnected) {
+              // Handle disconnection
+              setWalletState({
+                isConnected: false,
+                address: null,
+                balance: null,
+                isConnecting: false,
+                error: null,
+                walletType: null,
+                chainId: null,
+              });
+              localStorage.removeItem('reown_wallet_connection');
+            }
+          });
+        } catch (error) {
+          console.warn('Failed to set up AppKit event listeners:', error);
+        }
+      }
+    };
+
     restoreConnection();
+    
+    // Set up event listeners after a brief delay to ensure AppKit is ready
+    const timer = setTimeout(setupEventListeners, 1000);
+    
+    return () => clearTimeout(timer);
   }, [walletConnection]);
 
   const connectWallet = async (preferredWallet?: string) => {
