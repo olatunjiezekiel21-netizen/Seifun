@@ -86,14 +86,29 @@ export class ReownWalletConnection {
   }
 
   private async initializeReownAppKit() {
-    if (typeof window === 'undefined' || this.reownInitialized) return;
+    if (typeof window === 'undefined') return;
+
+    // Reset state for retry attempts
+    if (this.reownInitialized && !this.appKit) {
+      console.log('🔄 AppKit was initialized but instance missing, resetting...');
+      this.reownInitialized = false;
+    }
+
+    if (this.reownInitialized) {
+      console.log('✅ ReOWN already initialized');
+      return;
+    }
 
     try {
       console.log('🔄 Initializing ReOWN AppKit...');
+      
+      // Clear any existing instance
+      this.appKit = null;
+      
       const reownModules = await loadReownAppKit();
       if (!reownModules) {
         console.warn('⚠️ Reown AppKit modules not available');
-        return;
+        throw new Error('ReOWN modules failed to load');
       }
 
       const { createAppKit, ethersAdapter } = reownModules;
@@ -142,7 +157,7 @@ export class ReownWalletConnection {
         defaultNetwork: seiNetwork,
         metadata: reownConfig.metadata,
         features: {
-          analytics: false, // Disable analytics for now
+          analytics: false, // Disable analytics for stability
           email: false,
           socials: [],
           swaps: false,
@@ -161,12 +176,19 @@ export class ReownWalletConnection {
 
       console.log('✅ AppKit created successfully:', !!this.appKit);
 
-      this.reownInitialized = true;
-      console.log('✅ Reown AppKit initialized successfully for mobile and desktop');
+      // Only set initialized to true if AppKit was actually created
+      if (this.appKit) {
+        this.reownInitialized = true;
+        console.log('✅ Reown AppKit initialized successfully for mobile and desktop');
+      } else {
+        throw new Error('AppKit instance creation failed');
+      }
     } catch (error) {
       console.error('❌ Failed to initialize Reown AppKit:', error);
-      // Set a flag to show that Reown is not available
+      // Reset state for retry
       this.reownInitialized = false;
+      this.appKit = null;
+      throw error; // Re-throw to handle in calling code
     }
   }
 
@@ -245,14 +267,22 @@ export class ReownWalletConnection {
     try {
       console.log('🔗 Starting ReOWN wallet connection...');
       
-      // Initialize if not already done
-      if (!this.appKit) {
-        console.log('🔄 AppKit not initialized, initializing now...');
-        await this.initializeReownAppKit();
+      // Initialize if not already done, with retry logic
+      if (!this.appKit || !this.reownInitialized) {
+        console.log('🔄 AppKit not ready, initializing...');
+        try {
+          await this.initializeReownAppKit();
+        } catch (initError) {
+          console.error('❌ Initialization failed:', initError);
+          // Try one more time after a short delay
+          console.log('🔄 Retrying initialization after delay...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          await this.initializeReownAppKit();
+        }
       }
 
       if (!this.appKit) {
-        console.error('❌ AppKit initialization failed');
+        console.error('❌ AppKit initialization failed after retry');
         throw new Error('WalletConnect initialization failed. This could be due to:\n• Network connectivity issues\n• Browser compatibility problems\n• Missing ReOWN configuration\n\nPlease refresh the page and try again.');
       }
 
@@ -646,9 +676,17 @@ export class ReownWalletConnection {
 
   async disconnect(): Promise<void> {
     try {
+      console.log('🔌 Disconnecting wallet...');
+      
       // Disconnect Reown if connected
       if (this.appKit) {
-        await this.appKit.disconnect();
+        try {
+          await this.appKit.disconnect();
+          console.log('✅ AppKit disconnected successfully');
+        } catch (disconnectError) {
+          console.warn('⚠️ AppKit disconnect error:', disconnectError);
+          // Continue with cleanup even if disconnect fails
+        }
       }
 
       // Clear localStorage
@@ -656,6 +694,13 @@ export class ReownWalletConnection {
         try {
           localStorage.removeItem('reown_wallet_connection');
           localStorage.removeItem('walletconnect');
+          // Clear additional WalletConnect storage keys
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('wc@2') || key.startsWith('walletconnect') || key.includes('reown')) {
+              localStorage.removeItem(key);
+            }
+          });
+          console.log('🧹 Cleared wallet storage');
         } catch (error) {
           console.warn('Failed to clear localStorage:', error);
         }
@@ -668,6 +713,35 @@ export class ReownWalletConnection {
   async signTransaction(transaction: any): Promise<string> {
     // Implementation for transaction signing
     throw new Error('Transaction signing not implemented yet');
+  }
+
+  // Reset ReOWN state for troubleshooting
+  async resetReownState(): Promise<void> {
+    console.log('🔄 Resetting ReOWN state...');
+    
+    try {
+      // Disconnect if connected
+      if (this.appKit) {
+        await this.appKit.disconnect();
+      }
+    } catch (error) {
+      console.warn('Error during disconnect:', error);
+    }
+
+    // Reset all state
+    this.appKit = null;
+    this.reownInitialized = false;
+
+    // Clear all storage
+    if (typeof localStorage !== 'undefined') {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('wc@2') || key.startsWith('walletconnect') || key.includes('reown')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+
+    console.log('✅ ReOWN state reset complete');
   }
 }
 
@@ -684,13 +758,14 @@ export const useReownWallet = () => {
     chainId: null,
   });
 
-  // Safe initialization
+  // Safe initialization - prevent multiple instances
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !walletConnection) {
+      console.log('🔄 Creating ReOWN wallet connection instance...');
       const connection = new ReownWalletConnection(false); // Use testnet for now
       setWalletConnection(connection);
     }
-  }, []);
+  }, [walletConnection]);
 
   // Restore connection on mount
   useEffect(() => {
@@ -809,11 +884,31 @@ export const useReownWallet = () => {
     }
   };
 
+  const resetWalletState = async () => {
+    if (!walletConnection) return;
+
+    try {
+      await walletConnection.resetReownState();
+      setWalletState({
+        isConnected: false,
+        address: null,
+        balance: null,
+        isConnecting: false,
+        error: null,
+        walletType: null,
+        chainId: null,
+      });
+    } catch (error) {
+      console.error('Reset error:', error);
+    }
+  };
+
   return {
     ...walletState,
     connectWallet,
     disconnectWallet,
     refreshBalance,
     getAvailableWallets,
+    resetWalletState, // For troubleshooting
   };
 };
