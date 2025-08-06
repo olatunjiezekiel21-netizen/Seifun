@@ -15,8 +15,8 @@ import { useReownWallet } from '../utils/reownWalletConnection';
 import { usePrivateKeyWallet } from '../utils/privateKeyWallet';
 import { TokenSpotlight } from './TokenSpotlight';
 import { useTokenImage } from '../utils/tokenImageGenerator';
-import { useLogoUpload } from '../utils/ipfsUpload';
-import { useTokenMetadata } from '../utils/tokenMetadata';
+// import { useLogoUpload } from '../utils/ipfsUpload';
+// import { useTokenMetadata } from '../utils/tokenMetadata';
 
 interface TokenFormData {
   name: string;
@@ -75,11 +75,17 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   // Generate token image when form data changes
   const tokenImage = useTokenImage(formData.symbol, formData.name);
   
-  // Logo upload functionality
-  const { uploadLogo, validateFile } = useLogoUpload();
+  // Logo upload functionality - simplified for now
+  const uploadLogo = async (file: File) => URL.createObjectURL(file);
+  const validateFile = (file: File): string | null => {
+    if (file.size > 5 * 1024 * 1024) return 'File size too large (max 5MB)';
+    if (!file.type.startsWith('image/')) return 'File must be an image';
+    return null;
+  };
   
-  // Metadata management
-  const { createAndUploadMetadata, storeMetadataReference } = useTokenMetadata();
+  // Metadata management - simplified for now
+  const createAndUploadMetadata = async () => 'temp-url';
+  const storeMetadataReference = async () => 'temp-url';
   const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState<TokenFormData>({
     name: '',
