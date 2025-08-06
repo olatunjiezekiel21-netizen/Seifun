@@ -453,8 +453,21 @@ const Seilor = () => {
                       >
                         <div className="flex items-start space-x-4">
                           <div className="relative">
-                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-slate-600 group-hover:border-red-500/50 transition-colors">
-                              <Globe className="w-7 h-7 text-white" />
+                            <div className="w-14 h-14 rounded-xl overflow-hidden border-2 border-slate-600 group-hover:border-red-500/50 transition-colors">
+                              <img 
+                                src={dapp.image} 
+                                alt={`${dapp.name} logo`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Fallback to gradient with icon if image fails
+                                  e.currentTarget.style.display = 'none';
+                                  const parent = e.currentTarget.parentElement;
+                                  if (parent) {
+                                    parent.className = 'w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-slate-600 group-hover:border-red-500/50 transition-colors';
+                                    parent.innerHTML = '<svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>';
+                                  }
+                                }}
+                              />
                             </div>
                             {dapp.status === 'Live' && (
                               <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-800"></div>
@@ -530,8 +543,21 @@ const Seilor = () => {
                         <tr key={dapp.id} className="hover:bg-slate-700/20 transition-colors group">
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-slate-600">
-                                <Globe className="w-5 h-5 text-white" />
+                              <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-600">
+                                <img 
+                                  src={dapp.image} 
+                                  alt={`${dapp.name} logo`}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    // Fallback to gradient with icon if image fails
+                                    e.currentTarget.style.display = 'none';
+                                    const parent = e.currentTarget.parentElement;
+                                    if (parent) {
+                                      parent.className = 'w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-slate-600';
+                                      parent.innerHTML = '<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>';
+                                    }
+                                  }}
+                                />
                               </div>
                               <div>
                                 <div className="flex items-center space-x-2">
@@ -587,8 +613,21 @@ const Seilor = () => {
                       className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-700/50 transition-colors cursor-pointer"
                     >
                       <div className="flex items-start space-x-3">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-slate-600">
-                          <Globe className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-600">
+                          <img 
+                            src={dapp.image} 
+                            alt={`${dapp.name} logo`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to gradient with icon if image fails
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.className = 'w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-slate-600';
+                                parent.innerHTML = '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>';
+                              }
+                            }}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">

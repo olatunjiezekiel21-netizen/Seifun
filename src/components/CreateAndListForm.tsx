@@ -773,15 +773,21 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
             {!isConnected ? (
               <div className="text-center py-12">
                 <Shield className="w-16 h-16 app-text-muted mx-auto mb-4" />
-                <h3 className="app-heading-md app-text-primary mb-4">Connect Your Wallet</h3>
+                <h3 className="app-heading-md app-text-primary mb-4">Dev Wallet Ready</h3>
                 <p className="app-text-muted mb-6">
-                  Connect your wallet to create and list tokens on SeiList
+                  Using development wallet for SeiList token creation
                 </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-blue-700">
+                    <strong>Development Mode:</strong> SeiList uses a pre-configured wallet for testing. 
+                    Your tokens will be created on Sei testnet.
+                  </p>
+                </div>
                 <button
-                  onClick={connectWallet}
+                  onClick={() => window.location.reload()}
                   className="app-btn app-btn-primary"
                 >
-                  Connect Wallet
+                  Refresh Page
                 </button>
               </div>
             ) : (

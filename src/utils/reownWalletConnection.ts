@@ -112,12 +112,43 @@ export class ReownWalletConnection {
 
       console.log('🔧 Creating simple WalletConnect modal...');
 
-      // Create simple WalletConnect modal (no adapters, just pure WalletConnect)
+      // Get Sei network configuration
+      const seiNetwork = getSeiNetworkConfig(false); // Use testnet for now
+      
+      // Create WalletConnect modal with proper Sei network support
       this.appKit = createAppKit({
         projectId: reownConfig.projectId,
         metadata: reownConfig.metadata,
+        networks: [
+          {
+            id: seiNetwork.chainId,
+            name: seiNetwork.networkName,
+            nativeCurrency: seiNetwork.nativeCurrency,
+            rpcUrls: {
+              default: {
+                http: [seiNetwork.rpcUrl]
+              }
+            },
+            blockExplorers: {
+              default: {
+                name: 'SeiTrace',
+                url: seiNetwork.blockExplorerUrl
+              }
+            }
+          }
+        ],
+        defaultNetwork: {
+          id: seiNetwork.chainId,
+          name: seiNetwork.networkName,
+          nativeCurrency: seiNetwork.nativeCurrency,
+          rpcUrls: {
+            default: {
+              http: [seiNetwork.rpcUrl]
+            }
+          }
+        },
         features: {
-          analytics: false,
+          analytics: true,
           email: false,
           socials: [],
           swaps: false,
@@ -126,7 +157,9 @@ export class ReownWalletConnection {
         themeMode: 'light',
         themeVariables: {
           '--w3m-font-family': 'Inter, system-ui, sans-serif',
-          '--w3m-accent': '#4F46E5'
+          '--w3m-accent': '#4F46E5',
+          '--w3m-color-mix': '#4F46E5',
+          '--w3m-color-mix-strength': 20
         }
       });
 
