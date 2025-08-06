@@ -15,6 +15,8 @@ import { useReownWallet } from '../utils/reownWalletConnection';
 import { usePrivateKeyWallet } from '../utils/privateKeyWallet';
 import { TokenSpotlight } from './TokenSpotlight';
 import { useTokenImage } from '../utils/tokenImageGenerator';
+import { useLogoUpload } from '../utils/ipfsUpload';
+import { useTokenMetadata } from '../utils/tokenMetadata';
 
 interface TokenFormData {
   name: string;
@@ -26,6 +28,7 @@ interface TokenFormData {
   twitter: string;
   discord: string;
   tokenImage: string;
+  logoFile: File | null;
   totalSupply: string;
   launchType: 'fair' | 'presale';
   maxWallet: string;
@@ -71,6 +74,12 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   
   // Generate token image when form data changes
   const tokenImage = useTokenImage(formData.symbol, formData.name);
+  
+  // Logo upload functionality
+  const { uploadLogo, validateFile } = useLogoUpload();
+  
+  // Metadata management
+  const { createAndUploadMetadata, storeMetadataReference } = useTokenMetadata();
   const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState<TokenFormData>({
     name: '',
@@ -82,6 +91,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
     twitter: '',
     discord: '',
     tokenImage: '',
+    logoFile: null,
     totalSupply: '1000000000',
     launchType: 'fair',
     maxWallet: '2',
@@ -129,25 +139,21 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
       let provider, signer;
       
       if (useTestnet) {
-        // For testnet: create real tokens using private key (if available)
-        console.log('🧪 Using testnet mode with dev wallet');
+        // For testnet: create real tokens using private key wallet
+        console.log('🧪 Using testnet mode with private key wallet');
         const rpcUrl = import.meta.env.VITE_SEI_TESTNET_RPC || 'https://evm-rpc-testnet.sei-apis.com';
         provider = new ethers.JsonRpcProvider(rpcUrl);
         
-        // Check if we have private key for real transactions
-        const privateKey = import.meta.env.VITE_DEV_WALLET_PRIVATE_KEY;
+        console.log('🔑 Using private key wallet for REAL token creation on testnet');
         
-        if (privateKey) {
-          console.log('🔑 Private key found - creating REAL token on testnet');
+        try {
+          // Get signer from private key wallet
+          const signer = privateKeyWallet.getSigner();
           
-          try {
-            // Create wallet from private key
-            const wallet = new ethers.Wallet(privateKey, provider);
-            
-            // Verify wallet address matches
-            if (wallet.address.toLowerCase() !== address?.toLowerCase()) {
-              throw new Error('Private key does not match dev wallet address');
-            }
+          // Verify wallet address matches
+          if (signer.address.toLowerCase() !== address?.toLowerCase()) {
+            throw new Error('Private key wallet address mismatch');
+          }
             
             // Create factory contract instance
             const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS_TESTNET;
@@ -157,7 +163,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
               'event TokenCreated(address indexed tokenAddress, address indexed creator, string name, string symbol)'
             ];
             
-            const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, wallet);
+            const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, signer);
             
             // Get creation fee
             const fee = await factory.creationFee();
@@ -204,6 +210,17 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
             if (!tokenAddress) {
               throw new Error('Could not determine token address from transaction');
             }
+
+            // Upload metadata to IPFS and store reference
+            console.log('📤 Uploading token metadata to IPFS...');
+            try {
+              const metadataUrl = await createAndUploadMetadata(formData, tokenAddress, address);
+              await storeMetadataReference(tokenAddress, metadataUrl, signer);
+              console.log('✅ Token metadata stored on IPFS:', metadataUrl);
+            } catch (metadataError) {
+              console.warn('⚠️ Metadata upload failed (token still created):', metadataError);
+              // Continue even if metadata upload fails
+            }
             
             setVerificationStatus('verified');
             setCreatedTokenAddress(tokenAddress);
@@ -233,13 +250,9 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
             console.log(`🔗 Transaction: ${tx.hash}`);
             console.log(`🌐 View on SeiTrace: https://seitrace.com/address/${tokenAddress}?chain=sei-testnet`);
             
-          } catch (error) {
-            console.error('❌ Real token creation failed:', error);
-            throw error; // Re-throw to be caught by outer try-catch
-          }
-          
-        } else {
-          throw new Error('Development private key not configured. Please connect a wallet to create tokens.');
+        } catch (error) {
+          console.error('❌ Private key wallet token creation failed:', error);
+          throw error; // Re-throw to be caught by outer try-catch
         }
         
         // Token creation completed successfully
@@ -369,6 +382,74 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                 rows={4}
                 placeholder="Describe your token and its purpose..."
               />
+            </div>
+
+            {/* Logo Upload Section */}
+            <div>
+              <label className="block app-text-primary text-sm font-medium mb-2">
+                Token Logo
+              </label>
+              <div className="space-y-4">
+                {/* File Upload */}
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0] || null;
+                        if (file) {
+                          // Validate file first
+                          const validationError = validateFile(file);
+                          if (validationError) {
+                            alert(validationError);
+                            e.target.value = ''; // Clear the input
+                            return;
+                          }
+                          
+                          handleInputChange('logoFile', file);
+                          
+                          // Show immediate preview with local URL
+                          const localUrl = URL.createObjectURL(file);
+                          handleInputChange('tokenImage', localUrl);
+                          
+                          // Upload to IPFS in background
+                          try {
+                            console.log('📤 Uploading logo to IPFS...');
+                            const ipfsUrl = await uploadLogo(file);
+                            console.log('✅ Logo uploaded:', ipfsUrl);
+                            handleInputChange('tokenImage', ipfsUrl);
+                          } catch (error) {
+                            console.error('❌ Logo upload failed:', error);
+                            // Keep using local URL as fallback
+                          }
+                        } else {
+                          handleInputChange('logoFile', null);
+                          handleInputChange('tokenImage', '');
+                        }
+                      }}
+                      className="app-input file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-500 file:text-white hover:file:bg-blue-600"
+                    />
+                  </div>
+                  {/* Logo Preview */}
+                  {(formData.tokenImage || tokenImage) && (
+                    <div className="w-16 h-16 rounded-full border-2 border-gray-300 overflow-hidden">
+                      <img
+                        src={formData.tokenImage || tokenImage || ''}
+                        alt="Token logo preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to generated image if upload fails
+                          e.currentTarget.src = tokenImage || '';
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-400">
+                  Upload a logo for your token (PNG, JPG, GIF - max 5MB). If no logo is uploaded, a unique one will be generated automatically.
+                </p>
+              </div>
             </div>
 
             <div>
