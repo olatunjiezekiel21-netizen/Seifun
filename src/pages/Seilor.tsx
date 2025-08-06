@@ -10,7 +10,9 @@ import { AIChatDataService } from '../utils/aiChatDataService';
 import { TokenScanner } from '../utils/tokenScanner';
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 import { IntelligentAIChat } from '../utils/intelligentAIChat';
+import { AdvancedAIAgent } from '../utils/advancedAIAgent';
 import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
+import { useReownWallet } from '../utils/reownWalletConnection';
 
 const Seilor = () => {
   const [activeTab, setActiveTab] = useState('discover');
@@ -31,6 +33,7 @@ const Seilor = () => {
   const [tokenScanner] = useState(() => new TokenScanner());
   const [seiRegistry] = useState(() => new SeiTokenRegistry(false));
   const [intelligentAI] = useState(() => new IntelligentAIChat());
+  const [advancedAI] = useState(() => new AdvancedAIAgent());
   
   // Enhanced browser state
   const [showBrowser, setShowBrowser] = useState(false);
@@ -44,7 +47,41 @@ const Seilor = () => {
   const [dAppAnalysis, setDAppAnalysis] = useState<any>(null);
   
   // Wallet integration
-  const { isConnected, address, connectWallet } = useUnifiedWallet();
+  // Primary wallet connection using ReOWN Kit
+  const { 
+    isConnected: reownConnected, 
+    address: reownAddress, 
+    connectWallet: connectReownWallet, 
+    disconnectWallet: disconnectReownWallet 
+  } = useReownWallet();
+  
+  // Fallback unified wallet connection
+  const { 
+    isConnected: unifiedConnected, 
+    address: unifiedAddress, 
+    connectWallet: connectUnifiedWallet, 
+    disconnectWallet: disconnectUnifiedWallet 
+  } = useUnifiedWallet();
+
+  // Use ReOWN as primary, unified as fallback
+  const isConnected = reownConnected || unifiedConnected;
+  const address = reownAddress || unifiedAddress;
+  const connectWallet = async () => {
+    try {
+      await connectReownWallet('reown');
+    } catch (error) {
+      console.warn('ReOWN connection failed, trying unified wallet:', error);
+      await connectUnifiedWallet();
+    }
+  };
+  const disconnectWallet = async () => {
+    if (reownConnected) {
+      await disconnectReownWallet();
+    }
+    if (unifiedConnected) {
+      await disconnectUnifiedWallet();
+    }
+  };
   
   const [chatMessages, setChatMessages] = useState([
     {
@@ -111,7 +148,7 @@ const Seilor = () => {
         currentDapp: browserTitle || undefined
       };
 
-      const aiResponse = await intelligentAI.generateResponse(userMessage, context);
+      const aiResponse = await advancedAI.generateIntelligentResponse(userMessage, context);
 
       // Update with real response
       setChatMessages(prev => prev.slice(0, -1).concat({
