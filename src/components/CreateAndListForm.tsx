@@ -14,6 +14,7 @@ import { ethers } from 'ethers';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { usePrivateKeyWallet } from '../utils/privateKeyWallet';
 import { TokenSpotlight } from './TokenSpotlight';
+import { useTokenImage } from '../utils/tokenImageGenerator';
 
 interface TokenFormData {
   name: string;
@@ -67,6 +68,9 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   const [showTokenSpotlight, setShowTokenSpotlight] = useState(false);
   const [createdTokenData, setCreatedTokenData] = useState<any>(null);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
+  
+  // Generate token image when form data changes
+  const tokenImage = useTokenImage(formData.symbol, formData.name);
   const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState<TokenFormData>({
     name: '',
@@ -215,7 +219,8 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
               description: formData.description,
               website: formData.website,
               twitter: formData.twitter,
-              telegram: formData.telegram
+              telegram: formData.telegram,
+              tokenImage: tokenImage
             });
             
             // Show the spotlight after a brief delay for effect
@@ -296,7 +301,8 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         description: formData.description,
         website: formData.website,
         twitter: formData.twitter,
-        telegram: formData.telegram
+        telegram: formData.telegram,
+        tokenImage: tokenImage
       });
       
       // Show the spotlight after a brief delay for effect
