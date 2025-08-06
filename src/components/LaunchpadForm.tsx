@@ -47,8 +47,13 @@ const LaunchpadForm = () => {
   // Use ReOWN wallet for production
   const reownWallet = useReownWallet();
   
-  // For now, use private key wallet for easy testing
-  const { isConnected, address, connectWallet } = privateKeyWallet;
+  // For now, use private key wallet for easy testing (always connected)
+  const isConnected = privateKeyWallet.isConnected;
+  const address = privateKeyWallet.address;
+  const connectWallet = () => {
+    // Private key wallet is always connected, so this is just for UI consistency
+    console.log('Private key wallet is already connected:', address);
+  };
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

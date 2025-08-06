@@ -13,6 +13,7 @@ import {
 import { ethers } from 'ethers';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { usePrivateKeyWallet } from '../utils/privateKeyWallet';
+import { TokenSpotlight } from './TokenSpotlight';
 
 interface TokenFormData {
   name: string;
@@ -50,14 +51,22 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   // Use ReOWN wallet for production
   const reownWallet = useReownWallet();
   
-  // For now, use private key wallet for easy testing
-  const { isConnected, address, connectWallet } = privateKeyWallet;
+  // For now, use private key wallet for easy testing (always connected)
+  const isConnected = privateKeyWallet.isConnected;
+  const address = privateKeyWallet.address;
+  const connectWallet = () => {
+    // Private key wallet is always connected, so this is just for UI consistency
+    console.log('Private key wallet is already connected:', address);
+  };
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed' | null>(null);
   const [createdTokenAddress, setCreatedTokenAddress] = useState<string | null>(null);
   const [creationError, setCreationError] = useState<string | null>(null);
+  const [showTokenSpotlight, setShowTokenSpotlight] = useState(false);
+  const [createdTokenData, setCreatedTokenData] = useState<any>(null);
+  const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState<TokenFormData>({
     name: '',
@@ -194,6 +203,25 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
             
             setVerificationStatus('verified');
             setCreatedTokenAddress(tokenAddress);
+            setTransactionHash(tx.hash);
+            
+            // Prepare token data for spotlight
+            setCreatedTokenData({
+              name: formData.name,
+              symbol: formData.symbol,
+              address: tokenAddress,
+              totalSupply: formData.totalSupply,
+              decimals: formData.decimals,
+              description: formData.description,
+              website: formData.website,
+              twitter: formData.twitter,
+              telegram: formData.telegram
+            });
+            
+            // Show the spotlight after a brief delay for effect
+            setTimeout(() => {
+              setShowTokenSpotlight(true);
+            }, 1000);
             
             console.log('🎉 REAL TOKEN CREATED AND LISTED SUCCESSFULLY!');
             console.log(`📍 Token Address: ${tokenAddress}`);
@@ -256,6 +284,26 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
       const tokenAddress = receipt.logs[0].address; // Get token address from event
       
       setCreatedTokenAddress(tokenAddress);
+      setTransactionHash(tx.hash);
+      
+      // Prepare token data for spotlight
+      setCreatedTokenData({
+        name: formData.name,
+        symbol: formData.symbol,
+        address: tokenAddress,
+        totalSupply: formData.totalSupply,
+        decimals: 18,
+        description: formData.description,
+        website: formData.website,
+        twitter: formData.twitter,
+        telegram: formData.telegram
+      });
+      
+      // Show the spotlight after a brief delay for effect
+      setTimeout(() => {
+        setShowTokenSpotlight(true);
+      }, 1000);
+      
       console.log('Token created and listed successfully:', tokenAddress);
       
     } catch (error: any) {
@@ -692,6 +740,16 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
           </div>
         </div>
       </div>
+      
+      {/* Token Spotlight Modal */}
+      {showTokenSpotlight && createdTokenData && (
+        <TokenSpotlight
+          isOpen={showTokenSpotlight}
+          onClose={() => setShowTokenSpotlight(false)}
+          tokenData={createdTokenData}
+          transactionHash={transactionHash || undefined}
+        />
+      )}
     </div>
   );
 };
