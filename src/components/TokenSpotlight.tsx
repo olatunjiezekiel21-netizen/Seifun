@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, ExternalLink, Copy, Star, Sparkles, TrendingUp, Users, DollarSign, Zap } from 'lucide-react';
-import { useTokenImage } from '../utils/tokenImageGenerator';
+// import { useTokenImage } from '../utils/tokenImageGenerator';
 
 interface TokenSpotlightProps {
   isOpen: boolean;
@@ -29,8 +29,9 @@ export const TokenSpotlight: React.FC<TokenSpotlightProps> = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
   
-  // Generate unique token image
-  const generatedTokenImage = useTokenImage(tokenData.symbol, tokenData.name, tokenData.tokenImage);
+  // Generate unique token image - temporarily disabled for debugging
+  // const generatedTokenImage = useTokenImage(tokenData.symbol, tokenData.name, tokenData.tokenImage);
+  const generatedTokenImage = tokenData.tokenImage || '/Seifu.png'; // Fallback to Seifun logo
 
   // Generate unique token colors based on token symbol
   const generateTokenColors = (symbol: string) => {

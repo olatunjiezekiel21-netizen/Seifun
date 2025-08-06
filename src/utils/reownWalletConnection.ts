@@ -154,12 +154,18 @@ export class ReownWalletConnection {
           swaps: false,
           onramp: false
         },
-        themeMode: 'light',
+        themeMode: 'dark',
         themeVariables: {
           '--w3m-font-family': 'Inter, system-ui, sans-serif',
           '--w3m-accent': '#4F46E5',
           '--w3m-color-mix': '#4F46E5',
-          '--w3m-color-mix-strength': 20
+          '--w3m-color-mix-strength': 20,
+          '--w3m-background-color': '#0F172A',
+          '--w3m-foreground-color': '#1E293B',
+          '--w3m-border-color': '#334155',
+          '--w3m-text-primary': '#F8FAFC',
+          '--w3m-text-secondary': '#94A3B8',
+          '--w3m-overlay-background-color': 'rgba(15, 23, 42, 0.8)'
         }
       });
 
