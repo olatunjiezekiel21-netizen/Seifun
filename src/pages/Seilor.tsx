@@ -1073,369 +1073,229 @@ What specific aspect of Sei would you like to explore?`;
         </div>
       </div>
 
-      {/* Enhanced In-App Browser Modal with Protocol Logos */}
+            {/* Seamless In-App dApp Browser */}
       {showBrowser && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 rounded-2xl border border-slate-700 w-full max-w-7xl h-[90vh] flex flex-col">
-              {/* Enhanced Browser Header */}
-              <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800/50">
-                <div className="flex items-center space-x-3">
-                  {/* Browser Controls */}
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={navigateBack}
-                      disabled={browserHistoryIndex <= 0}
-                      className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                    >
-                      <ArrowLeft className="w-4 h-4 text-slate-300" />
-                    </button>
-                    <button
-                      onClick={navigateForward}
-                      disabled={browserHistoryIndex >= browserHistory.length - 1}
-                      className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                    >
-                      <ArrowRight className="w-4 h-4 text-slate-300" />
-                    </button>
-                    <button
-                      onClick={refreshBrowser}
-                      className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                    >
-                      <RefreshCw className={`w-4 h-4 text-slate-300 ${browserLoading ? 'animate-spin' : ''}`} />
-                    </button>
-                  </div>
-                  
-                  {/* URL Bar */}
-                  <div className="bg-slate-800 rounded-lg px-4 py-2 flex-1 max-w-md">
-                    <div className="flex items-center space-x-2">
-                      {browserUrl.startsWith('https://') ? (
-                        <Lock className="w-4 h-4 text-green-400" />
-                      ) : (
-                        <Globe className="w-4 h-4 text-slate-400" />
-                      )}
-                      <span className="text-slate-300 text-sm truncate">{browserUrl}</span>
-                    </div>
-                  </div>
-
-                  {/* Safety Toggle */}
-                  <button
-                    onClick={toggleSafeBrowsing}
-                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      isSafeBrowsingMode 
-                        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
-                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                    }`}
-                  >
-                    <Shield className="w-3 h-3" />
-                    <span>{isSafeBrowsingMode ? 'Safe Mode ON' : 'Safe Mode OFF'}</span>
-                  </button>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => window.open(browserUrl, '_blank')}
-                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                    title="Open in new tab"
-                  >
-                    <ExternalLink className="w-4 h-4 text-slate-400" />
-                  </button>
-                  <button
-                    onClick={() => setShowBrowser(false)}
-                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4 text-slate-400" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Safety Analysis Banner */}
-              {isSafeBrowsingMode && dAppAnalysis && (
-                <div className={`px-4 py-3 border-b border-slate-700 ${
-                  dAppAnalysis.safetyScore >= 80 ? 'bg-green-900/20' : 
-                  dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-900/20' : 'bg-red-900/20'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Shield className={`w-5 h-5 ${
-                        dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
-                        dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 'text-red-400'
-                      }`} />
+        <div className="fixed inset-0 bg-slate-900 z-50">
+          {/* Minimal Seilor Header */}
+          <div className="bg-slate-800/95 backdrop-blur-md border-b border-slate-700/50 px-4 py-3">
+            <div className="flex items-center justify-between">
+              {/* dApp Info with Logo */}
+              <div className="flex items-center space-x-3">
+                {(() => {
+                  const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
+                  return currentDapp ? (
+                    <>
+                      <img 
+                        src={currentDapp.image} 
+                        alt={currentDapp.name}
+                        className="w-8 h-8 rounded-lg object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/Seifu.png';
+                        }}
+                      />
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-white font-medium">Safety Score: {dAppAnalysis.safetyScore}/100</span>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            dAppAnalysis.safetyScore >= 80 ? 'bg-green-500/20 text-green-400' : 
-                            dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
-                          }`}>
-                            {dAppAnalysis.reputation}
-                          </span>
+                          <span className="text-white font-medium">{currentDapp.name}</span>
+                          {currentDapp.featured && (
+                            <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                          )}
                         </div>
-                        <div className="text-xs text-slate-400 mt-1">
-                          {dAppAnalysis.isVerified ? '✅ Verified' : '⚠️ Unverified'} • 
-                          {dAppAnalysis.hasSSL ? ' 🔒 SSL Secure' : ' ⚠️ No SSL'} • 
-                          Analyzed by Seifun SafeChecker
+                        <div className="flex items-center space-x-2 text-xs text-slate-400">
+                          <span>{currentDapp.category}</span>
+                          <span>•</span>
+                          <span>TVL: {currentDapp.tvl}</span>
                         </div>
                       </div>
-                    </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <Globe className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <span className="text-white font-medium">{browserTitle}</span>
+                        <div className="text-xs text-slate-400">External dApp</div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Seilor Controls */}
+              <div className="flex items-center space-x-2">
+                {/* Safety Score */}
+                {isSafeBrowsingMode && dAppAnalysis && (
+                  <div className={`flex items-center space-x-2 px-2 py-1 rounded-lg text-xs ${
+                    dAppAnalysis.safetyScore >= 80 ? 'bg-green-500/20 text-green-400' : 
+                    dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    <Shield className="w-3 h-3" />
+                    <span>{dAppAnalysis.safetyScore}/100</span>
+                  </div>
+                )}
+
+                {/* Navigation Controls */}
+                <button
+                  onClick={navigateBack}
+                  disabled={browserHistoryIndex <= 0}
+                  className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4 text-slate-300" />
+                </button>
+                <button
+                  onClick={navigateForward}
+                  disabled={browserHistoryIndex >= browserHistory.length - 1}
+                  className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                >
+                  <ArrowRight className="w-4 h-4 text-slate-300" />
+                </button>
+                <button
+                  onClick={refreshBrowser}
+                  className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                >
+                  <RefreshCw className={`w-4 h-4 text-slate-300 ${browserLoading ? 'animate-spin' : ''}`} />
+                </button>
+
+                {/* SafeChecker */}
+                <button
+                  onClick={() => window.open(`/app/safechecker?url=${encodeURIComponent(browserUrl)}`, '_blank')}
+                  className="flex items-center space-x-1 px-2 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs hover:bg-purple-500/30 transition-colors"
+                >
+                  <Shield className="w-3 h-3" />
+                  <span>Scan</span>
+                </button>
+
+                {/* External Browser */}
+                <button
+                  onClick={() => window.open(browserUrl, '_blank')}
+                  className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                  title="Open in external browser"
+                >
+                  <ExternalLink className="w-4 h-4 text-slate-400" />
+                </button>
+
+                {/* Close */}
+                <button
+                  onClick={() => setShowBrowser(false)}
+                  className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                >
+                  <X className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Seamless dApp Content */}
+          <div className="h-[calc(100vh-60px)] relative">
+            {browserLoading && (
+              <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center z-10">
+                <div className="flex items-center space-x-3 text-white">
+                  <RefreshCw className="w-6 h-6 animate-spin" />
+                  <span>Loading {browserTitle}...</span>
+                </div>
+              </div>
+            )}
+            
+            {browserError ? (
+              <div className="h-full flex items-center justify-center bg-slate-900">
+                <div className="text-center p-8">
+                  <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">Unable to Load dApp</h3>
+                  <p className="text-slate-400 mb-4 max-w-md">
+                    This dApp cannot be embedded due to security restrictions. 
+                    Try opening it in an external browser for full functionality.
+                  </p>
+                  <div className="flex items-center justify-center space-x-3">
                     <button
-                      onClick={() => setDAppAnalysis(null)}
-                      className="text-slate-400 hover:text-white"
+                      onClick={refreshBrowser}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
                     >
-                      <X className="w-4 h-4" />
+                      Try Again
+                    </button>
+                    <button
+                      onClick={() => window.open(browserUrl, '_blank')}
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>Open Externally</span>
                     </button>
                   </div>
                 </div>
-              )}
-
-              {/* Enhanced Smart Browser Content with Protocol Logos */}
-              <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
-                <div className="h-full flex flex-col">
-                  {/* dApp Info Header */}
-                  <div className="bg-white border-b border-slate-200 px-6 py-4">
-                    <div className="flex items-center space-x-4">
-                      {/* Find current dApp from URL */}
-                      {(() => {
-                        const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
-                        return currentDapp ? (
-                          <>
-                            <img 
-                              src={currentDapp.image} 
-                              alt={currentDapp.name}
-                              className="w-12 h-12 rounded-xl object-cover border-2 border-slate-200"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/Seifu.png';
-                              }}
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2">
-                                <h3 className="text-lg font-bold text-slate-800">{currentDapp.name}</h3>
-                                {currentDapp.featured && (
-                                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                )}
-                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
-                                  {currentDapp.category}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-600 mt-1">{currentDapp.description}</p>
-                              <div className="flex items-center space-x-4 mt-2 text-xs text-slate-500">
-                                <span>📈 TVL: {currentDapp.tvl}</span>
-                                <span>👥 Users: {currentDapp.users}</span>
-                                <span className={`px-2 py-1 rounded-full ${
-                                  currentDapp.status === 'Live' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                                }`}>
-                                  {currentDapp.status}
-                                </span>
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                              <Globe className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="text-lg font-bold text-slate-800">{browserTitle}</h3>
-                              <p className="text-sm text-slate-600">External dApp</p>
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Main Content Area */}
-                  <div className="flex-1 flex">
-                    {/* Left Panel - dApp Options */}
-                    <div className="w-80 bg-white border-r border-slate-200 p-6">
-                      <h4 className="text-lg font-semibold text-slate-800 mb-4">Choose Your Experience</h4>
-                      
-                      <div className="space-y-4">
-                        {/* Recommended External Browser */}
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border-2 border-green-200 relative">
-                          <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                            Recommended
-                          </div>
-                          <div className="flex items-start space-x-3">
-                            <ExternalLink className="w-8 h-8 text-green-500 mt-1" />
-                            <div className="flex-1">
-                              <h5 className="font-bold text-slate-800 mb-1">External Browser</h5>
-                              <p className="text-sm text-slate-600 mb-3">
-                                Full functionality with wallet extensions and optimal performance
-                              </p>
-                              <button
-                                onClick={() => {
-                                  window.open(browserUrl, '_blank');
-                                  setShowBrowser(false);
-                                }}
-                                className="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                              >
-                                Launch External
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* In-App Preview */}
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-                          <div className="flex items-start space-x-3">
-                            <Eye className="w-8 h-8 text-blue-500 mt-1" />
-                            <div className="flex-1">
-                              <h5 className="font-bold text-slate-800 mb-1">Quick Preview</h5>
-                              <p className="text-sm text-slate-600 mb-3">
-                                Limited preview mode - some features may not work
-                              </p>
-                              <button
-                                onClick={() => {
-                                  const previewContainer = document.querySelector('.browser-preview-container');
-                                  if (previewContainer) {
-                                    previewContainer.innerHTML = `
-                                      <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <div class="flex items-center space-x-2 text-yellow-800">
-                                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                                          </svg>
-                                          <span class="font-medium text-sm">Limited Preview Mode</span>
-                                        </div>
-                                        <p class="text-sm text-yellow-700 mt-1">
-                                          Wallet interactions won't work. Use external browser for full functionality.
-                                        </p>
-                                      </div>
-                                      <iframe
-                                        src="${browserUrl}"
-                                        style="width: 100%; height: 500px; border: none; border-radius: 8px; background: white;"
-                                        sandbox="allow-scripts allow-same-origin allow-forms"
-                                        title="dApp Preview">
-                                      </iframe>
-                                    `;
-                                  }
-                                }}
-                                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                              >
-                                Preview Mode
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* SafeChecker Integration */}
-                        {isConnected && (
-                          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-                            <div className="flex items-start space-x-3">
-                              <Shield className="w-8 h-8 text-purple-500 mt-1" />
-                              <div className="flex-1">
-                                <h5 className="font-bold text-slate-800 mb-1">Safety Analysis</h5>
-                                <p className="text-sm text-slate-600 mb-3">
-                                  Analyze this dApp with Seifun's SafeChecker
-                                </p>
-                                <button
-                                  onClick={() => window.open(`/app/safechecker?url=${encodeURIComponent(browserUrl)}`, '_blank')}
-                                  className="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                                >
-                                  Run Safety Check
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Why External Browser is Better */}
-                      <div className="mt-6 bg-slate-50 rounded-xl p-4">
-                        <h5 className="font-semibold text-slate-800 mb-3 flex items-center">
-                          <Lock className="w-4 h-4 mr-2" />
-                          Why External Browser Works Better
-                        </h5>
-                        <div className="space-y-2 text-sm text-slate-600">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>Full wallet integration</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>Transaction signing</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>No CORS restrictions</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>Optimal performance</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right Panel - Preview Area */}
-                    <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
-                      {/* Preview Header */}
-                      <div className="bg-white border-b border-slate-200 px-6 py-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-semibold text-slate-800">dApp Preview</h4>
-                          <div className="flex items-center space-x-2 text-sm text-slate-500">
-                            <Globe className="w-4 h-4" />
-                            <span className="font-mono">{new URL(browserUrl).hostname}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Preview Content */}
-                      <div className="flex-1 p-6">
-                        <div className="browser-preview-container h-full">
-                          <div className="h-full flex items-center justify-center">
-                            <div className="text-center">
-                              <Globe className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                              <h3 className="text-xl font-bold text-slate-700 mb-2">Ready to Launch</h3>
-                              <p className="text-slate-500 mb-6 max-w-md">
-                                Choose your preferred browsing method from the options on the left.
-                              </p>
-                              <div className="flex items-center justify-center space-x-4 text-sm text-slate-400">
-                                <div className="flex items-center space-x-2">
-                                  <Shield className="w-4 h-4" />
-                                  <span>Safe Browsing</span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Zap className="w-4 h-4" />
-                                  <span>AI Powered</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="bg-white border-t border-slate-200 px-6 py-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center space-x-4 text-slate-500">
-                        <span className="flex items-center space-x-2">
-                          <Sparkles className="w-4 h-4" />
-                          <span>Powered by Seilor AI</span>
-                        </span>
-                        <span>•</span>
-                        <span>🛡️ Seifun Safe Browsing</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {!isConnected && (
-                          <button
-                            onClick={connectWallet}
-                            className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                          >
-                            <Wallet className="w-3 h-3" />
-                            <span>Connect Wallet</span>
-                          </button>
-                        )}
-                        <span className="text-slate-400">
-                          Always verify transactions before signing
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <>
+                {/* Main iframe - completely seamless */}
+                <iframe
+                  src={browserUrl}
+                  className="w-full h-full border-none bg-white"
+                  title={browserTitle}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="camera; microphone; geolocation; payment"
+                  onLoad={() => setBrowserLoading(false)}
+                  onError={() => {
+                    setBrowserError('This dApp cannot be embedded due to security restrictions.');
+                    setBrowserLoading(false);
+                  }}
+                />
+                
+                {/* Seilor AI Assistant Overlay (Bottom Right) */}
+                <div className="absolute bottom-4 right-4 z-20">
+                  <button
+                    onClick={() => setActiveTab('ai')}
+                    className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-colors flex items-center space-x-2"
+                  >
+                    <Bot className="w-5 h-5" />
+                    <span className="hidden sm:inline text-sm font-medium">Ask Seilor AI</span>
+                  </button>
+                </div>
+
+                {/* Wallet Connection Prompt (Top Right) */}
+                {!isConnected && (
+                  <div className="absolute top-4 right-4 z-20">
+                    <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg border border-blue-400">
+                      <div className="flex items-center space-x-2">
+                        <Wallet className="w-4 h-4" />
+                        <span className="text-sm">Connect wallet for full dApp experience</span>
+                        <button
+                          onClick={connectWallet}
+                          className="ml-2 bg-white text-blue-500 px-2 py-1 rounded text-xs hover:bg-blue-50 transition-colors"
+                        >
+                          Connect
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Safety Warning (if low score) */}
+                {isSafeBrowsingMode && dAppAnalysis && dAppAnalysis.safetyScore < 60 && (
+                  <div className="absolute top-4 left-4 right-4 z-20">
+                    <div className="bg-red-500/90 backdrop-blur-sm text-white px-4 py-3 rounded-lg shadow-lg border border-red-400">
+                      <div className="flex items-center space-x-3">
+                        <AlertTriangle className="w-5 h-5" />
+                        <div className="flex-1">
+                          <div className="font-medium">Safety Warning</div>
+                          <div className="text-sm opacity-90">
+                            This dApp has a low safety score ({dAppAnalysis.safetyScore}/100). 
+                            Proceed with caution and avoid large transactions.
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setDAppAnalysis(null)}
+                          className="text-white/80 hover:text-white"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
       </div>
     );
   };
