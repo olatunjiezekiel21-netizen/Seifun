@@ -3,7 +3,7 @@ import {
   Brain, TrendingUp, Zap, Target, Globe, Sparkles, Bot, ChevronRight, ExternalLink, 
   Star, Users, DollarSign, Calendar, AlertCircle, AlertTriangle, Info, Activity, BarChart3, 
   Filter, Search, ArrowUpDown, Eye, MessageCircle, Send, Copy, Bookmark, Shield, X,
-  RefreshCw, ArrowLeft, ArrowRight, Home, Lock, Maximize2
+  RefreshCw, ArrowLeft, ArrowRight, Home, Lock, Maximize2, Wallet
 } from 'lucide-react';
 import { getSeiDApps, getAlphaInsights, getSeiNetworkStats, getDAppCategories, type SeiDApp, type AlphaInsight } from '../utils/seiEcosystemData';
 import { AIChatDataService } from '../utils/aiChatDataService';
@@ -428,226 +428,207 @@ What specific aspect of Sei would you like to explore?`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Professional Header */}
-      <div className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-40">
+      {/* Header */}
+      <div className="border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Brain className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">Seilor 0</h1>
+                  <h1 className="text-2xl font-bold text-white">Seilor 0</h1>
                   <p className="text-xs text-slate-400">AI-Powered Sei Navigator</p>
                 </div>
               </div>
-              <div className="hidden md:flex items-center space-x-1 bg-slate-800/50 rounded-lg p-1">
-                <span className="px-2 py-1 text-xs font-medium text-red-400 bg-red-500/10 rounded">BETA</span>
-                <span className="px-2 py-1 text-xs text-slate-400">v0.1.0</span>
-              </div>
             </div>
             
-            {/* Network Stats Bar */}
-            <div className="hidden lg:flex items-center space-x-6 text-sm">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="w-4 h-4 text-green-400" />
-                <span className="text-slate-300">TVL: <span className="font-semibold text-green-400">{networkStats.totalTvl}</span></span>
+            <div className="flex items-center space-x-4">
+              {/* Network Stats */}
+              <div className="hidden md:flex items-center space-x-6 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-slate-300">TVL: {networkStats.totalTvl}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Users className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-300">{networkStats.activeUsers}</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Users className="w-4 h-4 text-blue-400" />
-                <span className="text-slate-300">Users: <span className="font-semibold text-blue-400">{networkStats.activeUsers}</span></span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Activity className="w-4 h-4 text-purple-400" />
-                <span className="text-slate-300">TPS: <span className="font-semibold text-purple-400">{networkStats.transactions}</span></span>
-              </div>
+              
+              {/* Wallet Connection */}
+              {isConnected ? (
+                <div className="flex items-center space-x-2 bg-green-500/20 text-green-400 px-3 py-1.5 rounded-lg">
+                  <Wallet className="w-4 h-4" />
+                  <span className="text-sm font-medium">{address?.slice(0,6)}...{address?.slice(-4)}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={connectWallet}
+                  className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <Wallet className="w-4 h-4" />
+                  <span>Connect</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Professional Tab Navigation */}
-      <div className="border-b border-slate-700/30 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-0">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab Navigation */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="flex bg-slate-800/50 rounded-2xl p-2 backdrop-blur-md border border-slate-700/50">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center space-x-2 px-6 py-4 text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
                   activeTab === tab.id
-                    ? 'text-red-400 bg-slate-800/50 border-b-2 border-red-500'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
+                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/25'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-                {activeTab === tab.id && (
-                  <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-red-500 to-red-600" />
-                )}
+                <tab.icon className="w-5 h-5" />
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
-          </nav>
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* dApp Discovery Tab */}
-        {activeTab === 'discover' && (
-          <div className="space-y-8">
-            {/* Search and Filters */}
-            <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-                <div className="flex-1 max-w-md">
+        {/* Tab Content */}
+        <div className="space-y-8">
+          {/* dApp Discovery Tab */}
+          {activeTab === 'discover' && (
+            <div className="space-y-8">
+              {/* Search and Filter */}
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="text"
-                      placeholder="Search dApps, protocols, or descriptions..."
+                      placeholder="Search dApps and protocols..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50"
                     />
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <Filter className="w-4 h-4 text-slate-400" />
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500"
-                    >
-                      {categories.map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="flex gap-4">
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  >
+                    <option value="All">All Categories</option>
+                    {categories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
                   
-                  <div className="flex items-center space-x-2">
-                    <ArrowUpDown className="w-4 h-4 text-slate-400" />
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500"
-                    >
-                      <option value="tvl">Sort by TVL</option>
-                      <option value="name">Sort by Name</option>
-                      <option value="category">Sort by Category</option>
-                    </select>
-                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                  >
+                    <option value="tvl">Sort by TVL</option>
+                    <option value="name">Sort by Name</option>
+                    <option value="category">Sort by Category</option>
+                  </select>
                 </div>
               </div>
-            </div>
 
-            {/* Featured Projects */}
-            {seiDApps.filter(dapp => dapp.featured).length > 0 && (
+              {/* Featured Projects */}
+              {seiDApps.filter(dapp => dapp.featured).length > 0 && (
+                <div>
+                  <div className="flex items-center space-x-2 mb-6">
+                    <Star className="w-5 h-5 text-yellow-400" />
+                    <h2 className="text-2xl font-bold text-white">Featured Projects</h2>
+                    <span className="px-2 py-1 text-xs font-medium text-yellow-400 bg-yellow-500/10 rounded-full">
+                      {seiDApps.filter(dapp => dapp.featured).length} projects
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {seiDApps.filter(dapp => dapp.featured).map(dapp => (
+                      <div 
+                        key={dapp.id} 
+                        onClick={() => handleDAppNavigation(dapp)}
+                        className="group bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 hover:bg-slate-700/50 hover:border-red-500/50 transition-all duration-200 cursor-pointer"
+                      >
+                        <div className="flex items-start space-x-4">
+                          <div className="relative">
+                            <img 
+                              src={dapp.image} 
+                              alt={dapp.name}
+                              className="w-14 h-14 rounded-xl object-cover border-2 border-slate-600 group-hover:border-red-500/50 transition-colors"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/Seifu.png';
+                              }}
+                            />
+                            {dapp.status === 'Live' && (
+                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-800"></div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <h3 className="font-bold text-white group-hover:text-red-400 transition-colors">{dapp.name}</h3>
+                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            </div>
+                            <p className="text-sm text-slate-400 mb-3 line-clamp-2">{dapp.description}</p>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4 text-xs">
+                                <span className="flex items-center space-x-1">
+                                  <DollarSign className="w-3 h-3 text-green-400" />
+                                  <span className="text-slate-300">{dapp.tvl}</span>
+                                </span>
+                                <span className="flex items-center space-x-1">
+                                  <Users className="w-3 h-3 text-blue-400" />
+                                  <span className="text-slate-300">{dapp.users}</span>
+                                </span>
+                              </div>
+                              <span className="px-2 py-1 text-xs font-medium bg-red-500/20 text-red-400 rounded-full">
+                                {dapp.category}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* All Projects */}
               <div>
-                <div className="flex items-center space-x-2 mb-6">
-                  <Star className="w-5 h-5 text-yellow-400" />
-                  <h2 className="text-2xl font-bold text-white">Featured Projects</h2>
-                  <span className="px-2 py-1 text-xs font-medium text-yellow-400 bg-yellow-500/10 rounded-full">
-                    {seiDApps.filter(dapp => dapp.featured).length} projects
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white">All Projects</h2>
+                  <span className="text-slate-400 text-sm">
+                    Showing {seiDApps.filter(dapp => {
+                      const matchesCategory = selectedCategory === 'All' || dapp.category === selectedCategory;
+                      const matchesSearch = dapp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                           dapp.description.toLowerCase().includes(searchQuery.toLowerCase());
+                      return matchesCategory && matchesSearch;
+                    }).length} of {seiDApps.length} projects
                   </span>
                 </div>
                 
-                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   {seiDApps.filter(dapp => dapp.featured).map(dapp => (
-                     <div 
-                       key={dapp.id} 
-                       onClick={() => handleDAppNavigation(dapp)}
-                       className="group bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl border border-slate-700/50 p-6 hover:border-red-500/50 transition-all duration-300 hover:transform hover:scale-105 cursor-pointer"
-                     >
-                       <div className="flex items-start justify-between mb-4">
-                         <div className="flex items-center space-x-3">
-                           <img 
-                             src={dapp.image} 
-                             alt={dapp.name}
-                             className="w-12 h-12 rounded-xl border border-slate-600"
-                           />
-                           <div>
-                             <h3 className="font-bold text-white group-hover:text-red-400 transition-colors">
-                               {dapp.name}
-                             </h3>
-                             <span className="text-xs font-medium px-2 py-1 bg-slate-700/50 text-slate-300 rounded-full">
-                               {dapp.category}
-                             </span>
-                           </div>
-                         </div>
-                         <div className="flex items-center space-x-1">
-                           <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                           <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
-                         </div>
-                       </div>
-                       
-                       <p className="text-slate-300 text-sm mb-4 line-clamp-2">{dapp.description}</p>
-                       
-                       <div className="flex items-center justify-between">
-                         <div className="flex items-center space-x-4 text-xs">
-                           <div className="flex items-center space-x-1">
-                             <DollarSign className="w-3 h-3 text-green-400" />
-                             <span className="text-green-400 font-medium">{dapp.tvl}</span>
-                           </div>
-                           <div className="flex items-center space-x-1">
-                             <Users className="w-3 h-3 text-blue-400" />
-                             <span className="text-blue-400 font-medium">{dapp.users}</span>
-                           </div>
-                         </div>
-                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                           dapp.status === 'Live' 
-                             ? 'bg-green-500/20 text-green-400' 
-                             : 'bg-yellow-500/20 text-yellow-400'
-                         }`}>
-                           {dapp.status}
-                         </span>
-                       </div>
-                     </div>
-                   ))}
-                 </div>
-              </div>
-            )}
-
-            {/* Professional Data Table */}
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">All Projects</h2>
-                <span className="text-slate-400 text-sm">
-                  Showing {seiDApps.filter(dapp => {
-                    const matchesCategory = selectedCategory === 'All' || dapp.category === selectedCategory;
-                    const matchesSearch = dapp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                         dapp.description.toLowerCase().includes(searchQuery.toLowerCase());
-                    return matchesCategory && matchesSearch;
-                  }).length} of {seiDApps.length} projects
-                </span>
-              </div>
-              
-              <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-900/50 border-b border-slate-700/50">
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-hidden rounded-2xl border border-slate-700/50">
+                  <table className="w-full bg-slate-800/30">
+                    <thead className="bg-slate-700/50">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          Project
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          Category
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          TVL / Volume
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          Users
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          Actions
-                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Project</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">TVL</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Users</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-700/30">
@@ -667,702 +648,703 @@ What specific aspect of Sei would you like to explore?`;
                               <img 
                                 src={dapp.image} 
                                 alt={dapp.name}
-                                className="w-10 h-10 rounded-lg border border-slate-600"
+                                className="w-10 h-10 rounded-lg object-cover border border-slate-600"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/Seifu.png';
+                                }}
                               />
                               <div>
-                                <div className="font-semibold text-white group-hover:text-red-400 transition-colors">
-                                  {dapp.name}
+                                <div className="flex items-center space-x-2">
+                                  <div className="font-medium text-white">{dapp.name}</div>
+                                  {dapp.featured && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
                                 </div>
-                                <div className="text-sm text-slate-400 line-clamp-1">
-                                  {dapp.description}
-                                </div>
+                                <div className="text-sm text-slate-400 max-w-xs truncate">{dapp.description}</div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-700/50 text-slate-300">
+                            <span className="px-2 py-1 text-xs font-medium bg-slate-700/50 text-slate-300 rounded-full">
                               {dapp.category}
                             </span>
                           </td>
+                          <td className="px-6 py-4 text-sm text-slate-300">{dapp.tvl}</td>
+                          <td className="px-6 py-4 text-sm text-slate-300">{dapp.users}</td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center space-x-1">
-                              <DollarSign className="w-4 h-4 text-green-400" />
-                              <span className="text-green-400 font-medium">{dapp.tvl}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center space-x-1">
-                              <Users className="w-4 h-4 text-blue-400" />
-                              <span className="text-blue-400 font-medium">{dapp.users}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                               dapp.status === 'Live' 
-                                ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                                ? 'bg-green-500/20 text-green-400' 
+                                : 'bg-yellow-500/20 text-yellow-400'
                             }`}>
-                              <div className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                                dapp.status === 'Live' ? 'bg-green-400' : 'bg-yellow-400'
-                              }`} />
                               {dapp.status}
                             </span>
                           </td>
-                                                     <td className="px-6 py-4 text-right">
-                             <div className="flex items-center justify-end space-x-2">
-                               <button 
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   // View functionality - could show details modal
-                                 }}
-                                 className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
-                                 title="View Details"
-                               >
-                                 <Eye className="w-4 h-4" />
-                               </button>
-                               <button 
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   // Bookmark functionality - could save to favorites
-                                 }}
-                                 className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
-                                 title="Bookmark"
-                               >
-                                 <Bookmark className="w-4 h-4" />
-                               </button>
-                               <button 
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   handleDAppNavigation(dapp);
-                                 }}
-                                 className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                                 title="Open dApp"
-                               >
-                                 <ExternalLink className="w-4 h-4" />
-                               </button>
-                             </div>
-                           </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => handleDAppNavigation(dapp)}
+                              className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors"
+                            >
+                              <span>Launch</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Enhanced AI Analytics Tab */}
-        {activeTab === 'analytics' && (
-          <div className="space-y-8">
-            {/* Real-Time Network Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { label: 'Total TVL', value: networkStats.totalTvl, icon: DollarSign, color: 'green', change: '+12.5%' },
-                { label: 'Active Users', value: networkStats.activeUsers, icon: Users, color: 'blue', change: '+8.2%' },
-                { label: 'Transactions/sec', value: networkStats.transactions, icon: Activity, color: 'purple', change: '+15.7%' },
-                { label: 'Live dApps', value: networkStats.dAppsLive, icon: Globe, color: 'red', change: '+3' }
-              ].map((stat, index) => (
-                <div key={index} className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6 hover:bg-slate-800/70 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-slate-400 text-sm font-medium">{stat.label}</p>
-                      <p className={`text-2xl font-bold text-${stat.color}-400 mt-1`}>{stat.value}</p>
-                      <p className="text-green-400 text-xs mt-1">{stat.change} 24h</p>
-                    </div>
-                    <div className={`p-3 bg-${stat.color}-500/10 rounded-xl`}>
-                      <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* AI-Powered Market Analysis */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Market Sentiment Analysis */}
-              <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-white">AI Market Sentiment</h3>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-slate-400">Live Analysis</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-300">Overall Sentiment</span>
-                    <span className="text-green-400 font-semibold">Bullish (78%)</span>
-                  </div>
-                  <div className="w-full bg-slate-700 rounded-full h-2">
-                    <div className="bg-green-400 h-2 rounded-full" style={{width: '78%'}}></div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-400">+15</p>
-                      <p className="text-xs text-slate-400">Positive Signals</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-red-400">-3</p>
-                      <p className="text-xs text-slate-400">Risk Factors</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Top Performing dApps */}
-              <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
-                <h3 className="text-xl font-bold text-white mb-6">Top Performers (24h)</h3>
-                <div className="space-y-4">
-                  {[
-                    { name: 'Astroport', tvl: '$32.1M', change: '+12.5%', category: 'DEX' },
-                    { name: 'Dragonswap', tvl: '$18.7M', change: '+8.9%', category: 'DEX' },
-                    { name: 'Nitro', tvl: '$22.3M', change: '+15.2%', category: 'Perps' },
-                    { name: 'Kryptonite', tvl: '$14.1M', change: '+6.7%', category: 'Staking' }
-                  ].map((dapp, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                          <span className="text-white font-bold text-xs">{dapp.name[0]}</span>
+                {/* Mobile Card View */}
+                <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {seiDApps.filter(dapp => {
+                    const matchesCategory = selectedCategory === 'All' || dapp.category === selectedCategory;
+                    const matchesSearch = dapp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                         dapp.description.toLowerCase().includes(searchQuery.toLowerCase());
+                    return matchesCategory && matchesSearch;
+                  }).map(dapp => (
+                    <div 
+                      key={dapp.id}
+                      onClick={() => handleDAppNavigation(dapp)}
+                      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-700/50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <img 
+                          src={dapp.image} 
+                          alt={dapp.name}
+                          className="w-12 h-12 rounded-lg object-cover border border-slate-600"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/Seifu.png';
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h3 className="font-medium text-white">{dapp.name}</h3>
+                            {dapp.featured && <Star className="w-4 h-4 text-yellow-400 fill-current" />}
+                          </div>
+                          <p className="text-sm text-slate-400 mb-2 line-clamp-2">{dapp.description}</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3 text-xs text-slate-300">
+                              <span>{dapp.tvl}</span>
+                              <span>{dapp.users}</span>
+                            </div>
+                            <span className="px-2 py-1 text-xs font-medium bg-slate-700/50 text-slate-300 rounded-full">
+                              {dapp.category}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-white font-medium">{dapp.name}</p>
-                          <p className="text-xs text-slate-400">{dapp.category}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-white font-semibold">{dapp.tvl}</p>
-                        <p className="text-green-400 text-xs">{dapp.change}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
+          )}
 
-            {/* AI Insights Dashboard */}
-            <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-white">Seilor AI Insights</h3>
-                <Brain className="w-6 h-6 text-red-400" />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                  <TrendingUp className="w-8 h-8 text-blue-400 mb-3" />
-                  <h4 className="font-semibold text-white mb-2">Market Opportunity</h4>
-                  <p className="text-sm text-slate-300 mb-3">
-                    DeFi TVL showing strong growth momentum. Consider liquid staking protocols.
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <span className="text-xs text-blue-400">High Confidence</span>
-                  </div>
-                </div>
-
-                <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                  <Zap className="w-8 h-8 text-green-400 mb-3" />
-                  <h4 className="font-semibold text-white mb-2">Alpha Signal</h4>
-                  <p className="text-sm text-slate-300 mb-3">
-                    New gaming dApps launching. Early adoption could yield significant returns.
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-xs text-green-400">Medium Risk</span>
-                  </div>
-                </div>
-
-                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
-                  <Target className="w-8 h-8 text-purple-400 mb-3" />
-                  <h4 className="font-semibold text-white mb-2">Strategy</h4>
-                  <p className="text-sm text-slate-300 mb-3">
-                    Diversify across DEX tokens and staking. Monitor NFT marketplace growth.
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                    <span className="text-xs text-purple-400">Long Term</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Interactive Analytics */}
-            <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
-              <h3 className="text-xl font-bold text-white mb-6">Interactive Analytics</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Enhanced AI Analytics Tab */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-8">
+              {/* Real-Time Network Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'TVL Growth', value: '📈', desc: 'Track protocol growth' },
-                  { label: 'Volume Analysis', value: '💹', desc: 'Trading patterns' },
-                  { label: 'Yield Farming', value: '🌾', desc: 'Best APY opportunities' },
-                  { label: 'Risk Assessment', value: '⚡', desc: 'Portfolio risk analysis' }
-                ].map((item, index) => (
-                  <button
-                    key={index}
-                    className="bg-slate-900/50 hover:bg-slate-700/50 rounded-xl p-4 text-left transition-colors group"
-                  >
-                    <div className="text-2xl mb-2">{item.value}</div>
-                    <h4 className="font-semibold text-white group-hover:text-red-400 transition-colors">{item.label}</h4>
-                    <p className="text-xs text-slate-400">{item.desc}</p>
-                  </button>
+                  { label: 'Total TVL', value: networkStats.totalTvl, icon: DollarSign, color: 'green', change: '+12.5%' },
+                  { label: 'Active Users', value: networkStats.activeUsers, icon: Users, color: 'blue', change: '+8.2%' },
+                  { label: 'Transactions/sec', value: networkStats.transactions, icon: Activity, color: 'purple', change: '+15.7%' },
+                  { label: 'Live dApps', value: networkStats.dAppsLive, icon: Globe, color: 'red', change: '+3' }
+                ].map((stat, index) => (
+                  <div key={index} className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6 hover:bg-slate-800/70 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-slate-400 text-sm font-medium">{stat.label}</p>
+                        <p className={`text-2xl font-bold text-${stat.color}-400 mt-1`}>{stat.value}</p>
+                        <p className="text-green-400 text-xs mt-1">{stat.change} 24h</p>
+                      </div>
+                      <div className={`p-3 bg-${stat.color}-500/10 rounded-xl`}>
+                        <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* Alpha Insights Tab */}
-        {activeTab === 'alpha' && (
-          <div className="space-y-8">
-            <div className="text-center">
-              <Target className="w-16 h-16 text-red-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-2">Alpha Insights</h2>
-              <p className="text-slate-400 max-w-2xl mx-auto">
-                AI-powered market intelligence and early opportunities in the Sei ecosystem. 
-                Get ahead of the curve with exclusive insights.
-              </p>
-            </div>
-            
-            {alphaInsights.length === 0 ? (
-              <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-8 text-center">
-                <Sparkles className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">Alpha Intelligence Loading...</h3>
-                <p className="text-slate-400">Our AI is analyzing market data and ecosystem developments.</p>
-              </div>
-            ) : (
-              <div className="grid gap-6">
-                {alphaInsights.map(insight => (
-                  <div key={insight.id} className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white mb-2">{insight.title}</h3>
-                        <p className="text-slate-300 mb-4">{insight.description}</p>
-                        <div className="flex items-center space-x-4 text-sm">
-                          <span className="text-green-400">Confidence: {insight.confidence}%</span>
-                          <span className="text-blue-400">Timeframe: {insight.timeframe}</span>
-                          <span className="text-purple-400">Impact: {insight.impact}</span>
+              {/* AI-Powered Market Analysis */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Market Sentiment Analysis */}
+                <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-white">AI Market Sentiment</h3>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-slate-400">Live Analysis</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-300">Overall Sentiment</span>
+                      <span className="text-green-400 font-semibold">Bullish (78%)</span>
+                    </div>
+                    <div className="w-full bg-slate-700 rounded-full h-2">
+                      <div className="bg-green-400 h-2 rounded-full" style={{width: '78%'}}></div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-green-400">+15</p>
+                        <p className="text-xs text-slate-400">Positive Signals</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-red-400">-3</p>
+                        <p className="text-xs text-slate-400">Risk Factors</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Top Performing dApps */}
+                <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
+                  <h3 className="text-xl font-bold text-white mb-6">Top Performers (24h)</h3>
+                  <div className="space-y-4">
+                    {[
+                      { name: 'Astroport', tvl: '$32.1M', change: '+12.5%', category: 'DEX' },
+                      { name: 'Dragonswap', tvl: '$18.7M', change: '+8.9%', category: 'DEX' },
+                      { name: 'Nitro', tvl: '$22.3M', change: '+15.2%', category: 'Perps' },
+                      { name: 'Kryptonite', tvl: '$14.1M', change: '+6.7%', category: 'Staking' }
+                    ].map((dapp, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                            <span className="text-white font-bold text-xs">{dapp.name[0]}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-white">{dapp.name}</p>
+                            <p className="text-xs text-slate-400">{dapp.category}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-white">{dapp.tvl}</p>
+                          <p className="text-xs text-green-400">{dapp.change}</p>
                         </div>
                       </div>
-                      <span className="px-2 py-1 text-xs font-medium bg-red-500/20 text-red-400 rounded-full">
-                        {insight.type}
-                      </span>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* AI Assistant Tab */}
-        {activeTab === 'ai' && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <Bot className="w-16 h-16 text-red-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-2">Seilor AI Assistant</h2>
-              <p className="text-slate-400 max-w-2xl mx-auto">
-                Your intelligent guide to the Sei ecosystem. Ask about dApps, DeFi strategies, 
-                alpha opportunities, or get help navigating the blockchain.
-              </p>
-            </div>
-
-            {/* Enhanced Chat Interface */}
-            <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 overflow-hidden">
-              {/* Chat Messages */}
-              <div className="h-96 overflow-y-auto p-6 space-y-4">
-                {chatMessages.map((msg, index) => (
-                  <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-2xl ${msg.type === 'user' ? 'order-2' : 'order-1'}`}>
-                      <div className={`px-4 py-3 rounded-2xl ${
-                        msg.type === 'user' 
-                          ? 'bg-red-500 text-white ml-4' 
-                          : 'bg-slate-700/50 text-slate-200 mr-4'
-                      }`}>
-                        <div className="text-sm whitespace-pre-line">{msg.message}</div>
-                      </div>
-                      <div className={`text-xs text-slate-500 mt-1 ${
-                        msg.type === 'user' ? 'text-right mr-4' : 'ml-4'
-                      }`}>
-                        {msg.timestamp.toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      msg.type === 'user' 
-                        ? 'bg-red-500 order-1' 
-                        : 'bg-slate-600 order-2'
-                    }`}>
-                      {msg.type === 'user' ? (
-                        <Users className="w-4 h-4 text-white" />
-                      ) : (
-                        <Bot className="w-4 h-4 text-slate-300" />
-                      )}
-                    </div>
-                  </div>
-                ))}
+                </div>
               </div>
 
-              {/* Enhanced Chat Input */}
-              <div className="border-t border-slate-700/50 p-6 bg-slate-900/50">
-                <div className="flex items-end space-x-3">
-                  <div className="flex-1">
-                    <textarea
-                      value={aiChat}
-                      onChange={(e) => setAiChat(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleAiChat();
-                        }
-                      }}
-                      placeholder="Ask about dApps, alpha opportunities, DeFi strategies, or anything about Sei..."
-                      className="w-full bg-slate-800/50 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors resize-none"
-                      rows={3}
-                    />
-                  </div>
-                  <button
-                    onClick={handleAiChat}
-                    disabled={!aiChat.trim()}
-                    className="bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl font-medium transition-colors flex items-center space-x-2"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
+              {/* AI Insights Dashboard */}
+              <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white">AI Insights Dashboard</h3>
+                  <Brain className="w-6 h-6 text-red-400" />
                 </div>
                 
-                {/* Quick Actions */}
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                    <TrendingUp className="w-8 h-8 text-blue-400 mb-3" />
+                    <h4 className="font-semibold text-white mb-2">Market Opportunity</h4>
+                    <p className="text-sm text-slate-300 mb-3">
+                      DeFi TVL showing strong growth momentum. Consider liquid staking protocols.
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <span className="text-xs text-blue-400">High Confidence</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                    <Zap className="w-8 h-8 text-green-400 mb-3" />
+                    <h4 className="font-semibold text-white mb-2">Alpha Signal</h4>
+                    <p className="text-sm text-slate-300 mb-3">
+                      New gaming dApps launching. Early adoption could yield significant returns.
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-xs text-green-400">Medium Risk</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                    <Target className="w-8 h-8 text-purple-400 mb-3" />
+                    <h4 className="font-semibold text-white mb-2">Strategy</h4>
+                    <p className="text-sm text-slate-300 mb-3">
+                      Diversify across DEX tokens and staking. Monitor NFT marketplace growth.
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      <span className="text-xs text-purple-400">Long Term</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Analytics */}
+              <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
+                <h3 className="text-xl font-bold text-white mb-6">Interactive Analytics</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    'Show me top DeFi projects',
-                    'What are the best staking options?',
-                    'How do I bridge assets to Sei?',
-                    'Tell me about gaming on Sei',
-                    'What are the alpha opportunities?'
-                  ].map((suggestion, index) => (
+                    { label: 'TVL Growth', value: '📈', desc: 'Track protocol growth' },
+                    { label: 'Volume Analysis', value: '💹', desc: 'Trading patterns' },
+                    { label: 'Yield Farming', value: '🌾', desc: 'Best APY opportunities' },
+                    { label: 'Risk Assessment', value: '⚡', desc: 'Portfolio risk analysis' }
+                  ].map((item, index) => (
                     <button
                       key={index}
-                      onClick={() => setAiChat(suggestion)}
-                      className="px-3 py-1.5 text-xs bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white rounded-lg transition-colors"
+                      className="bg-slate-900/50 hover:bg-slate-700/50 rounded-xl p-4 text-left transition-colors group"
                     >
-                      {suggestion}
+                      <div className="text-2xl mb-2">{item.value}</div>
+                      <h4 className="font-semibold text-white group-hover:text-red-400 transition-colors">{item.label}</h4>
+                      <p className="text-xs text-slate-400">{item.desc}</p>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
+          )}
 
-            {/* AI Features Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: 'Smart Analysis',
-                  description: 'Get AI-powered insights on tokens, dApps, and market trends with real-time data',
-                  icon: Brain,
-                  color: 'blue'
-                },
-                {
-                  title: 'Risk Assessment',
-                  description: 'Evaluate investment risks with advanced algorithms and safety recommendations',
-                  icon: AlertCircle,
-                  color: 'yellow'
-                },
-                {
-                  title: 'Learning Guide',
-                  description: 'Learn DeFi concepts with personalized tutorials and step-by-step guidance',
-                  icon: Info,
-                  color: 'green'
-                }
-              ].map((feature, index) => (
-                <div key={index} className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6 hover:border-slate-600/50 transition-colors">
-                  <div className={`w-12 h-12 bg-${feature.color}-500/10 rounded-xl flex items-center justify-center mb-4`}>
-                    <feature.icon className={`w-6 h-6 text-${feature.color}-400`} />
+          {/* Alpha Insights Tab */}
+          {activeTab === 'alpha' && (
+            <div className="space-y-8">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-white mb-4">Alpha Insights</h2>
+                <p className="text-slate-400 max-w-2xl mx-auto">
+                  Real-time intelligence and opportunities in the Sei ecosystem, powered by AI analysis
+                </p>
+              </div>
+
+              {/* Alpha Insights Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {alphaInsights.map((insight) => (
+                  <div key={insight.id} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 hover:bg-slate-700/50 transition-colors">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${
+                          insight.confidence >= 80 ? 'bg-green-400' : 
+                          insight.confidence >= 60 ? 'bg-yellow-400' : 'bg-red-400'
+                        }`}></div>
+                        <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                          {insight.category}
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-500">{insight.timeframe}</span>
+                    </div>
+                    
+                    <h3 className="text-lg font-bold text-white mb-2">{insight.title}</h3>
+                    <p className="text-slate-400 text-sm mb-4 leading-relaxed">{insight.description}</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <TrendingUp className="w-4 h-4 text-green-400" />
+                          <span className="text-xs text-slate-300">{insight.confidence}% confidence</span>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          insight.impact === 'High' ? 'bg-red-500/20 text-red-400' :
+                          insight.impact === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-green-500/20 text-green-400'
+                        }`}>
+                          {insight.impact} Impact
+                        </span>
+                      </div>
+                      <button className="text-red-400 hover:text-red-300 transition-colors">
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">{feature.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
+                ))}
+              </div>
+
+              {/* Market Intelligence Summary */}
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 rounded-2xl border border-slate-700/50 p-8">
+                <div className="flex items-center space-x-3 mb-6">
+                  <Brain className="w-8 h-8 text-red-400" />
+                  <h3 className="text-2xl font-bold text-white">AI Market Intelligence</h3>
                 </div>
-              ))}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-400 mb-2">78%</div>
+                    <div className="text-sm text-slate-400">Bullish Sentiment</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-400 mb-2">15+</div>
+                    <div className="text-sm text-slate-400">Active Signals</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-yellow-400 mb-2">$2.1B</div>
+                    <div className="text-sm text-slate-400">Market Opportunity</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-400 mb-2">92%</div>
+                    <div className="text-sm text-slate-400">Accuracy Rate</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-                 )}
-       </div>
+          )}
 
-       {/* Enhanced In-App Browser Modal */}
-       {showBrowser && (
-         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-           <div className="bg-slate-900 rounded-2xl border border-slate-700 w-full max-w-7xl h-[90vh] flex flex-col">
-             {/* Enhanced Browser Header */}
-             <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800/50">
-               <div className="flex items-center space-x-3">
-                 {/* Browser Controls */}
-                 <div className="flex items-center space-x-2">
-                   <button
-                     onClick={navigateBack}
-                     disabled={browserHistoryIndex <= 0}
-                     className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                   >
-                     <ArrowLeft className="w-4 h-4 text-slate-300" />
-                   </button>
-                   <button
-                     onClick={navigateForward}
-                     disabled={browserHistoryIndex >= browserHistory.length - 1}
-                     className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
-                   >
-                     <ArrowRight className="w-4 h-4 text-slate-300" />
-                   </button>
-                   <button
-                     onClick={refreshBrowser}
-                     className="p-1.5 hover:bg-slate-700 rounded transition-colors"
-                   >
-                     <RefreshCw className={`w-4 h-4 text-slate-300 ${browserLoading ? 'animate-spin' : ''}`} />
-                   </button>
-                 </div>
-                 
-                 {/* URL Bar */}
-                 <div className="bg-slate-800 rounded-lg px-4 py-2 flex-1 max-w-md">
-                   <div className="flex items-center space-x-2">
-                     {browserUrl.startsWith('https://') ? (
-                       <Lock className="w-4 h-4 text-green-400" />
-                     ) : (
-                       <Globe className="w-4 h-4 text-slate-400" />
-                     )}
-                     <span className="text-slate-300 text-sm truncate">{browserUrl}</span>
-                   </div>
-                 </div>
+          {/* AI Assistant Tab */}
+          {activeTab === 'ai' && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
+                {/* Chat Header */}
+                <div className="bg-slate-700/50 px-6 py-4 border-b border-slate-700/50">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                      <Bot className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white">Seilor AI Assistant</h3>
+                      <p className="text-xs text-slate-400">Powered by advanced Sei blockchain intelligence</p>
+                    </div>
+                  </div>
+                </div>
 
-                 {/* Safety Toggle */}
-                 <button
-                   onClick={toggleSafeBrowsing}
-                   className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                     isSafeBrowsingMode 
-                       ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
-                       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                   }`}
-                 >
-                   <Shield className="w-3 h-3" />
-                   <span>{isSafeBrowsingMode ? 'Safe Mode ON' : 'Safe Mode OFF'}</span>
-                 </button>
-               </div>
-               
-               <div className="flex items-center space-x-2">
-                 <button
-                   onClick={() => window.open(browserUrl, '_blank')}
-                   className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                   title="Open in new tab"
-                 >
-                   <ExternalLink className="w-4 h-4 text-slate-400" />
-                 </button>
-                 <button
-                   onClick={() => setShowBrowser(false)}
-                   className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                 >
-                   <X className="w-4 h-4 text-slate-400" />
-                 </button>
-               </div>
-             </div>
+                {/* Chat Messages */}
+                <div className="h-96 overflow-y-auto p-6 space-y-4">
+                  {chatMessages.map((message, index) => (
+                    <div key={index} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-3xl p-4 rounded-2xl ${
+                        message.type === 'user' 
+                          ? 'bg-red-500 text-white' 
+                          : 'bg-slate-700/50 text-slate-100'
+                      }`}>
+                        <div className="prose prose-sm max-w-none">
+                          {message.message.split('\n').map((line, i) => {
+                            if (line.startsWith('**') && line.endsWith('**')) {
+                              return <div key={i} className="font-bold text-white mb-2">{line.slice(2, -2)}</div>;
+                            } else if (line.startsWith('• ')) {
+                              return <div key={i} className="ml-4 mb-1">{line}</div>;
+                            } else if (line.trim() === '') {
+                              return <div key={i} className="h-2"></div>;
+                            } else {
+                              return <div key={i} className="mb-1">{line}</div>;
+                            }
+                          })}
+                        </div>
+                        <div className="text-xs opacity-70 mt-2">
+                          {message.timestamp.toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-             {/* Safety Analysis Banner */}
-             {isSafeBrowsingMode && dAppAnalysis && (
-               <div className={`px-4 py-3 border-b border-slate-700 ${
-                 dAppAnalysis.safetyScore >= 80 ? 'bg-green-900/20' : 
-                 dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-900/20' : 'bg-red-900/20'
-               }`}>
-                 <div className="flex items-center justify-between">
-                   <div className="flex items-center space-x-3">
-                     <Shield className={`w-5 h-5 ${
-                       dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
-                       dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 'text-red-400'
-                     }`} />
-                     <div>
-                       <div className="flex items-center space-x-2">
-                         <span className="text-white font-medium">Safety Score: {dAppAnalysis.safetyScore}/100</span>
-                         <span className={`px-2 py-1 text-xs rounded-full ${
-                           dAppAnalysis.safetyScore >= 80 ? 'bg-green-500/20 text-green-400' : 
-                           dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
-                         }`}>
-                           {dAppAnalysis.reputation}
-                         </span>
-                       </div>
-                       <div className="text-xs text-slate-400 mt-1">
-                         {dAppAnalysis.isVerified ? '✅ Verified' : '⚠️ Unverified'} • 
-                         {dAppAnalysis.hasSSL ? ' 🔒 SSL Secure' : ' ⚠️ No SSL'} • 
-                         Analyzed by Seifun SafeChecker
-                       </div>
-                     </div>
-                   </div>
-                   <button
-                     onClick={() => setDAppAnalysis(null)}
-                     className="text-slate-400 hover:text-white"
-                   >
-                     <X className="w-4 h-4" />
-                   </button>
-                 </div>
-               </div>
-             )}
+                {/* Chat Input */}
+                <div className="p-6 border-t border-slate-700/50">
+                  <div className="flex space-x-4">
+                    <input
+                      type="text"
+                      value={aiChat}
+                      onChange={(e) => setAiChat(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
+                      placeholder="Ask about tokens, dApps, trading strategies, or anything Sei-related..."
+                      className="flex-1 px-4 py-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50"
+                    />
+                    <button
+                      onClick={handleAiChat}
+                      disabled={!aiChat.trim()}
+                      className="px-6 py-3 bg-red-500 hover:bg-red-600 disabled:bg-slate-600 disabled:opacity-50 text-white rounded-xl font-medium transition-colors flex items-center space-x-2"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>Send</span>
+                    </button>
+                  </div>
+                  
+                  {/* Quick Actions */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {[
+                      'Analyze token safety',
+                      'Best dApps for trading',
+                      'Staking opportunities',
+                      'Latest alpha insights',
+                      'Market sentiment'
+                    ].map((action) => (
+                      <button
+                        key={action}
+                        onClick={() => setAiChat(action)}
+                        className="px-3 py-1.5 text-xs bg-slate-700/50 hover:bg-red-500/20 text-slate-300 hover:text-red-400 rounded-lg transition-colors border border-slate-600/50 hover:border-red-500/50"
+                      >
+                        {action}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
-             {/* Enhanced Browser Content */}
-             <div className="flex-1 bg-white overflow-hidden relative">
-               {browserLoading && (
-                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-                   <div className="flex items-center space-x-3">
-                     <RefreshCw className="w-6 h-6 text-blue-500 animate-spin" />
-                     <span className="text-slate-600">Loading {browserTitle}...</span>
-                   </div>
-                 </div>
-               )}
-               
-               {browserError ? (
-                 <div className="h-full flex items-center justify-center">
-                   <div className="text-center p-8">
-                     <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-                     <h3 className="text-xl font-bold text-slate-800 mb-2">Failed to Load</h3>
-                     <p className="text-slate-600 mb-4">{browserError}</p>
-                     <button
-                       onClick={refreshBrowser}
-                       className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-                     >
-                       Try Again
-                     </button>
-                   </div>
-                 </div>
-               ) : (
-                 <div className="h-full">
-                   {/* Real iframe integration */}
-                   <iframe
-                     src={browserUrl}
-                     className="w-full h-full border-none"
-                     title={browserTitle}
-                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                     referrerPolicy="strict-origin-when-cross-origin"
-                     onLoad={() => setBrowserLoading(false)}
-                     onError={() => {
-                       setBrowserError('Failed to load this dApp. It may not support iframe embedding.');
-                       setBrowserLoading(false);
-                     }}
-                   />
-                   
-                   {/* Overlay for wallet connection prompts */}
-                   {!isConnected && (
-                     <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
-                       <div className="flex items-center space-x-2">
-                         <Wallet className="w-4 h-4" />
-                         <span className="text-sm">Connect wallet for full dApp experience</span>
-                         <button
-                           onClick={connectWallet}
-                           className="ml-2 bg-white text-blue-500 px-2 py-1 rounded text-xs hover:bg-blue-50"
-                         >
-                           Connect
-                         </button>
-                       </div>
-                     </div>
-                   )}
-                 </div>
-               )}
-             </div>
+      {/* Enhanced In-App Browser Modal with Protocol Logos */}
+      {showBrowser && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-slate-900 rounded-2xl border border-slate-700 w-full max-w-7xl h-[90vh] flex flex-col">
+              {/* Enhanced Browser Header */}
+              <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800/50">
+                <div className="flex items-center space-x-3">
+                  {/* Browser Controls */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={navigateBack}
+                      disabled={browserHistoryIndex <= 0}
+                      className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4 text-slate-300" />
+                    </button>
+                    <button
+                      onClick={navigateForward}
+                      disabled={browserHistoryIndex >= browserHistory.length - 1}
+                      className="p-1.5 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed rounded transition-colors"
+                    >
+                      <ArrowRight className="w-4 h-4 text-slate-300" />
+                    </button>
+                    <button
+                      onClick={refreshBrowser}
+                      className="p-1.5 hover:bg-slate-700 rounded transition-colors"
+                    >
+                      <RefreshCw className={`w-4 h-4 text-slate-300 ${browserLoading ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
+                  
+                  {/* URL Bar */}
+                  <div className="bg-slate-800 rounded-lg px-4 py-2 flex-1 max-w-md">
+                    <div className="flex items-center space-x-2">
+                      {browserUrl.startsWith('https://') ? (
+                        <Lock className="w-4 h-4 text-green-400" />
+                      ) : (
+                        <Globe className="w-4 h-4 text-slate-400" />
+                      )}
+                      <span className="text-slate-300 text-sm truncate">{browserUrl}</span>
+                    </div>
+                  </div>
 
-             {/* Browser Footer with Tips */}
-             <div className="px-4 py-3 border-t border-slate-700 bg-slate-800/30">
-               <div className="flex items-center justify-between text-xs text-slate-400">
-                 <div className="flex items-center space-x-4">
-                   <span>🛡️ Seifun Safe Browsing</span>
-                   <span>•</span>
-                   <span>Always verify transactions before signing</span>
-                 </div>
-                 <div className="flex items-center space-x-2">
-                   <span>Powered by Seilor AI</span>
-                   <button
-                     onClick={() => window.open(`/app/safechecker?url=${encodeURIComponent(browserUrl)}`, '_blank')}
-                     className="text-blue-400 hover:text-blue-300"
-                   >
-                     Analyze with SafeChecker
-                   </button>
-                 </div>
-               </div>
-             </div>
-           </div>
-         )}
-       </div>
-     );
-   };
-   
-   export default Seilor;
-                <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-                  <div className="text-center p-8 max-w-2xl">
-                    <div className="bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
-                      <Globe className="w-20 h-20 text-red-400 mx-auto mb-6" />
-                      <h3 className="text-2xl font-bold text-slate-800 mb-4">Seilor 0 Smart Browser</h3>
-                      <p className="text-slate-600 mb-8 leading-relaxed">
-                        Due to cross-origin security policies, external dApps work best in your default browser. 
-                        Choose your preferred browsing method below.
-                      </p>
+                  {/* Safety Toggle */}
+                  <button
+                    onClick={toggleSafeBrowsing}
+                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      isSafeBrowsingMode 
+                        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    }`}
+                  >
+                    <Shield className="w-3 h-3" />
+                    <span>{isSafeBrowsingMode ? 'Safe Mode ON' : 'Safe Mode OFF'}</span>
+                  </button>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => window.open(browserUrl, '_blank')}
+                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button
+                    onClick={() => setShowBrowser(false)}
+                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Safety Analysis Banner */}
+              {isSafeBrowsingMode && dAppAnalysis && (
+                <div className={`px-4 py-3 border-b border-slate-700 ${
+                  dAppAnalysis.safetyScore >= 80 ? 'bg-green-900/20' : 
+                  dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-900/20' : 'bg-red-900/20'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Shield className={`w-5 h-5 ${
+                        dAppAnalysis.safetyScore >= 80 ? 'text-green-400' : 
+                        dAppAnalysis.safetyScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+                      }`} />
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-white font-medium">Safety Score: {dAppAnalysis.safetyScore}/100</span>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            dAppAnalysis.safetyScore >= 80 ? 'bg-green-500/20 text-green-400' : 
+                            dAppAnalysis.safetyScore >= 60 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+                          }`}>
+                            {dAppAnalysis.reputation}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          {dAppAnalysis.isVerified ? '✅ Verified' : '⚠️ Unverified'} • 
+                          {dAppAnalysis.hasSSL ? ' 🔒 SSL Secure' : ' ⚠️ No SSL'} • 
+                          Analyzed by Seifun SafeChecker
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setDAppAnalysis(null)}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Enhanced Smart Browser Content with Protocol Logos */}
+              <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+                <div className="h-full flex flex-col">
+                  {/* dApp Info Header */}
+                  <div className="bg-white border-b border-slate-200 px-6 py-4">
+                    <div className="flex items-center space-x-4">
+                      {/* Find current dApp from URL */}
+                      {(() => {
+                        const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
+                        return currentDapp ? (
+                          <>
+                            <img 
+                              src={currentDapp.image} 
+                              alt={currentDapp.name}
+                              className="w-12 h-12 rounded-xl object-cover border-2 border-slate-200"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/Seifu.png';
+                              }}
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <h3 className="text-lg font-bold text-slate-800">{currentDapp.name}</h3>
+                                {currentDapp.featured && (
+                                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                )}
+                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                                  {currentDapp.category}
+                                </span>
+                              </div>
+                              <p className="text-sm text-slate-600 mt-1">{currentDapp.description}</p>
+                              <div className="flex items-center space-x-4 mt-2 text-xs text-slate-500">
+                                <span>📈 TVL: {currentDapp.tvl}</span>
+                                <span>👥 Users: {currentDapp.users}</span>
+                                <span className={`px-2 py-1 rounded-full ${
+                                  currentDapp.status === 'Live' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                  {currentDapp.status}
+                                </span>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                              <Globe className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="text-lg font-bold text-slate-800">{browserTitle}</h3>
+                              <p className="text-sm text-slate-600">External dApp</p>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Main Content Area */}
+                  <div className="flex-1 flex">
+                    {/* Left Panel - dApp Options */}
+                    <div className="w-80 bg-white border-r border-slate-200 p-6">
+                      <h4 className="text-lg font-semibold text-slate-800 mb-4">Choose Your Experience</h4>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div className="space-y-4">
                         {/* Recommended External Browser */}
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200 relative">
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border-2 border-green-200 relative">
                           <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                             Recommended
                           </div>
-                          <ExternalLink className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                          <h4 className="font-bold text-slate-800 mb-2">External Browser</h4>
-                          <p className="text-sm text-slate-600 mb-4">
-                            Full functionality with wallet extensions, transactions, and optimal performance
-                          </p>
-                          <button
-                            onClick={() => {
-                              window.open(browserUrl, '_blank');
-                              setShowBrowser(false);
-                            }}
-                            className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                          >
-                            Launch External
-                          </button>
+                          <div className="flex items-start space-x-3">
+                            <ExternalLink className="w-8 h-8 text-green-500 mt-1" />
+                            <div className="flex-1">
+                              <h5 className="font-bold text-slate-800 mb-1">External Browser</h5>
+                              <p className="text-sm text-slate-600 mb-3">
+                                Full functionality with wallet extensions and optimal performance
+                              </p>
+                              <button
+                                onClick={() => {
+                                  window.open(browserUrl, '_blank');
+                                  setShowBrowser(false);
+                                }}
+                                className="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Launch External
+                              </button>
+                            </div>
+                          </div>
                         </div>
 
                         {/* In-App Preview */}
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                          <Globe className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-                          <h4 className="font-bold text-slate-800 mb-2">Quick Preview</h4>
-                          <p className="text-sm text-slate-600 mb-4">
-                            Limited preview mode - some features may not work due to security restrictions
-                          </p>
-                          <button
-                            onClick={() => {
-                              // Create iframe preview with limitations notice
-                              const previewContainer = document.querySelector('.browser-preview-container');
-                              if (previewContainer) {
-                                previewContainer.innerHTML = `
-                                  <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                                    <div class="flex items-center space-x-2 text-yellow-800">
-                                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                                      </svg>
-                                      <span class="font-medium text-sm">Limited Preview Mode</span>
-                                    </div>
-                                    <p class="text-sm text-yellow-700 mt-1">
-                                      Transactions and wallet interactions won't work. Use external browser for full functionality.
-                                    </p>
-                                  </div>
-                                  <iframe 
-                                    src="${browserUrl}" 
-                                    style="width: 100%; height: 400px; border: none; border-radius: 12px;" 
-                                    sandbox="allow-scripts allow-same-origin"
-                                    title="dApp Preview">
-                                  </iframe>
-                                `;
-                              }
-                            }}
-                            className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                          >
-                            Preview Mode
-                          </button>
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                          <div className="flex items-start space-x-3">
+                            <Eye className="w-8 h-8 text-blue-500 mt-1" />
+                            <div className="flex-1">
+                              <h5 className="font-bold text-slate-800 mb-1">Quick Preview</h5>
+                              <p className="text-sm text-slate-600 mb-3">
+                                Limited preview mode - some features may not work
+                              </p>
+                              <button
+                                onClick={() => {
+                                  const previewContainer = document.querySelector('.browser-preview-container');
+                                  if (previewContainer) {
+                                    previewContainer.innerHTML = `
+                                      <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <div class="flex items-center space-x-2 text-yellow-800">
+                                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                          </svg>
+                                          <span class="font-medium text-sm">Limited Preview Mode</span>
+                                        </div>
+                                        <p class="text-sm text-yellow-700 mt-1">
+                                          Wallet interactions won't work. Use external browser for full functionality.
+                                        </p>
+                                      </div>
+                                      <iframe
+                                        src="${browserUrl}"
+                                        style="width: 100%; height: 500px; border: none; border-radius: 8px; background: white;"
+                                        sandbox="allow-scripts allow-same-origin allow-forms"
+                                        title="dApp Preview">
+                                      </iframe>
+                                    `;
+                                  }
+                                }}
+                                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Preview Mode
+                              </button>
+                            </div>
+                          </div>
                         </div>
+
+                        {/* SafeChecker Integration */}
+                        {isConnected && (
+                          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                            <div className="flex items-start space-x-3">
+                              <Shield className="w-8 h-8 text-purple-500 mt-1" />
+                              <div className="flex-1">
+                                <h5 className="font-bold text-slate-800 mb-1">Safety Analysis</h5>
+                                <p className="text-sm text-slate-600 mb-3">
+                                  Analyze this dApp with Seifun's SafeChecker
+                                </p>
+                                <button
+                                  onClick={() => window.open(`/app/safechecker?url=${encodeURIComponent(browserUrl)}`, '_blank')}
+                                  className="w-full bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                  Run Safety Check
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Browser Preview Container */}
-                      <div className="browser-preview-container"></div>
-
                       {/* Why External Browser is Better */}
-                      <div className="bg-slate-50 rounded-xl p-6 mt-6">
-                        <h5 className="font-semibold text-slate-800 mb-4">🔒 Why External Browser Works Better:</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-600">
+                      <div className="mt-6 bg-slate-50 rounded-xl p-4">
+                        <h5 className="font-semibold text-slate-800 mb-3 flex items-center">
+                          <Lock className="w-4 h-4 mr-2" />
+                          Why External Browser Works Better
+                        </h5>
+                        <div className="space-y-2 text-sm text-slate-600">
                           <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span>Full wallet integration</span>
@@ -1379,37 +1361,83 @@ What specific aspect of Sei would you like to explore?`;
                             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span>Optimal performance</span>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>Full security features</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span>Extension support</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Panel - Preview Area */}
+                    <div className="flex-1 bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
+                      {/* Preview Header */}
+                      <div className="bg-white border-b border-slate-200 px-6 py-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-slate-800">dApp Preview</h4>
+                          <div className="flex items-center space-x-2 text-sm text-slate-500">
+                            <Globe className="w-4 h-4" />
+                            <span className="font-mono">{new URL(browserUrl).hostname}</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Future Plans */}
-                      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-center space-x-2 text-blue-800">
-                          <Sparkles className="w-5 h-5" />
-                          <span className="font-medium">Coming Soon</span>
+                      {/* Preview Content */}
+                      <div className="flex-1 p-6">
+                        <div className="browser-preview-container h-full">
+                          <div className="h-full flex items-center justify-center">
+                            <div className="text-center">
+                              <Globe className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                              <h3 className="text-xl font-bold text-slate-700 mb-2">Ready to Launch</h3>
+                              <p className="text-slate-500 mb-6 max-w-md">
+                                Choose your preferred browsing method from the options on the left.
+                              </p>
+                              <div className="flex items-center justify-center space-x-4 text-sm text-slate-400">
+                                <div className="flex items-center space-x-2">
+                                  <Shield className="w-4 h-4" />
+                                  <span>Safe Browsing</span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Zap className="w-4 h-4" />
+                                  <span>AI Powered</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-sm text-blue-700 mt-1">
-                          We're working on advanced browser integration with native wallet support and enhanced security features.
-                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="bg-white border-t border-slate-200 px-6 py-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center space-x-4 text-slate-500">
+                        <span className="flex items-center space-x-2">
+                          <Sparkles className="w-4 h-4" />
+                          <span>Powered by Seilor AI</span>
+                        </span>
+                        <span>•</span>
+                        <span>🛡️ Seifun Safe Browsing</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {!isConnected && (
+                          <button
+                            onClick={connectWallet}
+                            className="flex items-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <Wallet className="w-3 h-3" />
+                            <span>Connect Wallet</span>
+                          </button>
+                        )}
+                        <span className="text-slate-400">
+                          Always verify transactions before signing
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-           </div>
-         </div>
-       )}
-     </div>
-   );
- };
- 
- export default Seilor;
+          )}
+      </div>
+    );
+  };
+  
+  export default Seilor;
