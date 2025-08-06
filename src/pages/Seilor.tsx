@@ -999,8 +999,21 @@ const Seilor = () => {
                     const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
                     return currentDapp ? (
                       <>
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-slate-600">
-                          <Globe className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-600">
+                          <img 
+                            src={currentDapp.image} 
+                            alt={`${currentDapp.name} logo`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to gradient with icon if image fails
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.className = 'w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-slate-600';
+                                parent.innerHTML = '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>';
+                              }
+                            }}
+                          />
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">
@@ -1051,6 +1064,35 @@ const Seilor = () => {
               {/* Left Panel - dApp Info & Actions */}
               <div className="w-96 bg-slate-800/50 border-r border-slate-700 p-6 overflow-y-auto">
                 <div className="space-y-6">
+                  {/* dApp Stats */}
+                  {(() => {
+                    const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
+                    return currentDapp ? (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                          <div className="text-sm text-slate-400">TVL</div>
+                          <div className="text-lg font-semibold text-green-400">{currentDapp.tvl}</div>
+                        </div>
+                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                          <div className="text-sm text-slate-400">Users</div>
+                          <div className="text-lg font-semibold text-blue-400">{currentDapp.users}</div>
+                        </div>
+                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                          <div className="text-sm text-slate-400">Category</div>
+                          <div className="text-lg font-semibold text-purple-400">{currentDapp.category}</div>
+                        </div>
+                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                          <div className="text-sm text-slate-400">Status</div>
+                          <div className={`text-lg font-semibold ${
+                            currentDapp.status === 'Live' ? 'text-green-400' : 'text-yellow-400'
+                          }`}>
+                            {currentDapp.status}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+
                   {/* dApp Description */}
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-3">About This Protocol</h3>
@@ -1058,6 +1100,39 @@ const Seilor = () => {
                       {seiDApps.find(dapp => dapp.url === browserUrl)?.description || 
                        "External decentralized application on the Sei blockchain ecosystem."}
                     </p>
+                  </div>
+
+                  {/* Protocol Features */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-3">Key Features</h3>
+                    <div className="space-y-2">
+                      {(() => {
+                        const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
+                        const features = currentDapp?.category === 'DeFi' ? [
+                          'Decentralized Trading',
+                          'Liquidity Provision',
+                          'Yield Farming',
+                          'Sei Network Native'
+                        ] : currentDapp?.category === 'NFT' ? [
+                          'NFT Marketplace',
+                          'Digital Collectibles',
+                          'Creator Tools',
+                          'Sei Network Native'
+                        ] : [
+                          'Blockchain Integration',
+                          'Decentralized Features',
+                          'Community Driven',
+                          'Sei Network Native'
+                        ];
+                        
+                        return features.map((feature, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                            <span className="text-slate-300 text-sm">{feature}</span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
                   </div>
 
                   {/* Safety Analysis */}
@@ -1232,9 +1307,31 @@ const Seilor = () => {
                 {/* Preview Content */}
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center max-w-md">
-                    <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                      <ExternalLink className="w-12 h-12 text-blue-400" />
-                    </div>
+                    {(() => {
+                      const currentDapp = seiDApps.find(dapp => dapp.url === browserUrl);
+                      return currentDapp ? (
+                        <div className="w-24 h-24 rounded-2xl overflow-hidden mx-auto mb-6 border-2 border-slate-600">
+                          <img 
+                            src={currentDapp.image} 
+                            alt={`${currentDapp.name} logo`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to gradient with icon if image fails
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.className = 'w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6 border-2 border-slate-600';
+                                parent.innerHTML = '<svg class="w-12 h-12 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>';
+                              }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                          <ExternalLink className="w-12 h-12 text-blue-400" />
+                        </div>
+                      );
+                    })()}
                     
                     <h3 className="text-2xl font-bold text-white mb-4">
                       Ready to Launch {seiDApps.find(dapp => dapp.url === browserUrl)?.name || 'dApp'}
@@ -1242,9 +1339,15 @@ const Seilor = () => {
                     
                     <p className="text-slate-400 mb-6 leading-relaxed">
                       This protocol will open in a new tab with full functionality, 
-                      wallet integration, and optimal performance. Seilor will track 
-                      your interactions for portfolio management.
+                      wallet integration, and optimal performance. Connect your wallet 
+                      in the new tab to start trading or interacting.
                     </p>
+
+                    {/* URL Preview */}
+                    <div className="bg-slate-800/50 rounded-lg p-3 mb-6 border border-slate-700">
+                      <div className="text-xs text-slate-500 mb-1">Opening URL:</div>
+                      <div className="font-mono text-sm text-blue-400 break-all">{browserUrl}</div>
+                    </div>
 
                     <div className="flex items-center justify-center space-x-6 text-sm text-slate-500">
                       <div className="flex items-center space-x-2">

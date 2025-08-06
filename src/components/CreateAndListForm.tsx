@@ -14,7 +14,7 @@ import { ethers } from 'ethers';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { usePrivateKeyWallet } from '../utils/privateKeyWallet';
 import { TokenSpotlight } from './TokenSpotlight';
-import { useTokenImage } from '../utils/tokenImageGenerator';
+// import { useTokenImage } from '../utils/tokenImageGenerator';
 // import { useLogoUpload } from '../utils/ipfsUpload';
 // import { useTokenMetadata } from '../utils/tokenMetadata';
 
@@ -72,8 +72,9 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   const [createdTokenData, setCreatedTokenData] = useState<any>(null);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   
-  // Generate token image when form data changes
-  const tokenImage = useTokenImage(formData.symbol, formData.name);
+  // Generate token image when form data changes - temporarily disabled for debugging
+  // const tokenImage = useTokenImage(formData.symbol, formData.name);
+  const tokenImage = '/Seifu.png'; // Fallback to Seifun logo for now
   
   // Logo upload functionality - simplified for now
   const uploadLogo = async (file: File) => URL.createObjectURL(file);
