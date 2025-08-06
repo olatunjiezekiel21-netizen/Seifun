@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
+import { useReownWallet } from '../utils/reownWalletConnection';
 import { 
   Wallet, 
   CheckCircle, 
@@ -20,13 +20,14 @@ const WalletConnectionTest: React.FC = () => {
     error,
     walletType,
     chainId,
-    availableWallets,
     connectWallet,
     disconnectWallet,
     refreshBalance,
-    clearError,
-    switchWallet
-  } = useUnifiedWallet();
+    getAvailableWallets
+  } = useReownWallet();
+
+  // Get available wallets
+  const availableWallets = getAvailableWallets();
 
   const [testResults, setTestResults] = useState<{[key: string]: 'pass' | 'fail' | 'pending'}>({});
   const [selectedWallet, setSelectedWallet] = useState<string>('');
@@ -116,7 +117,8 @@ const WalletConnectionTest: React.FC = () => {
   const handleSwitchWallet = async () => {
     if (selectedWallet) {
       try {
-        await switchWallet(selectedWallet);
+        await disconnectWallet();
+        await connectWallet(selectedWallet);
       } catch (error) {
         console.error('Wallet switch test failed:', error);
       }
@@ -226,7 +228,7 @@ const WalletConnectionTest: React.FC = () => {
                 <h3 className="text-red-800 font-medium mb-1">Connection Error</h3>
                 <p className="text-red-700 text-sm whitespace-pre-line">{error}</p>
                 <button
-                  onClick={clearError}
+                  onClick={() => {/* Error will clear on next connection attempt */}}
                   className="mt-2 text-red-600 hover:text-red-800 text-sm font-medium"
                 >
                   Clear Error

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Shield, Rocket, Lock, Users, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { ethers } from 'ethers';
-import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
+import { useReownWallet } from '../utils/reownWalletConnection';
 
 // Factory contract ABI (simplified)
 const FACTORY_ABI = [
@@ -41,7 +41,7 @@ const LaunchpadForm = () => {
   const devWallet = import.meta.env.VITE_DEV_WALLET;
   
   // Use unified wallet connection for all modes
-  const { isConnected, address, connectWallet } = useUnifiedWallet();
+  const { isConnected, address, connectWallet } = useReownWallet();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

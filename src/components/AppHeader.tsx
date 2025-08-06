@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Wallet, LogOut, User, Settings } from 'lucide-react';
-import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
+import { useReownWallet } from '../utils/reownWalletConnection';
 
 const AppHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   
-  // Use unified wallet functionality
+  // Use ReOWN wallet functionality
   const {
     isConnected,
     address,
     balance,
     isConnecting,
     error,
+    walletType,
     connectWallet,
     disconnectWallet
-  } = useUnifiedWallet();
+  } = useReownWallet();
 
   // Format address for display
   const walletAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';

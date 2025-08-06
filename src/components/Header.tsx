@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Wallet, ChevronDown, LogOut, Settings } from 'lucide-react';
-import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
+import { useReownWallet } from '../utils/reownWalletConnection';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,12 +15,13 @@ const Header = () => {
     isConnecting,
     error,
     walletType,
-    availableWallets,
     connectWallet,
     disconnectWallet,
-    switchWallet,
-    clearError
-  } = useUnifiedWallet();
+    getAvailableWallets
+  } = useReownWallet();
+
+  // Get available wallets
+  const availableWallets = getAvailableWallets();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -103,7 +104,7 @@ const Header = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        clearError();
+                        // Error will clear automatically on next connection attempt
                       }}
                       className="text-red-400 hover:text-red-600 transition-colors"
                     >
@@ -169,16 +170,16 @@ const Header = () => {
                             <div className="px-3 py-1 text-xs text-gray-500 uppercase tracking-wide font-medium">
                               Switch Wallet
                             </div>
-                            {availableWallets.filter(w => w !== walletType).map((wallet) => (
+                            {availableWallets.filter(w => w.name !== walletType).map((wallet) => (
                               <button
-                                key={wallet}
+                                key={wallet.id}
                                 onClick={() => {
-                                  switchWallet(wallet);
+                                  connectWallet(wallet.id);
                                   setShowWalletDropdown(false);
                                 }}
                                 className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200 capitalize text-gray-700 hover:text-gray-900"
                               >
-                                {wallet} Wallet
+                                {wallet.name}
                               </button>
                             ))}
                           </>

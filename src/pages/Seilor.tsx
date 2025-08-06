@@ -47,21 +47,30 @@ const Seilor = () => {
   const [dAppAnalysis, setDAppAnalysis] = useState<any>(null);
   
   // Wallet integration
-  // ReOWN Kit wallet connection (no fallbacks)
+  // ReOWN Kit wallet connection with comprehensive support
   const { 
     isConnected, 
     address, 
+    balance,
+    isConnecting,
+    error: walletError,
+    walletType,
+    chainId,
     connectWallet: connectReownWallet, 
-    disconnectWallet 
+    disconnectWallet,
+    getAvailableWallets,
+    refreshBalance
   } = useReownWallet();
 
-  // Connect wallet using ReOWN Kit only
-  const connectWallet = async () => {
+  // Connect wallet using ReOWN Kit with proper error handling
+  const connectWallet = async (preferredWallet?: string) => {
     try {
-      await connectReownWallet(); // Let ReOWN detect compatible wallets automatically
+      console.log('🔗 Connecting wallet via ReOWN Kit...', preferredWallet ? `Preferred: ${preferredWallet}` : 'Auto-detect');
+      await connectReownWallet(preferredWallet);
+      console.log('✅ Wallet connected successfully:', { address, walletType });
     } catch (error) {
-      console.error('ReOWN wallet connection failed:', error);
-      throw error; // Don't fall back, let user know ReOWN is required
+      console.error('❌ ReOWN wallet connection failed:', error);
+      // Don't throw - let the hook handle error state
     }
   };
   

@@ -14,7 +14,7 @@ import {
 // Ensure correct import paths for build
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 import { TokenScanner } from '../utils/tokenScanner';
-import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
+import { useReownWallet } from '../utils/reownWalletConnection';
 
 const SafeChecker = () => {
   const [tokenAddress, setTokenAddress] = useState('');
@@ -33,7 +33,7 @@ const SafeChecker = () => {
     connectWallet,
     disconnectWallet,
     walletType
-  } = useUnifiedWallet();
+  } = useReownWallet();
 
   // Initialize scanner and registry
   const tokenScanner = new TokenScanner();
