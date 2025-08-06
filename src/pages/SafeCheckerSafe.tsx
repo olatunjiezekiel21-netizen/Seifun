@@ -17,7 +17,7 @@ import { TokenScanner } from '../utils/tokenScanner';
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 
 // Import wallet hook directly to prevent lazy loading issues
-import { useReownWallet } from '../utils/reownWalletConnection';
+import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
 
 // Error Boundary Component
 class SafeCheckerErrorBoundary extends React.Component<
@@ -93,7 +93,7 @@ const SafeWalletProvider: React.FC<{ children: (walletData: any) => React.ReactN
 
   let walletData;
   try {
-    walletData = useReownWallet();
+    walletData = useUnifiedWallet();
   } catch (error) {
     console.warn('Wallet hook failed, using fallback:', error);
     walletData = fallbackWalletData;

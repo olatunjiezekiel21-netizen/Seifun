@@ -11,6 +11,7 @@ import TradingView from './pages/TradingView';
 import TradingSearch from './pages/TradingSearch';
 import Docs from './pages/Docs';
 import DevPlus from './pages/DevPlus';
+import WalletConnectionTest from './components/WalletConnectionTest';
 
 function App() {
   React.useEffect(() => {
@@ -96,6 +97,14 @@ function App() {
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSafe />
             <DevPlus />
+            <AppFooter />
+          </div>
+        } />
+        
+        <Route path="/app/wallet-test" element={
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <WalletConnectionTest />
             <AppFooter />
           </div>
         } />

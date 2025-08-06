@@ -14,7 +14,7 @@ import {
   Zap
 } from 'lucide-react';
 import { ethers } from 'ethers';
-import { useSeiWallet } from '../utils/seiWalletConnection';
+import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
 import { TokenScanner } from '../utils/tokenScanner';
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 
@@ -46,7 +46,7 @@ interface ListOnlyFormProps {
 }
 
 const ListOnlyForm: React.FC<ListOnlyFormProps> = ({ onBack }) => {
-  const { isConnected, address, connectWallet } = useSeiWallet();
+  const { isConnected, address, connectWallet } = useUnifiedWallet();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [tokenAddress, setTokenAddress] = useState('');

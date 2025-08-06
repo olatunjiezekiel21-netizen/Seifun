@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Wallet, ChevronDown, LogOut, Settings } from 'lucide-react';
-import { useSeiWallet } from '../utils/seiWalletConnection';
+import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,7 +20,7 @@ const Header = () => {
     disconnectWallet,
     switchWallet,
     clearError
-  } = useSeiWallet();
+  } = useUnifiedWallet();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -197,7 +197,7 @@ const Header = () => {
                       setShowWalletDropdown(!showWalletDropdown);
                     } else if (availableWallets.length === 1) {
                       // Connect directly if only one wallet is available
-                      connectWallet(availableWallets[0]);
+                      connectWallet(availableWallets[0].id);
                     } else {
                       // Show dropdown only if multiple wallets are available
                       setShowWalletDropdown(!showWalletDropdown);
@@ -239,17 +239,17 @@ const Header = () => {
                     <div className="p-2">
                       {availableWallets.map((wallet) => (
                         <button
-                          key={wallet}
+                          key={wallet.id}
                           onClick={() => {
-                            connectWallet(wallet);
+                            connectWallet(wallet.id);
                             setShowWalletDropdown(false);
                           }}
                           className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-all duration-200 flex items-center space-x-2 text-gray-700 hover:text-gray-900"
                         >
                           <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center shadow-sm">
-                            <span className="text-white text-xs font-bold">{wallet.charAt(0).toUpperCase()}</span>
+                            <span className="text-white text-xs font-bold">{wallet.name.charAt(0).toUpperCase()}</span>
                           </div>
-                          <span className="capitalize font-medium">{wallet} Wallet</span>
+                          <span className="font-medium">{wallet.name}</span>
                         </button>
                       ))}
                     </div>

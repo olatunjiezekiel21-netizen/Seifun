@@ -11,7 +11,7 @@ import {
   Check
 } from 'lucide-react';
 import { ethers } from 'ethers';
-import { useSeiWallet } from '../utils/seiWalletConnection';
+import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
 
 interface TokenFormData {
   name: string;
@@ -43,8 +43,8 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   const useTestnet = import.meta.env.VITE_USE_TESTNET_FOR_SEILIST === 'true';
   const devWallet = import.meta.env.VITE_DEV_WALLET;
   
-  // Use real wallet connection for all modes
-  const { isConnected, address, connectWallet } = useSeiWallet();
+  // Use unified wallet connection for all modes
+  const { isConnected, address, connectWallet } = useUnifiedWallet();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);

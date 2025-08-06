@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Wallet, LogOut, User, Settings } from 'lucide-react';
-import { useWalletConnect } from '../utils/walletConnect';
+import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
 
 const AppHeaderSafe = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Use simplified WalletConnect functionality
+  // Use unified wallet functionality
   const {
     isConnected,
     address,
@@ -16,7 +16,7 @@ const AppHeaderSafe = () => {
     error,
     connectWallet,
     disconnectWallet
-  } = useWalletConnect();
+  } = useUnifiedWallet();
 
   // Format address for display
   const walletAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';

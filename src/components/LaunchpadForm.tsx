@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Shield, Rocket, Lock, Users, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { ethers } from 'ethers';
-import { useSeiWallet } from '../utils/seiWalletConnection';
+import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
 
 // Factory contract ABI (simplified)
 const FACTORY_ABI = [
@@ -40,8 +40,8 @@ const LaunchpadForm = () => {
   const useTestnet = import.meta.env.VITE_USE_TESTNET_FOR_LAUNCHPAD === 'true';
   const devWallet = import.meta.env.VITE_DEV_WALLET;
   
-  // Use real wallet connection for all modes
-  const { isConnected, address, connectWallet } = useSeiWallet();
+  // Use unified wallet connection for all modes
+  const { isConnected, address, connectWallet } = useUnifiedWallet();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
