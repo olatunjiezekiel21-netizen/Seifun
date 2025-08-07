@@ -38,6 +38,13 @@ const Seilor = () => {
   const installedWallets = availableWallets.filter(w => w.installed);
   const hasInstalledWallets = installedWallets.length > 0;
   
+  // Debug wallet detection
+  console.log('🔍 Seilor wallet detection:', {
+    availableWallets: availableWallets.length,
+    installedWallets: installedWallets.length,
+    hasInstalledWallets
+  });
+  
   const [chatMessages, setChatMessages] = useState([
     {
       type: 'ai',
@@ -414,10 +421,19 @@ const Seilor = () => {
               {/* Wallet Connection */}
               <div className="flex items-center space-x-3">
                 {isConnected ? (
-                  <div className="flex items-center space-x-2 bg-slate-800/50 rounded-lg px-3 py-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-slate-300">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
-                    <span className="text-xs text-slate-400">{balance?.slice(0, 6)} SEI</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 bg-slate-800/50 rounded-lg px-3 py-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-slate-300">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+                      <span className="text-xs text-slate-400">{balance?.slice(0, 6)} SEI</span>
+                    </div>
+                    <button
+                      onClick={disconnectWallet}
+                      className="text-xs text-slate-400 hover:text-red-400 transition-colors"
+                      title="Disconnect Wallet"
+                    >
+                      ×
+                    </button>
                   </div>
                 ) : (
                   <div className="relative">
@@ -434,7 +450,7 @@ const Seilor = () => {
                       className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 disabled:opacity-50"
                     >
                       <Wallet className="w-4 h-4" />
-                      <span>{isConnecting ? 'Connecting...' : hasInstalledWallets ? 'Connect' : 'Get Wallet'}</span>
+                      <span>{isConnecting ? 'Connecting...' : 'Connect Wallet'}</span>
                     </button>
                     {error && (
                       <div className="absolute top-full right-0 mt-2 w-72 bg-slate-800 border border-red-500/50 rounded-lg p-3 z-50">

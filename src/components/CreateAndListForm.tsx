@@ -166,8 +166,8 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
             throw new Error('Private key wallet address mismatch');
           }
             
-            // Create factory contract instance
-            const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS_TESTNET;
+            // Create factory contract instance with fallback
+            const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A';
             const FACTORY_ABI = [
               'function createToken(string name, string symbol, uint8 decimals, uint256 totalSupply) external payable returns (address)',
               'function creationFee() external view returns (uint256)',
@@ -290,7 +290,16 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         throw new Error('Please connect your wallet first');
       }
       
-      const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS_MAINNET || import.meta.env.VITE_FACTORY_ADDRESS_TESTNET;
+      // Factory address with fallback to deployed address
+      const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS_MAINNET || 
+                               import.meta.env.VITE_FACTORY_ADDRESS_TESTNET || 
+                               '0x46287770F8329D51004560dC3BDED879A6565B9A'; // Deployed factory address
+      
+      console.log('🏭 Environment variables:', {
+        VITE_FACTORY_ADDRESS_MAINNET: import.meta.env.VITE_FACTORY_ADDRESS_MAINNET,
+        VITE_FACTORY_ADDRESS_TESTNET: import.meta.env.VITE_FACTORY_ADDRESS_TESTNET,
+        FACTORY_ADDRESS: FACTORY_ADDRESS
+      });
       
       if (!FACTORY_ADDRESS) {
         throw new Error('Token factory contract address not configured. Please check environment variables.');

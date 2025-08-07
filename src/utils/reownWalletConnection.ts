@@ -283,21 +283,23 @@ export class ReownWalletConnection {
 
       console.log('✅ AppKit ready, proceeding with connection...');
 
-      // Check if already connected
+      // Check if already connected - but always show modal if explicitly connecting
       const currentState = this.appKit.getState?.();
       if (currentState?.address) {
-        const balance = await this.getBalance(currentState.address);
-        return {
-          address: currentState.address,
-          chainId: currentState.selectedNetworkId || (this.isMainnet ? 1329 : 1328),
-          walletType: 'Mobile Wallet (WalletConnect)',
-          balance
-        };
+        console.log('🔄 Wallet already connected, but showing connection modal for user choice');
+        // Don't return early - let user choose to connect different wallet or confirm current
       }
 
-      // Open the Reown modal for wallet selection
+      // Always open the Reown modal for wallet selection/confirmation
       console.log('🔗 Opening Reown wallet selection...');
-      await this.appKit.open();
+      
+      // Ensure we're opening the connect modal, not the wallet interface
+      try {
+        await this.appKit.open({ view: 'Connect' });
+      } catch (error) {
+        console.log('Fallback: Opening modal without view parameter');
+        await this.appKit.open();
+      }
       
       // Wait for connection with enhanced error handling
       return new Promise((resolve, reject) => {
