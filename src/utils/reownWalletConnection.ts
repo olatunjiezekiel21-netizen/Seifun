@@ -809,11 +809,25 @@ export const useReownWallet = () => {
                 });
                 
                 // Save connection
-                localStorage.setItem('reown_wallet_connection', JSON.stringify({
+                if (typeof localStorage !== 'undefined') {
+                  localStorage.setItem('reown_wallet_connection', JSON.stringify({
+                    address: account.address,
+                    walletType: 'ReOWN',
+                    chainId: account.chainId,
+                  }));
+                }
+              }).catch(error => {
+                console.warn('Failed to get balance:', error);
+                // Still update connection state even if balance fails
+                setWalletState({
+                  isConnected: true,
                   address: account.address,
+                  balance: '0.0',
+                  isConnecting: false,
+                  error: null,
                   walletType: 'ReOWN',
                   chainId: account.chainId,
-                }));
+                });
               });
             } else if (!account.isConnected) {
               // Handle disconnection
@@ -826,7 +840,48 @@ export const useReownWallet = () => {
                 walletType: null,
                 chainId: null,
               });
-              localStorage.removeItem('reown_wallet_connection');
+              if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem('reown_wallet_connection');
+              }
+            }
+          });
+
+          // Listen for modal state changes to handle connection completion
+          walletConnection.appKit.subscribeModal((modal: any) => {
+            console.log('🔄 Modal state changed:', modal);
+            if (!modal.open) {
+              // Modal closed, check if we're connected
+              setTimeout(() => {
+                const account = walletConnection.appKit.getAccount();
+                if (account?.address && account?.isConnected) {
+                  walletConnection.getBalance(account.address).then(balance => {
+                    setWalletState({
+                      isConnected: true,
+                      address: account.address,
+                      balance,
+                      isConnecting: false,
+                      error: null,
+                      walletType: 'ReOWN',
+                      chainId: account.chainId,
+                    });
+                  }).catch(() => {
+                    setWalletState({
+                      isConnected: true,
+                      address: account.address,
+                      balance: '0.0',
+                      isConnecting: false,
+                      error: null,
+                      walletType: 'ReOWN',
+                      chainId: account.chainId,
+                    });
+                  });
+                } else {
+                  setWalletState(prev => ({
+                    ...prev,
+                    isConnecting: false
+                  }));
+                }
+              }, 500); // Small delay to allow state to settle
             }
           });
         } catch (error) {

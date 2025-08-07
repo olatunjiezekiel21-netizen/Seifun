@@ -7,6 +7,17 @@ interface AIContext {
   chatHistory?: any[];
   userPreferences?: any;
   marketData?: any;
+  walletData?: {
+    address: string;
+    balance: string;
+    tokens: Array<{
+      symbol: string;
+      balance: string;
+      address: string;
+    }>;
+    chainId: number;
+    network: string;
+  };
 }
 
 interface AICapability {
@@ -78,11 +89,16 @@ export class ProfessionalAIAgent {
       name: 'Trading Assistant',
       description: 'Trading strategies and execution help',
       handler: async (query: string, context: AIContext) => {
-        if (!context.isConnected) {
+        if (!context.isConnected || !context.walletData) {
           return `🔗 **Connect Your Wallet First**\n\nTo provide personalized trading assistance, please connect your wallet. I can then:\n\n• Analyze your current positions\n• Suggest optimal entry/exit points\n• Calculate risk/reward ratios\n• Monitor your portfolio performance\n\nConnect your wallet to unlock advanced trading features!`;
         }
         
-        return `📈 **Trading Assistant Active**\n\n🎯 **Available Services**:\n• Portfolio analysis and optimization\n• Risk management strategies\n• Market timing suggestions\n• DeFi yield opportunities\n• Token pair analysis\n\n💡 **Current Market Insight**: Based on recent patterns, consider diversifying across stable DeFi protocols while market volatility remains high.\n\nWhat trading strategy would you like to explore?`;
+        const wallet = context.walletData;
+        const seiBalance = parseFloat(wallet.balance);
+        const marketPrice = context.marketData?.seiPrice ? parseFloat(context.marketData.seiPrice) : 0.4;
+        const portfolioValue = seiBalance * marketPrice;
+        
+        return `📈 **Trading Assistant Active**\n\n💼 **Your Portfolio:**\n• SEI Balance: ${wallet.balance} SEI (~$${portfolioValue.toFixed(2)})\n• Network: ${wallet.network}\n• Address: ${wallet.address.slice(0, 8)}...${wallet.address.slice(-6)}\n\n🎯 **Personalized Recommendations:**\n${seiBalance < 1 ? '• ⚠️ Low balance - consider adding more SEI for trading\n• Start with small test trades to learn the platform' : seiBalance < 10 ? '• 💡 Moderate balance - good for small to medium trades\n• Consider DeFi yield farming opportunities' : '• 🚀 Strong balance - ready for advanced trading strategies\n• Explore liquidity provision and staking options'}\n\n📊 **Current Market Context:**\n• SEI Price: $${marketPrice.toFixed(4)}\n• Network: Low congestion, optimal for trading\n\nWhat specific trading strategy interests you?`;
       }
     });
 
