@@ -196,8 +196,19 @@ const Seilor = () => {
         userWallet: address,
         isConnected,
         currentTime: new Date(),
-        chatHistory: chatMessages.slice(-10),
+        chatHistory: chatMessages, // Full chat history instead of just last 10
         walletData: walletContext,
+        // Add user's todo list and task data
+        userTodos: todos,
+        todoCount: todos.length,
+        completedTodos: todos.filter(t => t.completed).length,
+        pendingTodos: todos.filter(t => !t.completed).length,
+        // Add user preferences and session data
+        userPreferences: {
+          activePanel,
+          sessionStartTime: new Date(Date.now() - 60000 * 30), // Mock 30 min session
+          totalInteractions: chatMessages.length
+        },
         // Add real-time data
         marketData: {
           seiPrice: (Math.random() * 0.5 + 0.3).toFixed(4), // This would be from real API
@@ -208,12 +219,56 @@ const Seilor = () => {
       // Generate intelligent response based on message type
       let response;
       
-      if (isConnected && walletContext) {
+      // Check for AI-powered todo management commands
+      if (userMessage.toLowerCase().includes('add') && (userMessage.toLowerCase().includes('todo') || userMessage.toLowerCase().includes('task'))) {
+        // Extract the task from the message
+        const taskMatch = userMessage.match(/add\s+([^"]*?)\s+(?:to\s+(?:my\s+)?(?:todo|task)|task)/i) ||
+                         userMessage.match(/add\s+(?:task|todo)?\s*[":]\s*([^"]*)/i) ||
+                         userMessage.match(/add\s+"([^"]+)"/i);
+        
+        if (taskMatch && taskMatch[1]) {
+          const taskText = taskMatch[1].trim();
+          if (taskText.length > 0) {
+            // Add the task using the existing addTodo function
+            addTodo(taskText);
+            response = `✅ **Task Added Successfully!**\n\n📝 **New Task**: "${taskText}"\n\n📊 **Updated Todo Stats**:\n• Total Tasks: ${aiContext.todoCount + 1}\n• Pending: ${aiContext.pendingTodos + 1}\n• Completed: ${aiContext.completedTodos}\n\n💡 **What's next?** I can help you:\n• Prioritize your tasks\n• Set reminders\n• Track progress\n• Add more tasks\n\nJust ask me anything!`;
+          } else {
+            response = `❌ **Couldn't extract task**. Try being more specific:\n\n✅ **Examples that work:**\n• "Add research new tokens to my todo"\n• "Add task: Check portfolio performance"\n• "Add 'Set up trading alerts' to tasks"\n\nWhat task would you like me to add?`;
+          }
+        } else {
+          response = `❓ **What task should I add?**\n\n✅ **Examples:**\n• "Add research new tokens to my todo"\n• "Add task: Check portfolio performance"\n• "Add 'Set up trading alerts'"\n\nJust tell me what you want to add to your todo list!`;
+        }
+      }
+      // Check for todo-related queries
+      else if (userMessage.toLowerCase().includes('todo') || userMessage.toLowerCase().includes('task') || userMessage.toLowerCase().includes('list')) {
+        const todoSummary = `📝 **Your Todo List Summary**\n\n📊 **Overview:**\n• Total Tasks: ${aiContext.todoCount}\n• Completed: ${aiContext.completedTodos}\n• Pending: ${aiContext.pendingTodos}\n\n`;
+        
+        if (aiContext.todoCount === 0) {
+          response = `${todoSummary}🎯 **No tasks yet!** Let me help you get organized:\n\n**Suggested Tasks:**\n• Research trending tokens\n• Set up portfolio tracking\n• Plan your trading strategy\n• Review market news\n\n💡 **Try saying**: "Add research tokens to my todo" or "Add portfolio tracking task" and I'll add it for you!`;
+        } else {
+          const recentTodos = todos.slice(-5).map(todo => 
+            `${todo.completed ? '✅' : '⏳'} ${todo.task} ${todo.completed ? '' : `(Added ${todo.timestamp.toLocaleDateString()})`}`
+          ).join('\n');
+          
+          response = `${todoSummary}**Recent Tasks:**\n${recentTodos}\n\n💡 **AI Insights:**\n${aiContext.pendingTodos > 3 ? '• You have many pending tasks - consider prioritizing!' : '• Good task management! Keep it up.'}\n${aiContext.completedTodos > 0 ? `• Great progress! You've completed ${aiContext.completedTodos} tasks.` : '• Ready to tackle your first task?'}\n\nNeed help with any specific task or want to add something new?`;
+        }
+      }
+      // Check for history-related queries
+      else if (userMessage.toLowerCase().includes('history') || userMessage.toLowerCase().includes('previous') || userMessage.toLowerCase().includes('earlier')) {
+        const sessionLength = Math.floor((new Date().getTime() - aiContext.userPreferences.sessionStartTime.getTime()) / (1000 * 60));
+        const recentMessages = aiContext.chatHistory.slice(-10).filter(msg => msg.type === 'user').map(msg => 
+          `• "${msg.message.slice(0, 50)}${msg.message.length > 50 ? '...' : ''}" (${msg.timestamp.toLocaleTimeString()})`
+        ).join('\n');
+        
+        response = `🕒 **Your Session History**\n\n📊 **Session Stats:**\n• Session Duration: ~${sessionLength} minutes\n• Total Messages: ${aiContext.chatHistory.length}\n• Your Questions: ${aiContext.chatHistory.filter(msg => msg.type === 'user').length}\n\n**Recent Questions:**\n${recentMessages}\n\n💡 **I remember everything** from our conversation and can reference any previous topics. What would you like to revisit or continue discussing?`;
+      }
+      // Enhanced wallet-aware responses
+      else if (isConnected && walletContext) {
         // Wallet-aware intelligent responses
         if (userMessage.toLowerCase().includes('balance') || userMessage.toLowerCase().includes('how much')) {
-          response = `💰 **Your Wallet Summary**\n\n🔗 **Address**: ${walletContext.address.slice(0, 8)}...${walletContext.address.slice(-6)}\n💎 **SEI Balance**: ${walletContext.balance} SEI\n🌐 **Network**: ${walletContext.network}\n\n${walletContext.balance === '0' || parseFloat(walletContext.balance) < 0.1 ? '⚠️ **Low Balance Alert**: You might want to add more SEI to your wallet for trading activities.' : '✅ **Good Balance**: You have sufficient SEI for trading activities.'}\n\nWould you like me to help you find trading opportunities or analyze any specific tokens?`;
+          response = `💰 **Your Wallet Summary**\n\n🔗 **Address**: ${walletContext.address.slice(0, 8)}...${walletContext.address.slice(-6)}\n💎 **SEI Balance**: ${walletContext.balance} SEI\n🌐 **Network**: ${walletContext.network}\n\n${walletContext.balance === '0' || parseFloat(walletContext.balance) < 0.1 ? '⚠️ **Low Balance Alert**: You might want to add more SEI to your wallet for trading activities.' : '✅ **Good Balance**: You have sufficient SEI for trading activities.'}\n\n📝 **Quick Context**: You have ${aiContext.pendingTodos} pending tasks${aiContext.pendingTodos > 0 ? ' - maybe add "Check portfolio" to your todo list?' : '!'}\n\nWould you like me to help you find trading opportunities or analyze any specific tokens?`;
         } else if (userMessage.toLowerCase().includes('portfolio') || userMessage.toLowerCase().includes('holdings')) {
-          response = `📊 **Portfolio Analysis**\n\n**Current Holdings:**\n${walletContext.tokens.map(token => `• ${token.balance} ${token.symbol}`).join('\n')}\n\n**Portfolio Value**: ~$${(parseFloat(walletContext.balance) * parseFloat(aiContext.marketData.seiPrice)).toFixed(2)} USD\n\n**Recommendations:**\n• Consider diversifying across multiple Sei DeFi protocols\n• Monitor gas fees for optimal transaction timing\n• Set up price alerts for your holdings\n\nWould you like specific trading recommendations based on your current portfolio?`;
+          response = `📊 **Portfolio Analysis**\n\n**Current Holdings:**\n${walletContext.tokens.map(token => `• ${token.balance} ${token.symbol}`).join('\n')}\n\n**Portfolio Value**: ~$${(parseFloat(walletContext.balance) * parseFloat(aiContext.marketData.seiPrice)).toFixed(2)} USD\n\n**Recommendations:**\n• Consider diversifying across multiple Sei DeFi protocols\n• Monitor gas fees for optimal transaction timing\n• Set up price alerts for your holdings\n\n📝 **Smart Suggestion**: ${aiContext.todoCount === 0 ? 'Want me to add "Portfolio review" to your todo list?' : `I see you have ${aiContext.pendingTodos} pending tasks - maybe prioritize portfolio-related ones?`}\n\nWould you like specific trading recommendations based on your current portfolio?`;
         } else if (userMessage.toLowerCase().includes('trade') || userMessage.toLowerCase().includes('swap')) {
           const availableBalance = parseFloat(walletContext.balance);
           const portfolioValue = availableBalance * parseFloat(aiContext.marketData.seiPrice);

@@ -7,6 +7,17 @@ interface AIContext {
   chatHistory?: any[];
   userPreferences?: any;
   marketData?: any;
+  // Todo and task management data
+  userTodos?: Array<{
+    id: string;
+    task: string;
+    completed: boolean;
+    timestamp: Date;
+  }>;
+  todoCount?: number;
+  completedTodos?: number;
+  pendingTodos?: number;
+  // Wallet data
   walletData?: {
     address: string;
     balance: string;
@@ -107,12 +118,41 @@ export class ProfessionalAIAgent {
       name: 'General Knowledge',
       description: 'General questions and conversations',
       handler: async (query: string, context: AIContext) => {
-        // Basic conversational AI responses
+        // Enhanced contextual awareness
+        const userContext = {
+          hasWallet: context.isConnected && context.walletData,
+          todoCount: context.todoCount || 0,
+          pendingTodos: context.pendingTodos || 0,
+          completedTodos: context.completedTodos || 0,
+          chatLength: context.chatHistory?.length || 0,
+          sessionTime: context.currentTime ? new Date().getTime() - context.currentTime.getTime() : 0
+        };
+
+        // Personalized responses based on user context
+        const getPersonalizedGreeting = () => {
+          let greeting = "👋 Hello! I'm your AI Trading Agent.";
+          
+          if (userContext.hasWallet) {
+            greeting += ` I see you're connected with ${context.walletData?.balance} SEI.`;
+          }
+          
+          if (userContext.todoCount > 0) {
+            greeting += ` You have ${userContext.pendingTodos} pending tasks`;
+            if (userContext.completedTodos > 0) {
+              greeting += ` and have completed ${userContext.completedTodos} tasks - great progress!`;
+            }
+            greeting += ".";
+          }
+          
+          greeting += "\n\n🎯 I can help with trading, market analysis, token scanning, managing your todos, and general questions. What can I assist you with?";
+          return greeting;
+        };
+
         const responses = {
-          greeting: "👋 Hello! I'm your AI Trading Agent. I'm here to help with trading, market analysis, token scanning, and general questions. What can I assist you with today?",
+          greeting: getPersonalizedGreeting(),
           weather: "🌤️ I don't have access to real-time weather data, but I can help you with trading and blockchain-related questions! For weather, I'd recommend checking a dedicated weather app.",
           math: "🧮 I can help with calculations! What math problem would you like me to solve?",
-          default: "🤖 I'm your AI Trading Agent, specialized in blockchain and trading assistance. While I can chat about various topics, my expertise is in:\n\n• Token analysis and security\n• Trading strategies and market insights\n• Sei blockchain ecosystem\n• DeFi protocols and opportunities\n\nWhat would you like to explore?"
+          default: `🤖 I'm your AI Trading Agent with full awareness of your Seilor 0 session.\n\n📊 **What I know about you:**\n${userContext.hasWallet ? `• Connected wallet: ${context.walletData?.address?.slice(0, 8)}...${context.walletData?.address?.slice(-6)}` : '• No wallet connected yet'}\n• Todo tasks: ${userContext.todoCount} total (${userContext.pendingTodos} pending, ${userContext.completedTodos} completed)\n• Our conversation: ${userContext.chatLength} messages\n\n🎯 **I specialize in:**\n• Token analysis and security\n• Trading strategies and market insights\n• Todo and task management\n• Sei blockchain ecosystem\n• DeFi protocols and opportunities\n• Remembering our full conversation history\n\nWhat would you like to explore or continue discussing?`
         };
 
         const lowerQuery = query.toLowerCase();
