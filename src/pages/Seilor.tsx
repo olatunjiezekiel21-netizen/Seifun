@@ -28,7 +28,9 @@ const Seilor = () => {
     walletType,
     connectWallet,
     disconnectWallet,
-    getAvailableWallets
+    getAvailableWallets,
+    clearError,
+    forceStateRefresh
   } = useReownWallet();
 
   // Get available wallets for display
@@ -435,14 +437,31 @@ const Seilor = () => {
                       <span>{isConnecting ? 'Connecting...' : hasInstalledWallets ? 'Connect' : 'Get Wallet'}</span>
                     </button>
                     {error && (
-                      <div className="absolute top-full right-0 mt-2 w-64 bg-slate-800 border border-red-500/50 rounded-lg p-3 z-50">
-                        <p className="text-red-400 text-xs">{error}</p>
-                        <button
-                          onClick={() => window.location.reload()}
-                          className="mt-2 text-xs text-slate-400 hover:text-white underline"
-                        >
-                          Reload and try again
-                        </button>
+                      <div className="absolute top-full right-0 mt-2 w-72 bg-slate-800 border border-red-500/50 rounded-lg p-3 z-50">
+                        <p className="text-red-400 text-xs mb-2">{error}</p>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              clearError();
+                              forceStateRefresh();
+                            }}
+                            className="text-xs text-blue-400 hover:text-blue-300 underline"
+                          >
+                            Force Refresh
+                          </button>
+                          <button
+                            onClick={clearError}
+                            className="text-xs text-slate-400 hover:text-white underline"
+                          >
+                            Clear Error
+                          </button>
+                          <button
+                            onClick={() => window.location.reload()}
+                            className="text-xs text-slate-400 hover:text-white underline"
+                          >
+                            Reload Page
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

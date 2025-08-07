@@ -846,16 +846,21 @@ export const useReownWallet = () => {
             }
           });
 
-          // Listen for modal state changes to handle connection completion
+          // Listen for modal state changes as backup (only if account listener didn't fire)
           walletConnection.appKit.subscribeModal((modal: any) => {
             console.log('🔄 Modal state changed:', modal);
             if (!modal.open) {
-              // Modal closed, check if we're connected
+              // Modal closed, check connection state after delay (backup mechanism)
               setTimeout(() => {
                 const account = walletConnection.appKit.getAccount();
-                if (account?.address && account?.isConnected) {
+                const currentState = walletState;
+                
+                // Only update if we don't already have a connection
+                if (account?.address && account?.isConnected && !currentState.isConnected) {
+                  console.log('🔄 Backup modal listener: updating connection state');
                   walletConnection.getBalance(account.address).then(balance => {
-                    setWalletState({
+                    setWalletState(prev => ({
+                      ...prev,
                       isConnected: true,
                       address: account.address,
                       balance,
@@ -863,9 +868,10 @@ export const useReownWallet = () => {
                       error: null,
                       walletType: 'ReOWN',
                       chainId: account.chainId,
-                    });
+                    }));
                   }).catch(() => {
-                    setWalletState({
+                    setWalletState(prev => ({
+                      ...prev,
                       isConnected: true,
                       address: account.address,
                       balance: '0.0',
@@ -873,15 +879,16 @@ export const useReownWallet = () => {
                       error: null,
                       walletType: 'ReOWN',
                       chainId: account.chainId,
-                    });
+                    }));
                   });
-                } else {
+                } else if (!account?.isConnected && currentState.isConnecting) {
+                  // Only reset connecting state if we were connecting
                   setWalletState(prev => ({
                     ...prev,
                     isConnecting: false
                   }));
                 }
-              }, 500); // Small delay to allow state to settle
+              }, 1000); // Longer delay to let other listeners fire first
             }
           });
         } catch (error) {
@@ -906,16 +913,29 @@ export const useReownWallet = () => {
     try {
       const result = await walletConnection.connect(preferredWallet);
       
-      // Clear any previous errors and set connected state
-      setWalletState({
+      // Force a state update with the connection result
+      const newState = {
         isConnected: true,
         address: result.address,
         balance: result.balance || '0',
         isConnecting: false,
-        error: null, // Explicitly clear errors
+        error: null,
         walletType: result.walletType,
         chainId: result.chainId,
-      });
+      };
+      
+      console.log('🔄 Setting wallet state after successful connection:', newState);
+      setWalletState(newState);
+
+      // Force a re-render by triggering a small delay to ensure state persists
+      setTimeout(() => {
+        console.log('🔄 Confirming wallet state update...');
+        setWalletState(prev => ({
+          ...prev,
+          isConnected: true,
+          error: null
+        }));
+      }, 100);
 
       // Save connection
       if (typeof localStorage !== 'undefined') {
@@ -941,6 +961,33 @@ export const useReownWallet = () => {
 
   const clearError = () => {
     setWalletState(prev => ({ ...prev, error: null }));
+  };
+
+  const forceStateRefresh = async () => {
+    if (!walletConnection) return;
+    
+    try {
+      // Check actual AppKit state
+      const account = walletConnection.appKit?.getAccount();
+      console.log('🔍 Force refresh - AppKit account:', account);
+      
+      if (account?.address && account?.isConnected) {
+        const balance = await walletConnection.getBalance(account.address);
+        console.log('🔍 Force refresh - updating state with:', { address: account.address, balance });
+        
+        setWalletState({
+          isConnected: true,
+          address: account.address,
+          balance,
+          isConnecting: false,
+          error: null,
+          walletType: 'ReOWN',
+          chainId: account.chainId,
+        });
+      }
+    } catch (error) {
+      console.error('Force state refresh error:', error);
+    }
   };
 
   const disconnectWallet = async () => {
@@ -1019,5 +1066,6 @@ export const useReownWallet = () => {
     refreshBalance,
     getAvailableWallets,
     resetWalletState, // For troubleshooting
+    forceStateRefresh, // Force state refresh for debugging
   };
 };
