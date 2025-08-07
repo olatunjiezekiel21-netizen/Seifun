@@ -1,0 +1,15 @@
+{
+  "network": "seiTestnet",
+  "factoryAddress": "0x46287770F8329D51004560dC3BDED879A6565B9A",
+  "deployer": "0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e",
+  "timestamp": "2025-08-07T14:59:24.128Z",
+  "transactionHash": "0x02d05689695dd9879eade0b833233d2e8ea4cdc7a4ddfbbf5f69fe30350e8752",
+  "contracts": {
+    "SimpleTokenFactory": "0x46287770F8329D51004560dC3BDED879A6565B9A"
+  },
+  "config": {
+    "creationFee": "2.0 SEI",
+    "gasLimit": 3000000,
+    "gasPrice": "20 gwei"
+  }
+}
