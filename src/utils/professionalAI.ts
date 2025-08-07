@@ -216,6 +216,8 @@ export class ProfessionalAIAgent {
   }
 
   private loadMemory() {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    
     try {
       const saved = localStorage.getItem('seilor_ai_memory');
       if (saved) {
@@ -228,6 +230,8 @@ export class ProfessionalAIAgent {
   }
 
   private saveMemory() {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    
     try {
       const memoryObj = Object.fromEntries(this.memory);
       localStorage.setItem('seilor_ai_memory', JSON.stringify(memoryObj));

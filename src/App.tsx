@@ -12,6 +12,7 @@ import TradingSearch from './pages/TradingSearch';
 import Docs from './pages/Docs';
 import DevPlus from './pages/DevPlus';
 import WalletConnectionTest from './components/WalletConnectionTest';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   React.useEffect(() => {
@@ -64,7 +65,9 @@ function App() {
         <Route path="/app/seilor" element={
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSafe />
-            <Seilor />
+            <ErrorBoundary>
+              <Seilor />
+            </ErrorBoundary>
             <AppFooter />
           </div>
         } />
@@ -113,7 +116,9 @@ function App() {
         <Route path="/seilor" element={
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSafe />
-            <Seilor />
+            <ErrorBoundary>
+              <Seilor />
+            </ErrorBoundary>
             <AppFooter />
           </div>
         } />

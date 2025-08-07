@@ -235,6 +235,8 @@ export class SeiTradingService {
 
   // Data persistence
   private loadHistory() {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    
     try {
       const saved = localStorage.getItem('seilor_transaction_history');
       if (saved) {
@@ -249,6 +251,8 @@ export class SeiTradingService {
   }
 
   private saveHistory() {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    
     try {
       localStorage.setItem('seilor_transaction_history', JSON.stringify(this.transactionHistory));
     } catch (error) {
@@ -257,6 +261,8 @@ export class SeiTradingService {
   }
 
   private loadProtocolInteractions() {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    
     try {
       const saved = localStorage.getItem('seilor_protocol_interactions');
       if (saved) {
@@ -274,6 +280,8 @@ export class SeiTradingService {
   }
 
   private saveProtocolInteractions() {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    
     try {
       const data = Object.fromEntries(this.protocolInteractions);
       localStorage.setItem('seilor_protocol_interactions', JSON.stringify(data));
@@ -303,8 +311,15 @@ export class SeiTradingService {
   clearHistory() {
     this.transactionHistory = [];
     this.protocolInteractions.clear();
-    localStorage.removeItem('seilor_transaction_history');
-    localStorage.removeItem('seilor_protocol_interactions');
+    
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem('seilor_transaction_history');
+        localStorage.removeItem('seilor_protocol_interactions');
+      } catch (error) {
+        console.warn('Failed to clear history from localStorage:', error);
+      }
+    }
   }
 
   // Portfolio analysis

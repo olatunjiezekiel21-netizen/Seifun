@@ -11,6 +11,7 @@ const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo'>('chat');
   const [aiChat, setAiChat] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [professionalAI] = useState(() => new ProfessionalAIAgent());
   const [tradingService] = useState(() => new SeiTradingService());
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -56,45 +57,73 @@ const Seilor = () => {
     }
   }, [isConnected, tradingService]);
 
-  // Load saved data
+  // Load saved data safely
   useEffect(() => {
-    // Load chat history
-    const savedChat = localStorage.getItem('seilor_chat_history');
-    if (savedChat) {
-      try {
-        const parsed = JSON.parse(savedChat);
-        setChatMessages(parsed.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        })));
-      } catch (error) {
-        console.warn('Failed to load chat history:', error);
+    const initializeComponent = async () => {
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+        setIsInitialized(true);
+        return;
       }
-    }
+      
+      try {
+        // Small delay to ensure DOM is ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Load chat history
+        const savedChat = localStorage.getItem('seilor_chat_history');
+        if (savedChat) {
+          const parsed = JSON.parse(savedChat);
+          if (Array.isArray(parsed) && parsed.length > 1) { // Only load if we have more than the default message
+            setChatMessages(parsed.map((msg: any) => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp)
+            })));
+          }
+        }
 
-    // Load todos
-    const savedTodos = localStorage.getItem('seilor_todos');
-    if (savedTodos) {
-      try {
-        const parsed = JSON.parse(savedTodos);
-        setTodos(parsed.map((todo: any) => ({
-          ...todo,
-          timestamp: new Date(todo.timestamp)
-        })));
+        // Load todos
+        const savedTodos = localStorage.getItem('seilor_todos');
+        if (savedTodos) {
+          const parsed = JSON.parse(savedTodos);
+          if (Array.isArray(parsed)) {
+            setTodos(parsed.map((todo: any) => ({
+              ...todo,
+              timestamp: new Date(todo.timestamp)
+            })));
+          }
+        }
       } catch (error) {
-        console.warn('Failed to load todos:', error);
+        console.warn('Failed to load saved data:', error);
+      } finally {
+        setIsInitialized(true);
       }
-    }
+    };
+
+    initializeComponent();
   }, []);
 
-  // Save chat history
+  // Save chat history safely
   useEffect(() => {
-    localStorage.setItem('seilor_chat_history', JSON.stringify(chatMessages));
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    if (chatMessages.length <= 1) return; // Don't save just the initial message
+    
+    try {
+      localStorage.setItem('seilor_chat_history', JSON.stringify(chatMessages));
+    } catch (error) {
+      console.warn('Failed to save chat history:', error);
+    }
   }, [chatMessages]);
 
-  // Save todos
+  // Save todos safely
   useEffect(() => {
-    localStorage.setItem('seilor_todos', JSON.stringify(todos));
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    if (todos.length === 0) return; // Don't save empty array
+    
+    try {
+      localStorage.setItem('seilor_todos', JSON.stringify(todos));
+    } catch (error) {
+      console.warn('Failed to save todos:', error);
+    }
   }, [todos]);
 
   // Professional AI chat handler with real-time capabilities
@@ -182,6 +211,26 @@ const Seilor = () => {
     { id: 'transactions', label: 'Transactions', icon: Activity },
     { id: 'todo', label: 'Todo', icon: List }
   ];
+
+  // Show loading screen while initializing
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <Bot className="w-8 h-8 text-white animate-pulse" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Initializing Seilor AI</h2>
+          <p className="text-slate-400">Setting up your trading agent...</p>
+          <div className="flex items-center justify-center space-x-2 mt-4">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
