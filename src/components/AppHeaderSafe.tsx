@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Wallet, LogOut, User, Settings } from 'lucide-react';
+import { Menu, X, Wallet, LogOut, User, Settings, ChevronDown } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 
 const AppHeaderSafe = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
+  const walletDropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
 
   // Use ReOWN wallet functionality
@@ -34,10 +36,25 @@ const AppHeaderSafe = () => {
   const handleDisconnectWallet = async () => {
     try {
       await disconnectWallet();
+      setIsWalletDropdownOpen(false);
     } catch (error) {
       console.error('Failed to disconnect wallet:', error);
     }
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (walletDropdownRef.current && !walletDropdownRef.current.contains(event.target as Node)) {
+        setIsWalletDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
 
 

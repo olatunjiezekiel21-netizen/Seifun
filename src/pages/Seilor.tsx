@@ -15,6 +15,7 @@ const Seilor = () => {
   const [professionalAI] = useState(() => new ProfessionalAIAgent());
   const [tradingService] = useState(() => new SeiTradingService());
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [newTodo, setNewTodo] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
   // Wallet integration
@@ -214,7 +215,10 @@ const Seilor = () => {
         } else if (userMessage.toLowerCase().includes('portfolio') || userMessage.toLowerCase().includes('holdings')) {
           response = `📊 **Portfolio Analysis**\n\n**Current Holdings:**\n${walletContext.tokens.map(token => `• ${token.balance} ${token.symbol}`).join('\n')}\n\n**Portfolio Value**: ~$${(parseFloat(walletContext.balance) * parseFloat(aiContext.marketData.seiPrice)).toFixed(2)} USD\n\n**Recommendations:**\n• Consider diversifying across multiple Sei DeFi protocols\n• Monitor gas fees for optimal transaction timing\n• Set up price alerts for your holdings\n\nWould you like specific trading recommendations based on your current portfolio?`;
         } else if (userMessage.toLowerCase().includes('trade') || userMessage.toLowerCase().includes('swap')) {
-          response = `🔄 **Trading Assistant**\n\n**Your Trading Capacity:**\n💰 Available: ${walletContext.balance} SEI (~$${(parseFloat(walletContext.balance) * parseFloat(aiContext.marketData.seiPrice)).toFixed(2)})\n⛽ Gas Reserve: ~0.1 SEI recommended\n\n**Popular Sei Trading Pairs:**\n• SEI/USDC - High liquidity\n• SEI/USDT - Stable trading\n• Various meme tokens - Higher risk/reward\n\n**Current Market Insight**: SEI is trading at $${aiContext.marketData.seiPrice}\n\n🎯 **Smart Trading Tips:**\n• Start with small amounts to test strategies\n• Use limit orders for better entry points\n• Monitor slippage on smaller tokens\n\nWhat specific token would you like to trade or analyze?`;
+          const availableBalance = parseFloat(walletContext.balance);
+          const portfolioValue = availableBalance * parseFloat(aiContext.marketData.seiPrice);
+          
+          response = `🔄 **Real Trading Assistant**\n\n**Your Current Position:**\n💰 Balance: ${walletContext.balance} SEI (~$${portfolioValue.toFixed(2)})\n🏦 Address: ${walletContext.address.slice(0, 8)}...${walletContext.address.slice(-6)}\n⛽ Network: Sei Testnet (Low fees)\n\n**Trading Options Available:**\n\n${availableBalance > 1 ? '✅ **Ready to Trade**' : '⚠️ **Low Balance Warning**'}\n\n**Recommended Actions:**\n${availableBalance > 10 ? '• 🚀 Advanced trading strategies available\n• 💎 Consider liquidity provision\n• 📈 Explore yield farming opportunities' : availableBalance > 1 ? '• 🎯 Start with small test trades\n• 📊 Analyze market trends first\n• 💡 Consider dollar-cost averaging' : '• 💳 Add more SEI to your wallet\n• 🔍 Research tokens while you wait\n• 📚 Learn about trading strategies'}\n\n**Real Trading Protocols on Sei:**\n• **Astroport** - DEX with good liquidity\n• **Dragonswap** - Popular AMM\n• **Kryptonite** - Lending protocol\n\n💡 **Next Steps:** To start trading, I can help you:\n1. Analyze specific tokens\n2. Calculate optimal trade sizes\n3. Find the best trading routes\n4. Monitor gas fees\n\nWhat would you like to trade? (Provide token address or symbol)`;
         }
       }
       
@@ -250,13 +254,28 @@ const Seilor = () => {
 
   // Add todo
   const addTodo = (task: string) => {
-    const newTodo = {
+    if (!task.trim()) return;
+    
+    const todoItem = {
       id: Date.now().toString(),
-      task,
+      task: task.trim(),
       completed: false,
       timestamp: new Date()
     };
-    setTodos(prev => [...prev, newTodo]);
+    setTodos(prev => [...prev, todoItem]);
+  };
+
+  // Handle todo form submission
+  const handleAddTodo = () => {
+    if (newTodo.trim()) {
+      addTodo(newTodo);
+      setNewTodo('');
+    }
+  };
+
+  // Delete todo
+  const deleteTodo = (id: string) => {
+    setTodos(prev => prev.filter(todo => todo.id !== id));
   };
 
   // Toggle todo completion
@@ -639,6 +658,12 @@ const Seilor = () => {
                               {todo.timestamp.toLocaleString()}
                             </p>
                           </div>
+                          <button
+                            onClick={() => deleteTodo(todo.id)}
+                            className="text-slate-400 hover:text-red-400 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
                       ))}
                       {todos.length === 0 && (
@@ -651,12 +676,45 @@ const Seilor = () => {
                     </div>
                   </div>
                   <div className="bg-slate-700/30 px-6 py-4 border-t border-slate-700/50">
-                    <button
-                      onClick={() => addTodo('New trading task')}
-                      className="w-full py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-sm font-medium transition-colors"
-                    >
-                      Add Sample Task
-                    </button>
+                    <div className="space-y-3">
+                      <div className="flex space-x-3">
+                        <input
+                          type="text"
+                          value={newTodo}
+                          onChange={(e) => setNewTodo(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAddTodo()}
+                          placeholder="Add a new task or trading goal..."
+                          className="flex-1 bg-slate-800/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 text-sm"
+                        />
+                        <button
+                          onClick={handleAddTodo}
+                          disabled={!newTodo.trim()}
+                          className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-slate-600 disabled:to-slate-700 text-white rounded-lg font-medium transition-all duration-200 text-sm"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => addTodo('Analyze new token opportunities')}
+                          className="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs transition-colors"
+                        >
+                          + Token Research
+                        </button>
+                        <button
+                          onClick={() => addTodo('Check portfolio performance')}
+                          className="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs transition-colors"
+                        >
+                          + Portfolio Review
+                        </button>
+                        <button
+                          onClick={() => addTodo('Set up trading alerts')}
+                          className="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs transition-colors"
+                        >
+                          + Trading Alerts
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}
