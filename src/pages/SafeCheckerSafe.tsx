@@ -157,7 +157,7 @@ const SafeCheckerSafe = () => {
           
           isHoneypot: analysis.safetyChecks.honeypot.isHoneypot || false,
           isVerified: analysis.safetyChecks.verified.isVerified || false,
-          riskLevel: analysis.isSafe ? 'LOW' : (analysis.riskScore > 70 ? 'HIGH' : 'MEDIUM'),
+          riskLevel: analysis.riskScore < 40 ? 'HIGH' : (analysis.riskScore >= 70 ? 'LOW' : 'MEDIUM'),
           securityScore: analysis.riskScore,
           
           safetyChecks: analysis.safetyChecks,
@@ -497,9 +497,9 @@ const SafeCheckerSafe = () => {
                     </div>
                   </div>
                   <p className="text-sm text-gray-700">
-                    {scanResult.securityScore >= 80 ? '✅ This token appears to be safe based on our analysis' :
-                     scanResult.securityScore >= 60 ? '⚠️ This token has some risk factors to consider' :
-                     '🚨 This token has significant risk factors - proceed with caution'}
+                    {scanResult.securityScore >= 70 ? '✅ This token appears to be safe based on our analysis (LOW RISK)' :
+                     scanResult.securityScore >= 40 ? '⚠️ This token has some risk factors to consider (MEDIUM RISK)' :
+                     '🚨 This token has significant risk factors - proceed with extreme caution (HIGH RISK)'}
                   </p>
                 </div>
 
@@ -679,7 +679,7 @@ const SafeCheckerSafe = () => {
                   <p className="text-blue-700 text-sm mb-2">
                     Our scoring system starts at 100 points and deducts points based on risk factors:
                   </p>
-                                     <ul className="text-blue-700 text-sm space-y-1">
+                  <ul className="text-blue-700 text-sm space-y-1 mb-3">
                      <li>• <strong>Honeypot Detection:</strong> -40 points if detected</li>
                      <li>• <strong>Blacklist Functions:</strong> -25 points if present</li>
                      <li>• <strong>Excessive Fees:</strong> -20 points if buy/sell tax &gt; 10%</li>
@@ -688,6 +688,14 @@ const SafeCheckerSafe = () => {
                      <li>• <strong>Verification Bonus:</strong> +10 points if verified</li>
                      <li>• <strong>Renounced Bonus:</strong> +5 points if ownership renounced</li>
                    </ul>
+                   <div className="text-blue-700 text-sm">
+                     <strong>Risk Levels:</strong>
+                     <div className="ml-4 mt-1">
+                       • <span className="text-green-600 font-medium">70-100 points: LOW RISK</span> ✅<br/>
+                       • <span className="text-yellow-600 font-medium">40-69 points: MEDIUM RISK</span> ⚠️<br/>
+                       • <span className="text-red-600 font-medium">0-39 points: HIGH RISK</span> 🚨
+                     </div>
+                   </div>
                 </div>
               </div>
 

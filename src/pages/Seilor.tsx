@@ -363,14 +363,34 @@ const Seilor = () => {
                     <span className="text-xs text-slate-400">{balance?.slice(0, 6)} SEI</span>
                   </div>
                 ) : (
-                  <button
-                    onClick={connectWallet}
-                    disabled={isConnecting}
-                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 disabled:opacity-50"
-                  >
-                    <Wallet className="w-4 h-4" />
-                    <span>{isConnecting ? 'Connecting...' : hasInstalledWallets ? 'Connect' : 'Get Wallet'}</span>
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={async () => {
+                        try {
+                          console.log('Seilor 0: Attempting to connect wallet...');
+                          await connectWallet();
+                        } catch (error) {
+                          console.error('Seilor 0: Wallet connection error:', error);
+                        }
+                      }}
+                      disabled={isConnecting}
+                      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2 disabled:opacity-50"
+                    >
+                      <Wallet className="w-4 h-4" />
+                      <span>{isConnecting ? 'Connecting...' : hasInstalledWallets ? 'Connect' : 'Get Wallet'}</span>
+                    </button>
+                    {error && (
+                      <div className="absolute top-full right-0 mt-2 w-64 bg-slate-800 border border-red-500/50 rounded-lg p-3 z-50">
+                        <p className="text-red-400 text-xs">{error}</p>
+                        <button
+                          onClick={() => window.location.reload()}
+                          className="mt-2 text-xs text-slate-400 hover:text-white underline"
+                        >
+                          Reload and try again
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
