@@ -11,7 +11,6 @@ import { TokenScanner } from '../utils/tokenScanner';
 import { SeiTokenRegistry } from '../utils/seiTokenRegistry';
 import { IntelligentAIChat } from '../utils/intelligentAIChat';
 import { AdvancedAIAgent } from '../utils/advancedAIAgent';
-import { useUnifiedWallet } from '../utils/unifiedWalletConnection';
 import { useReownWallet } from '../utils/reownWalletConnection';
 
 const Seilor = () => {
@@ -173,7 +172,7 @@ const Seilor = () => {
     }
   };
 
-  // Enhanced dApp navigation with real in-app browsing
+  // Simplified dApp navigation with verification dialog
   const handleDAppNavigation = async (dapp: SeiDApp) => {
     if (dapp.url.startsWith('/')) {
       // Internal Seifun routes - navigate normally
@@ -181,161 +180,27 @@ const Seilor = () => {
       return;
     }
 
-    // External dApps - enhanced in-app browsing
-    setBrowserUrl(dapp.url);
-    setBrowserTitle(dapp.name);
-    setBrowserLoading(true);
-    setBrowserError('');
-    setDAppAnalysis(null);
+    // Show verification dialog for external dApps
+    const isVerified = dapp.featured;
+    const verificationStatus = isVerified ? 'verified' : 'not yet integrated';
     
-    // Add to history
-    const newHistory = [...browserHistory.slice(0, browserHistoryIndex + 1), dapp.url];
-    setBrowserHistory(newHistory);
-    setBrowserHistoryIndex(newHistory.length - 1);
-
-    // Perform real safety analysis based on dApp data
-    if (isSafeBrowsingMode) {
-      try {
-        // Professional Security Assessment Algorithm
-        let safetyScore = 40; // Conservative base score
-        const warnings = [];
-        const risks = [];
-        const recommendations = [
-          'Always verify transaction details before signing',
-          'Keep your wallet secure and never share private keys',
-          'Start with small amounts when using new protocols'
-        ];
-
-        // Security Infrastructure Assessment (25 points max)
-        const hasSSL = dapp.url.startsWith('https://');
-        if (hasSSL) {
-          safetyScore += 15;
-        } else {
-          warnings.push('⚠️ No HTTPS encryption - Data transmission not secure');
-          risks.push('HIGH: Unencrypted connection vulnerable to attacks');
-        }
-
-        // Protocol Maturity & Verification (30 points max)
-        if (dapp.featured) {
-          safetyScore += 25; // High weight for featured/verified protocols
-        } else {
-          warnings.push('⚠️ Protocol not verified by Seilor security team');
-        }
-        
-        // Operational Status Assessment (15 points max)
-        if (dapp.status === 'Live') {
-          safetyScore += 15;
-        } else if (dapp.status === 'Beta') {
-          safetyScore += 8;
-          warnings.push('⚠️ Protocol in Beta - Potential bugs and changes expected');
-        } else {
-          warnings.push('⚠️ Protocol not fully operational');
-          risks.push('MEDIUM: Unstable protocol status');
-        }
-
-        // Liquidity & Market Depth Analysis (20 points max)
-        const tvlValue = parseFloat(dapp.tvl.replace(/[^0-9.]/g, ''));
-        if (tvlValue >= 100) {
-          safetyScore += 20; // Excellent liquidity
-        } else if (tvlValue >= 50) {
-          safetyScore += 15; // Good liquidity
-        } else if (tvlValue >= 10) {
-          safetyScore += 10; // Moderate liquidity
-        } else if (tvlValue >= 1) {
-          safetyScore += 5; // Low liquidity
-          warnings.push('⚠️ Low TVL may indicate limited liquidity');
-        } else {
-          warnings.push('⚠️ Very low TVL - High slippage risk');
-          risks.push('HIGH: Insufficient liquidity for large transactions');
-        }
-
-        // User Adoption & Network Effects (10 points max)
-        const userCount = parseFloat(dapp.users.replace(/[^0-9.]/g, ''));
-        if (userCount >= 50000) {
-          safetyScore += 10; // Strong network effect
-        } else if (userCount >= 10000) {
-          safetyScore += 7; // Good adoption
-        } else if (userCount >= 1000) {
-          safetyScore += 4; // Moderate adoption
-        } else {
-          warnings.push('⚠️ Limited user base - Less battle-tested');
-          risks.push('MEDIUM: Lower user adoption may indicate higher risks');
-        }
-
-        // Category-Specific Risk Assessment
-        if (dapp.category === 'DeFi') {
-          recommendations.push('🔍 Review smart contract audits and security reports');
-          recommendations.push('💡 Understand impermanent loss risks in AMM pools');
-          recommendations.push('⚖️ Diversify across multiple protocols to reduce risk');
-          if (tvlValue < 10) {
-            risks.push('HIGH: DeFi protocols with low TVL have higher smart contract risks');
-          }
-        } else if (dapp.category === 'NFT') {
-          recommendations.push('🔍 Verify NFT authenticity and creator reputation');
-          recommendations.push('💰 Factor in gas fees for minting and trading operations');
-          recommendations.push('📊 Research floor prices and trading volume trends');
-        } else if (dapp.category === 'Gaming') {
-          recommendations.push('🎮 Understand tokenomics and in-game economics');
-          recommendations.push('🔒 Be cautious with asset bridging between games');
-        }
-
-        // Domain & Infrastructure Analysis
-        const domain = new URL(dapp.url).hostname;
-        const establishedDomains = ['astroport.fi', 'dragonswap.app', 'seinetwork.io'];
-        const suspiciousTlds = ['.tk', '.ml', '.ga', '.cf'];
-        
-        if (establishedDomains.some(safeDomain => domain.includes(safeDomain))) {
-          safetyScore += 5; // Bonus for known established domains
-        }
-        
-        if (suspiciousTlds.some(tld => domain.endsWith(tld))) {
-          warnings.push('⚠️ Domain uses suspicious TLD - Exercise extra caution');
-          risks.push('MEDIUM: Free domain TLD may indicate temporary or untrustworthy site');
-          safetyScore -= 10;
-        }
-
-        // Final Score Calibration
-        safetyScore = Math.max(0, Math.min(100, safetyScore));
-
-        const analysis = {
-          safetyScore,
-          isVerified: dapp.featured && hasSSL && safetyScore >= 80,
-          hasSSL,
-          reputation: safetyScore >= 90 ? 'Institutional Grade' : 
-                     safetyScore >= 80 ? 'High Trust' : 
-                     safetyScore >= 70 ? 'Moderate Trust' : 
-                     safetyScore >= 60 ? 'Exercise Caution' : 
-                     safetyScore >= 40 ? 'High Risk' : 'Extreme Risk',
-          riskLevel: safetyScore >= 80 ? 'LOW' : 
-                    safetyScore >= 60 ? 'MODERATE' : 
-                    safetyScore >= 40 ? 'HIGH' : 'CRITICAL',
-          warnings,
-          risks,
-          recommendations,
-          assessmentDate: new Date().toISOString()
-        };
-        
-        setDAppAnalysis(analysis);
-      } catch (error) {
-        console.warn('Failed to analyze dApp:', error);
-        // Fallback analysis
-        setDAppAnalysis({
-          safetyScore: 70,
-          isVerified: false,
-          hasSSL: dapp.url.startsWith('https://'),
-          reputation: 'Unknown',
-          warnings: ['Unable to perform complete safety analysis'],
-          recommendations: [
-            'Exercise extra caution with this protocol',
-            'Verify all transaction details carefully',
-            'Consider using smaller amounts initially'
-          ]
-        });
-      }
+    const confirmed = window.confirm(
+      `🚀 Launch ${dapp.name}\n\n` +
+      `Status: This dApp is ${verificationStatus} for optimal safety.\n\n` +
+      `${isVerified ? 
+        '✅ This protocol has been verified by our security team.\n' +
+        '🛡️ Seilor AI will monitor for security risks.\n' :
+        '⚠️ This dApp has not been fully integrated yet.\n' +
+        '🔍 Please exercise caution and verify all transactions.\n'
+      }\n` +
+      `📊 Your wallet will be available for connection in the new tab.\n\n` +
+      `Do you want to proceed to ${new URL(dapp.url).hostname}?`
+    );
+    
+    if (confirmed) {
+      console.log(`🚀 User launched ${dapp.name} externally`);
+      window.open(dapp.url, '_blank', 'noopener,noreferrer');
     }
-
-    setShowBrowser(true);
-    setBrowserLoading(false);
   };
 
   // Browser navigation functions
@@ -832,33 +697,71 @@ const Seilor = () => {
                   </div>
                 </div>
 
-                {/* Top Performing dApps */}
+                {/* Wallet Portfolio or Top Performers */}
                 <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6">
-                  <h3 className="text-xl font-bold text-white mb-6">Top Performers (24h)</h3>
-                  <div className="space-y-4">
-                    {[
-                      { name: 'Astroport', tvl: '$32.1M', change: '+12.5%', category: 'DEX' },
-                      { name: 'Dragonswap', tvl: '$18.7M', change: '+8.9%', category: 'DEX' },
-                      { name: 'Nitro', tvl: '$22.3M', change: '+15.2%', category: 'Perps' },
-                      { name: 'Kryptonite', tvl: '$14.1M', change: '+6.7%', category: 'Staking' }
-                    ].map((dapp, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-xs">{dapp.name[0]}</span>
+                  {isConnected ? (
+                    <>
+                      <h3 className="text-xl font-bold text-white mb-6">Your Portfolio</h3>
+                      <div className="text-center py-8">
+                        <Wallet className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                        <p className="text-slate-400 mb-2">Portfolio tracking coming soon</p>
+                        <p className="text-sm text-slate-500">
+                          Connect to dApps to start tracking your positions
+                        </p>
+                        <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-300">Connected Wallet</span>
+                            <span className="text-green-400 font-mono text-sm">
+                              {address?.slice(0,8)}...{address?.slice(-6)}
+                            </span>
                           </div>
-                          <div>
-                            <p className="font-medium text-white">{dapp.name}</p>
-                            <p className="text-xs text-slate-400">{dapp.category}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium text-white">{dapp.tvl}</p>
-                          <p className="text-xs text-green-400">{dapp.change}</p>
+                          {balance && (
+                            <div className="flex justify-between items-center mt-2">
+                              <span className="text-slate-300">Balance</span>
+                              <span className="text-blue-400 font-medium">
+                                {parseFloat(balance).toFixed(4)} SEI
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-bold text-white mb-6">Featured dApps</h3>
+                      <div className="space-y-4">
+                        {seiDApps.filter(dapp => dapp.featured).slice(0, 4).map((dapp, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                                <img 
+                                  src={dapp.image} 
+                                  alt={dapp.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const parent = e.currentTarget.parentElement;
+                                    if (parent) {
+                                      parent.className = 'w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center';
+                                      parent.innerHTML = `<span class="text-white font-bold text-xs">${dapp.name[0]}</span>`;
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <p className="font-medium text-white">{dapp.name}</p>
+                                <p className="text-xs text-slate-400">{dapp.category}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-medium text-white">{dapp.tvl}</p>
+                              <p className="text-xs text-slate-400">{dapp.users} users</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -1106,8 +1009,8 @@ const Seilor = () => {
         </div>
       </div>
 
-            {/* Enhanced dApp Launch Interface */}
-      {showBrowser && (
+            {/* Browser modal removed - using direct external launch */}
+      {false && showBrowser && (
         <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-50">
           <div className="h-full flex flex-col">
             {/* Header */}

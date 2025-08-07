@@ -290,13 +290,19 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         throw new Error('Please connect your wallet first');
       }
       
-      const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS_MAINNET;
+      const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS_MAINNET || import.meta.env.VITE_FACTORY_ADDRESS_TESTNET;
+      
+      if (!FACTORY_ADDRESS) {
+        throw new Error('Token factory contract address not configured. Please check environment variables.');
+      }
+      
       const FACTORY_ABI = [
         'function createToken(string name, string symbol, uint8 decimals, uint256 totalSupply) external payable returns (address)',
         'function creationFee() external view returns (uint256)',
         'event TokenCreated(address indexed tokenAddress, address indexed creator, string name, string symbol)'
       ];
       
+      console.log('Using factory address:', FACTORY_ADDRESS);
       const factory = new ethers.Contract(FACTORY_ADDRESS, FACTORY_ABI, signer);
 
       // Get creation fee
