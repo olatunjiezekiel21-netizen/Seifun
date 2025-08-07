@@ -6,6 +6,7 @@ import {
 import { ProfessionalAIAgent } from '../utils/professionalAI';
 import { SeiTradingService, type TransactionHistory, type ProtocolInteraction } from '../utils/seiTradingService';
 import { useReownWallet } from '../utils/reownWalletConnection';
+import { mcpService } from '../services/MCPService';
 
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo'>('chat');
