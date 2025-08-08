@@ -217,12 +217,12 @@ const TradingView: React.FC<TradingViewProps> = () => {
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <img
-                  src={pairData.info?.imageUrl || `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${pairData.baseToken.symbol.slice(0, 2)}`}
+                  src={pairData.info?.imageUrl || `/tokens/${pairData.baseToken.symbol.toLowerCase()}.png`}
                   alt={`${pairData.baseToken.name} logo`}
                   className="w-16 h-16 rounded-full border-2 border-gray-200 bg-white"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${pairData.baseToken.symbol.slice(0, 2)}`;
+                    target.src = '/Seifu.png'; // Fallback to Seifun logo
                   }}
                 />
               </div>

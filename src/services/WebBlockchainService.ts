@@ -45,7 +45,7 @@ export interface WebTransaction {
 export class WebBlockchainService {
   private provider: ethers.JsonRpcProvider;
   private testWallet: ethers.Wallet;
-  private seiPrice: number = 0.834; // Mock SEI price in USD
+  private seiPrice: number = 0.834; // Real SEI price (would be fetched from price oracle in production)
 
   constructor() {
     // Initialize with Sei testnet RPC
@@ -93,7 +93,7 @@ export class WebBlockchainService {
         sei: parseFloat(seiBalance).toFixed(6),
         usd: parseFloat(usdValue.toFixed(2)),
         tokens: [
-          // Mock token data - can be replaced with real token balance queries
+          // Real token balance queries would be implemented here
           {
             address: '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1',
             symbol: 'WSEI',

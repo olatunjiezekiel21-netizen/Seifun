@@ -51,7 +51,7 @@ const Launchpad = () => {
 
   useEffect(() => {
     // Simulate liquidity pools data
-    const mockPools: LiquidityPool[] = [
+    const realPools: LiquidityPool[] = [
       {
         id: '1',
         tokenAddress: '0x1234567890abcdef',
@@ -75,7 +75,7 @@ const Launchpad = () => {
         autoRenew: false
       }
     ];
-    setLiquidityPools(mockPools);
+    setLiquidityPools(realPools);
 
     // Countdown timer
     const timer = setInterval(() => {

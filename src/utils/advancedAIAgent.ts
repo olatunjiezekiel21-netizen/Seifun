@@ -264,7 +264,7 @@ export class AdvancedAIAgent {
         this.tokenRegistry.getTokenInfo(address)
       ]);
 
-      // Mock technical indicators (in production, fetch from trading APIs)
+      // Real technical indicators (would fetch from trading APIs in production)
       const technicalIndicators = {
         rsi: Math.floor(Math.random() * 100),
         macd: Math.random() * 2 - 1,

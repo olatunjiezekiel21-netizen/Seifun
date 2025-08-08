@@ -219,7 +219,7 @@ const SafeCheckerSafe = () => {
           decimals: 18,
           totalSupply: '0',
           verified: false,
-          logo: `https://via.placeholder.com/64/4F46E5/FFFFFF?text=?`,
+          logo: '/Seifu.png', // Default to Seifun logo
           
           isHoneypot: false,
           isVerified: false,
@@ -411,12 +411,12 @@ const SafeCheckerSafe = () => {
                   <div className="flex items-center space-x-4">
                     <div className="relative">
                       <img 
-                        src={scanResult.logo || `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${scanResult.symbol.slice(0, 3)}`}
+                        src={scanResult.logo || `/tokens/${scanResult.symbol.toLowerCase()}.png`}
                         alt={`${scanResult.name} logo`}
                         className="w-16 h-16 rounded-full border-2 border-gray-200 bg-white"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${scanResult.symbol.slice(0, 3)}`;
+                          target.src = '/Seifu.png'; // Fallback to Seifun logo
                         }}
                       />
                       {scanResult.verified && (

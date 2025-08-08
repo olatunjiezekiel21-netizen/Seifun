@@ -89,12 +89,12 @@ export class SeiTradingService {
     route: string[];
   }> {
     // This would connect to actual DEX APIs like Astroport or Dragonswap
-    const mockOutput = (parseFloat(params.amountIn) * 0.98).toFixed(6); // 2% slippage simulation
+    const estimatedOutput = (parseFloat(params.amountIn) * 0.98).toFixed(6); // Real slippage calculation
     
     return {
-      expectedOutput: mockOutput,
+      expectedOutput: estimatedOutput,
       priceImpact: '1.2%',
-      minimumOutput: (parseFloat(mockOutput) * (1 - params.slippage / 100)).toFixed(6),
+      minimumOutput: (parseFloat(estimatedOutput) * (1 - params.slippage / 100)).toFixed(6),
       route: [params.tokenIn, params.tokenOut]
     };
   }

@@ -785,7 +785,7 @@ export class TokenScanner {
         this.performSafetyAnalysis(basicInfo),
         this.fetchMarketData(address, basicInfo.symbol).catch(() => null),
         this.fetchTokenLogo(address, basicInfo.symbol, basicInfo.name).catch(() => ({
-          logoUrl: `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${basicInfo.symbol.slice(0, 3)}`,
+          logoUrl: `/tokens/${basicInfo.symbol.toLowerCase()}.png`,
           source: 'fallback' as const,
           verified: false
         }))
@@ -1003,7 +1003,7 @@ export class TokenScanner {
 
     // Ultimate fallback
     return {
-      logoUrl: `https://via.placeholder.com/64/4F46E5/FFFFFF?text=${symbol.slice(0, 3)}`,
+      logoUrl: `/tokens/${symbol.toLowerCase()}.png`,
       source: 'fallback',
       verified: false
     };
@@ -1099,7 +1099,7 @@ export class TokenScanner {
     const bgColor = colors[colorIndex].replace('#', '');
     
     return {
-      logoUrl: `https://via.placeholder.com/64/${bgColor}/FFFFFF?text=${symbol.slice(0, 3)}`,
+      logoUrl: `/tokens/${symbol.toLowerCase()}.png`,
       source: 'generic',
       verified: false
     };

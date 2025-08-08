@@ -16,7 +16,7 @@ const SeifunLaunch = () => {
     { id: 'community', name: 'Community', icon: Users },
   ];
 
-  const mockTokens = [
+  const featuredTokens = [
     {
       id: '1',
       name: 'SeiDoge',
@@ -115,7 +115,7 @@ const SeifunLaunch = () => {
     }
   ];
 
-  const filteredTokens = mockTokens.filter(token => {
+  const filteredTokens = featuredTokens.filter(token => {
     const matchesSearch = token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          token.symbol.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || 
