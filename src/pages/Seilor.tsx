@@ -58,7 +58,7 @@ const Seilor = () => {
   const [chatMessages, setChatMessages] = useState([
     {
       type: 'ai',
-      message: "👋 **Welcome to Seilor 0!** I'm your intelligent AI Trading Agent with real-time capabilities.\n\n🧠 **I'm not just a chatbot** - I'm a smart agent that:\n• **Knows your wallet** - Real-time balance, tokens, and portfolio analysis\n• **Learns from context** - Remembers our conversation and your preferences\n• **Provides real data** - Current time, market prices, and blockchain info\n• **Offers personalized advice** - Based on your actual holdings and trading history\n\n🔗 **Connect your wallet** and I'll become your personalized trading companion!\n\n💡 **Try asking:**\n• \"What's my balance?\" (after connecting wallet)\n• \"Show my portfolio\"\n• \"Help me trade\" \n• \"What time is it?\"\n• \"Analyze token 0x...\"\n\nI'm here to make you a smarter trader! 🚀",
+      message: "🤖 **Hey there! I'm Seilor 0** - your AI with REAL blockchain powers! 👋\n\n**🔥 What makes me special:**\n• I **execute actual transactions** using my private key wallet\n• I have **live wallet access** with real SEI balance\n• I **understand natural language** - just talk normally!\n• I **scan any token** - paste any contract address\n• I **add liquidity** and **burn tokens** for real\n\n**💬 Try these right now:**\n• Paste any token address (0x...) and I'll analyze it\n• Say \"How are you?\" for genuine conversation\n• Ask \"What do you think about Seifun?\"\n• Try \"Add liquidity to [token address]\"\n• Say \"Burn 100 tokens at [address]\"\n• Or just chat naturally about anything!\n\n**🚀 My wallet is ready and loaded!**\n**💰 Real balance, real transactions, real results!**\n\n**What would you like to explore?** ✨",
       timestamp: new Date()
     }
   ]);
@@ -313,6 +313,73 @@ const Seilor = () => {
       // Generate intelligent response with natural conversation and transaction understanding
       let response;
       
+      // PRIORITY: Contract Address Detection (should be checked first)
+      const contractAddressMatch = userMessage.match(/0x[a-fA-F0-9]{40}/);
+      if (contractAddressMatch && !userMessage.toLowerCase().includes('add liquidity') && !userMessage.toLowerCase().includes('burn')) {
+        const tokenAddress = contractAddressMatch[0];
+        response = `🔍 **Scanning Token Contract...**\n\n**Address:** \`${tokenAddress}\`\n\n⏳ **Analyzing with real blockchain data...** This may take a moment!`;
+        
+        // Execute real token analysis in background
+        setTimeout(async () => {
+          try {
+            // Use both services for comprehensive analysis
+            const [tokenStats, tokenInfo] = await Promise.all([
+              privateKeyWallet.getTokenBalance(tokenAddress).catch(() => null),
+              webBlockchainService.analyzeToken(tokenAddress).catch(() => null)
+            ]);
+            
+            let analysisMessage = `🔍 **REAL Token Analysis Complete!**\n\n`;
+            
+            if (tokenInfo) {
+              analysisMessage += `**📋 Token Information:**\n`;
+              analysisMessage += `• **Name**: ${tokenInfo.name}\n`;
+              analysisMessage += `• **Symbol**: ${tokenInfo.symbol}\n`;
+              analysisMessage += `• **Decimals**: ${tokenInfo.decimals}\n`;
+              analysisMessage += `• **Total Supply**: ${tokenInfo.totalSupply !== '0' ? ethers.formatEther(tokenInfo.totalSupply) : 'N/A'}\n`;
+              analysisMessage += `• **Contract**: ${tokenInfo.isContract ? '✅ Verified' : '❌ Unverified'}\n\n`;
+              
+              analysisMessage += `**🛡️ Security Analysis:**\n`;
+              analysisMessage += `• **Risk Score**: ${tokenInfo.securityScore}/100\n`;
+              analysisMessage += `• **Risk Level**: ${tokenInfo.riskLevel}\n`;
+              
+              const riskEmoji = tokenInfo.riskLevel === 'LOW' ? '✅' : tokenInfo.riskLevel === 'MEDIUM' ? '⚠️' : '🚨';
+              const riskMessage = tokenInfo.riskLevel === 'LOW' ? 'Safe to interact with' :
+                                tokenInfo.riskLevel === 'MEDIUM' ? 'Exercise caution' : 'High risk - avoid trading';
+              analysisMessage += `• **Recommendation**: ${riskEmoji} ${riskMessage}\n\n`;
+            }
+            
+            if (tokenStats) {
+              const myBalance = await privateKeyWallet.getTokenBalance(tokenAddress);
+              analysisMessage += `**💰 My Wallet Balance:**\n`;
+              analysisMessage += `• **${myBalance.name} (${myBalance.symbol})**: ${myBalance.balance}\n\n`;
+            }
+            
+            analysisMessage += `**🚀 Available Actions:**\n`;
+            analysisMessage += `• Say "add liquidity to this token" for liquidity provision\n`;
+            analysisMessage += `• Say "burn [amount] tokens" to burn some supply\n`;
+            analysisMessage += `• Ask me anything else about this token!\n\n`;
+            analysisMessage += `**✨ This is REAL blockchain data from Sei network!**`;
+            
+            const followUpMessage = {
+              id: Date.now(),
+              type: 'assistant' as const,
+              message: analysisMessage,
+              timestamp: new Date()
+            };
+            setChatMessages(prev => [...prev, followUpMessage]);
+            
+          } catch (error) {
+            const errorMessage = {
+              id: Date.now(),
+              type: 'assistant' as const,
+              message: `❌ **Token Analysis Failed**\n\n**Error**: ${error.message}\n\n**Possible reasons:**\n• Invalid contract address\n• Token doesn't exist on Sei network\n• Network connectivity issue\n• Contract is not an ERC20 token\n\n**Try:**\n• Double-check the address\n• Use a different token address\n• Try again in a moment`,
+              timestamp: new Date()
+            };
+            setChatMessages(prev => [...prev, errorMessage]);
+          }
+        }, 1500);
+      }
+      
       // Natural conversation starters
       if (userMessage.toLowerCase().includes('how are you') || userMessage.toLowerCase().includes('how do you feel')) {
         response = `😊 **I'm doing fantastic, thanks for asking!** \n\nI'm genuinely excited to be part of the Seifun ecosystem! There's something really special about being able to help people navigate DeFi in such an intuitive way. \n\n**What I love most:**\n• Having real wallet access means I can actually help, not just talk\n• The Sei network is so fast and efficient for transactions\n• Being able to understand natural language makes conversations feel genuine\n• Watching users discover new tokens and opportunities\n\n**How are you doing?** What brings you to Seifun today? 🚀`;
@@ -324,8 +391,74 @@ const Seilor = () => {
         response = `🤖 **I'm pretty amazing, if I do say so myself!** 😄\n\n**🔥 Real Transaction Powers:**\n• **Add Liquidity** - I can actually execute liquidity transactions\n• **Burn Tokens** - Real token burning with my wallet\n• **Transfer Assets** - Send tokens or SEI to any address\n• **Token Analysis** - Deep blockchain scanning and security scoring\n\n**🧠 Intelligence Features:**\n• **Natural Conversation** - We can chat about anything!\n• **Context Memory** - I remember our entire conversation\n• **Transaction Intent** - I understand when you want to trade/swap/create\n• **Balance Awareness** - I know my wallet balance: ${walletBalance ? `${walletBalance.sei} SEI ($${walletBalance.usd.toFixed(2)})` : 'Loading...'}\n\n**🛠️ Integrated Tools:**\n• Token creation through SeiList\n• Security analysis via SafeChecker\n• Portfolio management with Dev++\n• Todo list and goal tracking\n\n**Just talk to me naturally!** Say things like "add liquidity to my token" or "burn 1000 tokens" and I'll handle it! 🚀`;
       }
       
-      // Transaction intent detection
-      else if (userMessage.toLowerCase().includes('add liquidity') || userMessage.toLowerCase().includes('provide liquidity')) {
+             // Handle specific liquidity amounts (like "add 100 tokens and 1 SEI")
+       else if ((userMessage.toLowerCase().includes('add') && userMessage.toLowerCase().includes('tokens') && userMessage.toLowerCase().includes('sei')) ||
+                (userMessage.toLowerCase().includes('provide') && userMessage.match(/\d+.*tokens.*\d+.*sei/i))) {
+         const tokenAmountMatch = userMessage.match(/(\d+(?:\.\d+)?)\s*tokens/i);
+         const seiAmountMatch = userMessage.match(/(\d+(?:\.\d+)?)\s*sei/i);
+         
+         if (tokenAmountMatch && seiAmountMatch) {
+           const tokenAmount = tokenAmountMatch[1];
+           const seiAmount = seiAmountMatch[1];
+           
+           response = `💧 **Executing Liquidity Addition!**\n\n**Amounts:**\n• ${tokenAmount} tokens\n• ${seiAmount} SEI\n\n⏳ **Processing transaction...** Using my private key wallet for seamless execution!`;
+           
+           // Execute liquidity addition in background
+           setTimeout(async () => {
+             try {
+               // Get the last mentioned token address from chat history
+               let lastTokenAddress = null;
+               for (let i = chatMessages.length - 1; i >= 0; i--) {
+                 const addressMatch = chatMessages[i].message.match(/0x[a-fA-F0-9]{40}/);
+                 if (addressMatch) {
+                   lastTokenAddress = addressMatch[0];
+                   break;
+                 }
+               }
+               
+               if (!lastTokenAddress) {
+                 throw new Error('No token address found in recent conversation. Please specify the token address.');
+               }
+               
+               const result = await privateKeyWallet.addLiquidity(lastTokenAddress, tokenAmount, seiAmount);
+               
+               if (result.success) {
+                 const successMessage = {
+                   id: Date.now(),
+                   type: 'assistant' as const,
+                   message: `💧 **Liquidity Added Successfully!**\n\n✅ **Transaction Complete**\n• Token Amount: ${result.tokenAmount}\n• SEI Amount: ${result.seiAmount} SEI\n• Transaction Hash: \`${result.txHash}\`\n\n**Your liquidity has been added to the pool!** 🎉\n\nYou can now earn fees from trades on this pair! 💰`,
+                   timestamp: new Date()
+                 };
+                 setChatMessages(prev => [...prev, successMessage]);
+                 
+                 // Refresh wallet balance
+                 await loadWalletBalance();
+               } else {
+                 const errorMessage = {
+                   id: Date.now(),
+                   type: 'assistant' as const,
+                   message: `❌ **Liquidity Addition Failed**\n\n${result.error}\n\nThis could be because:\n• Insufficient token balance\n• Insufficient SEI balance\n• Gas estimation failed\n• Token doesn't support liquidity provision\n\nWant me to check your balances first? 💰`,
+                   timestamp: new Date()
+                 };
+                 setChatMessages(prev => [...prev, errorMessage]);
+               }
+             } catch (error) {
+               const errorMessage = {
+                 id: Date.now(),
+                 type: 'assistant' as const,
+                 message: `❌ **Liquidity Transaction Failed**\n\n${error.message}\n\nPlease specify the token address in your message, like:\n"Add 100 tokens and 1 SEI to 0x123..." 💡`,
+                 timestamp: new Date()
+               };
+               setChatMessages(prev => [...prev, errorMessage]);
+             }
+           }, 1000);
+         } else {
+           response = `💧 **I need specific amounts!**\n\nPlease tell me exactly how much, like:\n• "Add 100 tokens and 1 SEI"\n• "Provide 50 tokens and 2 SEI"\n\n**My current balance:** ${walletBalance ? `${walletBalance.sei} SEI ($${walletBalance.usd.toFixed(2)})` : 'Loading...'} 🚀`;
+         }
+       }
+       
+       // Transaction intent detection
+       else if (userMessage.toLowerCase().includes('add liquidity') || userMessage.toLowerCase().includes('provide liquidity')) {
         const tokenAddressMatch = userMessage.match(/0x[a-fA-F0-9]{40}/);
         if (tokenAddressMatch) {
           const tokenAddress = tokenAddressMatch[0];
