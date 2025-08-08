@@ -12,6 +12,8 @@ import { mcpService } from '../services/MCPService';
 import { webBlockchainService } from '../services/WebBlockchainService';
 import { AIInterface } from '../components/AIInterface';
 import { privateKeyWallet } from '../services/PrivateKeyWallet';
+import { chatBrain } from '../services/ChatBrain';
+import { actionBrain, IntentType } from '../services/ActionBrain';
 
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
@@ -267,30 +269,63 @@ const Seilor = () => {
 
   // Intelligent AI chat handler with real-time wallet awareness
   const handleAiChat = async () => {
-    if (!aiChat.trim()) return;
-
+    if (!aiChat.trim() || loading) return;
+    
+    setLoading(true);
     const userMessage = aiChat.trim();
     setAiChat('');
-
-    // Add user message to UI
-    const newUserMessage = {
-      type: 'user',
+    
+    // Add user message immediately
+    const userChatMessage = {
+      id: Date.now(),
+      type: 'user' as const,
       message: userMessage,
       timestamp: new Date()
     };
-    setChatMessages(prev => [...prev, newUserMessage]);
-
-    setLoading(true);
-
+    setChatMessages(prev => [...prev, userChatMessage]);
+    
     try {
-      // Get real-time wallet context
-      const walletContext = await getWalletContext();
+      // Process message through Chat Brain (which uses Action Brain)
+      const response = await chatBrain.processMessage(userMessage);
       
-      // Create comprehensive context for intelligent responses
-      const aiContext = {
-        userWallet: address,
-        isConnected,
-        currentTime: new Date(),
+      // Add AI response
+      const aiResponse = {
+        id: Date.now() + 1,
+        type: 'assistant' as const,
+        message: response.message,
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, aiResponse]);
+      
+      // Add suggestions if available
+      if (response.suggestions && response.suggestions.length > 0) {
+        const suggestionsMessage = {
+          id: Date.now() + 2,
+          type: 'assistant' as const,
+          message: `💡 **Suggestions:**\n${response.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}`,
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, suggestionsMessage]);
+      }
+      
+    } catch (error) {
+      console.error('Chat Brain Error:', error);
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'assistant' as const,
+        message: `❌ **I encountered an issue processing your message.**\n\n**Error**: ${error.message}\n\n**Please try**: Being more specific or rephrasing your request.`,
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    // Old AI logic removed - now using Chat Brain system
+  
+  // Add todo function
+  const addTodo = (task: string) => {
         chatHistory: chatMessages, // Full chat history instead of just last 10
         walletData: walletContext,
         // Add user's todo list and task data

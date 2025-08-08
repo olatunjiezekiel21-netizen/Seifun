@@ -39,6 +39,8 @@ const Docs = () => {
   const [activeSection, setActiveSection] = useState('introduction');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Documentation structure based on our GitBook SUMMARY.md
   const documentationSections = [
@@ -700,6 +702,128 @@ const Docs = () => {
     }
   };
 
+  // Enhanced search functionality
+  const performSearch = (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const results: any[] = [];
+    const searchTerm = query.toLowerCase();
+
+    // Search through all sections and items
+    documentationSections.forEach(section => {
+      // Check section title match
+      if (section.title.toLowerCase().includes(searchTerm)) {
+        results.push({
+          type: 'section',
+          id: section.id,
+          title: section.title,
+          description: `${section.items.length} topics available`,
+          icon: section.icon,
+          relevance: section.title.toLowerCase().indexOf(searchTerm)
+        });
+      }
+
+      // Check individual items
+      section.items.forEach(item => {
+        if (item.title.toLowerCase().includes(searchTerm)) {
+          results.push({
+            type: 'item',
+            id: item.id,
+            title: item.title,
+            description: `In ${section.title}`,
+            icon: item.icon,
+            sectionId: section.id,
+            relevance: item.title.toLowerCase().indexOf(searchTerm)
+          });
+        }
+      });
+
+      // Search content based on keywords
+      const content = documentationContent[section.id as keyof typeof documentationContent];
+      if (content && typeof content.content === 'string' && content.content.toLowerCase().includes(searchTerm)) {
+        results.push({
+          type: 'content',
+          id: section.id,
+          title: `${section.title} (Content Match)`,
+          description: 'Found in page content',
+          icon: section.icon,
+          relevance: content.content.toLowerCase().indexOf(searchTerm)
+        });
+      }
+    });
+
+    // Search specific keywords and topics
+    const keywordMatches = searchKeywords(searchTerm);
+    results.push(...keywordMatches);
+
+    // Sort by relevance (exact matches first)
+    results.sort((a, b) => a.relevance - b.relevance);
+    
+    setSearchResults(results.slice(0, 10)); // Limit to top 10 results
+    setIsSearching(false);
+  };
+
+  // Keyword-based search for common topics
+  const searchKeywords = (query: string): any[] => {
+    const keywords = {
+      'token': [
+        { id: 'token-creation', title: 'Token Creation Guide', section: 'SeiList', icon: Code },
+        { id: 'seilist-intro', title: 'SeiList Introduction', section: 'SeiList', icon: Layers }
+      ],
+      'ai': [
+        { id: 'seilor-intro', title: 'Seilor 0 AI Agent', section: 'AI Features', icon: Bot },
+        { id: 'ai-trading', title: 'AI Trading Features', section: 'Seilor 0', icon: TrendingUp }
+      ],
+      'security': [
+        { id: 'security-overview', title: 'Security Overview', section: 'SafeChecker', icon: Shield },
+        { id: 'token-scanning', title: 'Token Scanning', section: 'SafeChecker', icon: Search }
+      ],
+      'wallet': [
+        { id: 'wallet-connection', title: 'Wallet Connection', section: 'Getting Started', icon: Lock },
+        { id: 'portfolio-management', title: 'Portfolio Management', section: 'Seilor 0', icon: Settings }
+      ],
+      'trading': [
+        { id: 'ai-trading', title: 'AI Trading Features', section: 'Seilor 0', icon: TrendingUp },
+        { id: 'trading-strategies', title: 'Trading Strategies', section: 'Seilor 0', icon: Terminal }
+      ],
+      'liquidity': [
+        { id: 'liquidity-management', title: 'Liquidity Management', section: 'SeiList', icon: TrendingUp }
+      ]
+    };
+
+    const results: any[] = [];
+    Object.entries(keywords).forEach(([keyword, items]) => {
+      if (query.includes(keyword)) {
+        items.forEach(item => {
+          results.push({
+            type: 'keyword',
+            id: item.id,
+            title: item.title,
+            description: `Keyword match: ${keyword}`,
+            icon: item.icon,
+            relevance: 0 // High relevance for keyword matches
+          });
+        });
+      }
+    });
+
+    return results;
+  };
+
+  // Handle search input with debouncing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   const filteredSections = documentationSections.filter(section =>
     section.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     section.items.some(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -740,6 +864,72 @@ const Docs = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none w-64"
                 />
+                
+                {/* Search Results Dropdown */}
+                {searchQuery && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-xl max-h-96 overflow-y-auto z-50">
+                    {isSearching ? (
+                      <div className="p-4 text-center text-gray-400">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                        Searching...
+                      </div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="py-2">
+                        <div className="px-3 py-2 text-xs font-medium text-gray-400 uppercase tracking-wide border-b border-gray-700">
+                          Search Results ({searchResults.length})
+                        </div>
+                        {searchResults.map((result, index) => {
+                          const IconComponent = result.icon;
+                          return (
+                            <button
+                              key={`${result.id}-${index}`}
+                              onClick={() => {
+                                setActiveSection(result.id);
+                                setSearchQuery('');
+                                setSearchResults([]);
+                              }}
+                              className="w-full text-left px-3 py-3 hover:bg-gray-700 border-b border-gray-700/50 last:border-b-0 transition-colors"
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0 mt-0.5">
+                                  <IconComponent className="w-4 h-4 text-blue-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-white truncate">
+                                    {result.title}
+                                  </div>
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    {result.description}
+                                  </div>
+                                  <div className="flex items-center mt-1">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                      result.type === 'section' ? 'bg-blue-100 text-blue-800' :
+                                      result.type === 'item' ? 'bg-green-100 text-green-800' :
+                                      result.type === 'keyword' ? 'bg-purple-100 text-purple-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {result.type === 'section' ? 'Section' :
+                                       result.type === 'item' ? 'Topic' :
+                                       result.type === 'keyword' ? 'Keyword' :
+                                       'Content'}
+                                    </span>
+                                  </div>
+                                </div>
+                                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-400">
+                        <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <div className="text-sm">No results found for "{searchQuery}"</div>
+                        <div className="text-xs mt-1">Try searching for: token, ai, security, wallet, trading</div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <a
                 href="https://github.com/Seifun1/Seifun"
