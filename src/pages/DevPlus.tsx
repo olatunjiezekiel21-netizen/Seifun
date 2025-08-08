@@ -18,8 +18,12 @@ import {
   Star,
   RefreshCw,
   ExternalLink,
-  TrendingDown
+  TrendingDown,
+  Droplets,
+  Flame
 } from 'lucide-react';
+import { defiService, testDefiService } from '../services/DeFiService';
+import { useReownWallet } from '../utils/reownWalletConnection';
 
 interface TokenData {
   address: string;
@@ -39,7 +43,7 @@ interface TokenData {
 }
 
 interface TokenActivity {
-  type: 'launch' | 'trade' | 'scan' | 'alert';
+  type: 'launch' | 'trade' | 'scan' | 'alert' | 'liquidity' | 'burn';
   tokenAddress: string;
   tokenName: string;
   tokenSymbol: string;
@@ -54,6 +58,14 @@ const DevPlus = () => {
   const [tokens, setTokens] = useState<TokenData[]>([]);
   const [activities, setActivities] = useState<TokenActivity[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
+  const [showLiquidityModal, setShowLiquidityModal] = useState(false);
+  const [showBurnModal, setShowBurnModal] = useState(false);
+  const [liquidityAmount, setLiquidityAmount] = useState({ token: '', sei: '' });
+  const [burnAmount, setBurnAmount] = useState('');
+  const [processing, setProcessing] = useState(false);
+  
+  const { walletState, connectWallet } = useReownWallet();
 
   // Load real data from localStorage (would be from TokenService in production)
   useEffect(() => {
@@ -98,6 +110,143 @@ const DevPlus = () => {
 
   const handleRefresh = () => {
     loadData();
+  };
+
+  // REAL LIQUIDITY ADDITION
+  const handleAddLiquidity = async () => {
+    if (!selectedToken || !walletState.isConnected) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    if (!liquidityAmount.token || !liquidityAmount.sei) {
+      alert('Please enter both token and SEI amounts');
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      // Connect DeFi service to user's wallet
+      await defiService.connectWallet();
+      
+      const result = await defiService.addLiquidity({
+        tokenAddress: selectedToken.address,
+        tokenAmount: liquidityAmount.token,
+        seiAmount: liquidityAmount.sei,
+        slippageTolerance: 5, // 5%
+        deadline: 20 // 20 minutes
+      });
+
+      if (result.success) {
+        alert(
+          `🎉 Liquidity Added Successfully!\n\n` +
+          `Token: ${selectedToken.name} (${selectedToken.symbol})\n` +
+          `Token Amount: ${result.tokenAmount}\n` +
+          `SEI Amount: ${result.seiAmount}\n` +
+          `LP Tokens Received: ${result.liquidityTokens}\n` +
+          `Transaction Hash: ${result.txHash}\n\n` +
+          `Your liquidity has been added to the pool!`
+        );
+        
+        // Add activity
+        const newActivity = {
+          type: 'liquidity' as const,
+          tokenAddress: selectedToken.address,
+          tokenName: selectedToken.name,
+          tokenSymbol: selectedToken.symbol,
+          description: `Added ${liquidityAmount.token} ${selectedToken.symbol} + ${liquidityAmount.sei} SEI liquidity`,
+          timestamp: new Date(),
+          status: 'success' as const,
+          txHash: result.txHash
+        };
+        
+        setActivities(prev => [newActivity, ...prev.slice(0, 9)]);
+        setShowLiquidityModal(false);
+        setLiquidityAmount({ token: '', sei: '' });
+      } else {
+        alert(`❌ Liquidity Addition Failed:\n\n${result.error}`);
+      }
+    } catch (error) {
+      alert(`❌ Liquidity Addition Failed:\n\n${error.message}`);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // REAL TOKEN BURNING
+  const handleBurnTokens = async () => {
+    if (!selectedToken || !walletState.isConnected) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    if (!burnAmount) {
+      alert('Please enter the amount to burn');
+      return;
+    }
+
+    const confirmed = confirm(
+      `🔥 FINAL BURN CONFIRMATION 🔥\n\n` +
+      `You are about to PERMANENTLY BURN:\n` +
+      `${burnAmount} ${selectedToken.symbol}\n\n` +
+      `This action is IRREVERSIBLE!\n` +
+      `The tokens will be permanently removed from circulation.\n\n` +
+      `Are you absolutely sure you want to proceed?`
+    );
+
+    if (!confirmed) return;
+
+    setProcessing(true);
+    try {
+      // Connect DeFi service to user's wallet
+      await defiService.connectWallet();
+      
+      const result = await defiService.burnTokens({
+        tokenAddress: selectedToken.address,
+        amount: burnAmount
+      });
+
+      if (result.success) {
+        alert(
+          `🔥 Tokens Burned Successfully!\n\n` +
+          `Token: ${selectedToken.name} (${selectedToken.symbol})\n` +
+          `Amount Burned: ${result.amountBurned}\n` +
+          `New Total Supply: ${result.newTotalSupply}\n` +
+          `Transaction Hash: ${result.txHash}\n\n` +
+          `The tokens have been permanently removed from circulation!`
+        );
+        
+        // Update token data
+        setTokens(prev => prev.map(token => 
+          token.address === selectedToken.address 
+            ? { ...token, totalSupply: result.newTotalSupply }
+            : token
+        ));
+        
+        // Add activity
+        const newActivity = {
+          type: 'burn' as const,
+          tokenAddress: selectedToken.address,
+          tokenName: selectedToken.name,
+          tokenSymbol: selectedToken.symbol,
+          description: `Burned ${burnAmount} ${selectedToken.symbol} tokens`,
+          timestamp: new Date(),
+          status: 'success' as const,
+          txHash: result.txHash
+        };
+        
+        setActivities(prev => [newActivity, ...prev.slice(0, 9)]);
+        setShowBurnModal(false);
+        setBurnAmount('');
+        loadData(); // Refresh data
+      } else {
+        alert(`❌ Token Burn Failed:\n\n${result.error}`);
+      }
+    } catch (error) {
+      alert(`❌ Token Burn Failed:\n\n${error.message}`);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   // Calculate key metrics from real data
@@ -376,55 +525,24 @@ const DevPlus = () => {
                               </button>
                               <button
                                 onClick={() => {
-                                  const astroUrl = `https://astroport.fi/swap?from=sei&to=${token.address}`;
-                                  window.open(astroUrl, '_blank');
+                                  setSelectedToken(token);
+                                  setShowLiquidityModal(true);
                                 }}
                                 className="text-green-400 hover:text-green-300 text-xs flex items-center space-x-1"
-                                title="Add Liquidity on Astroport"
+                                title="Add Real Liquidity"
                               >
-                                <TrendingUp className="w-3 h-3" />
+                                <Droplets className="w-3 h-3" />
                                 <span>Liquidity</span>
                               </button>
                               <button
                                 onClick={() => {
-                                  const confirmed = window.confirm(
-                                    `⚠️ BURN TOKENS WARNING ⚠️\n\n` +
-                                    `You are about to burn tokens from ${token.name} (${token.symbol}).\n\n` +
-                                    `This action is PERMANENT and IRREVERSIBLE!\n\n` +
-                                    `• Tokens will be permanently removed from circulation\n` +
-                                    `• Total supply will be reduced\n` +
-                                    `• Gas fees will apply\n\n` +
-                                    `Are you sure you want to continue?`
-                                  );
-                                  
-                                  if (confirmed) {
-                                    const burnAmount = prompt(
-                                      `🔥 Burn ${token.symbol} Tokens\n\n` +
-                                      `Current Supply: ${parseInt(token.totalSupply).toLocaleString()}\n` +
-                                      `Your Balance: [Connect wallet to see balance]\n\n` +
-                                      `Enter the amount of ${token.symbol} tokens to burn:`
-                                    );
-                                    
-                                    if (burnAmount && !isNaN(Number(burnAmount))) {
-                                      alert(
-                                        `🔥 Token Burn Initiated!\n\n` +
-                                        `Token: ${token.name} (${token.symbol})\n` +
-                                        `Amount to Burn: ${Number(burnAmount).toLocaleString()} ${token.symbol}\n` +
-                                        `Contract: ${token.address}\n\n` +
-                                        `⚠️ This is a demo. In production:\n` +
-                                        `• Connect your wallet\n` +
-                                        `• Verify token ownership\n` +
-                                        `• Execute burn transaction\n` +
-                                        `• Update Dev++ metrics\n\n` +
-                                        `🚀 Feature coming soon with full wallet integration!`
-                                      );
-                                    }
-                                  }
+                                  setSelectedToken(token);
+                                  setShowBurnModal(true);
                                 }}
                                 className="text-red-400 hover:text-red-300 text-xs flex items-center space-x-1"
-                                title="Burn Tokens (Reduce Supply)"
+                                title="Burn Tokens (Real Transaction)"
                               >
-                                <Zap className="w-3 h-3" />
+                                <Flame className="w-3 h-3" />
                                 <span>Burn</span>
                               </button>
                             </div>
@@ -549,6 +667,172 @@ const DevPlus = () => {
           </div>
         )}
       </div>
+
+      {/* REAL LIQUIDITY MODAL */}
+      {showLiquidityModal && selectedToken && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">Add Real Liquidity</h3>
+              <button
+                onClick={() => setShowLiquidityModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <ExternalLink className="w-5 h-5 rotate-45" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Token: {selectedToken.name} ({selectedToken.symbol})
+                </label>
+                <input
+                  type="number"
+                  placeholder="Token amount"
+                  value={liquidityAmount.token}
+                  onChange={(e) => setLiquidityAmount(prev => ({ ...prev, token: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  SEI Amount
+                </label>
+                <input
+                  type="number"
+                  placeholder="SEI amount"
+                  value={liquidityAmount.sei}
+                  onChange={(e) => setLiquidityAmount(prev => ({ ...prev, sei: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              {!walletState.isConnected && (
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                  <p className="text-yellow-400 text-sm">
+                    ⚠️ Please connect your wallet to add liquidity
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <p className="text-blue-400 text-sm">
+                  💡 This will create a real liquidity pool with your tokens and SEI. 
+                  Make sure you have sufficient balance of both tokens.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowLiquidityModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddLiquidity}
+                disabled={processing || !walletState.isConnected}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+              >
+                {processing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Droplets className="w-4 h-4" />
+                    <span>Add Liquidity</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REAL BURN MODAL */}
+      {showBurnModal && selectedToken && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-red-500/30">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-red-400">🔥 Burn Tokens</h3>
+              <button
+                onClick={() => setShowBurnModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <ExternalLink className="w-5 h-5 rotate-45" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Token: {selectedToken.name} ({selectedToken.symbol})
+                </label>
+                <div className="text-sm text-gray-400 mb-2">
+                  Current Supply: {parseInt(selectedToken.totalSupply).toLocaleString()}
+                </div>
+                <input
+                  type="number"
+                  placeholder="Amount to burn"
+                  value={burnAmount}
+                  onChange={(e) => setBurnAmount(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-700 border border-red-500/50 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none"
+                />
+              </div>
+
+              {!walletState.isConnected && (
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                  <p className="text-yellow-400 text-sm">
+                    ⚠️ Please connect your wallet to burn tokens
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                <h4 className="text-red-400 font-medium mb-2">⚠️ DANGER ZONE</h4>
+                <ul className="text-red-300 text-sm space-y-1">
+                  <li>• This action is PERMANENT and IRREVERSIBLE</li>
+                  <li>• Tokens will be permanently removed from circulation</li>
+                  <li>• Total supply will be reduced forever</li>
+                  <li>• You can only burn tokens you own</li>
+                  <li>• Gas fees will apply for the transaction</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowBurnModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBurnTokens}
+                disabled={processing || !walletState.isConnected}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+              >
+                {processing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Burning...</span>
+                  </>
+                ) : (
+                  <>
+                    <Flame className="w-4 h-4" />
+                    <span>Burn Tokens</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
