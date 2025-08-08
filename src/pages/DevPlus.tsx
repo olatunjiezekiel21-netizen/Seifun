@@ -65,7 +65,7 @@ const DevPlus = () => {
   const [burnAmount, setBurnAmount] = useState('');
   const [processing, setProcessing] = useState(false);
   
-  const { walletState, connectWallet } = useReownWallet();
+  const { isConnected, address, connectWallet } = useReownWallet();
 
   // Load real data from localStorage (would be from TokenService in production)
   useEffect(() => {
@@ -114,7 +114,7 @@ const DevPlus = () => {
 
   // REAL LIQUIDITY ADDITION
   const handleAddLiquidity = async () => {
-    if (!selectedToken || !walletState.isConnected) {
+    if (!selectedToken || !isConnected) {
       alert('Please connect your wallet first');
       return;
     }
@@ -175,7 +175,7 @@ const DevPlus = () => {
 
   // REAL TOKEN BURNING
   const handleBurnTokens = async () => {
-    if (!selectedToken || !walletState.isConnected) {
+    if (!selectedToken || !isConnected) {
       alert('Please connect your wallet first');
       return;
     }
@@ -709,13 +709,13 @@ const DevPlus = () => {
                 />
               </div>
 
-              {!walletState.isConnected && (
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                  <p className="text-yellow-400 text-sm">
-                    ⚠️ Please connect your wallet to add liquidity
-                  </p>
-                </div>
-              )}
+                        {!isConnected && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+              <p className="text-yellow-400 text-sm">
+                ⚠️ Please connect your wallet to add liquidity
+              </p>
+            </div>
+          )}
 
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                 <p className="text-blue-400 text-sm">
@@ -733,8 +733,8 @@ const DevPlus = () => {
                 Cancel
               </button>
               <button
-                onClick={handleAddLiquidity}
-                disabled={processing || !walletState.isConnected}
+                            onClick={handleAddLiquidity}
+            disabled={processing || !isConnected}
                 className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 {processing ? (
@@ -785,13 +785,13 @@ const DevPlus = () => {
                 />
               </div>
 
-              {!walletState.isConnected && (
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                  <p className="text-yellow-400 text-sm">
-                    ⚠️ Please connect your wallet to burn tokens
-                  </p>
-                </div>
-              )}
+                        {!isConnected && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+              <p className="text-yellow-400 text-sm">
+                ⚠️ Please connect your wallet to burn tokens
+              </p>
+            </div>
+          )}
 
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                 <h4 className="text-red-400 font-medium mb-2">⚠️ DANGER ZONE</h4>
@@ -813,8 +813,8 @@ const DevPlus = () => {
                 Cancel
               </button>
               <button
-                onClick={handleBurnTokens}
-                disabled={processing || !walletState.isConnected}
+                            onClick={handleBurnTokens}
+            disabled={processing || !isConnected}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 {processing ? (

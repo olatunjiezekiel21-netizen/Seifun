@@ -70,7 +70,7 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
   const [scanResults, setScanResults] = useState<TokenScanResult | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { walletState } = useReownWallet();
+  const { isConnected, address } = useReownWallet();
 
   // Handle image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +103,7 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
     
     try {
       // Use real DeFi service to scan token
-      const tokenStats = await defiService.getTokenStats(scanAddress, walletState.address || undefined);
+      const tokenStats = await defiService.getTokenStats(scanAddress, address || undefined);
       
       const scanResult: TokenScanResult = {
         address: scanAddress,
@@ -155,7 +155,7 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
       return;
     }
 
-    if (!walletState.isConnected) {
+    if (!isConnected) {
       alert('🔗 Please connect your wallet first to create tokens');
       return;
     }
@@ -458,7 +458,7 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
 
           <button
             onClick={handleTokenCreate}
-            disabled={processing || !walletState.isConnected || !tokenForm.name || !tokenForm.symbol}
+            disabled={processing || !isConnected || !tokenForm.name || !tokenForm.symbol}
             className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {processing ? (
@@ -588,9 +588,9 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
       <div className="mt-6 pt-4 border-t border-gray-700">
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${walletState.isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
             <span className="text-gray-400">
-              {walletState.isConnected ? `Connected: ${walletState.address?.slice(0, 8)}...` : 'Wallet not connected'}
+              {isConnected ? `Connected: ${address?.slice(0, 8)}...` : 'Wallet not connected'}
             </span>
           </div>
           <div className="flex items-center space-x-2 text-gray-400">
