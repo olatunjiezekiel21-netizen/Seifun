@@ -74,7 +74,30 @@ export class ActionBrain {
     const normalizedMessage = message.toLowerCase().trim();
     const entities = this.extractEntities(message);
     
-    // Token Address Detection (Highest Priority for Scanning)
+    // Send/Transfer Tokens Intent (HIGHEST PRIORITY)
+    if (this.matchesPattern(normalizedMessage, [
+      /send\s+\d+.*sei/,
+      /transfer\s+\d+.*sei/,
+      /send\s+\d+.*tokens?/,
+      /transfer\s+\d+.*tokens?/,
+      /send.*\d+.*to.*0x/,
+      /transfer.*\d+.*to.*0x/
+    ])) {
+      const transferEntities = this.extractTransferEntities(normalizedMessage);
+      console.log('🎯 SEND_TOKENS intent recognized!');
+      console.log('📝 Message:', message);
+      console.log('🔄 Normalized:', normalizedMessage);
+      console.log('📊 Transfer entities:', transferEntities);
+      
+      return {
+        intent: IntentType.SEND_TOKENS,
+        confidence: 0.9,
+        entities: { ...entities, ...transferEntities },
+        rawMessage: message
+      };
+    }
+    
+    // Token Address Detection (High Priority for Scanning)
     if (entities.tokenAddress && !this.isActionIntent(normalizedMessage)) {
       return {
         intent: IntentType.TOKEN_SCAN,
@@ -304,28 +327,7 @@ export class ActionBrain {
       };
     }
     
-    // Send/Transfer Tokens Intent
-    if (this.matchesPattern(normalizedMessage, [
-      /send\s+\d+.*sei/,
-      /transfer\s+\d+.*sei/,
-      /send\s+\d+.*tokens?/,
-      /transfer\s+\d+.*tokens?/,
-      /send.*\d+.*to.*0x/,
-      /transfer.*\d+.*to.*0x/
-    ])) {
-      const transferEntities = this.extractTransferEntities(normalizedMessage);
-      console.log('🎯 SEND_TOKENS intent recognized!');
-      console.log('📝 Message:', message);
-      console.log('🔄 Normalized:', normalizedMessage);
-      console.log('📊 Transfer entities:', transferEntities);
-      
-      return {
-        intent: IntentType.SEND_TOKENS,
-        confidence: 0.9,
-        entities: { ...entities, ...transferEntities },
-        rawMessage: message
-      };
-    }
+
     
     // Conversational Intent
     if (this.matchesPattern(normalizedMessage, [

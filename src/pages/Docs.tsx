@@ -744,7 +744,23 @@ const Docs = () => {
       });
 
       // Search actual content by extracting text from JSX
-      const content = documentationContent[section.id as keyof typeof documentationContent];
+      // Map section IDs to content keys
+      const contentKeyMapping: { [key: string]: string } = {
+        'getting-started': 'introduction',
+        'introduction': 'introduction',
+        'features': 'introduction', // For now, all content is in introduction
+        'ai-agent': 'introduction',
+        'token-creation': 'introduction',
+        'safechecker': 'introduction',
+        'developer-tools': 'introduction',
+        'api-reference': 'introduction',
+        'tutorials': 'introduction',
+        'troubleshooting': 'introduction'
+      };
+      
+      const contentKey = contentKeyMapping[section.id] || 'introduction';
+      const content = documentationContent[contentKey as keyof typeof documentationContent];
+      
       if (content) {
         const extractedText = extractTextFromContent(content);
         if (extractedText.toLowerCase().includes(searchTerm)) {
