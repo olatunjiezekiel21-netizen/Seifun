@@ -790,48 +790,57 @@ export const useReownWallet = () => {
       }
     };
 
-    // Set up AppKit event listeners for real-time state updates
+    // Enhanced AppKit event listeners for real-time state updates
     const setupEventListeners = () => {
       if (walletConnection.appKit) {
         try {
-          // Listen for account changes
+          // Listen for account changes with enhanced persistence
           walletConnection.appKit.subscribeAccount((account: any) => {
-            console.log('🔄 Account state changed:', account);
+            console.log('🔄 Real-time account state changed:', account);
+            
             if (account.address && account.isConnected) {
-              // Update wallet state when account connects
+              console.log('✅ Wallet connected - updating state immediately');
+              
+              // Immediate state update for better UX
+              setWalletState(prev => ({
+                ...prev,
+                isConnected: true,
+                address: account.address,
+                isConnecting: false,
+                error: null,
+                walletType: 'ReOWN',
+                chainId: account.chainId,
+              }));
+              
+              // Update balance asynchronously
               walletConnection.getBalance(account.address).then(balance => {
-                setWalletState({
-                  isConnected: true,
-                  address: account.address,
+                setWalletState(prev => ({
+                  ...prev,
                   balance,
-                  isConnecting: false,
-                  error: null,
-                  walletType: 'ReOWN',
-                  chainId: account.chainId,
-                });
+                }));
                 
-                // Save connection
+                // Save connection with timestamp for better persistence
                 if (typeof localStorage !== 'undefined') {
                   localStorage.setItem('reown_wallet_connection', JSON.stringify({
                     address: account.address,
                     walletType: 'ReOWN',
                     chainId: account.chainId,
+                    timestamp: Date.now(),
+                    balance,
                   }));
                 }
+                
+                console.log('💾 Wallet connection persisted to localStorage');
               }).catch(error => {
                 console.warn('Failed to get balance:', error);
                 // Still update connection state even if balance fails
-                setWalletState({
-                  isConnected: true,
-                  address: account.address,
+                setWalletState(prev => ({
+                  ...prev,
                   balance: '0.0',
-                  isConnecting: false,
-                  error: null,
-                  walletType: 'ReOWN',
-                  chainId: account.chainId,
-                });
+                }));
               });
             } else if (!account.isConnected) {
+              console.log('❌ Wallet disconnected - clearing state');
               // Handle disconnection
               setWalletState({
                 isConnected: false,
@@ -845,6 +854,23 @@ export const useReownWallet = () => {
               if (typeof localStorage !== 'undefined') {
                 localStorage.removeItem('reown_wallet_connection');
               }
+            }
+          });
+          
+          // Listen for chain changes
+          walletConnection.appKit.subscribeChainId((chainId: number) => {
+            console.log('🔗 Chain changed:', chainId);
+            setWalletState(prev => ({
+              ...prev,
+              chainId,
+            }));
+            
+            // Update saved connection with new chain
+            const savedConnection = localStorage.getItem('reown_wallet_connection');
+            if (savedConnection) {
+              const connection = JSON.parse(savedConnection);
+              connection.chainId = chainId;
+              localStorage.setItem('reown_wallet_connection', JSON.stringify(connection));
             }
           });
 
@@ -904,7 +930,26 @@ export const useReownWallet = () => {
     // Set up event listeners after a brief delay to ensure AppKit is ready
     const timer = setTimeout(setupEventListeners, 1000);
     
-    return () => clearTimeout(timer);
+    // Set up periodic refresh for wallet state (every 30 seconds)
+    const refreshInterval = setInterval(async () => {
+      if (walletState.isConnected && walletState.address && walletConnection) {
+        try {
+          const balance = await walletConnection.getBalance(walletState.address);
+          setWalletState(prev => ({
+            ...prev,
+            balance,
+          }));
+          console.log('🔄 Wallet balance refreshed:', balance);
+        } catch (error) {
+          console.warn('Periodic balance refresh failed:', error);
+        }
+      }
+    }, 30000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearInterval(refreshInterval);
+    };
   }, [walletConnection]);
 
   const connectWallet = async (preferredWallet?: string) => {

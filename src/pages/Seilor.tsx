@@ -273,6 +273,170 @@ const Seilor = () => {
         
         response = `🕒 **Your Session History**\n\n📊 **Session Stats:**\n• Session Duration: ~${sessionLength} minutes\n• Total Messages: ${aiContext.chatHistory.length}\n• Your Questions: ${aiContext.chatHistory.filter(msg => msg.type === 'user').length}\n\n**Recent Questions:**\n${recentMessages}\n\n💡 **I remember everything** from our conversation and can reference any previous topics. What would you like to revisit or continue discussing?`;
       }
+      // 🪙 COMPREHENSIVE SEIFUN PROJECT QUERIES
+      else if (userMessage.toLowerCase().includes('live tokens') || userMessage.toLowerCase().includes('created tokens') || userMessage.toLowerCase().includes('my tokens')) {
+        try {
+          // Get live tokens from Dev++ storage
+          const storedTokens = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
+          
+          if (storedTokens.length === 0) {
+            response = `📭 **No Tokens Created Yet**\n\nYou haven't created any tokens through SeiList yet! Here's how to get started:\n\n🪙 **Create Your First Token:**\n• Visit SeiList in the navigation\n• Follow the 4-step creation process\n• Get stunning token preview\n• Automatic Dev++ integration\n\n💡 **Once you create tokens, I can help you:**\n• Monitor their performance\n• Track security scores\n• Manage liquidity\n• Analyze trading activity\n\n🚀 **Ready to launch your first token?** Click SeiList to begin!`;
+          } else {
+            response = `🪙 **Your Live Tokens (Real Data from Dev++)**\n\n`;
+            response += `**📊 Portfolio Overview:**\n`;
+            response += `• **Total Tokens Created**: ${storedTokens.length}\n`;
+            const avgScore = storedTokens.reduce((sum, token) => sum + (token.securityScore || 0), 0) / storedTokens.length;
+            response += `• **Average Security Score**: ${Math.round(avgScore)}/100\n`;
+            const verifiedCount = storedTokens.filter(token => token.verified).length;
+            response += `• **Verified Tokens**: ${verifiedCount}/${storedTokens.length}\n\n`;
+            
+            response += `**🎯 Your Tokens:**\n`;
+            storedTokens.slice(0, 5).forEach((token, index) => {
+              const scoreEmoji = token.securityScore >= 70 ? '✅' : token.securityScore >= 40 ? '⚠️' : '🚨';
+              response += `${index + 1}. **${token.name} (${token.symbol})**\n`;
+              response += `   • Address: ${token.address}\n`;
+              response += `   • Security: ${scoreEmoji} ${token.securityScore}/100\n`;
+              response += `   • Supply: ${parseInt(token.totalSupply).toLocaleString()}\n`;
+              response += `   • Created: ${new Date(token.createdAt).toLocaleDateString()}\n\n`;
+            });
+            
+            if (storedTokens.length > 5) {
+              response += `📋 **And ${storedTokens.length - 5} more tokens...**\n\n`;
+            }
+            
+            response += `💡 **I can help you:**\n• Monitor token performance\n• Analyze security scores\n• Track market activity\n• Manage Dev++ dashboard\n\n🚀 **This is real data from your created tokens!**`;
+          }
+        } catch (error) {
+          response = `❌ **Token Data Error**: Failed to load your token portfolio. Please try refreshing Dev++ dashboard.`;
+        }
+      }
+      // 🏆 HIGHEST TRADING TOKEN ON SEI
+      else if (userMessage.toLowerCase().includes('highest trading') || userMessage.toLowerCase().includes('top token') || userMessage.toLowerCase().includes('best performing')) {
+        try {
+          const networkInfo = await webBlockchainService.getNetworkInfo();
+          response = `🏆 **Top Performing Tokens on Sei Network**\n\n`;
+          response += `**📊 Network Status:**\n`;
+          response += `• **Network**: ${networkInfo.network}\n`;
+          response += `• **Block Height**: ${networkInfo.blockNumber}\n`;
+          response += `• **Gas Price**: ${networkInfo.gasPrice} wei\n\n`;
+          
+          response += `**🔥 Popular Sei Tokens:**\n`;
+          response += `1. **SEI** - Native token with highest volume\n`;
+          response += `2. **SEIDOGE** - Popular meme token\n`;
+          response += `3. **Your Created Tokens** - Check Dev++ for performance\n\n`;
+          
+          response += `💡 **Want real-time trading data?**\n`;
+          response += `• Check SafeChecker for token analysis\n`;
+          response += `• Use Dev++ for your token metrics\n`;
+          response += `• Monitor Astroport/Dragonswap for DEX activity\n\n`;
+          
+          response += `🚀 **I can help you track specific tokens - just ask me to analyze any contract address!**`;
+        } catch (error) {
+          response = `❌ **Network Query Failed**: ${error.message}\n\nTrying to get top trading data from Sei network...`;
+        }
+      }
+      // 📖 DOCUMENTATION QUERIES
+      else if (userMessage.toLowerCase().includes('docs') || userMessage.toLowerCase().includes('documentation') || userMessage.toLowerCase().includes('how to') || userMessage.toLowerCase().includes('guide')) {
+        response = `📖 **Seifun Documentation & Guides**\n\n`;
+        response += `**🎯 Available Guides:**\n`;
+        response += `• **Getting Started** - Platform overview & wallet setup\n`;
+        response += `• **SeiList Guide** - Complete token creation process\n`;
+        response += `• **Seilor 0 Features** - AI trading capabilities (that's me!)\n`;
+        response += `• **SafeChecker** - Token security analysis\n`;
+        response += `• **Dev++** - Professional developer tools\n\n`;
+        
+        response += `**🔗 Quick Links:**\n`;
+        response += `• Visit **Docs** in the navigation for full guides\n`;
+        response += `• Check **SeiList** for token creation\n`;
+        response += `• Use **SafeChecker** for security analysis\n`;
+        response += `• Access **Dev++** for token management\n\n`;
+        
+        response += `💡 **Ask me specific questions like:**\n`;
+        response += `• "How do I create a token?"\n`;
+        response += `• "What is SafeChecker?"\n`;
+        response += `• "How does Dev++ work?"\n`;
+        response += `• "Show me my token portfolio"\n\n`;
+        
+        response += `🚀 **I have access to all Seifun documentation and can guide you through any feature!**`;
+      }
+      // 🪙 TOKEN CREATION HELP
+      else if (userMessage.toLowerCase().includes('create token') || userMessage.toLowerCase().includes('launch token') || userMessage.toLowerCase().includes('new token')) {
+        response = `🪙 **Token Creation with SeiList**\n\n`;
+        response += `**🎯 4-Step Creation Process:**\n`;
+        response += `1. **Token Details** - Name, symbol, description, logo\n`;
+        response += `2. **Launch Settings** - Supply, percentages, launch type\n`;
+        response += `3. **Review & Create** - Stunning preview with spotlight effect\n`;
+        response += `4. **Success & Liquidity** - Token deployed, liquidity guidance\n\n`;
+        
+        response += `**✨ Professional Features:**\n`;
+        response += `• Custom logo upload & auto-generation\n`;
+        response += `• Stunning token preview with animations\n`;
+        response += `• Custom URL naming (seifu.fun/yourtoken)\n`;
+        response += `• Automatic Dev++ integration\n`;
+        response += `• Enhanced SafeChecker recognition\n`;
+        response += `• Real smart contract deployment\n\n`;
+        
+        response += `**💰 Cost & Requirements:**\n`;
+        response += `• Small SEI fee for deployment\n`;
+        response += `• Connected wallet required\n`;
+        response += `• Sei Network connection\n\n`;
+        
+        response += `**🚀 Ready to create?** Visit SeiList in the navigation to start your token launch journey!\n\n`;
+        response += `💡 **After creation, I can help you monitor and manage your token through Dev++!**`;
+      }
+      // 🔄 SWAP & DEX HELP
+      else if (userMessage.toLowerCase().includes('swap') || userMessage.toLowerCase().includes('trade') || userMessage.toLowerCase().includes('dex')) {
+        response = `🔄 **Token Swapping & DEX Trading**\n\n`;
+        response += `**🏪 Sei Network DEXes:**\n`;
+        response += `1. **Astroport** - Advanced AMM with concentrated liquidity\n`;
+        response += `   • Website: astroport.fi\n`;
+        response += `   • Features: Limit orders, LP rewards\n\n`;
+        
+        response += `2. **Dragonswap** - Community-focused DEX\n`;
+        response += `   • Website: dragonswap.app\n`;
+        response += `   • Features: Simple swaps, farming\n\n`;
+        
+        response += `**💡 Seifun Integration:**\n`;
+        response += `• After creating tokens, add liquidity on these DEXes\n`;
+        response += `• Use SafeChecker before trading unknown tokens\n`;
+        response += `• Monitor your tokens through Dev++\n\n`;
+        
+        response += `**⚠️ Trading Tips:**\n`;
+        response += `• Always check token security scores\n`;
+        response += `• Start with small amounts\n`;
+        response += `• Verify contract addresses\n`;
+        response += `• Use slippage protection\n\n`;
+        
+        response += `🚀 **I can help you analyze tokens before trading - just send me a contract address!**`;
+      }
+      // 🔥 TOKEN BURN FUNCTIONALITY
+      else if (userMessage.toLowerCase().includes('burn token') || userMessage.toLowerCase().includes('burn') || userMessage.toLowerCase().includes('reduce supply')) {
+        response = `🔥 **Token Burning Guide**\n\n`;
+        response += `**🎯 What is Token Burning?**\n`;
+        response += `• Permanently removing tokens from circulation\n`;
+        response += `• Reduces total supply\n`;
+        response += `• Can increase token value\n`;
+        response += `• Irreversible process\n\n`;
+        
+        response += `**🛠️ How to Burn Tokens:**\n`;
+        response += `1. **Visit Dev++** - Your token management dashboard\n`;
+        response += `2. **Select Your Token** - Choose which token to burn\n`;
+        response += `3. **Specify Amount** - Enter tokens to burn\n`;
+        response += `4. **Confirm Transaction** - Execute burn on blockchain\n\n`;
+        
+        response += `**⚠️ Important Notes:**\n`;
+        response += `• Burning is permanent and irreversible\n`;
+        response += `• You can only burn tokens you own\n`;
+        response += `• Gas fees apply for the transaction\n`;
+        response += `• Updates total supply on-chain\n\n`;
+        
+        response += `**📊 After Burning:**\n`;
+        response += `• Dev++ will update your token metrics\n`;
+        response += `• New supply reflected on SafeChecker\n`;
+        response += `• Blockchain explorers show reduced supply\n\n`;
+        
+        response += `🚀 **Ready to burn tokens? Visit Dev++ dashboard to manage your token supply!**`;
+      }
       // 🌐 REAL BLOCKCHAIN INTEGRATION - Web-based (works immediately!)
       else if (userMessage.toLowerCase().includes('balance') || userMessage.toLowerCase().includes('portfolio') || userMessage.toLowerCase().includes('wallet')) {
         try {

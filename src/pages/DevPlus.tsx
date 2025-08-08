@@ -365,13 +365,69 @@ const DevPlus = () => {
                             )}
                           </td>
                           <td className="p-4">
-                            <button
-                              onClick={() => window.open(`/safechecker?address=${token.address}`, '_blank')}
-                              className="text-blue-400 hover:text-blue-300 text-sm flex items-center space-x-1"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                              <span>Scan</span>
-                            </button>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => window.open(`/app/safechecker?address=${token.address}`, '_blank')}
+                                className="text-blue-400 hover:text-blue-300 text-xs flex items-center space-x-1"
+                                title="Security Scan"
+                              >
+                                <Shield className="w-3 h-3" />
+                                <span>Scan</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const astroUrl = `https://astroport.fi/swap?from=sei&to=${token.address}`;
+                                  window.open(astroUrl, '_blank');
+                                }}
+                                className="text-green-400 hover:text-green-300 text-xs flex items-center space-x-1"
+                                title="Add Liquidity on Astroport"
+                              >
+                                <TrendingUp className="w-3 h-3" />
+                                <span>Liquidity</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const confirmed = window.confirm(
+                                    `⚠️ BURN TOKENS WARNING ⚠️\n\n` +
+                                    `You are about to burn tokens from ${token.name} (${token.symbol}).\n\n` +
+                                    `This action is PERMANENT and IRREVERSIBLE!\n\n` +
+                                    `• Tokens will be permanently removed from circulation\n` +
+                                    `• Total supply will be reduced\n` +
+                                    `• Gas fees will apply\n\n` +
+                                    `Are you sure you want to continue?`
+                                  );
+                                  
+                                  if (confirmed) {
+                                    const burnAmount = prompt(
+                                      `🔥 Burn ${token.symbol} Tokens\n\n` +
+                                      `Current Supply: ${parseInt(token.totalSupply).toLocaleString()}\n` +
+                                      `Your Balance: [Connect wallet to see balance]\n\n` +
+                                      `Enter the amount of ${token.symbol} tokens to burn:`
+                                    );
+                                    
+                                    if (burnAmount && !isNaN(Number(burnAmount))) {
+                                      alert(
+                                        `🔥 Token Burn Initiated!\n\n` +
+                                        `Token: ${token.name} (${token.symbol})\n` +
+                                        `Amount to Burn: ${Number(burnAmount).toLocaleString()} ${token.symbol}\n` +
+                                        `Contract: ${token.address}\n\n` +
+                                        `⚠️ This is a demo. In production:\n` +
+                                        `• Connect your wallet\n` +
+                                        `• Verify token ownership\n` +
+                                        `• Execute burn transaction\n` +
+                                        `• Update Dev++ metrics\n\n` +
+                                        `🚀 Feature coming soon with full wallet integration!`
+                                      );
+                                    }
+                                  }
+                                }}
+                                className="text-red-400 hover:text-red-300 text-xs flex items-center space-x-1"
+                                title="Burn Tokens (Reduce Supply)"
+                              >
+                                <Zap className="w-3 h-3" />
+                                <span>Burn</span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

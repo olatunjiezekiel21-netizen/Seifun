@@ -219,7 +219,7 @@ export const TokenSpotlight: React.FC<TokenSpotlightProps> = ({
           )}
         </div>
 
-        {/* SeiPump Branding */}
+        {/* Seifun Branding */}
         <div className="bg-gradient-to-r from-blue-500/10 to-purple-600/10 rounded-2xl p-4 border border-blue-500/20 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -227,13 +227,13 @@ export const TokenSpotlight: React.FC<TokenSpotlightProps> = ({
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Powered by SeiPump</h3>
-                <p className="text-sm text-slate-400">The premier token launchpad on Sei</p>
+                <h3 className="text-lg font-bold text-white">Powered by Seifun</h3>
+                <p className="text-sm text-slate-400">The premier DeFi ecosystem on Sei</p>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm text-blue-400 font-medium">Like Pump.fun</div>
-              <div className="text-xs text-slate-400">but for Sei Network</div>
+              <div className="text-sm text-blue-400 font-medium">Professional</div>
+              <div className="text-xs text-slate-400">Token Creation Platform</div>
             </div>
           </div>
         </div>
@@ -303,7 +303,7 @@ export const TokenSpotlight: React.FC<TokenSpotlightProps> = ({
         {/* Bottom Message */}
         <div className="text-center mt-6 p-4 bg-gradient-to-r from-green-500/10 to-emerald-600/10 rounded-xl border border-green-500/20">
           <p className="text-green-400 font-medium">🎉 Congratulations! Your token is now live on Sei!</p>
-          <p className="text-slate-400 text-sm mt-1">Built with SeiPump - Share it with your community and start pumping! 🚀</p>
+          <p className="text-slate-400 text-sm mt-1">Built with Seifun - Share it with your community and let's grow together! 🚀</p>
         </div>
       </div>
     </div>

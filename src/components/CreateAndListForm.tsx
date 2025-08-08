@@ -874,7 +874,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                 🎯 Custom Naming (Seifu Style)
               </h4>
               <p className="app-text-secondary text-sm mb-4">
-                Add a custom suffix to your token launch page URL, similar to pump.fun → seifu.fun
+                Add a custom suffix to your token launch page URL, making it uniquely yours on seifu.fun
               </p>
               
               <div className="flex items-center space-x-2">
