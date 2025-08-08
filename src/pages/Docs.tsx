@@ -30,636 +30,799 @@ import {
   Globe,
   Smartphone,
   Cpu,
-  Activity
+  Activity,
+  Home,
+  ArrowRight
 } from 'lucide-react';
 
 const Docs = () => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeSection, setActiveSection] = useState('introduction');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  // Close sidebar when clicking outside on mobile
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isSidebarOpen && window.innerWidth < 1024) {
-        const target = event.target as Element;
-        const sidebar = document.querySelector('[data-sidebar]');
-        const menuButton = document.querySelector('[data-menu-button]');
-        
-        if (sidebar && !sidebar.contains(target) && menuButton && !menuButton.contains(target)) {
-          setIsSidebarOpen(false);
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSidebarOpen]);
-
-  // Prevent body scroll when sidebar is open on mobile
-  useEffect(() => {
-    if (isSidebarOpen && window.innerWidth < 1024) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isSidebarOpen]);
-
-  // Theme classes
-  const themeClasses = {
-    light: {
-      bg: 'bg-white',
-      bgSecondary: 'bg-gray-50',
-      bgTertiary: 'bg-gray-100',
-      text: 'text-gray-900',
-      textSecondary: 'text-gray-600',
-      textMuted: 'text-gray-500',
-      border: 'border-gray-200',
-      borderLight: 'border-gray-100',
-      card: 'bg-white border border-gray-200 shadow-sm',
-      cardHover: 'hover:shadow-md hover:border-gray-300',
-      accent: 'text-blue-600',
-      accentBg: 'bg-blue-50',
-      accentHover: 'hover:bg-blue-100',
-      codeBlock: 'bg-gray-900 text-gray-100',
-      sidebar: 'bg-gray-50 border-gray-200'
-    },
-    dark: {
-      bg: 'bg-slate-900',
-      bgSecondary: 'bg-slate-800',
-      bgTertiary: 'bg-slate-700',
-      text: 'text-white',
-      textSecondary: 'text-slate-300',
-      textMuted: 'text-slate-400',
-      border: 'border-slate-700',
-      borderLight: 'border-slate-600',
-      card: 'bg-slate-800/50 border border-slate-700 backdrop-blur-sm',
-      cardHover: 'hover:bg-slate-800/70 hover:border-slate-600',
-      accent: 'text-red-400',
-      accentBg: 'bg-red-500/10',
-      accentHover: 'hover:bg-red-500/20',
-      codeBlock: 'bg-slate-800 text-slate-100',
-      sidebar: 'bg-slate-800/50 border-slate-700'
-    }
-  };
-
-  const t = themeClasses[theme];
-
-  const navigation = [
+  // Documentation structure based on our GitBook SUMMARY.md
+  const documentationSections = [
     {
+      id: 'getting-started',
       title: 'Getting Started',
+      icon: Rocket,
       items: [
-        { id: 'overview', title: 'Overview', icon: BookOpen },
-        { id: 'installation', title: 'Installation', icon: Terminal },
-        { id: 'quickstart', title: 'Quick Start', icon: Zap },
-        { id: 'authentication', title: 'Authentication', icon: Lock }
+        { id: 'introduction', title: 'Introduction', icon: Home },
+        { id: 'quick-start', title: 'Quick Start', icon: Zap },
+        { id: 'wallet-connection', title: 'Wallet Connection', icon: Lock },
+        { id: 'first-steps', title: 'First Steps', icon: ArrowRight }
       ]
     },
     {
-      title: 'Core Features',
+      id: 'features',
+      title: 'Features Overview',
+      icon: Star,
       items: [
-        { id: 'seilor', title: 'Seilor 0 AI', icon: Bot },
-        { id: 'safechecker', title: 'SafeChecker', icon: Shield },
-        { id: 'seilist', title: 'SeiList', icon: Rocket },
-        { id: 'trading', title: 'Trading Tools', icon: TrendingUp }
+        { id: 'platform-overview', title: 'Platform Overview', icon: Globe },
+        { id: 'ai-integration', title: 'AI Integration', icon: Bot },
+        { id: 'blockchain-features', title: 'Blockchain Features', icon: Database },
+        { id: 'security-features', title: 'Security Features', icon: Shield }
       ]
     },
     {
-      title: 'API Reference',
+      id: 'seilist',
+      title: 'SeiList - Token Creation',
+      icon: Layers,
       items: [
-        { id: 'rest-api', title: 'REST API', icon: Globe },
-        { id: 'websocket', title: 'WebSocket', icon: Activity },
-        { id: 'sdk', title: 'JavaScript SDK', icon: Code },
-        { id: 'mobile', title: 'Mobile SDK', icon: Smartphone }
+        { id: 'seilist-intro', title: 'Introduction to SeiList', icon: BookOpen },
+        { id: 'token-creation', title: 'Token Creation Guide', icon: Code },
+        { id: 'liquidity-management', title: 'Liquidity Management', icon: TrendingUp },
+        { id: 'custom-branding', title: 'Custom Branding', icon: Star },
+        { id: 'token-verification', title: 'Token Verification', icon: Check }
       ]
     },
     {
-      title: 'Advanced',
+      id: 'seilor',
+      title: 'Seilor 0 - AI Agent',
+      icon: Bot,
       items: [
-        { id: 'architecture', title: 'Architecture', icon: Layers },
-        { id: 'database', title: 'Database Schema', icon: Database },
-        { id: 'deployment', title: 'Deployment', icon: Settings },
-        { id: 'contributing', title: 'Contributing', icon: Users }
+        { id: 'seilor-intro', title: 'Meet Seilor 0', icon: Bot },
+        { id: 'ai-trading', title: 'AI Trading Features', icon: TrendingUp },
+        { id: 'real-time-data', title: 'Real-time Data', icon: Activity },
+        { id: 'portfolio-management', title: 'Portfolio Management', icon: Settings },
+        { id: 'trading-strategies', title: 'Trading Strategies', icon: Terminal }
+      ]
+    },
+    {
+      id: 'safechecker',
+      title: 'SafeChecker - Security',
+      icon: Shield,
+      items: [
+        { id: 'security-overview', title: 'Security Overview', icon: Shield },
+        { id: 'token-scanning', title: 'Token Scanning', icon: Search },
+        { id: 'risk-assessment', title: 'Risk Assessment', icon: Activity },
+        { id: 'security-scores', title: 'Security Scores', icon: Star },
+        { id: 'honeypot-detection', title: 'Honeypot Detection', icon: Lock }
+      ]
+    },
+    {
+      id: 'dev++',
+      title: 'Dev++ - Developer Tools',
+      icon: Code,
+      items: [
+        { id: 'dev++-overview', title: 'Dev++ Overview', icon: Code },
+        { id: 'token-tracking', title: 'Token Tracking', icon: Activity },
+        { id: 'analytics', title: 'Analytics Dashboard', icon: TrendingUp },
+        { id: 'data-export', title: 'Data Export', icon: Database }
       ]
     }
   ];
 
-  const copyToClipboard = (code: string, id: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(id);
-    setTimeout(() => setCopiedCode(null), 2000);
-  };
-
-  const CodeBlock = ({ code, language, id }: { code: string; language: string; id: string }) => (
-    <div className={`relative rounded-lg overflow-hidden ${t.codeBlock} mb-4`}>
-      <div className="flex items-center justify-between px-4 py-2 bg-slate-700 border-b border-slate-600">
-        <span className="text-sm font-medium text-slate-300">{language}</span>
-        <button
-          onClick={() => copyToClipboard(code, id)}
-          className="flex items-center space-x-1 text-slate-300 hover:text-white transition-colors"
-        >
-          {copiedCode === id ? <Check size={16} /> : <Copy size={16} />}
-          <span className="text-xs">{copiedCode === id ? 'Copied!' : 'Copy'}</span>
-        </button>
-      </div>
-      <pre className="p-4 overflow-x-auto">
-        <code className="text-sm">{code}</code>
-      </pre>
-    </div>
-  );
-
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'overview':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Seifun Documentation</h1>
-              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
-                Welcome to Seifun, the ultimate Sei blockchain toolkit. Build, analyze, and trade tokens safely with our comprehensive suite of tools and AI-powered features.
-              </p>
+  // Content for each documentation section
+  const documentationContent = {
+    'introduction': {
+      title: '🚀 Welcome to Seifun',
+      content: (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-6 border border-blue-500/20">
+            <h2 className="text-2xl font-bold text-white mb-4">🌟 What is Seifun?</h2>
+            <p className="text-gray-300 mb-4">
+              Seifun is a comprehensive DeFi ecosystem built on Sei Network that combines AI-powered trading, 
+              advanced token creation tools, security analysis, and seamless user experience.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+              <div className="bg-white/5 rounded-lg p-4">
+                <Bot className="w-8 h-8 text-blue-400 mb-2" />
+                <h3 className="font-semibold text-white mb-2">AI Trading Agent</h3>
+                <p className="text-sm text-gray-400">Seilor 0 - Intelligent blockchain assistant with real-time data</p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-4">
+                <Layers className="w-8 h-8 text-green-400 mb-2" />
+                <h3 className="font-semibold text-white mb-2">SeiList</h3>
+                <p className="text-sm text-gray-400">Professional token creation and listing platform</p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-4">
+                <Shield className="w-8 h-8 text-red-400 mb-2" />
+                <h3 className="font-semibold text-white mb-2">SafeChecker</h3>
+                <p className="text-sm text-gray-400">Advanced token security scanner</p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-4">
+                <Code className="w-8 h-8 text-purple-400 mb-2" />
+                <h3 className="font-semibold text-white mb-2">Dev++</h3>
+                <p className="text-sm text-gray-400">Professional developer tools and analytics</p>
+              </div>
             </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>What is Seifun?</h2>
-              <p className={`${t.textSecondary} mb-4`}>
-                Seifun is a comprehensive platform that combines advanced token analysis, AI-powered insights, and professional trading tools specifically designed for the Sei blockchain ecosystem.
+          </div>
+          
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-xl font-bold text-white mb-4">🎯 Key Features</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-blue-400 mb-2">AI-Powered Intelligence</h4>
+                <ul className="text-gray-300 space-y-1 ml-4">
+                  <li>• Real blockchain data integration</li>
+                  <li>• Smart contract analysis</li>
+                  <li>• Portfolio management</li>
+                  <li>• Trading recommendations</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-green-400 mb-2">Token Creation & Management</h4>
+                <ul className="text-gray-300 space-y-1 ml-4">
+                  <li>• Professional token deployment</li>
+                  <li>• Custom branding and naming</li>
+                  <li>• Liquidity provision guidance</li>
+                  <li>• Automatic verification</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-red-400 mb-2">Security & Safety</h4>
+                <ul className="text-gray-300 space-y-1 ml-4">
+                  <li>• Comprehensive token scanning</li>
+                  <li>• Risk score analysis</li>
+                  <li>• Honeypot detection</li>
+                  <li>• Real-time security monitoring</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-blue-500/10 rounded-lg p-6 border border-blue-500/20">
+            <h3 className="text-xl font-bold text-white mb-4">🚀 Quick Start</h3>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                <span className="text-gray-300">Connect your wallet (MetaMask, WalletConnect, etc.)</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+                <span className="text-gray-300">Explore Seilor 0 for AI-powered trading insights</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
+                <span className="text-gray-300">Create tokens with SeiList or scan with SafeChecker</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">4</div>
+                <span className="text-gray-300">Monitor your projects with Dev++ dashboard</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    'quick-start': {
+      title: '⚡ Quick Start Guide',
+      content: (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg p-6 border border-green-500/20">
+            <h2 className="text-2xl font-bold text-white mb-4">Get Started in Minutes</h2>
+            <p className="text-gray-300">
+              Follow this guide to get up and running with Seifun quickly and efficiently.
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <Lock className="w-6 h-6 mr-2 text-blue-400" />
+                Step 1: Connect Your Wallet
+              </h3>
+              <p className="text-gray-300 mb-4">
+                Seifun supports multiple wallet types for seamless Web3 integration:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className={`${t.accentBg} rounded-lg p-4`}>
-                  <Shield className={`${t.accent} mb-2`} size={24} />
-                  <h3 className={`font-semibold ${t.text} mb-2`}>Security First</h3>
-                  <p className={`text-sm ${t.textMuted}`}>Advanced token scanning and honeypot detection</p>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="font-semibold text-white mb-2">MetaMask</h4>
+                  <p className="text-sm text-gray-400">Most popular browser wallet</p>
                 </div>
-                <div className={`${t.accentBg} rounded-lg p-4`}>
-                  <Bot className={`${t.accent} mb-2`} size={24} />
-                  <h3 className={`font-semibold ${t.text} mb-2`}>AI-Powered</h3>
-                  <p className={`text-sm ${t.textMuted}`}>Seilor 0 AI provides intelligent insights</p>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="font-semibold text-white mb-2">WalletConnect</h4>
+                  <p className="text-sm text-gray-400">Mobile wallet integration</p>
                 </div>
-                <div className={`${t.accentBg} rounded-lg p-4`}>
-                  <Code className={`${t.accent} mb-2`} size={24} />
-                  <h3 className={`font-semibold ${t.text} mb-2`}>Developer Tools</h3>
-                  <p className={`text-sm ${t.textMuted}`}>Complete SDK and API access</p>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="font-semibold text-white mb-2">Coinbase Wallet</h4>
+                  <p className="text-sm text-gray-400">Coinbase's self-custody wallet</p>
                 </div>
               </div>
+              <div className="mt-4 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <p className="text-sm text-blue-300">
+                  <strong>💡 Tip:</strong> Make sure you're connected to the Sei Network for full functionality.
+                </p>
+              </div>
             </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Key Features</h2>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className={`${t.accent} mt-1 flex-shrink-0`}>
-                    <ChevronRight size={16} />
-                  </div>
-                  <div>
-                    <h3 className={`font-semibold ${t.text}`}>Seilor 0 AI Assistant</h3>
-                    <p className={`${t.textSecondary} text-sm`}>Intelligent AI that provides real-time analysis, dApp discovery, and trading insights</p>
-                  </div>
+            
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <Bot className="w-6 h-6 mr-2 text-green-400" />
+                Step 2: Meet Seilor 0
+              </h3>
+              <p className="text-gray-300 mb-4">
+                Start with our AI trading agent for intelligent blockchain insights:
+              </p>
+              <ul className="space-y-2 text-gray-300">
+                <li className="flex items-center space-x-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Get real-time wallet balance and transaction history</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Analyze tokens for security and investment potential</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Get AI-powered trading recommendations</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  <span>Access your todo list and project management</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <Layers className="w-6 h-6 mr-2 text-purple-400" />
+                Step 3: Explore Core Features
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="font-semibold text-white mb-2 flex items-center">
+                    <Layers className="w-5 h-5 mr-2 text-blue-400" />
+                    SeiList
+                  </h4>
+                  <p className="text-sm text-gray-400 mb-3">Create and launch professional tokens</p>
+                  <button 
+                    onClick={() => window.location.href = '/app/seilist'}
+                    className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                  >
+                    Launch SeiList
+                  </button>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className={`${t.accent} mt-1 flex-shrink-0`}>
-                    <ChevronRight size={16} />
-                  </div>
-                  <div>
-                    <h3 className={`font-semibold ${t.text}`}>SafeChecker Scanner</h3>
-                    <p className={`${t.textSecondary} text-sm`}>Advanced token security analysis with real-time risk assessment</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className={`${t.accent} mt-1 flex-shrink-0`}>
-                    <ChevronRight size={16} />
-                  </div>
-                  <div>
-                    <h3 className={`font-semibold ${t.text}`}>SeiList Directory</h3>
-                    <p className={`${t.textSecondary} text-sm`}>Curated list of verified tokens and projects on Sei blockchain</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className={`${t.accent} mt-1 flex-shrink-0`}>
-                    <ChevronRight size={16} />
-                  </div>
-                  <div>
-                    <h3 className={`font-semibold ${t.text}`}>Professional Trading Tools</h3>
-                    <p className={`${t.textSecondary} text-sm`}>Advanced charts, analytics, and portfolio management</p>
-                  </div>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="font-semibold text-white mb-2 flex items-center">
+                    <Shield className="w-5 h-5 mr-2 text-red-400" />
+                    SafeChecker
+                  </h4>
+                  <p className="text-sm text-gray-400 mb-3">Scan tokens for security risks</p>
+                  <button 
+                    onClick={() => window.location.href = '/app/safechecker'}
+                    className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                  >
+                    Open SafeChecker
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        );
-
-      case 'installation':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Installation</h1>
-              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
-                Get started with Seifun by installing our SDK or using our web interface directly.
-              </p>
-            </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Web Interface</h2>
-              <p className={`${t.textSecondary} mb-4`}>
-                The easiest way to get started is by using our web interface directly at:
-              </p>
-              <div className={`${t.accentBg} rounded-lg p-4 mb-4`}>
-                <a href="https://seifun.netlify.app" className={`${t.accent} font-mono font-semibold break-all`}>
-                  https://seifun.netlify.app
-                </a>
+        </div>
+      )
+    },
+    'token-creation': {
+      title: '🪙 Token Creation with SeiList',
+      content: (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-6 border border-purple-500/20">
+            <h2 className="text-2xl font-bold text-white mb-4">Professional Token Creation</h2>
+            <p className="text-gray-300">
+              SeiList provides a comprehensive 4-step process for creating and launching professional tokens on Sei Network.
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">🎯 4-Step Creation Process</h3>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-4 p-4 bg-white/5 rounded-lg">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">1</div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Token Details</h4>
+                    <p className="text-gray-400 text-sm">Define your token's name, symbol, description, and upload a custom logo</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4 p-4 bg-white/5 rounded-lg">
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">2</div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Launch Settings</h4>
+                    <p className="text-gray-400 text-sm">Configure supply, percentages, and choose between Fair Launch or Presale</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4 p-4 bg-white/5 rounded-lg">
+                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">3</div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Review & Create</h4>
+                    <p className="text-gray-400 text-sm">Preview your token with stunning graphics and custom naming</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-4 p-4 bg-white/5 rounded-lg">
+                  <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">4</div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Success & Liquidity</h4>
+                    <p className="text-gray-400 text-sm">Token created! Get guidance for adding liquidity on DEXes</p>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>JavaScript SDK</h2>
-              <p className={`${t.textSecondary} mb-4`}>
-                Install the Seifun SDK for programmatic access to our features:
-              </p>
-              <CodeBlock
-                code={`npm install @seifun/sdk
-
-# or with yarn
-yarn add @seifun/sdk
-
-# or with pnpm
-pnpm add @seifun/sdk`}
-                language="bash"
-                id="install-sdk"
-              />
+            
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">✨ Key Features</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-blue-400">Branding & Design</h4>
+                  <ul className="text-gray-300 space-y-1 text-sm">
+                    <li>• Custom logo upload & auto-generation</li>
+                    <li>• Stunning token preview with spotlight effects</li>
+                    <li>• Custom URL naming (seifu.fun/yourtoken)</li>
+                    <li>• Professional metadata structure</li>
+                  </ul>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-green-400">Technical Features</h4>
+                  <ul className="text-gray-300 space-y-1 text-sm">
+                    <li>• Real smart contract deployment</li>
+                    <li>• Automatic Dev++ integration</li>
+                    <li>• Enhanced SafeChecker recognition</li>
+                    <li>• IPFS metadata storage</li>
+                  </ul>
+                </div>
+              </div>
             </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Requirements</h2>
+            
+            <div className="bg-blue-500/10 rounded-lg p-6 border border-blue-500/20">
+              <h3 className="text-xl font-bold text-white mb-4">💡 Best Practices</h3>
+              <div className="space-y-3 text-gray-300">
+                <p><strong>Token Design:</strong> Use clear, memorable names and symbols. Upload high-quality logos for better recognition.</p>
+                <p><strong>Economics:</strong> Plan your tokenomics carefully. Consider reasonable supply and fair distribution.</p>
+                <p><strong>Liquidity:</strong> Prepare to add liquidity on DEXes like Astroport or Dragonswap after creation.</p>
+                <p><strong>Security:</strong> Test with small amounts first and always verify your token address.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    'ai-trading': {
+      title: '🤖 AI Trading with Seilor 0',
+      content: (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg p-6 border border-green-500/20">
+            <h2 className="text-2xl font-bold text-white mb-4">Meet Seilor 0 - Your AI Trading Assistant</h2>
+            <p className="text-gray-300">
+              Seilor 0 is an intelligent blockchain assistant that provides real-time data, analysis, and trading insights powered by live Sei Network data.
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">🌟 Real Features (No Mockups)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-blue-400 flex items-center">
+                    <Activity className="w-5 h-5 mr-2" />
+                    Live Blockchain Data
+                  </h4>
+                  <ul className="text-gray-300 space-y-2 text-sm">
+                    <li>• Real-time wallet balance checking</li>
+                    <li>• Actual transaction history from Sei RPC</li>
+                    <li>• Live token analysis and contract verification</li>
+                    <li>• Real security scoring and risk assessment</li>
+                  </ul>
+                </div>
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-green-400 flex items-center">
+                    <Bot className="w-5 h-5 mr-2" />
+                    AI Intelligence
+                  </h4>
+                  <ul className="text-gray-300 space-y-2 text-sm">
+                    <li>• ChatGPT-like conversational interface</li>
+                    <li>• Context-aware responses</li>
+                    <li>• Todo list management and tracking</li>
+                    <li>• Portfolio analysis and insights</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">💬 Example Conversations</h3>
+              <div className="space-y-4">
+                <div className="bg-white/5 rounded-lg p-4">
+                  <p className="text-blue-300 font-medium mb-2">You: "What's my SEI balance?"</p>
+                  <p className="text-gray-300 text-sm">Seilor 0: Fetches your actual balance from the Sei blockchain and displays it with recent transaction activity.</p>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <p className="text-blue-300 font-medium mb-2">You: "Analyze token 0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1"</p>
+                  <p className="text-gray-300 text-sm">Seilor 0: Performs real contract verification, security analysis, and provides detailed token information.</p>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <p className="text-blue-300 font-medium mb-2">You: "Add 'Research new DeFi protocols' to my todo"</p>
+                  <p className="text-gray-300 text-sm">Seilor 0: Adds the task to your actual todo list and provides task management suggestions.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-purple-500/10 rounded-lg p-6 border border-purple-500/20">
+              <h3 className="text-xl font-bold text-white mb-4">🚀 Getting Started</h3>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${t.accent.replace('text-', 'bg-')}`}></div>
-                  <span className={t.textSecondary}>Node.js 16.0 or higher</span>
+                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                  <span className="text-gray-300">Connect your wallet to enable real data access</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${t.accent.replace('text-', 'bg-')}`}></div>
-                  <span className={t.textSecondary}>Modern web browser with Web3 support</span>
+                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+                  <span className="text-gray-300">Start chatting - ask about balances, tokens, or trading</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${t.accent.replace('text-', 'bg-')}`}></div>
-                  <span className={t.textSecondary}>Sei-compatible wallet (MetaMask, Keplr, etc.)</span>
+                  <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
+                  <span className="text-gray-300">Use todo management for project tracking</span>
                 </div>
+              </div>
+              <div className="mt-4">
+                <button 
+                  onClick={() => window.location.href = '/app/seilor'}
+                  className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  Chat with Seilor 0
+                </button>
               </div>
             </div>
           </div>
-        );
-
-      case 'quickstart':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Quick Start</h1>
-              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
-                Get up and running with Seifun in minutes.
-              </p>
-            </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Basic Usage</h2>
-              <p className={`${t.textSecondary} mb-4`}>
-                Here's how to get started with the Seifun SDK:
-              </p>
-              <CodeBlock
-                code={`import { SeifunClient } from '@seifun/sdk';
-
-// Initialize the client
-const seifun = new SeifunClient({
-  network: 'sei-mainnet', // or 'sei-testnet'
-  apiKey: 'your-api-key' // optional for public endpoints
-});
-
-// Scan a token for security issues
-const scanResult = await seifun.safechecker.scanToken({
-  address: '0x1234567890abcdef1234567890abcdef12345678'
-});
-
-console.log('Security Score:', scanResult.securityScore);
-console.log('Risk Level:', scanResult.riskLevel);
-
-// Get AI insights from Seilor 0
-const insights = await seifun.seilor.getInsights({
-  query: 'What are the trending tokens on Sei?'
-});
-
-console.log('AI Response:', insights.response);`}
-                language="javascript"
-                id="basic-usage"
-              />
-            </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Next Steps</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className={`${t.bgSecondary} rounded-lg p-4`}>
-                  <Bot className={`${t.accent} mb-2`} size={24} />
-                  <h3 className={`font-semibold ${t.text} mb-2`}>Explore Seilor 0 AI</h3>
-                  <p className={`text-sm ${t.textMuted} mb-3`}>Learn how to integrate AI-powered insights</p>
-                  <button className={`text-sm ${t.accent} hover:underline`}>
-                    View Seilor 0 Docs →
-                  </button>
+        </div>
+      )
+    },
+    'security-overview': {
+      title: '🛡️ SafeChecker Security Overview',
+      content: (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-lg p-6 border border-red-500/20">
+            <h2 className="text-2xl font-bold text-white mb-4">Advanced Token Security Analysis</h2>
+            <p className="text-gray-300">
+              SafeChecker provides comprehensive security analysis for tokens on Sei Network, helping you identify risks and make informed decisions.
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">🔍 Security Features</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-red-400 flex items-center">
+                    <Shield className="w-5 h-5 mr-2" />
+                    Risk Assessment
+                  </h4>
+                  <ul className="text-gray-300 space-y-2 text-sm">
+                    <li>• Contract verification status</li>
+                    <li>• Ownership analysis</li>
+                    <li>• Function accessibility review</li>
+                    <li>• Security score calculation (0-100)</li>
+                  </ul>
                 </div>
-                <div className={`${t.bgSecondary} rounded-lg p-4`}>
-                  <Shield className={`${t.accent} mb-2`} size={24} />
-                  <h3 className={`font-semibold ${t.text} mb-2`}>SafeChecker API</h3>
-                  <p className={`text-sm ${t.textMuted} mb-3`}>Integrate token security scanning</p>
-                  <button className={`text-sm ${t.accent} hover:underline`}>
-                    View SafeChecker Docs →
-                  </button>
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-orange-400 flex items-center">
+                    <Search className="w-5 h-5 mr-2" />
+                    Detection Systems
+                  </h4>
+                  <ul className="text-gray-300 space-y-2 text-sm">
+                    <li>• Honeypot detection</li>
+                    <li>• Rug pull indicators</li>
+                    <li>• Suspicious pattern analysis</li>
+                    <li>• High-risk behavior flagging</li>
+                  </ul>
                 </div>
               </div>
             </div>
-          </div>
-        );
-
-      case 'seilor':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Seilor 0 AI</h1>
-              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
-                Seilor 0 is our advanced AI assistant that provides intelligent insights, dApp discovery, and real-time analysis of the Sei ecosystem.
-              </p>
-            </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Features</h2>
+            
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">📊 Risk Score System</h3>
               <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <Bot className={`${t.accent} mt-1 flex-shrink-0`} size={20} />
+                <div className="flex items-center space-x-4 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">70+</div>
                   <div>
-                    <h3 className={`font-semibold ${t.text}`}>Intelligent Analysis</h3>
-                    <p className={`${t.textSecondary} text-sm`}>AI-powered token analysis and market insights</p>
+                    <h4 className="font-semibold text-green-400">Low Risk</h4>
+                    <p className="text-gray-300 text-sm">Well-structured contract with standard functions</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <Globe className={`${t.accent} mt-1 flex-shrink-0`} size={20} />
+                <div className="flex items-center space-x-4 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                  <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">40-69</div>
                   <div>
-                    <h3 className={`font-semibold ${t.text}`}>dApp Discovery</h3>
-                    <p className={`${t.textSecondary} text-sm`}>Discover and navigate Sei ecosystem dApps</p>
+                    <h4 className="font-semibold text-yellow-400">Medium Risk</h4>
+                    <p className="text-gray-300 text-sm">Some concerning patterns but potentially legitimate</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <TrendingUp className={`${t.accent} mt-1 flex-shrink-0`} size={20} />
+                <div className="flex items-center space-x-4 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                  <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">&lt;40</div>
                   <div>
-                    <h3 className={`font-semibold ${t.text}`}>Market Analytics</h3>
-                    <p className={`${t.textSecondary} text-sm`}>Real-time market data and trend analysis</p>
+                    <h4 className="font-semibold text-red-400">High Risk</h4>
+                    <p className="text-gray-300 text-sm">Multiple red flags detected - exercise extreme caution</p>
                   </div>
                 </div>
               </div>
             </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>API Usage</h2>
-              <CodeBlock
-                code={`// Get AI insights
-const response = await seifun.seilor.chat({
-  message: "What are the best performing tokens today?",
-  context: "trading"
-});
-
-// Discover dApps
-const dapps = await seifun.seilor.discoverDapps({
-  category: "defi",
-  limit: 10
-});
-
-// Get market analysis
-const analysis = await seifun.seilor.analyzeMarket({
-  timeframe: "24h",
-  tokens: ["SEI", "SEIDOGE"]
-});`}
-                language="javascript"
-                id="seilor-api"
-              />
-            </div>
-          </div>
-        );
-
-      case 'rest-api':
-        return (
-          <div className="space-y-8">
-            <div>
-              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>REST API</h1>
-              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed mb-8`}>
-                Access Seifun's features through our RESTful API endpoints.
-              </p>
-            </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Base URL</h2>
-              <div className={`${t.accentBg} rounded-lg p-4 mb-4`}>
-                <code className={`${t.accent} font-mono text-sm break-all`}>https://api.seifun.app/v1</code>
+            
+            <div className="bg-blue-500/10 rounded-lg p-6 border border-blue-500/20">
+              <h3 className="text-xl font-bold text-white mb-4">🎯 How to Use SafeChecker</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                  <span className="text-gray-300">Enter the token contract address you want to analyze</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+                  <span className="text-gray-300">Review the comprehensive security report</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
+                  <span className="text-gray-300">Make informed decisions based on risk score and analysis</span>
+                </div>
               </div>
-            </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Authentication</h2>
-              <p className={`${t.textSecondary} mb-4`}>
-                Include your API key in the Authorization header:
-              </p>
-              <CodeBlock
-                code={`curl -H "Authorization: Bearer YOUR_API_KEY" \\
-     -H "Content-Type: application/json" \\
-     https://api.seifun.app/v1/tokens/scan`}
-                language="bash"
-                id="auth-example"
-              />
-            </div>
-
-            <div className={`${t.card} rounded-xl p-4 md:p-6`}>
-              <h2 className={`text-xl md:text-2xl font-bold ${t.text} mb-4`}>Endpoints</h2>
-              <div className="space-y-4">
-                <div className={`${t.bgSecondary} rounded-lg p-4`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-2">
-                    <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-mono">GET</span>
-                    <code className={`${t.text} font-mono text-sm break-all`}>/tokens/{address}/scan</code>
-                  </div>
-                  <p className={`${t.textMuted} text-sm`}>Scan a token for security issues</p>
-                </div>
-                <div className={`${t.bgSecondary} rounded-lg p-4`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-2">
-                    <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-mono">POST</span>
-                    <code className={`${t.text} font-mono text-sm break-all`}>/seilor/chat</code>
-                  </div>
-                  <p className={`${t.textMuted} text-sm`}>Chat with Seilor 0 AI assistant</p>
-                </div>
-                <div className={`${t.bgSecondary} rounded-lg p-4`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-2">
-                    <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-mono">GET</span>
-                    <code className={`${t.text} font-mono text-sm break-all`}>/dapps</code>
-                  </div>
-                  <p className={`${t.textMuted} text-sm`}>Get list of Sei ecosystem dApps</p>
-                </div>
+              <div className="mt-4">
+                <button 
+                  onClick={() => window.location.href = '/app/safechecker'}
+                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  Open SafeChecker
+                </button>
               </div>
             </div>
           </div>
-        );
-
-      default:
-        return (
-          <div className="space-y-8">
-            <div>
-              <h1 className={`text-3xl md:text-4xl font-bold ${t.text} mb-4`}>Documentation</h1>
-              <p className={`text-lg md:text-xl ${t.textSecondary} leading-relaxed`}>
-                Select a section from the navigation to view detailed documentation.
-              </p>
+        </div>
+      )
+    },
+    'dev++-overview': {
+      title: '💻 Dev++ Developer Dashboard',
+      content: (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-6 border border-purple-500/20">
+            <h2 className="text-2xl font-bold text-white mb-4">Professional Developer Tools</h2>
+            <p className="text-gray-300">
+              Dev++ provides comprehensive token management, security monitoring, and analytics for developers and project creators.
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">📊 Dashboard Features</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-blue-400 flex items-center">
+                    <Activity className="w-5 h-5 mr-2" />
+                    Real-time Monitoring
+                  </h4>
+                  <ul className="text-gray-300 space-y-2 text-sm">
+                    <li>• Live token tracking and analytics</li>
+                    <li>• Security score monitoring</li>
+                    <li>• Activity feed and alerts</li>
+                    <li>• Performance metrics</li>
+                  </ul>
+                </div>
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-green-400 flex items-center">
+                    <Database className="w-5 h-5 mr-2" />
+                    Data Management
+                  </h4>
+                  <ul className="text-gray-300 space-y-2 text-sm">
+                    <li>• Token portfolio overview</li>
+                    <li>• Export functionality</li>
+                    <li>• Historical data tracking</li>
+                    <li>• Integration status monitoring</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-xl font-bold text-white mb-4">🎯 Key Metrics</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/5 rounded-lg p-4 text-center">
+                  <Code className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white">Active Tokens</div>
+                  <div className="text-sm text-gray-400">Created & Tracked</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center">
+                  <Shield className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white">Avg Security</div>
+                  <div className="text-sm text-gray-400">Score Rating</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center">
+                  <Check className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white">Verified</div>
+                  <div className="text-sm text-gray-400">Tokens</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center">
+                  <Activity className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white">Alerts</div>
+                  <div className="text-sm text-gray-400">Active Monitoring</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-purple-500/10 rounded-lg p-6 border border-purple-500/20">
+              <h3 className="text-xl font-bold text-white mb-4">🚀 Quick Actions</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button 
+                  onClick={() => window.location.href = '/app/seilist'}
+                  className="bg-white/5 hover:bg-white/10 rounded-lg p-4 text-left transition-colors border border-white/10"
+                >
+                  <Zap className="w-8 h-8 text-blue-400 mb-2" />
+                  <div className="font-semibold text-white">Launch Token</div>
+                  <div className="text-sm text-gray-400">Create new token</div>
+                </button>
+                <button 
+                  onClick={() => window.location.href = '/app/safechecker'}
+                  className="bg-white/5 hover:bg-white/10 rounded-lg p-4 text-left transition-colors border border-white/10"
+                >
+                  <Shield className="w-8 h-8 text-red-400 mb-2" />
+                  <div className="font-semibold text-white">Security Scan</div>
+                  <div className="text-sm text-gray-400">Analyze tokens</div>
+                </button>
+                <button 
+                  className="bg-white/5 hover:bg-white/10 rounded-lg p-4 text-left transition-colors border border-white/10"
+                >
+                  <TrendingUp className="w-8 h-8 text-green-400 mb-2" />
+                  <div className="font-semibold text-white">Analytics</div>
+                  <div className="text-sm text-gray-400">View metrics</div>
+                </button>
+                <button 
+                  className="bg-white/5 hover:bg-white/10 rounded-lg p-4 text-left transition-colors border border-white/10"
+                >
+                  <Database className="w-8 h-8 text-purple-400 mb-2" />
+                  <div className="font-semibold text-white">Export Data</div>
+                  <div className="text-sm text-gray-400">Download reports</div>
+                </button>
+              </div>
+              <div className="mt-6">
+                <button 
+                  onClick={() => window.location.href = '/app/dev-plus'}
+                  className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors"
+                >
+                  Open Dev++ Dashboard
+                </button>
+              </div>
             </div>
           </div>
-        );
+        </div>
+      )
     }
   };
 
+  const filteredSections = documentationSections.filter(section =>
+    section.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    section.items.some(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const currentContent = documentationContent[activeSection as keyof typeof documentationContent] || documentationContent.introduction;
+
   return (
-    <div className={`min-h-screen ${t.bg} transition-colors duration-200`}>
-      {/* Header - Fixed with proper z-index */}
-      <header className={`fixed top-0 left-0 right-0 z-50 ${t.bgSecondary} ${t.border} border-b backdrop-blur-md bg-opacity-95`}>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <div className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <button
-                data-menu-button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className={`lg:hidden ${t.text} hover:${t.textSecondary} p-2 rounded-lg ${t.bgTertiary} transition-colors`}
+                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
+                data-menu-button
               >
-                {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+                {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">S</span>
-                </div>
+                <BookOpen className="w-8 h-8 text-blue-400" />
                 <div>
-                  <h1 className={`text-xl font-bold ${t.text}`}>Seifun</h1>
-                  <p className={`text-xs ${t.textMuted}`}>Documentation</p>
+                  <h1 className="text-xl font-bold">Seifun Documentation</h1>
+                  <p className="text-sm text-gray-400">Complete guide to the Seifun ecosystem</p>
                 </div>
               </div>
             </div>
-
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Search - Hidden on small screens */}
-              <div className="hidden md:flex items-center space-x-2">
-                <div className="relative">
-                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${t.textMuted}`} size={16} />
-                  <input
-                    type="text"
-                    placeholder="Search docs..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`pl-10 pr-4 py-2 rounded-lg ${t.bgTertiary} ${t.text} ${t.border} border focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-48 lg:w-64`}
-                  />
-                </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search documentation..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none w-64"
+                />
               </div>
-
-              {/* Theme Toggle */}
-              <button
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                className={`p-2 rounded-lg ${t.bgTertiary} ${t.text} hover:${t.accentHover} transition-colors`}
+              <a
+                href="https://github.com/Seifun1/Seifun"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-gray-400 hover:text-white"
               >
-                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-              </button>
-
-              {/* External Links - Hidden on small screens */}
-              <div className="hidden sm:flex items-center space-x-2">
-                <a
-                  href="https://github.com/Seifun1/Seifun"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`p-2 rounded-lg ${t.text} hover:${t.accentHover} transition-colors`}
-                >
-                  <Github size={20} />
-                </a>
-                <a
-                  href="https://twitter.com/seifun"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`p-2 rounded-lg ${t.text} hover:${t.accentHover} transition-colors`}
-                >
-                  <Twitter size={20} />
-                </a>
-              </div>
+                <Github className="w-5 h-5" />
+              </a>
             </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content - With proper top padding to account for fixed header */}
-      <div className="pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="flex gap-4 lg:gap-8">
-            {/* Sidebar - Fixed positioning for desktop, overlay for mobile */}
-            <aside 
-              data-sidebar
-              className={`
-                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-                lg:translate-x-0 
-                fixed lg:static 
-                top-16 left-0 
-                w-72 lg:w-64 h-[calc(100vh-4rem)] lg:h-auto 
-                z-40 lg:z-auto 
-                transition-transform duration-300 ease-in-out
-                lg:shrink-0
-                overflow-y-auto lg:overflow-visible
-              `}
-            >
-              <div className={`h-full lg:h-auto ${t.sidebar} ${t.border} border rounded-none lg:rounded-xl p-4 backdrop-blur-sm`}>
-                <nav className="space-y-6">
-                  {navigation.map((section) => (
-                    <div key={section.title}>
-                      <h3 className={`text-sm font-semibold ${t.textMuted} uppercase tracking-wider mb-3`}>
-                        {section.title}
-                      </h3>
-                      <ul className="space-y-1">
-                        {section.items.map((item) => (
-                          <li key={item.id}>
-                            <button
-                              onClick={() => {
-                                setActiveSection(item.id);
-                                setIsSidebarOpen(false);
-                              }}
-                              className={`w-full flex items-center space-x-3 px-3 py-3 lg:py-2 rounded-lg text-left transition-colors ${
-                                activeSection === item.id
-                                  ? `${t.accentBg} ${t.accent} font-medium`
-                                  : `${t.textSecondary} hover:${t.accentHover} hover:${t.accent}`
-                              }`}
-                            >
-                              <item.icon size={16} className="flex-shrink-0" />
-                              <span className="text-sm">{item.title}</span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </nav>
-              </div>
-            </aside>
-
-            {/* Main Content - With proper margin for sidebar */}
-            <main className="flex-1 min-w-0">
-              <div className="prose prose-lg max-w-none">
-                {renderContent()}
-              </div>
-            </main>
           </div>
         </div>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex gap-8">
+          {/* Sidebar */}
+          <div className={`${isSidebarOpen ? 'block' : 'hidden'} lg:block w-64 flex-shrink-0`} data-sidebar>
+            <div className="bg-gray-800 rounded-lg p-4 sticky top-24">
+              <nav className="space-y-2">
+                {filteredSections.map((section) => {
+                  const SectionIcon = section.icon;
+                  return (
+                    <div key={section.id}>
+                      <div className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-300 border-b border-gray-700 mb-2">
+                        <SectionIcon className="w-4 h-4" />
+                        <span>{section.title}</span>
+                      </div>
+                      <div className="space-y-1 ml-6">
+                        {section.items.map((item) => {
+                          const ItemIcon = item.icon;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                setActiveSection(item.id);
+                                setIsSidebarOpen(false);
+                              }}
+                              className={`w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-lg transition-colors ${
+                                activeSection === item.id
+                                  ? 'bg-blue-600 text-white'
+                                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                              }`}
+                            >
+                              <ItemIcon className="w-4 h-4" />
+                              <span>{item.title}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            <div className="bg-gray-800 rounded-lg p-8">
+              <h1 className="text-3xl font-bold text-white mb-6">{currentContent.title}</h1>
+              {currentContent.content}
+            </div>
+            
+            {/* Footer */}
+            <div className="mt-8 p-6 bg-gray-800 rounded-lg border-t border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-400">
+                  Last updated: {new Date().toLocaleDateString()}
+                </div>
+                <div className="flex items-center space-x-4">
+                  <a href="https://github.com/Seifun1/Seifun" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+                    <Github className="w-5 h-5" />
+                  </a>
+                  <a href="https://twitter.com/SeifunDeFi" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
