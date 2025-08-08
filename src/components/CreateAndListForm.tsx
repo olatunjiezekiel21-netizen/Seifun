@@ -192,9 +192,8 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   const steps = [
     { number: 1, title: 'Token Details', icon: Upload },
     { number: 2, title: 'Launch Settings', icon: Rocket },
-    { number: 3, title: 'Liquidity Setup', icon: Droplet },
-    { number: 4, title: 'Verification', icon: Shield },
-    { number: 5, title: 'Deploy & List', icon: CheckCircle }
+    { number: 3, title: 'Review & Create', icon: Shield },
+    { number: 4, title: 'Success & Liquidity', icon: CheckCircle }
   ];
 
   const handleInputChange = (field: keyof TokenFormData, value: string | boolean) => {
@@ -346,7 +345,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         
         // Move to success step
         setTimeout(() => {
-          setCurrentStep(5);
+          setCurrentStep(4);
         }, 1000);
         
         return;
@@ -711,130 +710,8 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
       case 3:
         return (
           <div className="space-y-6">
-            <h3 className="app-heading-md app-text-primary mb-6">Liquidity Setup</h3>
-            <p className="app-text-secondary mb-6">
-              Configure liquidity provision for your token launch. Adding liquidity makes your token tradeable immediately.
-            </p>
-
-            {/* Add Liquidity Toggle */}
-            <div className="app-bg-tertiary rounded-lg p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <input
-                  type="checkbox"
-                  id="addLiquidity"
-                  checked={formData.addLiquidity}
-                  onChange={(e) => handleInputChange('addLiquidity', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded"
-                />
-                <label htmlFor="addLiquidity" className="app-text-primary text-sm font-medium">
-                  Add Initial Liquidity (Recommended)
-                </label>
-              </div>
-              
-              {formData.addLiquidity && (
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <label className="block app-text-primary text-sm font-medium mb-2">
-                      Initial SEI Liquidity Amount
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.initialLiquidityETH}
-                      onChange={(e) => handleInputChange('initialLiquidityETH', e.target.value)}
-                      className="app-input"
-                      min="0.1"
-                      step="0.1"
-                      placeholder="1.0"
-                    />
-                    <p className="text-sm text-gray-400 mt-1">
-                      Amount of SEI to add as initial liquidity (minimum 0.1 SEI)
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block app-text-primary text-sm font-medium mb-2">
-                      Token Percentage for Liquidity (%)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.lpPercentage}
-                      onChange={(e) => handleInputChange('lpPercentage', e.target.value)}
-                      className="app-input"
-                      min="10"
-                      max="90"
-                    />
-                    <p className="text-sm text-gray-400 mt-1">
-                      Percentage of total supply to add to liquidity pool
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block app-text-primary text-sm font-medium mb-2">
-                      Liquidity Lock Duration (Days)
-                    </label>
-                    <select
-                      value={formData.liquidityLockDuration}
-                      onChange={(e) => handleInputChange('liquidityLockDuration', e.target.value)}
-                      className="app-input"
-                    >
-                      <option value="30">30 Days</option>
-                      <option value="90">90 Days</option>
-                      <option value="180">180 Days</option>
-                      <option value="365">1 Year (Recommended)</option>
-                      <option value="730">2 Years</option>
-                    </select>
-                    <p className="text-sm text-gray-400 mt-1">
-                      How long to lock the liquidity pool (prevents rug pulls)
-                    </p>
-                  </div>
-
-                  {/* Liquidity Preview */}
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                    <h5 className="text-blue-400 font-medium mb-2">💧 Liquidity Preview</h5>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">SEI Amount:</span>
-                        <span className="text-blue-400">{formData.initialLiquidityETH} SEI</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Token Amount:</span>
-                        <span className="text-blue-400">
-                          {((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100).toLocaleString()} {formData.symbol || 'TOKEN'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Initial Price:</span>
-                        <span className="text-blue-400">
-                          {formData.initialLiquidityETH && formData.lpPercentage ? 
-                            (parseFloat(formData.initialLiquidityETH) / ((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100)).toFixed(8)
-                            : '0'
-                          } SEI per {formData.symbol || 'TOKEN'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Lock Duration:</span>
-                        <span className="text-blue-400">{formData.liquidityLockDuration} days</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {!formData.addLiquidity && (
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mt-4">
-                  <div className="flex items-start space-x-2">
-                    <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <div className="text-yellow-500 font-medium">No Initial Liquidity</div>
-                      <div className="text-yellow-400 text-sm mt-1">
-                        Your token won't be tradeable immediately. You'll need to add liquidity manually after deployment.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
+            <h3 className="app-heading-md app-text-primary mb-6">Review & Create Token</h3>
+            
             {/* Custom Naming Feature */}
             <div className="app-bg-tertiary rounded-lg p-6">
               <h4 className="app-text-primary font-medium mb-4">🎯 Custom Naming (Seifu Style)</h4>
@@ -857,13 +734,6 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                 Your token will be accessible at: seifu.fun/{formData.symbol.toLowerCase() || 'your-token'}
               </p>
             </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <h3 className="app-heading-md app-text-primary mb-6">Verification & Review</h3>
             
             <div className="app-bg-tertiary rounded-lg p-6">
               <h4 className="app-text-primary font-medium mb-4">Token Summary</h4>
@@ -908,18 +778,21 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
           </div>
         );
 
-      case 5:
+      case 4:
         return (
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 text-white rounded-full mb-4">
-              <CheckCircle className="w-8 h-8" />
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 text-white rounded-full mb-4">
+                <CheckCircle className="w-8 h-8" />
+              </div>
+              
+              <h3 className="app-heading-lg app-text-primary mb-2">Token Created Successfully!</h3>
+              <p className="app-text-secondary mb-6">
+                Your token has been deployed and is now listed on SeiList
+              </p>
             </div>
-            
-            <h3 className="app-heading-lg app-text-primary">Token Created & Listed Successfully!</h3>
-            <p className="app-text-secondary">
-              Your token has been deployed and is now listed on SeiList
-            </p>
 
+            {/* Token Information */}
             {createdTokenAddress && (
               <div className="app-bg-tertiary rounded-lg p-6">
                 <div className="space-y-4">
@@ -945,6 +818,140 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                       </button>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Liquidity Setup Section - Post Creation */}
+            {createdTokenAddress && (
+              <div className="app-bg-tertiary rounded-lg p-6">
+                <h4 className="app-text-primary font-medium mb-4 flex items-center">
+                  <Droplet className="w-5 h-5 mr-2 text-blue-500" />
+                  Add Liquidity (Optional)
+                </h4>
+                <p className="app-text-secondary text-sm mb-4">
+                  Make your token tradeable by adding liquidity. This is optional but recommended for immediate trading.
+                </p>
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      id="addLiquidityPost"
+                      checked={formData.addLiquidity}
+                      onChange={(e) => handleInputChange('addLiquidity', e.target.checked)}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <label htmlFor="addLiquidityPost" className="app-text-primary text-sm font-medium">
+                      Add Initial Liquidity Now
+                    </label>
+                  </div>
+                  
+                  {formData.addLiquidity && (
+                    <div className="space-y-4 mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block app-text-primary text-sm font-medium mb-2">
+                            SEI Amount
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.initialLiquidityETH}
+                            onChange={(e) => handleInputChange('initialLiquidityETH', e.target.value)}
+                            className="app-input"
+                            min="0.1"
+                            step="0.1"
+                            placeholder="1.0"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block app-text-primary text-sm font-medium mb-2">
+                            Token Percentage (%)
+                          </label>
+                          <input
+                            type="number"
+                            value={formData.lpPercentage}
+                            onChange={(e) => handleInputChange('lpPercentage', e.target.value)}
+                            className="app-input"
+                            min="10"
+                            max="90"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block app-text-primary text-sm font-medium mb-2">
+                          Lock Duration
+                        </label>
+                        <select
+                          value={formData.liquidityLockDuration}
+                          onChange={(e) => handleInputChange('liquidityLockDuration', e.target.value)}
+                          className="app-input"
+                        >
+                          <option value="30">30 Days</option>
+                          <option value="90">90 Days</option>
+                          <option value="180">180 Days</option>
+                          <option value="365">1 Year (Recommended)</option>
+                          <option value="730">2 Years</option>
+                        </select>
+                      </div>
+
+                      {/* Liquidity Preview */}
+                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                        <h5 className="text-blue-400 font-medium mb-2 flex items-center">
+                          <Plus className="w-4 h-4 mr-1" />
+                          Liquidity Preview
+                        </h5>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">SEI:</span>
+                            <span className="text-blue-400">{formData.initialLiquidityETH} SEI</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Tokens:</span>
+                            <span className="text-blue-400">
+                              {((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100).toLocaleString()} {formData.symbol}
+                            </span>
+                          </div>
+                          <div className="flex justify-between col-span-2">
+                            <span className="text-gray-400">Initial Price:</span>
+                            <span className="text-blue-400">
+                              {formData.initialLiquidityETH && formData.lpPercentage ? 
+                                (parseFloat(formData.initialLiquidityETH) / ((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100)).toFixed(8)
+                                : '0'
+                              } SEI per {formData.symbol}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          // TODO: Implement liquidity addition logic
+                          alert('Liquidity addition feature coming soon! For now, you can add liquidity manually on DEXes like Astroport or Dragonswap.');
+                        }}
+                        className="app-btn app-btn-primary w-full"
+                      >
+                        <Droplet className="w-4 h-4 mr-2" />
+                        Add Liquidity
+                      </button>
+                    </div>
+                  )}
+
+                  {!formData.addLiquidity && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
+                      <div className="flex items-start space-x-2">
+                        <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <div className="text-yellow-500 font-medium">No Liquidity Added</div>
+                          <div className="text-yellow-400 text-sm mt-1">
+                            Your token won't be tradeable immediately. You can add liquidity later on DEXes like Astroport or Dragonswap.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1074,7 +1081,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                 {renderStepContent()}
                 
                 {/* Navigation Buttons */}
-                {currentStep < 5 && (
+                {currentStep < 4 && (
                   <div className="flex justify-between mt-8 pt-6 border-t app-border">
                     <button
                       onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
@@ -1084,7 +1091,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                       Previous
                     </button>
                     
-                    {currentStep === 4 ? (
+                    {currentStep === 3 ? (
                       <button
                         onClick={createAndListToken}
                         disabled={isSubmitting || !formData.name || !formData.symbol}
@@ -1104,7 +1111,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                       </button>
                     ) : (
                       <button
-                        onClick={() => setCurrentStep(Math.min(5, currentStep + 1))}
+                        onClick={() => setCurrentStep(Math.min(4, currentStep + 1))}
                         disabled={currentStep === 1 && (!formData.name || !formData.symbol)}
                         className="app-btn app-btn-primary"
                       >
