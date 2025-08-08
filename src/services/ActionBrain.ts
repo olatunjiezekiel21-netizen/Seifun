@@ -24,7 +24,10 @@ export enum IntentType {
   OPEN_POSITION = 'open_position',
   CLOSE_POSITION = 'close_position',
   GET_POSITIONS = 'get_positions',
-  WALLET_INFO = 'wallet_info'
+  WALLET_INFO = 'wallet_info',
+  // Token Transfer Operations
+  SEND_TOKENS = 'send_tokens',
+  TRANSFER_CONFIRMATION = 'transfer_confirmation'
 }
 
 // Entity Extraction Results
@@ -41,6 +44,9 @@ interface ExtractedEntities {
   side?: 'long' | 'short';
   leverage?: number;
   positionId?: string;
+  // Transfer entities
+  recipient?: string;
+  transferAmount?: number;
 }
 
 // Intent Recognition Result
@@ -298,6 +304,23 @@ export class ActionBrain {
       };
     }
     
+    // Send/Transfer Tokens Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /send\s+\d+.*sei/,
+      /transfer\s+\d+.*sei/,
+      /send\s+\d+.*tokens?/,
+      /transfer\s+\d+.*tokens?/,
+      /send.*\d+.*to.*0x/,
+      /transfer.*\d+.*to.*0x/
+    ])) {
+      return {
+        intent: IntentType.SEND_TOKENS,
+        confidence: 0.9,
+        entities: { ...entities, ...this.extractTransferEntities(normalizedMessage) },
+        rawMessage: message
+      };
+    }
+    
     // Conversational Intent
     if (this.matchesPattern(normalizedMessage, [
       /how.*are.*you/,
@@ -383,6 +406,12 @@ export class ActionBrain {
           
         case IntentType.WALLET_INFO:
           return await this.executeWalletInfo(intentResult);
+          
+        case IntentType.SEND_TOKENS:
+          return await this.executeSendTokens(intentResult);
+          
+        case IntentType.TRANSFER_CONFIRMATION:
+          return await this.executeTransferConfirmation(intentResult);
           
         default:
           return this.executeUnknown(intentResult);
@@ -710,6 +739,24 @@ export class ActionBrain {
     const leverageMatch = message.match(/(\d+)x?\s*leverage/i);
     if (leverageMatch) {
       entities.leverage = parseInt(leverageMatch[1]);
+    }
+    
+    return entities;
+  }
+  
+  private extractTransferEntities(message: string): Partial<ExtractedEntities> {
+    const entities: Partial<ExtractedEntities> = {};
+    
+    // Extract recipient address
+    const addressMatch = message.match(/0x[a-fA-F0-9]{40}/);
+    if (addressMatch) {
+      entities.recipient = addressMatch[0];
+    }
+    
+    // Extract transfer amount
+    const amountMatch = message.match(/(\d+(?:\.\d+)?)\s*(sei|tokens?)?/i);
+    if (amountMatch) {
+      entities.transferAmount = parseFloat(amountMatch[1]);
     }
     
     return entities;
@@ -1069,6 +1116,79 @@ export class ActionBrain {
       success: false,
       response: "Token burn functionality - implementation in progress"
     };
+  }
+  
+  // ROBUST TOKEN TRANSFER WITH CONFIRMATION
+  private async executeSendTokens(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { transferAmount, recipient } = intent.entities;
+      
+      if (!transferAmount || !recipient) {
+        return {
+          success: false,
+          response: `❌ **Missing transfer details**\n\n**Usage**: "Send 50 SEI to 0x1234..."\n**Need**: Amount and recipient address`
+        };
+      }
+      
+      // Validate recipient address
+      if (!recipient.match(/^0x[a-fA-F0-9]{40}$/)) {
+        return {
+          success: false,
+          response: `❌ **Invalid recipient address**\n\n**Address**: ${recipient}\n**Required**: Valid Ethereum address (0x...)`
+        };
+      }
+      
+      // Check current balance
+      const currentBalance = await cambrianSeiAgent.getBalance();
+      const balanceNum = parseFloat(currentBalance);
+      
+      if (balanceNum < transferAmount) {
+        return {
+          success: false,
+          response: `❌ **Insufficient Balance**\n\n**Available**: ${currentBalance} SEI\n**Requested**: ${transferAmount} SEI\n**Shortfall**: ${(transferAmount - balanceNum).toFixed(4)} SEI\n\n**💡 Try**: A smaller amount or check your balance`
+        };
+      }
+      
+      // Calculate remaining balance after transfer
+      const remainingBalance = (balanceNum - transferAmount).toFixed(4);
+      
+      // Request confirmation with detailed information
+      return {
+        success: true,
+        response: `💸 **Transfer Confirmation Required**\n\n**📊 Transaction Details:**\n• **Amount**: ${transferAmount} SEI\n• **Recipient**: ${recipient}\n• **Current Balance**: ${currentBalance} SEI\n• **After Transfer**: ${remainingBalance} SEI\n\n**⚠️ Please confirm this transaction**\n**Reply**: "Yes, confirm" or "Cancel"\n\n**🔒 This will execute a real blockchain transaction**`,
+        data: {
+          pendingTransfer: {
+            amount: transferAmount,
+            recipient,
+            currentBalance,
+            remainingBalance
+          }
+        }
+      };
+      
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Transfer Setup Failed**: ${error.message}`
+      };
+    }
+  }
+  
+  // TRANSFER CONFIRMATION HANDLER
+  private async executeTransferConfirmation(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      // This would be called when user confirms the transfer
+      // In a real implementation, we'd store the pending transfer in context/state
+      return {
+        success: false,
+        response: `⚠️ **No pending transfer found**\n\nPlease initiate a transfer first with: "Send [amount] SEI to [address]"`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Confirmation Failed**: ${error.message}`
+      };
+    }
   }
   
   // Liquidity Addition Action (Enhanced)

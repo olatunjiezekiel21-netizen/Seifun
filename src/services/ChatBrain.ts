@@ -1,4 +1,5 @@
 import { actionBrain, IntentType } from './ActionBrain';
+import { cambrianSeiAgent } from './CambrianSeiAgent';
 
 // Conversation Context
 interface ConversationContext {
@@ -14,6 +15,14 @@ interface ConversationContext {
     messageCount: number;
     successfulActions: number;
     failedActions: number;
+  };
+  // Transfer confirmation context
+  pendingTransfer?: {
+    amount: number;
+    recipient: string;
+    currentBalance: string;
+    remainingBalance: string;
+    timestamp: Date;
   };
 }
 
@@ -65,19 +74,25 @@ export class ChatBrain {
       };
       this.conversationHistory.push(userChatMessage);
       
-      // Step 1: Intent Recognition through Action Brain
+      // Step 1: Check for confirmation responses first
+      const confirmationResult = this.checkForConfirmation(userMessage);
+      if (confirmationResult) {
+        return confirmationResult;
+      }
+      
+      // Step 2: Intent Recognition through Action Brain
       const intentResult = await actionBrain.recognizeIntent(userMessage);
       
-      // Step 2: Context Enhancement
+      // Step 3: Context Enhancement
       const enhancedIntent = this.enhanceWithContext(intentResult);
       
-      // Step 3: Action Execution
+      // Step 4: Action Execution
       const actionResponse = await actionBrain.executeAction(enhancedIntent);
       
-      // Step 4: Update Context
+      // Step 5: Update Context (including pending transfers)
       this.updateContext(enhancedIntent, actionResponse);
       
-      // Step 5: Generate Conversational Response
+      // Step 6: Generate Conversational Response
       const chatResponse = this.generateConversationalResponse(
         enhancedIntent, 
         actionResponse
@@ -116,6 +131,124 @@ export class ChatBrain {
     }
   }
   
+  // Check for confirmation responses to pending transfers
+  private checkForConfirmation(message: string): ChatResponse | null {
+    const normalizedMessage = message.toLowerCase().trim();
+    
+    // Check if there's a pending transfer
+    if (!this.context.pendingTransfer) {
+      return null;
+    }
+    
+    // Check for confirmation patterns
+    const confirmationPatterns = [
+      /^yes$/,
+      /^y$/,
+      /^confirm$/,
+      /^yes.*confirm/,
+      /^confirm.*yes/,
+      /^go.*ahead/,
+      /^proceed/,
+      /^send.*it/
+    ];
+    
+    const cancelPatterns = [
+      /^no$/,
+      /^n$/,
+      /^cancel$/,
+      /^abort/,
+      /^stop/,
+      /^never.*mind/,
+      /^don.*t.*send/
+    ];
+    
+    const isConfirmation = confirmationPatterns.some(pattern => pattern.test(normalizedMessage));
+    const isCancel = cancelPatterns.some(pattern => pattern.test(normalizedMessage));
+    
+    if (isConfirmation) {
+      return this.executeConfirmedTransfer();
+    } else if (isCancel) {
+      return this.cancelPendingTransfer();
+    }
+    
+    // If message doesn't match confirmation patterns but there's a pending transfer, remind user
+    if (this.context.pendingTransfer) {
+      return {
+        message: `⏳ **You have a pending transfer**\n\n**Amount**: ${this.context.pendingTransfer.amount} SEI\n**To**: ${this.context.pendingTransfer.recipient}\n\n**Reply**: "Yes, confirm" to proceed or "Cancel" to abort`,
+        success: false,
+        intent: IntentType.TRANSFER_CONFIRMATION,
+        confidence: 0.8
+      };
+    }
+    
+    return null;
+  }
+  
+  // Execute confirmed transfer
+  private async executeConfirmedTransfer(): Promise<ChatResponse> {
+    if (!this.context.pendingTransfer) {
+      return {
+        message: `❌ **No pending transfer found**`,
+        success: false,
+        intent: IntentType.TRANSFER_CONFIRMATION,
+        confidence: 1.0
+      };
+    }
+    
+    try {
+      const { amount, recipient } = this.context.pendingTransfer;
+      
+      // Execute the actual transfer using CambrianSeiAgent
+      const result = await cambrianSeiAgent.transferToken(
+        amount.toString(), 
+        recipient as any
+      );
+      
+      // Clear pending transfer
+      this.context.pendingTransfer = undefined;
+      
+      return {
+        message: `✅ **Transfer Completed!**\n\n**Amount**: ${amount} SEI\n**Recipient**: ${recipient}\n**Transaction**: ${result}\n\n**🎉 Your SEI has been sent successfully!**`,
+        success: true,
+        intent: IntentType.SEND_TOKENS,
+        confidence: 1.0
+      };
+      
+    } catch (error) {
+      // Clear pending transfer even on error
+      this.context.pendingTransfer = undefined;
+      
+      return {
+        message: `❌ **Transfer Failed**\n\n**Error**: ${error.message}\n\n**💡 Your funds are safe** - no transaction was completed`,
+        success: false,
+        intent: IntentType.SEND_TOKENS,
+        confidence: 1.0
+      };
+    }
+  }
+  
+  // Cancel pending transfer
+  private cancelPendingTransfer(): ChatResponse {
+    if (!this.context.pendingTransfer) {
+      return {
+        message: `❌ **No pending transfer to cancel**`,
+        success: false,
+        intent: IntentType.TRANSFER_CONFIRMATION,
+        confidence: 1.0
+      };
+    }
+    
+    const { amount, recipient } = this.context.pendingTransfer;
+    this.context.pendingTransfer = undefined;
+    
+    return {
+      message: `🚫 **Transfer Cancelled**\n\n**Amount**: ${amount} SEI\n**Recipient**: ${recipient}\n\n**✅ Your funds remain safe in your wallet**`,
+      success: true,
+      intent: IntentType.TRANSFER_CONFIRMATION,
+      confidence: 1.0
+    };
+  }
+  
   // Enhance intent with conversation context
   private enhanceWithContext(intentResult: any): any {
     const enhanced = { ...intentResult };
@@ -145,6 +278,14 @@ export class ChatBrain {
     
     // Update last action
     this.context.lastAction = intentResult.intent;
+    
+    // Store pending transfer data if present
+    if (actionResponse.data?.pendingTransfer) {
+      this.context.pendingTransfer = {
+        ...actionResponse.data.pendingTransfer,
+        timestamp: new Date()
+      };
+    }
     
     // Learn user preferences based on successful actions
     if (actionResponse.success) {
