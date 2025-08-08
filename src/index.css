@@ -4,3 +4,112 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-stops));
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* App-specific styles */
+.app-bg-primary {
+  @apply bg-gray-900;
+}
+
+.app-bg-secondary {
+  @apply bg-gray-800;
+}
+
+.app-bg-tertiary {
+  @apply bg-gray-700;
+}
+
+.app-text-primary {
+  @apply text-white;
+}
+
+.app-text-secondary {
+  @apply text-gray-300;
+}
+
+.app-text-muted {
+  @apply text-gray-400;
+}
+
+.app-border {
+  @apply border-gray-700;
+}
+
+.app-input {
+  @apply w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors;
+}
+
+.app-btn {
+  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900;
+}
+
+.app-btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+}
+
+.app-btn-secondary {
+  @apply bg-gray-700 text-gray-300 hover:bg-gray-600 focus:ring-gray-500;
+}
+
+.app-btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+}
+
+.app-heading-xl {
+  @apply text-4xl font-bold text-white;
+}
+
+.app-heading-lg {
+  @apply text-3xl font-bold text-white;
+}
+
+.app-heading-md {
+  @apply text-2xl font-bold text-white;
+}
+
+.app-text-lg {
+  @apply text-lg text-gray-300;
+}
+
+.app-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.app-category-tabs {
+  @apply flex flex-wrap gap-2 border-b border-gray-700 pb-4;
+}
+
+.app-category-tab {
+  @apply px-4 py-2 rounded-lg text-sm font-medium transition-colors;
+}
+
+.app-category-tab.active {
+  @apply bg-blue-600 text-white;
+}
+
+.app-category-tab:not(.active) {
+  @apply text-gray-400 hover:text-white hover:bg-gray-800;
+}

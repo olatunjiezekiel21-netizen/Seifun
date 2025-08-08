@@ -10,7 +10,9 @@ import {
   Copy,
   Check,
   Droplet,
-  Plus
+  Plus,
+  Zap,
+  Target
 } from 'lucide-react';
 import { ethers } from 'ethers';
 import { useReownWallet } from '../utils/reownWalletConnection';
@@ -710,53 +712,138 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
           <div className="space-y-6">
             <h3 className="app-heading-md app-text-primary mb-6">Review & Create Token</h3>
             
+            {/* STUNNING TOKEN PREVIEW WITH SPOTLIGHT EFFECT */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-pink-900/20 p-8 border border-blue-500/30">
+              {/* Animated Background Effects */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-pink-600/10 animate-pulse"></div>
+              <div className="absolute top-0 left-0 w-full h-full">
+                <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl animate-bounce"></div>
+                <div className="absolute top-3/4 right-1/4 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl animate-bounce delay-1000"></div>
+                <div className="absolute bottom-1/4 left-1/2 w-20 h-20 bg-pink-500/20 rounded-full blur-xl animate-bounce delay-2000"></div>
+              </div>
+              
+              {/* Spotlight Effect */}
+              <div className="absolute inset-0 bg-gradient-radial from-transparent via-white/5 to-transparent opacity-50"></div>
+              
+              {/* Main Token Display */}
+              <div className="relative z-10 text-center">
+                {/* Token Logo with Glow Effect */}
+                <div className="relative mx-auto mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-50 animate-pulse scale-110"></div>
+                  <div className="relative w-32 h-32 mx-auto rounded-full border-4 border-white/20 overflow-hidden shadow-2xl">
+                    <img
+                      src={
+                        formData.tokenImage || 
+                        logoPreviewUrl || 
+                        generateTokenImage(formData.symbol, formData.name)
+                      }
+                      alt="Token logo"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = generateTokenImage(formData.symbol, formData.name);
+                      }}
+                    />
+                  </div>
+                  {/* Rotating Ring Effect */}
+                  <div className="absolute inset-0 w-32 h-32 mx-auto border-2 border-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-spin opacity-30"></div>
+                </div>
+                
+                {/* Token Name & Symbol */}
+                <div className="mb-6">
+                  <h2 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-2">
+                    {formData.name || 'Your Token'}
+                  </h2>
+                  <div className="inline-flex items-center px-4 py-2 bg-white/10 rounded-full border border-white/20">
+                    <span className="text-xl font-mono text-blue-300">${formData.symbol || 'SYMBOL'}</span>
+                  </div>
+                </div>
+                
+                {/* Token Stats Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="text-2xl font-bold text-white mb-1">
+                      {parseInt(formData.totalSupply || '0').toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-300">Total Supply</div>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="text-2xl font-bold text-green-400 mb-1">
+                      {formData.lpPercentage || '0'}%
+                    </div>
+                    <div className="text-sm text-gray-300">Liquidity</div>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="text-2xl font-bold text-yellow-400 mb-1">
+                      {formData.teamPercentage || '0'}%
+                    </div>
+                    <div className="text-sm text-gray-300">Team</div>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="text-2xl font-bold text-red-400 mb-1">
+                      {formData.burnPercentage || '0'}%
+                    </div>
+                    <div className="text-sm text-gray-300">Burn</div>
+                  </div>
+                </div>
+                
+                {/* Launch Type Badge */}
+                <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full text-white font-medium mb-6 shadow-lg">
+                  <Zap className="w-5 h-5 mr-2" />
+                  {formData.launchType === 'fair' ? 'Fair Launch' : 'Presale Launch'}
+                </div>
+                
+                {/* DevPlus Connection Status */}
+                <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                    <span className="text-green-300 font-medium">Connected to DevPlus</span>
+                  </div>
+                  <p className="text-sm text-green-200 mt-1">
+                    Your token will be automatically monitored and managed through DevPlus
+                  </p>
+                </div>
+              </div>
+              
+              {/* Particle Effects */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-10 left-10 w-2 h-2 bg-blue-400 rounded-full opacity-70 animate-ping"></div>
+                <div className="absolute top-20 right-20 w-1 h-1 bg-purple-400 rounded-full opacity-60 animate-ping delay-500"></div>
+                <div className="absolute bottom-20 left-20 w-1.5 h-1.5 bg-pink-400 rounded-full opacity-80 animate-ping delay-1000"></div>
+                <div className="absolute bottom-10 right-10 w-1 h-1 bg-yellow-400 rounded-full opacity-50 animate-ping delay-1500"></div>
+              </div>
+            </div>
+            
             {/* Custom Naming Feature */}
-            <div className="app-bg-tertiary rounded-lg p-6">
-              <h4 className="app-text-primary font-medium mb-4">🎯 Custom Naming (Seifu Style)</h4>
+            <div className="app-bg-tertiary rounded-lg p-6 border border-blue-500/20">
+              <h4 className="app-text-primary font-medium mb-4 flex items-center">
+                <Target className="w-5 h-5 mr-2 text-blue-400" />
+                🎯 Custom Naming (Seifu Style)
+              </h4>
               <p className="app-text-secondary text-sm mb-4">
                 Add a custom suffix to your token launch page URL, similar to pump.fun → seifu.fun
               </p>
               
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400">seifu.fun/</span>
+                <span className="text-gray-400 font-mono">seifu.fun/</span>
                 <input
                   type="text"
                   value={formData.symbol.toLowerCase()}
                   onChange={(e) => handleInputChange('symbol', e.target.value.toUpperCase())}
-                  className="app-input flex-1"
+                  className="app-input flex-1 font-mono"
                   placeholder="your-token"
                   pattern="[a-z0-9-]+"
                 />
               </div>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-400 mt-1 font-mono">
                 Your token will be accessible at: seifu.fun/{formData.symbol.toLowerCase() || 'your-token'}
               </p>
             </div>
-            
-            <div className="app-bg-tertiary rounded-lg p-6">
-              <h4 className="app-text-primary font-medium mb-4">Token Summary</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="app-text-muted">Name:</span>
-                  <span className="app-text-primary font-medium">{formData.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="app-text-muted">Symbol:</span>
-                  <span className="app-text-primary font-medium">{formData.symbol}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="app-text-muted">Total Supply:</span>
-                  <span className="app-text-primary font-medium">{parseInt(formData.totalSupply).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="app-text-muted">Launch Type:</span>
-                  <span className="app-text-primary font-medium capitalize">{formData.launchType}</span>
-                </div>
-              </div>
-            </div>
 
             {verificationStatus === 'pending' && (
-              <div className="flex items-center space-x-3 text-yellow-500">
+              <div className="flex items-center space-x-3 text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
                 <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
                 <span>Creating and listing token...</span>
               </div>
