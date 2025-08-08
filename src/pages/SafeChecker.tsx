@@ -96,7 +96,7 @@ const SafeChecker = () => {
         // Safety analysis with dynamic scoring
         isHoneypot: analysis.safetyChecks.honeypot.isHoneypot || false,
         isVerified: analysis.safetyChecks.verified.isVerified || false,
-        riskLevel: analysis.isSafe ? 'LOW' : (analysis.riskScore > 70 ? 'HIGH' : 'MEDIUM'),
+        riskLevel: analysis.riskScore < 40 ? 'HIGH' : (analysis.riskScore >= 70 ? 'LOW' : 'MEDIUM'),
         securityScore: analysis.riskScore, // Use the dynamic risk score directly
         
         // Detailed safety checks

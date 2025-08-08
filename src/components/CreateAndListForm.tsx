@@ -8,7 +8,9 @@ import {
   AlertTriangle,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  Droplet,
+  Plus
 } from 'lucide-react';
 import { ethers } from 'ethers';
 import { useReownWallet } from '../utils/reownWalletConnection';
@@ -39,6 +41,10 @@ interface TokenFormData {
   lockDuration: string;
   daoEnabled: boolean;
   teamWallets: string;
+  // New liquidity features
+  initialLiquidityETH: string;
+  addLiquidity: boolean;
+  liquidityLockDuration: string;
 }
 
 interface CreateAndListFormProps {
@@ -75,22 +81,86 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   const [showTokenSpotlight, setShowTokenSpotlight] = useState(false);
   const [createdTokenData, setCreatedTokenData] = useState<any>(null);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>('');
   
-  // Generate token image when form data changes - temporarily disabled for debugging
-  // const tokenImage = useTokenImage(formData.symbol, formData.name);
-  const tokenImage = '/Seifu.png'; // Fallback to Seifun logo for now
+  // Generate unique token image based on symbol and name
+  const generateTokenImage = (symbol: string, name: string) => {
+    if (!symbol && !name) return '/Seifun.png'; // Only fallback if no data
+    
+    // Create a unique color based on the token symbol
+    let hash = 0;
+    const text = symbol + name;
+    for (let i = 0; i < text.length; i++) {
+      hash = text.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    
+    // Generate SVG with token symbol
+    const svg = `
+      <svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:hsl(${hue}, 70%, 50%);stop-opacity:1" />
+            <stop offset="100%" style="stop-color:hsl(${(hue + 60) % 360}, 70%, 40%);stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="32" fill="url(#grad)" />
+        <text x="32" y="38" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">
+          ${symbol.slice(0, 3).toUpperCase()}
+        </text>
+      </svg>
+    `;
+    
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  };
   
-  // Logo upload functionality - simplified for now
-  const uploadLogo = async (file: File) => URL.createObjectURL(file);
+  // Logo upload functionality - improved
+  const uploadLogo = async (file: File): Promise<string> => {
+    try {
+      // For now, use local URL - can be replaced with IPFS later
+      const localUrl = URL.createObjectURL(file);
+      console.log('✅ Logo uploaded locally:', localUrl);
+      return localUrl;
+    } catch (error) {
+      console.error('❌ Logo upload failed:', error);
+      throw error;
+    }
+  };
+  
   const validateFile = (file: File): string | null => {
     if (file.size > 5 * 1024 * 1024) return 'File size too large (max 5MB)';
     if (!file.type.startsWith('image/')) return 'File must be an image';
     return null;
   };
   
-  // Metadata management - simplified for now
-  const createAndUploadMetadata = async () => 'temp-url';
-  const storeMetadataReference = async () => 'temp-url';
+  // Metadata management - improved
+  const createTokenMetadata = (tokenData: TokenFormData, tokenAddress: string) => {
+    return {
+      name: tokenData.name,
+      symbol: tokenData.symbol,
+      description: tokenData.description,
+      image: tokenData.tokenImage || generateTokenImage(tokenData.symbol, tokenData.name),
+      external_url: tokenData.website,
+      social_links: {
+        website: tokenData.website,
+        github: tokenData.github,
+        telegram: tokenData.telegram,
+        twitter: tokenData.twitter,
+        discord: tokenData.discord
+      },
+      contract_address: tokenAddress,
+      total_supply: tokenData.totalSupply,
+      decimals: 18,
+      chain: 'sei-testnet',
+      created_by: address,
+      created_at: new Date().toISOString(),
+      verified: true,
+      // Add token standards for better recognition
+      token_standard: 'ERC20',
+      platform: 'SeiList by Seifun' // Fixed branding
+    };
+  };
+  
   const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState<TokenFormData>({
     name: '',
@@ -108,18 +178,23 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
     maxWallet: '2',
     lpPercentage: '80',
     burnPercentage: '0',
-    teamPercentage: '5',
+    teamPercentage: '10',
     lockLp: true,
     lockDuration: '365',
     daoEnabled: false,
-    teamWallets: ''
+    teamWallets: '',
+    // New liquidity features
+    initialLiquidityETH: '1',
+    addLiquidity: true,
+    liquidityLockDuration: '365'
   });
 
   const steps = [
     { number: 1, title: 'Token Details', icon: Upload },
     { number: 2, title: 'Launch Settings', icon: Rocket },
-    { number: 3, title: 'Verification', icon: Shield },
-    { number: 4, title: 'Deploy & List', icon: CheckCircle }
+    { number: 3, title: 'Liquidity Setup', icon: Droplet },
+    { number: 4, title: 'Verification', icon: Shield },
+    { number: 5, title: 'Deploy & List', icon: CheckCircle }
   ];
 
   const handleInputChange = (field: keyof TokenFormData, value: string | boolean) => {
@@ -271,7 +346,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         
         // Move to success step
         setTimeout(() => {
-          setCurrentStep(4);
+          setCurrentStep(5);
         }, 1000);
         
         return;
@@ -442,40 +517,45 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                           
                           // Show immediate preview with local URL
                           const localUrl = URL.createObjectURL(file);
+                          setLogoPreviewUrl(localUrl);
                           handleInputChange('tokenImage', localUrl);
                           
-                          // Upload to IPFS in background
+                          // Upload in background (for future IPFS integration)
                           try {
-                            console.log('📤 Uploading logo to IPFS...');
-                            const ipfsUrl = await uploadLogo(file);
-                            console.log('✅ Logo uploaded:', ipfsUrl);
-                            handleInputChange('tokenImage', ipfsUrl);
+                            console.log('📤 Processing logo...');
+                            const processedUrl = await uploadLogo(file);
+                            console.log('✅ Logo processed:', processedUrl);
+                            setLogoPreviewUrl(processedUrl);
+                            handleInputChange('tokenImage', processedUrl);
                           } catch (error) {
-                            console.error('❌ Logo upload failed:', error);
+                            console.error('❌ Logo processing failed:', error);
                             // Keep using local URL as fallback
                           }
                         } else {
                           handleInputChange('logoFile', null);
                           handleInputChange('tokenImage', '');
+                          setLogoPreviewUrl('');
                         }
                       }}
                       className="app-input file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-500 file:text-white hover:file:bg-blue-600"
                     />
                   </div>
-                  {/* Logo Preview */}
-                  {(formData.tokenImage || tokenImage) && (
+                                      {/* Logo Preview */}
                     <div className="w-16 h-16 rounded-full border-2 border-gray-300 overflow-hidden">
                       <img
-                        src={formData.tokenImage || tokenImage || ''}
+                        src={
+                          formData.tokenImage || 
+                          logoPreviewUrl || 
+                          generateTokenImage(formData.symbol, formData.name)
+                        }
                         alt="Token logo preview"
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          // Fallback to generated image if upload fails
-                          e.currentTarget.src = tokenImage || '';
+                          // Fallback to generated image if everything fails
+                          e.currentTarget.src = generateTokenImage(formData.symbol, formData.name);
                         }}
                       />
                     </div>
-                  )}
                 </div>
                 <p className="text-sm text-gray-400">
                   Upload a logo for your token (PNG, JPG, GIF - max 5MB). If no logo is uploaded, a unique one will be generated automatically.
@@ -631,6 +711,158 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
       case 3:
         return (
           <div className="space-y-6">
+            <h3 className="app-heading-md app-text-primary mb-6">Liquidity Setup</h3>
+            <p className="app-text-secondary mb-6">
+              Configure liquidity provision for your token launch. Adding liquidity makes your token tradeable immediately.
+            </p>
+
+            {/* Add Liquidity Toggle */}
+            <div className="app-bg-tertiary rounded-lg p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <input
+                  type="checkbox"
+                  id="addLiquidity"
+                  checked={formData.addLiquidity}
+                  onChange={(e) => handleInputChange('addLiquidity', e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded"
+                />
+                <label htmlFor="addLiquidity" className="app-text-primary text-sm font-medium">
+                  Add Initial Liquidity (Recommended)
+                </label>
+              </div>
+              
+              {formData.addLiquidity && (
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <label className="block app-text-primary text-sm font-medium mb-2">
+                      Initial SEI Liquidity Amount
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.initialLiquidityETH}
+                      onChange={(e) => handleInputChange('initialLiquidityETH', e.target.value)}
+                      className="app-input"
+                      min="0.1"
+                      step="0.1"
+                      placeholder="1.0"
+                    />
+                    <p className="text-sm text-gray-400 mt-1">
+                      Amount of SEI to add as initial liquidity (minimum 0.1 SEI)
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block app-text-primary text-sm font-medium mb-2">
+                      Token Percentage for Liquidity (%)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.lpPercentage}
+                      onChange={(e) => handleInputChange('lpPercentage', e.target.value)}
+                      className="app-input"
+                      min="10"
+                      max="90"
+                    />
+                    <p className="text-sm text-gray-400 mt-1">
+                      Percentage of total supply to add to liquidity pool
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block app-text-primary text-sm font-medium mb-2">
+                      Liquidity Lock Duration (Days)
+                    </label>
+                    <select
+                      value={formData.liquidityLockDuration}
+                      onChange={(e) => handleInputChange('liquidityLockDuration', e.target.value)}
+                      className="app-input"
+                    >
+                      <option value="30">30 Days</option>
+                      <option value="90">90 Days</option>
+                      <option value="180">180 Days</option>
+                      <option value="365">1 Year (Recommended)</option>
+                      <option value="730">2 Years</option>
+                    </select>
+                    <p className="text-sm text-gray-400 mt-1">
+                      How long to lock the liquidity pool (prevents rug pulls)
+                    </p>
+                  </div>
+
+                  {/* Liquidity Preview */}
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                    <h5 className="text-blue-400 font-medium mb-2">💧 Liquidity Preview</h5>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">SEI Amount:</span>
+                        <span className="text-blue-400">{formData.initialLiquidityETH} SEI</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Token Amount:</span>
+                        <span className="text-blue-400">
+                          {((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100).toLocaleString()} {formData.symbol || 'TOKEN'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Initial Price:</span>
+                        <span className="text-blue-400">
+                          {formData.initialLiquidityETH && formData.lpPercentage ? 
+                            (parseFloat(formData.initialLiquidityETH) / ((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100)).toFixed(8)
+                            : '0'
+                          } SEI per {formData.symbol || 'TOKEN'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Lock Duration:</span>
+                        <span className="text-blue-400">{formData.liquidityLockDuration} days</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!formData.addLiquidity && (
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mt-4">
+                  <div className="flex items-start space-x-2">
+                    <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-yellow-500 font-medium">No Initial Liquidity</div>
+                      <div className="text-yellow-400 text-sm mt-1">
+                        Your token won't be tradeable immediately. You'll need to add liquidity manually after deployment.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Custom Naming Feature */}
+            <div className="app-bg-tertiary rounded-lg p-6">
+              <h4 className="app-text-primary font-medium mb-4">🎯 Custom Naming (Seifu Style)</h4>
+              <p className="app-text-secondary text-sm mb-4">
+                Add a custom suffix to your token launch page URL, similar to pump.fun → seifu.fun
+              </p>
+              
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-400">seifu.fun/</span>
+                <input
+                  type="text"
+                  value={formData.symbol.toLowerCase()}
+                  onChange={(e) => handleInputChange('symbol', e.target.value.toUpperCase())}
+                  className="app-input flex-1"
+                  placeholder="your-token"
+                  pattern="[a-z0-9-]+"
+                />
+              </div>
+              <p className="text-sm text-gray-400 mt-1">
+                Your token will be accessible at: seifu.fun/{formData.symbol.toLowerCase() || 'your-token'}
+              </p>
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
             <h3 className="app-heading-md app-text-primary mb-6">Verification & Review</h3>
             
             <div className="app-bg-tertiary rounded-lg p-6">
@@ -676,7 +908,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="text-center space-y-6">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 text-white rounded-full mb-4">
@@ -842,7 +1074,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                 {renderStepContent()}
                 
                 {/* Navigation Buttons */}
-                {currentStep < 4 && (
+                {currentStep < 5 && (
                   <div className="flex justify-between mt-8 pt-6 border-t app-border">
                     <button
                       onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
@@ -852,7 +1084,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                       Previous
                     </button>
                     
-                    {currentStep === 3 ? (
+                    {currentStep === 4 ? (
                       <button
                         onClick={createAndListToken}
                         disabled={isSubmitting || !formData.name || !formData.symbol}
@@ -872,7 +1104,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                       </button>
                     ) : (
                       <button
-                        onClick={() => setCurrentStep(Math.min(4, currentStep + 1))}
+                        onClick={() => setCurrentStep(Math.min(5, currentStep + 1))}
                         disabled={currentStep === 1 && (!formData.name || !formData.symbol)}
                         className="app-btn app-btn-primary"
                       >
