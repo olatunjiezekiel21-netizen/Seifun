@@ -1,0 +1,33 @@
+root: ./
+
+structure:
+  readme: README.md
+  summary: SUMMARY.md
+
+title: Seifun Documentation
+description: Complete guide to the Seifun ecosystem - AI trading, token creation, and DeFi tools on Sei Network
+
+plugins:
+  - search
+  - sharing
+  - fontsettings
+  - theme-default
+
+pluginsConfig:
+  sharing:
+    facebook: true
+    twitter: true
+    google: true
+    weibo: false
+    instapaper: false
+    vk: false
+    all: ['facebook', 'google', 'twitter']
+  
+  theme-default:
+    showLevel: true
+    
+variables:
+  project_name: Seifun
+  version: v1.0.0
+  network: Sei Network
+  website: https://seifun.io

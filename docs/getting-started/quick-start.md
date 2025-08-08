@@ -1,126 +1,94 @@
-# Quick Start Guide
+# 🚀 Quick Start Guide
 
-Get up and running with Seifun in under 5 minutes! This guide will walk you through the essential steps to start using our DeFi ecosystem.
+Welcome to Seifun! This guide will get you up and running in just a few minutes.
 
-## 🚀 Step 1: Access Seifun
+## What You'll Need
 
-Visit **[seifun.netlify.app](https://seifun.netlify.app)** in your web browser.
+- **Sei-compatible wallet** (MetaMask, Trust Wallet, or Compass)
+- **Some SEI tokens** for transactions (available from Sei faucet for testnet)
+- **Web browser** (Chrome, Firefox, Safari, or Edge)
 
-{% hint style="info" %}
-Seifun works best on modern browsers like Chrome, Firefox, Safari, or Edge. Mobile browsers are fully supported!
-{% endhint %}
+## Step 1: Access Seifun
 
-## 💳 Step 2: Connect Your Wallet
+Visit [app.seifun.io](https://app.seifun.io) in your web browser.
 
-1. Click the **"Connect Wallet"** button in the top-right corner
-2. Choose your preferred wallet:
-   - **Mobile**: Trust Wallet, MetaMask Mobile, Rainbow
-   - **Desktop**: MetaMask Extension, Compass, Keplr
+## Step 2: Connect Your Wallet
+
+1. Click **"Connect Wallet"** in the top right corner
+2. Select your wallet from the list
 3. Approve the connection in your wallet
-4. Switch to **Sei Testnet** if prompted
+4. You're now connected! 🎉
 
-### Sei Testnet Configuration
-```json
-{
-  "chainId": 1328,
-  "name": "Sei Testnet",
-  "rpcUrl": "https://evm-rpc-testnet.sei-apis.com",
-  "blockExplorer": "https://seitrace.com"
-}
-```
+## Step 3: Explore the Platform
 
-## 🔍 Step 3: Explore Features
+### 🤖 Meet Seilor 0 (AI Trading Agent)
+- Navigate to **Seilor 0** from the main menu
+- Chat with our AI agent about:
+  - Your wallet balance
+  - Token analysis
+  - Trading strategies
+  - Market insights
 
-### Seilor - dApp Discovery
-- Browse 20+ verified Sei protocols
-- Get AI-powered security analysis
-- View real-time TVL and user data
-- Connect safely to external dApps
+### 🪙 Create Tokens with SeiList
+- Go to **SeiList** to create your own tokens
+- Follow the 4-step process:
+  1. **Token Details** - Name, symbol, logo
+  2. **Launch Settings** - Supply, distribution
+  3. **Review & Create** - Final verification
+  4. **Success & Liquidity** - Add trading liquidity
 
-### SeiList - Token Launchpad
-- Create professional tokens in minutes
-- Upload custom logos to IPFS
-- Deploy with comprehensive metadata
-- Celebrate with Token Spotlight
-
-### SafeChecker - Security Scanner
-- Analyze any Sei token for safety
-- Get professional risk assessments
-- View detailed security metrics
+### 🛡️ Scan Tokens with SafeChecker
+- Use **SafeChecker** to analyze any token
+- Get security scores and risk assessments
+- Detect honeypots and scams
 - Make informed investment decisions
 
-## 🎯 Quick Actions
+## Step 4: Your First Action
 
-### Create Your First Token
-1. Navigate to **SeiList**
-2. Click **"Create & List Token"**
-3. Fill in token details:
-   - Name: "My Awesome Token"
-   - Symbol: "MAT"
-   - Supply: "1000000"
-4. Upload a logo (optional)
-5. Pay 2 SEI creation fee
-6. Celebrate your token launch! 🎉
+Choose one to get started:
 
-### Analyze a Token
+### Option A: Analyze a Token 🔍
 1. Go to **SafeChecker**
-2. Enter any Sei token address
-3. Click **"Analyze Token"**
-4. Review the security report
-5. Make informed decisions
+2. Paste any Sei token address
+3. Click **"Scan Token"**
+4. Review the security analysis
 
-### Discover dApps
-1. Open **Seilor**
-2. Browse featured protocols
-3. Click any dApp for details
-4. Launch with verification dialog
-5. Connect your wallet in new tab
+### Option B: Chat with AI 💬
+1. Visit **Seilor 0**
+2. Ask: "What's my wallet balance?"
+3. Get real-time blockchain data
+4. Explore AI trading features
 
-## 🛡️ Security Tips
+### Option C: Create a Token 🚀
+1. Navigate to **SeiList**
+2. Click **"Create & List"**
+3. Follow the guided process
+4. Launch your token with liquidity
 
-{% hint style="warning" %}
-**Always verify before transacting:**
-- Check security scores in SafeChecker
-- Start with small amounts
-- Verify contract addresses
-- Never share private keys
-{% endhint %}
+## 🎯 Pro Tips
 
-### Red Flags to Watch For
-- ❌ Low security scores (<60/100)
-- ❌ Unverified contracts
-- ❌ No HTTPS encryption
-- ❌ Suspicious domain names
-- ❌ No audit reports
-
-### Green Flags for Safety
-- ✅ High security scores (80+/100)
-- ✅ Verified protocols
-- ✅ Strong community
-- ✅ Regular audits
-- ✅ Transparent team
+- **Start Small**: Begin with small amounts for testing
+- **Use Testnet**: Practice on Sei testnet before mainnet
+- **Ask AI**: Seilor 0 can help with any questions
+- **Check Security**: Always scan tokens before trading
+- **Join Community**: Connect with us on [Telegram](https://t.me/SeifunOfficial)
 
 ## 🆘 Need Help?
 
-### Common Issues
-- **Wallet not connecting?** Try refreshing the page
-- **Wrong network?** Switch to Sei Testnet in your wallet
-- **Transaction failing?** Check you have enough SEI for gas
-- **Site not loading?** Clear browser cache and cookies
+- **Live Chat**: Ask Seilor 0 any questions
+- **Community**: Join our [Telegram](https://t.me/SeifunOfficial)
+- **Documentation**: Browse these docs
+- **Support**: Check our [FAQ](../faq/common-issues.md)
 
-### Get Support
-- **Discord**: [Join our community](https://discord.gg/seifun)
-- **Twitter**: [@SeifunDeFi](https://twitter.com/SeifunDeFi)
-- **Email**: support@seifun.io
+## What's Next?
 
-## 🎉 What's Next?
-
-Now that you're set up, explore these advanced features:
-
-- **[Portfolio Tracking](../user-guide/portfolio.md)** - Monitor your DeFi positions
-- **[Advanced Security Analysis](../user-guide/safechecker-guide.md)** - Deep dive into token safety
-- **[dApp Integration](../developer-guide/dapp-integration.md)** - Connect your own protocol
+- **[Learn about Features](../features/overview.md)** - Explore all capabilities
+- **[Wallet Setup Guide](wallet-connection.md)** - Detailed wallet instructions
+- **[Token Creation Tutorial](../tutorials/create-token.md)** - Step-by-step token guide
+- **[AI Trading Guide](../seilor/ai-trading.md)** - Master Seilor 0
 
 ---
 
-**Ready to dive deeper?** Check out our [User Guide](../user-guide/) for comprehensive tutorials on each feature.
+**Ready to dive deeper?** Explore our comprehensive guides or jump straight into the platform!
+
+*Welcome to the future of DeFi on Sei Network! 🌟*

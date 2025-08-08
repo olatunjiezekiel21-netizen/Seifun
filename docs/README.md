@@ -1,128 +1,83 @@
-# 📚 Seifun Documentation
+# 🚀 Seifun Documentation
 
-Welcome to the comprehensive documentation for **Seifun**, the advanced DeFi ecosystem on Sei Network.
+Welcome to **Seifun** - the ultimate DeFi ecosystem on Sei Network! This comprehensive documentation will guide you through all features and capabilities of the Seifun platform.
 
-## 🚀 Quick Navigation
+## 🌟 What is Seifun?
 
-<table>
-  <tr>
-    <td>
-      <a href="getting-started/">
-        <img src="https://img.shields.io/badge/Getting%20Started-4F46E5?style=for-the-badge&logo=rocket&logoColor=white" alt="Getting Started" />
-      </a>
-    </td>
-    <td>
-      <a href="user-guide/">
-        <img src="https://img.shields.io/badge/User%20Guide-10B981?style=for-the-badge&logo=user&logoColor=white" alt="User Guide" />
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <a href="developer-guide/">
-        <img src="https://img.shields.io/badge/Developer%20Guide-F59E0B?style=for-the-badge&logo=code&logoColor=white" alt="Developer Guide" />
-      </a>
-    </td>
-    <td>
-      <a href="api-reference/">
-        <img src="https://img.shields.io/badge/API%20Reference-EF4444?style=for-the-badge&logo=api&logoColor=white" alt="API Reference" />
-      </a>
-    </td>
-  </tr>
-</table>
+Seifun is a comprehensive DeFi ecosystem built on Sei Network that combines AI-powered trading, advanced token creation tools, security analysis, and seamless user experience. Our platform offers:
 
-## 🏆 What is Seifun?
+- **🤖 AI Trading Agent (Seilor 0)** - Intelligent blockchain assistant with real-time data
+- **🪙 SeiList** - Professional token creation and listing platform
+- **🛡️ SafeChecker** - Advanced token security scanner
+- **📊 Trading Tools** - Real-time market analysis and trading features
+- **🌐 Web3 Integration** - Seamless wallet connection and blockchain interaction
 
-Seifun is a comprehensive DeFi ecosystem built on the Sei blockchain, featuring:
+## 🎯 Key Features
 
-- **🚀 Seilor**: dApp discovery platform with AI-powered security analysis
-- **💎 SeiList**: Professional token launchpad with IPFS integration
-- **🛡️ SafeChecker**: Advanced token security scanner
+### AI-Powered Intelligence
+- Real blockchain data integration
+- Smart contract analysis
+- Portfolio management
+- Trading recommendations
 
-## ✨ Key Features
+### Token Creation & Management
+- Professional token deployment
+- Custom branding and naming
+- Liquidity provision tools
+- Automatic verification
 
-### 🔍 **AI-Powered Security**
-Professional security scoring algorithm that analyzes:
-- Infrastructure security (HTTPS/SSL)
-- Protocol maturity and verification
-- Liquidity depth and market analysis
-- User adoption and network effects
+### Security & Safety
+- Comprehensive token scanning
+- Risk assessment algorithms
+- Honeypot detection
+- Smart contract verification
 
-### 💳 **Multi-Wallet Support**
-- **ReOWN WalletConnect**: Primary connection method
-- **Mobile Wallets**: Trust Wallet, MetaMask Mobile, Rainbow
-- **Desktop Extensions**: MetaMask, Compass, Keplr
+### User Experience
+- Intuitive interface design
+- Mobile-responsive layout
+- Fast loading times
+- Seamless wallet integration
 
-### 📱 **Mobile-First Design**
-- Fully responsive across all devices
-- Touch-optimized interactions
-- Progressive Web App (PWA) capabilities
-- Lightning-fast loading times
+## 🚀 Getting Started
 
-## 🎯 **Use Cases**
+Ready to explore Seifun? Here's how to get started:
 
-### For Users
-- **Discover dApps**: Find and analyze Sei protocols safely
-- **Create Tokens**: Launch professional tokens with metadata
-- **Portfolio Tracking**: Monitor your DeFi positions
-- **Security Analysis**: Get AI-powered risk assessments
+1. **[Connect Your Wallet](getting-started/wallet-connection.md)** - Set up your Sei wallet
+2. **[Explore Features](features/overview.md)** - Discover what Seifun offers
+3. **[Create Your First Token](seilist/token-creation.md)** - Launch on SeiList
+4. **[Use AI Trading](seilor/ai-trading.md)** - Meet Seilor 0
+5. **[Scan Tokens](safechecker/token-scanning.md)** - Stay safe with SafeChecker
 
-### For Developers
-- **Integration**: Connect your dApp to Seifun ecosystem
-- **API Access**: Programmatic access to security data
-- **Smart Contracts**: Deploy using our factory contracts
-- **Analytics**: Access user behavior and security metrics
+## 🔗 Quick Links
 
-## 🌐 **Network Information**
-
-- **Blockchain**: Sei Testnet
-- **Chain ID**: 1328
-- **RPC URL**: https://evm-rpc-testnet.sei-apis.com
-- **Explorer**: https://seitrace.com
-- **Factory Contract**: `0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F`
-
-## 🚀 **Getting Started**
-
-1. **[Connect Your Wallet](user-guide/wallet-connection.md)** - Set up wallet connection
-2. **[Explore dApps](user-guide/seilor-guide.md)** - Discover and analyze protocols
-3. **[Create Tokens](user-guide/seilist-guide.md)** - Launch your own tokens
-4. **[Security Analysis](user-guide/safechecker-guide.md)** - Analyze token safety
-
-## 🛠️ **For Developers**
-
-- **[Development Setup](developer-guide/setup.md)** - Local development environment
-- **[Architecture Overview](developer-guide/architecture.md)** - System design and components
-- **[Smart Contracts](developer-guide/smart-contracts.md)** - Contract integration
-- **[API Documentation](api-reference/)** - Programmatic access
-
-## 📞 **Support & Community**
-
-- **Discord**: [Join our community](https://discord.gg/seifun)
+- **Website**: [seifun.io](https://seifun.io)
+- **App**: [app.seifun.io](https://app.seifun.io)
+- **GitHub**: [github.com/Seifun1/Seifun](https://github.com/Seifun1/Seifun)
 - **Twitter**: [@SeifunDeFi](https://twitter.com/SeifunDeFi)
-- **Email**: support@seifun.io
-- **GitHub**: [Seifun1/Seifun](https://github.com/Seifun1/Seifun)
+- **Telegram**: [t.me/SeifunOfficial](https://t.me/SeifunOfficial)
 
-## 🔄 **Recent Updates**
+## 📚 Documentation Structure
 
-### v1.2.0 - Latest Release
-- ✅ Professional security scoring algorithm
-- ✅ Real-time wallet state synchronization
-- ✅ Simplified dApp launch experience
-- ✅ Enhanced mobile responsiveness
-- ✅ Token spotlight celebration feature
+This documentation is organized into several sections:
 
-### Coming Soon
-- 📚 Complete GitBook documentation
-- 🔗 Cross-chain support
-- 📊 Advanced portfolio analytics
-- 📱 Native mobile app
+- **Getting Started** - Basic setup and onboarding
+- **Features** - Detailed feature explanations
+- **SeiList** - Token creation and management
+- **Seilor 0** - AI trading assistant
+- **SafeChecker** - Security and analysis tools
+- **API Reference** - Technical integration guides
+- **Tutorials** - Step-by-step guides
+- **FAQ** - Common questions and answers
+
+## 🆘 Need Help?
+
+- **Community Support**: Join our [Telegram](https://t.me/SeifunOfficial)
+- **Technical Issues**: Check our [FAQ](faq/common-issues.md)
+- **Bug Reports**: Create an issue on [GitHub](https://github.com/Seifun1/Seifun/issues)
+- **Feature Requests**: Discuss in our community channels
 
 ---
 
-<div align="center">
+**Built with ❤️ on Sei Network**
 
-**Ready to build on Sei?** [Get Started →](getting-started/)
-
-*Built with ❤️ for the Sei ecosystem*
-
-</div>
+*Seifun - Where AI meets DeFi*

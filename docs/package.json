@@ -1,0 +1,98 @@
+{
+  "name": "seifun-docs",
+  "version": "1.0.0",
+  "description": "Comprehensive documentation for the Seifun DeFi ecosystem",
+  "main": "README.md",
+  "scripts": {
+    "init": "gitbook init",
+    "build": "gitbook build",
+    "serve": "gitbook serve",
+    "install": "gitbook install",
+    "pdf": "gitbook pdf . ./seifun-docs.pdf",
+    "epub": "gitbook epub . ./seifun-docs.epub",
+    "mobi": "gitbook mobi . ./seifun-docs.mobi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Seifun1/Seifun.git"
+  },
+  "keywords": [
+    "seifun",
+    "defi",
+    "sei-network",
+    "documentation",
+    "gitbook",
+    "blockchain",
+    "ai-trading",
+    "token-creation",
+    "security"
+  ],
+  "author": "Seifun Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Seifun1/Seifun/issues"
+  },
+  "homepage": "https://docs.seifun.io",
+  "devDependencies": {
+    "gitbook-cli": "^2.3.2"
+  },
+  "gitbook": {
+    "root": "./",
+    "structure": {
+      "readme": "README.md",
+      "summary": "SUMMARY.md"
+    },
+    "title": "Seifun Documentation",
+    "description": "Complete guide to the Seifun ecosystem - AI trading, token creation, and DeFi tools on Sei Network",
+    "language": "en",
+    "direction": "ltr",
+    "plugins": [
+      "search",
+      "sharing",
+      "fontsettings",
+      "theme-default",
+      "github",
+      "edit-link",
+      "copy-code-button",
+      "expandable-chapters",
+      "anchor-navigation-ex"
+    ],
+    "pluginsConfig": {
+      "github": {
+        "url": "https://github.com/Seifun1/Seifun"
+      },
+      "edit-link": {
+        "base": "https://github.com/Seifun1/Seifun/tree/main/docs",
+        "label": "Edit This Page"
+      },
+      "sharing": {
+        "facebook": true,
+        "twitter": true,
+        "google": true,
+        "weibo": false,
+        "instapaper": false,
+        "vk": false,
+        "all": [
+          "facebook",
+          "google",
+          "twitter",
+          "weibo",
+          "instapaper"
+        ]
+      },
+      "theme-default": {
+        "showLevel": true
+      }
+    },
+    "variables": {
+      "project_name": "Seifun",
+      "version": "v1.0.0",
+      "network": "Sei Network",
+      "website": "https://seifun.io",
+      "app_url": "https://app.seifun.io",
+      "github_url": "https://github.com/Seifun1/Seifun",
+      "telegram_url": "https://t.me/SeifunOfficial",
+      "twitter_url": "https://twitter.com/SeifunDeFi"
+    }
+  }
+}
