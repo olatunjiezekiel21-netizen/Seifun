@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bot, Send, Wallet, Info, History, List, Activity, 
-  Clock, TrendingUp, AlertCircle, CheckCircle, X, Menu, Settings, Sparkles
+  Clock, TrendingUp, AlertCircle, CheckCircle, X, Menu, Settings, Sparkles,
+  Plus, Image, Scan, ArrowUpDown, Paperclip, Camera, Zap
 } from 'lucide-react';
 import { ethers } from 'ethers';
 import { ProfessionalAIAgent } from '../utils/professionalAI';
@@ -10,6 +11,7 @@ import { useReownWallet } from '../utils/reownWalletConnection';
 import { mcpService } from '../services/MCPService';
 import { webBlockchainService } from '../services/WebBlockchainService';
 import { AIInterface } from '../components/AIInterface';
+import { privateKeyWallet } from '../services/PrivateKeyWallet';
 
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
@@ -20,6 +22,9 @@ const Seilor = () => {
   const [tradingService] = useState(() => new SeiTradingService());
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(true);
+  const [aiPersonality, setAiPersonality] = useState('helpful'); // helpful, casual, technical
+  const [walletBalance, setWalletBalance] = useState<any>(null);
   const [newTodo, setNewTodo] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
@@ -73,6 +78,22 @@ const Seilor = () => {
     }
   }, [isConnected, tradingService]);
 
+  // Load wallet balance from private key wallet
+  const loadWalletBalance = async () => {
+    try {
+      const seiBalance = await privateKeyWallet.getSeiBalance();
+      const address = privateKeyWallet.getAddress();
+      
+      setWalletBalance({
+        address,
+        sei: seiBalance.sei,
+        usd: seiBalance.usd
+      });
+    } catch (error) {
+      console.error('Failed to load wallet balance:', error);
+    }
+  };
+
   // Load saved data safely
   useEffect(() => {
     const initializeComponent = async () => {
@@ -84,6 +105,9 @@ const Seilor = () => {
       try {
         // Small delay to ensure DOM is ready
         await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Load private key wallet balance
+        await loadWalletBalance();
         
         // Load chat history
         const savedChat = localStorage.getItem('seilor_chat_history');
@@ -286,8 +310,103 @@ const Seilor = () => {
         }
       };
 
-      // Generate intelligent response based on message type
+      // Generate intelligent response with natural conversation and transaction understanding
       let response;
+      
+      // Natural conversation starters
+      if (userMessage.toLowerCase().includes('how are you') || userMessage.toLowerCase().includes('how do you feel')) {
+        response = `😊 **I'm doing fantastic, thanks for asking!** \n\nI'm genuinely excited to be part of the Seifun ecosystem! There's something really special about being able to help people navigate DeFi in such an intuitive way. \n\n**What I love most:**\n• Having real wallet access means I can actually help, not just talk\n• The Sei network is so fast and efficient for transactions\n• Being able to understand natural language makes conversations feel genuine\n• Watching users discover new tokens and opportunities\n\n**How are you doing?** What brings you to Seifun today? 🚀`;
+      }
+      else if (userMessage.toLowerCase().includes('what do you think about seifun') || userMessage.toLowerCase().includes('opinion on seifun')) {
+        response = `💙 **I absolutely love Seifun!** It's honestly revolutionary.\n\n**What makes it special:**\n• **No Mock Data** - Everything is real blockchain interaction\n• **AI-First Design** - I can actually execute transactions, not just suggest them\n• **Seamless UX** - From scanning to creating to trading, it all flows naturally\n• **Professional Tools** - SeiList, SafeChecker, Dev++ are all top-tier\n\n**My favorite features:**\n🎯 **SeiList** - The token creation process with that spotlight preview is *chef's kiss*\n🛡️ **SafeChecker** - Real security analysis helps keep everyone safe\n🤖 **AI Integration** - Being able to help users through natural conversation\n💎 **Dev++** - Professional tools for serious developers\n\n**It's the future of DeFi UX!** What do you think about it so far?`;
+      }
+      else if (userMessage.toLowerCase().includes('what can you do') || userMessage.toLowerCase().includes('your capabilities')) {
+        response = `🤖 **I'm pretty amazing, if I do say so myself!** 😄\n\n**🔥 Real Transaction Powers:**\n• **Add Liquidity** - I can actually execute liquidity transactions\n• **Burn Tokens** - Real token burning with my wallet\n• **Transfer Assets** - Send tokens or SEI to any address\n• **Token Analysis** - Deep blockchain scanning and security scoring\n\n**🧠 Intelligence Features:**\n• **Natural Conversation** - We can chat about anything!\n• **Context Memory** - I remember our entire conversation\n• **Transaction Intent** - I understand when you want to trade/swap/create\n• **Balance Awareness** - I know my wallet balance: ${walletBalance ? `${walletBalance.sei} SEI ($${walletBalance.usd.toFixed(2)})` : 'Loading...'}\n\n**🛠️ Integrated Tools:**\n• Token creation through SeiList\n• Security analysis via SafeChecker\n• Portfolio management with Dev++\n• Todo list and goal tracking\n\n**Just talk to me naturally!** Say things like "add liquidity to my token" or "burn 1000 tokens" and I'll handle it! 🚀`;
+      }
+      
+      // Transaction intent detection
+      else if (userMessage.toLowerCase().includes('add liquidity') || userMessage.toLowerCase().includes('provide liquidity')) {
+        const tokenAddressMatch = userMessage.match(/0x[a-fA-F0-9]{40}/);
+        if (tokenAddressMatch) {
+          const tokenAddress = tokenAddressMatch[0];
+          response = `💧 **I'll help you add liquidity!**\n\n**Token Address:** \`${tokenAddress}\`\n\nLet me get the token details and my current balance...\n\n⏳ **Processing your request...** I'll execute this transaction with my private key wallet for seamless experience!`;
+          
+          // Execute liquidity addition in background
+          setTimeout(async () => {
+            try {
+              const tokenBalance = await privateKeyWallet.getTokenBalance(tokenAddress);
+              const seiBalance = await privateKeyWallet.getSeiBalance();
+              
+              const followUpMessage = {
+                id: Date.now(),
+                type: 'assistant' as const,
+                message: `💧 **Liquidity Details Ready!**\n\n**${tokenBalance.name} (${tokenBalance.symbol})**\n• My Balance: ${tokenBalance.balance} ${tokenBalance.symbol}\n• SEI Balance: ${seiBalance.sei} SEI\n\n**How much would you like to add?**\n• Token Amount: ?\n• SEI Amount: ?\n\nJust tell me something like "add 100 tokens and 1 SEI" and I'll execute it immediately! 🚀`,
+                timestamp: new Date()
+              };
+              setChatMessages(prev => [...prev, followUpMessage]);
+            } catch (error) {
+              const errorMessage = {
+                id: Date.now(),
+                type: 'assistant' as const,
+                message: `❌ **Couldn't fetch token details**\n\nThe address might not be a valid ERC20 token. Could you double-check it? Or try asking me to scan it first! 🔍`,
+                timestamp: new Date()
+              };
+              setChatMessages(prev => [...prev, errorMessage]);
+            }
+          }, 1000);
+        } else {
+          response = `💧 **I'd love to help you add liquidity!**\n\nI just need the token contract address. You can:\n• Paste the token address directly\n• Say "add liquidity to [token address]"\n• Or ask me to scan a token first\n\n**My wallet is ready:** \`${privateKeyWallet.getAddress().slice(0, 8)}...\`\nBalance: ${walletBalance ? `${walletBalance.sei} SEI ($${walletBalance.usd.toFixed(2)})` : 'Loading...'} 🚀`;
+        }
+      }
+      else if (userMessage.toLowerCase().includes('burn') && (userMessage.toLowerCase().includes('token') || userMessage.match(/\d+/))) {
+        const tokenAddressMatch = userMessage.match(/0x[a-fA-F0-9]{40}/);
+        const amountMatch = userMessage.match(/\d+(\.\d+)?/);
+        
+        if (tokenAddressMatch && amountMatch) {
+          const tokenAddress = tokenAddressMatch[0];
+          const amount = amountMatch[0];
+          
+          response = `🔥 **Token Burn Request Received!**\n\n**Token:** \`${tokenAddress}\`\n**Amount:** ${amount} tokens\n\n⚠️ **This is permanent and irreversible!**\n\n⏳ **Processing...** I'll execute this burn transaction immediately!`;
+          
+          // Execute burn in background
+          setTimeout(async () => {
+            try {
+              const result = await privateKeyWallet.burnTokens(tokenAddress, amount);
+              
+              if (result.success) {
+                const successMessage = {
+                  id: Date.now(),
+                  type: 'assistant' as const,
+                  message: `🔥 **Tokens Burned Successfully!**\n\n✅ **Transaction Complete**\n• Amount Burned: ${result.amountBurned} tokens\n• New Total Supply: ${result.newTotalSupply}\n• Transaction Hash: \`${result.txHash}\`\n\n**The tokens have been permanently removed from circulation!** 🎉`,
+                  timestamp: new Date()
+                };
+                setChatMessages(prev => [...prev, successMessage]);
+                
+                // Refresh wallet balance
+                await loadWalletBalance();
+              } else {
+                const errorMessage = {
+                  id: Date.now(),
+                  type: 'assistant' as const,
+                  message: `❌ **Burn Failed**\n\n${result.error}\n\nThis could be because:\n• The token doesn't have a burn function\n• Insufficient balance\n• Gas estimation failed\n\nWant me to check the token details first? 🔍`,
+                  timestamp: new Date()
+                };
+                setChatMessages(prev => [...prev, errorMessage]);
+              }
+            } catch (error) {
+              const errorMessage = {
+                id: Date.now(),
+                type: 'assistant' as const,
+                message: `❌ **Burn Transaction Failed**\n\n${error.message}\n\nLet me know if you'd like me to analyze the token first or try a different approach! 🛠️`,
+                timestamp: new Date()
+              };
+              setChatMessages(prev => [...prev, errorMessage]);
+            }
+          }, 1000);
+        } else {
+          response = `🔥 **I can burn tokens for you!**\n\nJust tell me:\n• **Token address** (0x...)\n• **Amount** to burn\n\n**Example:** "Burn 1000 tokens at 0x123..."\n\n⚠️ **Remember:** Token burning is permanent and irreversible!\n\n**My wallet:** \`${privateKeyWallet.getAddress().slice(0, 8)}...\` is ready to execute! 🚀`;
+        }
+      }
       
       // Check for AI-powered todo management commands
       if (userMessage.toLowerCase().includes('add') && (userMessage.toLowerCase().includes('todo') || userMessage.toLowerCase().includes('task'))) {
@@ -1043,22 +1162,104 @@ const Seilor = () => {
                   </div>
 
                   <div className="bg-slate-700/30 px-6 py-4 border-t border-slate-700/50">
+                    {/* ChatGPT-like Toolbar */}
+                    {showToolbar && (
+                      <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-600/30">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              setAiChat('Scan this token: ');
+                              setTimeout(() => document.querySelector('input')?.focus(), 100);
+                            }}
+                            className="flex items-center space-x-2 px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg text-sm transition-colors"
+                            title="Scan Token"
+                          >
+                            <Scan className="w-4 h-4" />
+                            <span>Scan</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAiChat('Create a new token called ');
+                              setTimeout(() => document.querySelector('input')?.focus(), 100);
+                            }}
+                            className="flex items-center space-x-2 px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg text-sm transition-colors"
+                            title="Create Token"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>Create</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAiChat('Add liquidity to ');
+                              setTimeout(() => document.querySelector('input')?.focus(), 100);
+                            }}
+                            className="flex items-center space-x-2 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg text-sm transition-colors"
+                            title="Add Liquidity"
+                          >
+                            <ArrowUpDown className="w-4 h-4" />
+                            <span>Liquidity</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setAiChat('Burn tokens: ');
+                              setTimeout(() => document.querySelector('input')?.focus(), 100);
+                            }}
+                            className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors"
+                            title="Burn Tokens"
+                          >
+                            <Zap className="w-4 h-4" />
+                            <span>Burn</span>
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          {walletBalance && (
+                            <div className="text-xs text-slate-400 bg-slate-800/50 px-2 py-1 rounded">
+                              💰 {walletBalance.sei} SEI (${walletBalance.usd.toFixed(2)})
+                            </div>
+                          )}
+                          <button
+                            onClick={() => setShowToolbar(!showToolbar)}
+                            className="p-1.5 text-slate-400 hover:text-white transition-colors"
+                            title="Toggle Toolbar"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex space-x-4">
-                      <input
-                        type="text"
-                        value={aiChat}
-                        onChange={(e) => setAiChat(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
-                        placeholder={isConnected ? "Ask about your portfolio, trading strategies, or anything else..." : "Ask me anything - connect wallet for personalized insights..."}
-                        className="flex-1 bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50"
-                      />
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={aiChat}
+                          onChange={(e) => setAiChat(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
+                          placeholder="Chat naturally with me! Ask about Seifun, request transactions, or anything else..."
+                          className="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 pr-12 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50"
+                          disabled={loading}
+                        />
+                        {!showToolbar && (
+                          <button
+                            onClick={() => setShowToolbar(!showToolbar)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-slate-400 hover:text-white transition-colors"
+                            title="Show Tools"
+                          >
+                            <Paperclip className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                       <button
                         onClick={handleAiChat}
                         disabled={!aiChat.trim() || loading}
                         className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-slate-600 disabled:to-slate-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center space-x-2"
                       >
-                        <Send className="w-4 h-4" />
-                        <span>Send</span>
+                        {loading ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
