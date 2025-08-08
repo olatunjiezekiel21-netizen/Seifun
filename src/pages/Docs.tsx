@@ -743,29 +743,27 @@ const Docs = () => {
         }
       });
 
-      // Search content based on keywords
-      const content = documentationContent[section.id as keyof typeof documentationContent];
-      if (content && typeof content.content === 'string' && content.content.toLowerCase().includes(searchTerm)) {
-        results.push({
-          type: 'content',
-          id: section.id,
-          title: `${section.title} (Content Match)`,
-          description: 'Found in page content',
-          icon: section.icon,
-          relevance: content.content.toLowerCase().indexOf(searchTerm)
-        });
-      }
+      // Search content based on keywords (skip content search for now as it's React elements)
+      // We'll focus on title and section matching which is more reliable
     });
 
     // Search specific keywords and topics
     const keywordMatches = searchKeywords(searchTerm);
     results.push(...keywordMatches);
 
-    // Sort by relevance (exact matches first)
-    results.sort((a, b) => a.relevance - b.relevance);
+    // Sort by relevance (exact matches first, then by type priority)
+    results.sort((a, b) => {
+      // Prioritize exact matches
+      if (a.relevance !== b.relevance) {
+        return a.relevance - b.relevance;
+      }
+      // Then prioritize by type: keyword > item > section
+      const typePriority = { keyword: 0, item: 1, section: 2, content: 3 };
+      return typePriority[a.type] - typePriority[b.type];
+    });
     
-    setSearchResults(results.slice(0, 10)); // Limit to top 10 results
-    setIsSearching(false);
+    setSearchResults(results.slice(0, 8)); // Limit to top 8 results for better UX
+    setTimeout(() => setIsSearching(false), 100); // Small delay to prevent flickering
   };
 
   // Keyword-based search for common topics
@@ -793,21 +791,42 @@ const Docs = () => {
       ],
       'liquidity': [
         { id: 'liquidity-management', title: 'Liquidity Management', section: 'SeiList', icon: TrendingUp }
+      ],
+      // Add more comprehensive keywords
+      'seilor': [
+        { id: 'seilor-intro', title: 'Meet Seilor 0', section: 'AI Agent', icon: Bot }
+      ],
+      'seilist': [
+        { id: 'seilist-intro', title: 'Introduction to SeiList', section: 'Token Creation', icon: Layers }
+      ],
+      'safechecker': [
+        { id: 'security-overview', title: 'Security Overview', section: 'SafeChecker', icon: Shield }
+      ],
+      'quick': [
+        { id: 'quick-start', title: 'Quick Start', section: 'Getting Started', icon: Zap }
+      ],
+      'start': [
+        { id: 'quick-start', title: 'Quick Start', section: 'Getting Started', icon: Zap },
+        { id: 'introduction', title: 'Introduction', section: 'Getting Started', icon: Home }
       ]
     };
 
     const results: any[] = [];
     Object.entries(keywords).forEach(([keyword, items]) => {
-      if (query.includes(keyword)) {
+      if (query.toLowerCase().includes(keyword.toLowerCase()) || keyword.toLowerCase().includes(query.toLowerCase())) {
         items.forEach(item => {
-          results.push({
-            type: 'keyword',
-            id: item.id,
-            title: item.title,
-            description: `Keyword match: ${keyword}`,
-            icon: item.icon,
-            relevance: 0 // High relevance for keyword matches
-          });
+          // Check if we already have this item to avoid duplicates
+          const exists = results.some(r => r.id === item.id);
+          if (!exists) {
+            results.push({
+              type: 'keyword',
+              id: item.id,
+              title: item.title,
+              description: `Keyword match: ${keyword}`,
+              icon: item.icon,
+              relevance: 0 // High relevance for keyword matches
+            });
+          }
         });
       }
     });
@@ -823,6 +842,19 @@ const Docs = () => {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const searchContainer = document.querySelector('.search-container');
+      if (searchContainer && !searchContainer.contains(event.target as Node)) {
+        setSearchResults([]);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const filteredSections = documentationSections.filter(section =>
     section.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -855,7 +887,7 @@ const Docs = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="relative">
+              <div className="relative search-container">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 <input
                   type="text"
@@ -864,6 +896,17 @@ const Docs = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none w-64"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
                 
                 {/* Search Results Dropdown */}
                 {searchQuery && (
