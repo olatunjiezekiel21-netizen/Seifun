@@ -41,10 +41,9 @@ interface TokenFormData {
   lockDuration: string;
   daoEnabled: boolean;
   teamWallets: string;
-  // New liquidity features
+  // Basic liquidity features (no locking - not available on Sei)
   initialLiquidityETH: string;
   addLiquidity: boolean;
-  liquidityLockDuration: string;
 }
 
 interface CreateAndListFormProps {
@@ -183,10 +182,9 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
     lockDuration: '365',
     daoEnabled: false,
     teamWallets: '',
-    // New liquidity features
+    // Basic liquidity features (no locking - not available on Sei)
     initialLiquidityETH: '1',
-    addLiquidity: true,
-    liquidityLockDuration: '365'
+    addLiquidity: false
   });
 
   const steps = [
@@ -880,22 +878,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block app-text-primary text-sm font-medium mb-2">
-                          Lock Duration
-                        </label>
-                        <select
-                          value={formData.liquidityLockDuration}
-                          onChange={(e) => handleInputChange('liquidityLockDuration', e.target.value)}
-                          className="app-input"
-                        >
-                          <option value="30">30 Days</option>
-                          <option value="90">90 Days</option>
-                          <option value="180">180 Days</option>
-                          <option value="365">1 Year (Recommended)</option>
-                          <option value="730">2 Years</option>
-                        </select>
-                      </div>
+                      
 
                       {/* Liquidity Preview */}
                       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
@@ -914,43 +897,77 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                               {((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100).toLocaleString()} {formData.symbol}
                             </span>
                           </div>
-                          <div className="flex justify-between col-span-2">
-                            <span className="text-gray-400">Initial Price:</span>
-                            <span className="text-blue-400">
-                              {formData.initialLiquidityETH && formData.lpPercentage ? 
-                                (parseFloat(formData.initialLiquidityETH) / ((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100)).toFixed(8)
-                                : '0'
-                              } SEI per {formData.symbol}
-                            </span>
-                          </div>
+                                                     <div className="flex justify-between col-span-2">
+                             <span className="text-gray-400">Est. Initial Price:</span>
+                             <span className="text-blue-400">
+                               {formData.initialLiquidityETH && formData.lpPercentage ? 
+                                 (parseFloat(formData.initialLiquidityETH) / ((parseInt(formData.totalSupply) * parseInt(formData.lpPercentage)) / 100)).toFixed(8)
+                                 : '0'
+                               } SEI per {formData.symbol}
+                             </span>
+                           </div>
+                           <div className="col-span-2 text-xs text-gray-500 mt-2">
+                             *Price will be determined by market once liquidity is added to a DEX
+                           </div>
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          // TODO: Implement liquidity addition logic
-                          alert('Liquidity addition feature coming soon! For now, you can add liquidity manually on DEXes like Astroport or Dragonswap.');
-                        }}
-                        className="app-btn app-btn-primary w-full"
-                      >
-                        <Droplet className="w-4 h-4 mr-2" />
-                        Add Liquidity
-                      </button>
+                                             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                         <h6 className="text-blue-400 font-medium mb-2">📝 Manual Liquidity Addition</h6>
+                         <p className="text-sm text-gray-400 mb-3">
+                           Liquidity must be added manually on Sei DEXes. Here's how:
+                         </p>
+                         <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+                           <li>Go to <strong>Astroport</strong> or <strong>Dragonswap</strong></li>
+                           <li>Find "Add Liquidity" or "Pool" section</li>
+                           <li>Select your token and SEI as the pair</li>
+                           <li>Enter the amounts you want to provide</li>
+                           <li>Confirm the transaction</li>
+                         </ol>
+                         <div className="flex space-x-2 mt-3">
+                           <button
+                             onClick={() => window.open('https://astroport.fi', '_blank')}
+                             className="app-btn app-btn-secondary text-xs px-3 py-1"
+                           >
+                             Open Astroport
+                           </button>
+                           <button
+                             onClick={() => window.open('https://dragonswap.app', '_blank')}
+                             className="app-btn app-btn-secondary text-xs px-3 py-1"
+                           >
+                             Open Dragonswap
+                           </button>
+                         </div>
+                       </div>
                     </div>
                   )}
 
                   {!formData.addLiquidity && (
-                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4">
-                      <div className="flex items-start space-x-2">
-                        <AlertTriangle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <div className="text-yellow-500 font-medium">No Liquidity Added</div>
-                          <div className="text-yellow-400 text-sm mt-1">
-                            Your token won't be tradeable immediately. You can add liquidity later on DEXes like Astroport or Dragonswap.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                                         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                       <div className="flex items-start space-x-2">
+                         <AlertTriangle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                         <div>
+                           <div className="text-blue-500 font-medium">Ready for Manual Liquidity</div>
+                           <div className="text-blue-400 text-sm mt-1">
+                             Your token is created! Add liquidity on DEXes like Astroport or Dragonswap to make it tradeable.
+                           </div>
+                           <div className="flex space-x-2 mt-2">
+                             <button
+                               onClick={() => window.open('https://astroport.fi', '_blank')}
+                               className="text-xs text-blue-400 hover:text-blue-300 underline"
+                             >
+                               Astroport
+                             </button>
+                             <button
+                               onClick={() => window.open('https://dragonswap.app', '_blank')}
+                               className="text-xs text-blue-400 hover:text-blue-300 underline"
+                             >
+                               Dragonswap
+                             </button>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
                   )}
                 </div>
               </div>

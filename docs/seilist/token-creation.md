@@ -99,22 +99,24 @@ Your token is created! Now decide on liquidity:
 #### Liquidity Options (Optional)
 After seeing your token, you can:
 
-##### Add Liquidity Now
-- **SEI Amount**: How much SEI to pair
-- **Token Percentage**: What % of supply to use
-- **Lock Duration**: Liquidity lock period
-- **Price Preview**: See initial token price
+##### Manual Liquidity Addition
+- **DEX Required**: Must use Astroport or Dragonswap
+- **SEI Pairing**: Pair your token with SEI
+- **Market Price**: Price determined by supply/demand
+- **No Locking**: Sei doesn't have built-in liquidity locking
 
-##### Liquidity Benefits
-- ✅ **Immediate Trading**: Token becomes tradeable
-- ✅ **Price Discovery**: Market-driven pricing
-- ✅ **Investor Confidence**: Shows commitment
-- ✅ **DEX Integration**: Works with Astroport, Dragonswap
+##### How to Add Liquidity
+1. **Visit a DEX** - Go to Astroport or Dragonswap
+2. **Find Pools** - Look for "Add Liquidity" or "Pool" section
+3. **Select Pair** - Choose your token + SEI
+4. **Set Amounts** - Enter how much of each token to add
+5. **Confirm** - Complete the transaction
 
-##### Skip Liquidity
-- ⚠️ **Manual Later**: Add liquidity on DEXes later
-- ⚠️ **Not Tradeable**: Token won't trade immediately
-- ⚠️ **Extra Steps**: Requires separate DEX interaction
+##### Why Add Liquidity?
+- ✅ **Enable Trading**: Makes your token tradeable
+- ✅ **Price Discovery**: Market determines token value
+- ✅ **Earn Fees**: Get trading fees as liquidity provider
+- ✅ **Build Trust**: Shows commitment to the project
 
 ## 💡 Best Practices
 
@@ -127,8 +129,8 @@ After seeing your token, you can:
 ### Economics
 - **Reasonable Supply**: Not too high, not too low
 - **Fair Distribution**: Avoid excessive team allocation
-- **Liquidity Planning**: 70-90% for LP recommended
-- **Lock Periods**: Longer locks build trust
+- **Liquidity Planning**: Plan for manual DEX liquidity addition
+- **Market Dynamics**: Let market determine token value
 
 ### Security
 - **Test First**: Use small amounts initially

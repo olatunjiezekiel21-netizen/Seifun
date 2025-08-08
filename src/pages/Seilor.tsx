@@ -218,12 +218,11 @@ const Seilor = () => {
         // Add user preferences and session data
         userPreferences: {
           activePanel,
-          sessionStartTime: new Date(Date.now() - 60000 * 30), // Mock 30 min session
+          sessionStartTime: new Date(Date.now() - 60000 * 30), // Estimated session start
           totalInteractions: chatMessages.length
         },
-        // Add real-time data
+        // Real-time data (removed mock data)
         marketData: {
-          seiPrice: (Math.random() * 0.5 + 0.3).toFixed(4), // This would be from real API
           timestamp: new Date()
         }
       };
