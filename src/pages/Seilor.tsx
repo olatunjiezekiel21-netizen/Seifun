@@ -3,10 +3,12 @@ import {
   Bot, Send, Wallet, Info, History, List, Activity, 
   Clock, TrendingUp, AlertCircle, CheckCircle, X, Menu
 } from 'lucide-react';
+import { ethers } from 'ethers';
 import { ProfessionalAIAgent } from '../utils/professionalAI';
 import { SeiTradingService, type TransactionHistory, type ProtocolInteraction } from '../utils/seiTradingService';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { mcpService } from '../services/MCPService';
+import { webBlockchainService } from '../services/WebBlockchainService';
 
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo'>('chat');
@@ -272,14 +274,103 @@ const Seilor = () => {
         
         response = `🕒 **Your Session History**\n\n📊 **Session Stats:**\n• Session Duration: ~${sessionLength} minutes\n• Total Messages: ${aiContext.chatHistory.length}\n• Your Questions: ${aiContext.chatHistory.filter(msg => msg.type === 'user').length}\n\n**Recent Questions:**\n${recentMessages}\n\n💡 **I remember everything** from our conversation and can reference any previous topics. What would you like to revisit or continue discussing?`;
       }
-      // Enhanced wallet-aware responses
+      // 🌐 REAL BLOCKCHAIN INTEGRATION - Web-based (works immediately!)
+      else if (userMessage.toLowerCase().includes('balance') || userMessage.toLowerCase().includes('portfolio') || userMessage.toLowerCase().includes('wallet')) {
+        try {
+          const [balance, address] = await Promise.all([
+            webBlockchainService.getWalletBalance(),
+            webBlockchainService.getWalletAddress()
+          ]);
+          
+          response = `💰 **REAL Wallet Data (Live from Sei Blockchain!)**\n\n🔗 **Address**: ${address.slice(0, 8)}...${address.slice(-6)}\n💎 **SEI Balance**: ${balance.sei} SEI\n💵 **USD Value**: $${balance.usd.toFixed(2)}\n🌐 **Network**: Sei Testnet\n\n`;
+          
+          if (balance.tokens.length > 0) {
+            response += `**🪙 Token Holdings:**\n`;
+            balance.tokens.forEach(token => {
+              response += `• **${token.symbol}**: ${token.balance} ($${token.value.toFixed(2)})\n`;
+            });
+            
+            const totalValue = balance.usd + balance.tokens.reduce((sum, token) => sum + token.value, 0);
+            response += `\n**💎 Total Portfolio Value**: $${totalValue.toFixed(2)}\n\n`;
+          }
+          
+          response += `**🤖 AI Insights**: ${balance.usd > 50 ? 'Your portfolio looks healthy!' : 'Consider adding more SEI for trading.'} ${balance.tokens.length > 0 ? 'Good diversification across tokens.' : 'You might want to diversify into other Sei tokens.'}\n\n**🚀 This is REAL data from the Sei blockchain - not mock data!**`;
+          
+        } catch (error) {
+          response = `❌ **Blockchain Query Failed**: ${error.message}\n\nI tried to get your real wallet data from the Sei blockchain, but encountered an issue. This might be due to:\n• Network connectivity\n• RPC node issues\n• Blockchain sync problems\n\nTry again in a moment!`;
+        }
+      }
+      // 🔍 REAL TOKEN ANALYSIS - Web-based
+      else if (userMessage.toLowerCase().includes('analyze') && userMessage.includes('0x')) {
+        const addressMatch = userMessage.match(/0x[a-fA-F0-9]{40}/);
+        if (addressMatch) {
+          const tokenAddress = addressMatch[0];
+          try {
+            const tokenInfo = await webBlockchainService.analyzeToken(tokenAddress);
+            
+            response = `🔍 **REAL Token Analysis (Live from Blockchain!)**\n\n`;
+            response += `**📋 Token Information:**\n`;
+            response += `• **Name**: ${tokenInfo.name}\n`;
+            response += `• **Symbol**: ${tokenInfo.symbol}\n`;
+            response += `• **Address**: ${tokenInfo.address}\n`;
+            response += `• **Contract**: ${tokenInfo.isContract ? '✅ Yes' : '❌ No'}\n`;
+            response += `• **Verified**: ${tokenInfo.verified ? '✅ Yes' : '❌ No'}\n`;
+            response += `• **Decimals**: ${tokenInfo.decimals}\n`;
+            response += `• **Total Supply**: ${tokenInfo.totalSupply !== '0' ? ethers.formatEther(tokenInfo.totalSupply) : 'N/A'}\n\n`;
+            
+            response += `**🛡️ Security Analysis:**\n`;
+            response += `• **Risk Score**: ${tokenInfo.securityScore}/100\n`;
+            response += `• **Risk Level**: ${tokenInfo.riskLevel}\n`;
+            
+            const riskEmoji = tokenInfo.riskLevel === 'LOW' ? '✅' : tokenInfo.riskLevel === 'MEDIUM' ? '⚠️' : '🚨';
+            const riskMessage = tokenInfo.riskLevel === 'LOW' ? 'This token appears safe to interact with' : 
+                              tokenInfo.riskLevel === 'MEDIUM' ? 'Exercise caution - review factors before trading' : 
+                              'High risk - avoid trading this token';
+            
+            response += `• **Recommendation**: ${riskEmoji} ${riskMessage}\n\n`;
+            response += `**🚀 This is REAL contract analysis from the Sei blockchain!**`;
+            
+          } catch (error) {
+            response = `❌ **Token Analysis Failed**: ${error.message}\n\nI tried to analyze the token ${tokenAddress} directly from the Sei blockchain, but encountered an issue. Please verify:\n• The address is correct\n• The token exists on Sei network\n• Network connectivity is stable`;
+          }
+        }
+      }
+      // 📈 REAL TRANSACTION HISTORY - Web-based
+      else if (userMessage.toLowerCase().includes('transaction') || userMessage.toLowerCase().includes('history') || userMessage.toLowerCase().includes('recent')) {
+        try {
+          const transactions = await webBlockchainService.getTransactionHistory();
+          
+          if (transactions.length === 0) {
+            response = `📭 **No Recent Transactions Found**\n\nI searched the Sei blockchain but didn't find any recent transactions for your wallet address. This could mean:\n\n• This is a new wallet\n• No activity in recent blocks\n• Transactions are still being indexed\n\nOnce you start making transactions, I'll be able to show you detailed history here! 🚀`;
+                     } else {
+             response = `📈 **REAL Transaction History (Live from Sei Blockchain!)**\n\n`;
+             
+             const walletAddress = await webBlockchainService.getWalletAddress();
+             
+             transactions.forEach((tx, index) => {
+               const timeAgo = Math.floor((Date.now() - tx.timestamp) / (1000 * 60 * 60));
+               const direction = tx.from.toLowerCase() === walletAddress.toLowerCase() ? '📤 Sent' : '📥 Received';
+               const amount = ethers.formatEther(tx.value);
+               
+               response += `**${index + 1}. ${direction}**\n`;
+               response += `• **Amount**: ${parseFloat(amount).toFixed(6)} SEI\n`;
+               response += `• **${tx.from.toLowerCase() === walletAddress.toLowerCase() ? 'To' : 'From'}**: ${(tx.from.toLowerCase() === walletAddress.toLowerCase() ? tx.to : tx.from).slice(0, 10)}...\n`;
+               response += `• **Time**: ${timeAgo}h ago\n`;
+               response += `• **Status**: ${tx.status === 'success' ? '✅ Success' : '❌ Failed'}\n`;
+               response += `• **Hash**: ${tx.hash.slice(0, 10)}...\n\n`;
+             });
+             
+             response += `**🚀 This is REAL transaction data from the Sei blockchain!**`;
+           }
+          
+        } catch (error) {
+          response = `❌ **Transaction History Failed**: ${error.message}\n\nI tried to get your transaction history from the Sei blockchain, but encountered an issue. This might be due to:\n• Network connectivity\n• Blockchain indexing delays\n• RPC node issues`;
+        }
+      }
+      // Enhanced wallet-aware responses (fallback)
       else if (isConnected && walletContext) {
         // Wallet-aware intelligent responses
-        if (userMessage.toLowerCase().includes('balance') || userMessage.toLowerCase().includes('how much')) {
-          response = `💰 **Your Wallet Summary**\n\n🔗 **Address**: ${walletContext.address.slice(0, 8)}...${walletContext.address.slice(-6)}\n💎 **SEI Balance**: ${walletContext.balance} SEI\n🌐 **Network**: ${walletContext.network}\n\n${walletContext.balance === '0' || parseFloat(walletContext.balance) < 0.1 ? '⚠️ **Low Balance Alert**: You might want to add more SEI to your wallet for trading activities.' : '✅ **Good Balance**: You have sufficient SEI for trading activities.'}\n\n📝 **Quick Context**: You have ${aiContext.pendingTodos} pending tasks${aiContext.pendingTodos > 0 ? ' - maybe add "Check portfolio" to your todo list?' : '!'}\n\nWould you like me to help you find trading opportunities or analyze any specific tokens?`;
-        } else if (userMessage.toLowerCase().includes('portfolio') || userMessage.toLowerCase().includes('holdings')) {
-          response = `📊 **Portfolio Analysis**\n\n**Current Holdings:**\n${walletContext.tokens.map(token => `• ${token.balance} ${token.symbol}`).join('\n')}\n\n**Portfolio Value**: ~$${(parseFloat(walletContext.balance) * parseFloat(aiContext.marketData.seiPrice)).toFixed(2)} USD\n\n**Recommendations:**\n• Consider diversifying across multiple Sei DeFi protocols\n• Monitor gas fees for optimal transaction timing\n• Set up price alerts for your holdings\n\n📝 **Smart Suggestion**: ${aiContext.todoCount === 0 ? 'Want me to add "Portfolio review" to your todo list?' : `I see you have ${aiContext.pendingTodos} pending tasks - maybe prioritize portfolio-related ones?`}\n\nWould you like specific trading recommendations based on your current portfolio?`;
-        } else if (userMessage.toLowerCase().includes('trade') || userMessage.toLowerCase().includes('swap')) {
+        if (userMessage.toLowerCase().includes('trade') || userMessage.toLowerCase().includes('swap')) {
           const availableBalance = parseFloat(walletContext.balance);
           const portfolioValue = availableBalance * parseFloat(aiContext.marketData.seiPrice);
           
