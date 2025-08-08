@@ -1,5 +1,6 @@
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { webBlockchainService } from './WebBlockchainService';
+import { cambrianSeiAgent, SwapParams, StakeParams, LendingParams, TradingParams } from './CambrianSeiAgent';
 
 // Intent Types for NLP Processing
 export enum IntentType {
@@ -12,7 +13,18 @@ export enum IntentType {
   PROTOCOL_DATA = 'protocol_data',
   TRADING_INFO = 'trading_info',
   HELP = 'help',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
+  // New CambrianAgents capabilities
+  SYMPHONY_SWAP = 'symphony_swap',
+  STAKE_TOKENS = 'stake_tokens',
+  UNSTAKE_TOKENS = 'unstake_tokens',
+  LEND_TOKENS = 'lend_tokens',
+  BORROW_TOKENS = 'borrow_tokens',
+  REPAY_LOAN = 'repay_loan',
+  OPEN_POSITION = 'open_position',
+  CLOSE_POSITION = 'close_position',
+  GET_POSITIONS = 'get_positions',
+  WALLET_INFO = 'wallet_info'
 }
 
 // Entity Extraction Results
@@ -22,6 +34,13 @@ interface ExtractedEntities {
   amount?: number;
   seiAmount?: number;
   tokenAmount?: number;
+  // New entities for Cambrian operations
+  tokenIn?: string;
+  tokenOut?: string;
+  market?: string;
+  side?: 'long' | 'short';
+  leverage?: number;
+  positionId?: string;
 }
 
 // Intent Recognition Result
@@ -154,6 +173,131 @@ export class ActionBrain {
       };
     }
     
+    // Symphony DEX Swap Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /swap.*\d+.*sei.*for.*usdc/,
+      /swap.*\d+.*usdc.*for.*sei/,
+      /exchange.*\d+.*tokens?/,
+      /trade.*\d+.*sei/,
+      /symphony.*swap/,
+      /dex.*swap/
+    ])) {
+      return {
+        intent: IntentType.SYMPHONY_SWAP,
+        confidence: 0.9,
+        entities: { ...entities, ...this.extractSwapEntities(normalizedMessage) },
+        rawMessage: message
+      };
+    }
+    
+    // Staking Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /stake.*\d+.*sei/,
+      /stake.*tokens?/,
+      /silo.*stake/,
+      /earn.*yield/,
+      /deposit.*stake/
+    ])) {
+      return {
+        intent: IntentType.STAKE_TOKENS,
+        confidence: 0.85,
+        entities,
+        rawMessage: message
+      };
+    }
+    
+    // Unstaking Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /unstake.*\d+.*sei/,
+      /withdraw.*stake/,
+      /unstake.*tokens?/,
+      /remove.*stake/
+    ])) {
+      return {
+        intent: IntentType.UNSTAKE_TOKENS,
+        confidence: 0.85,
+        entities,
+        rawMessage: message
+      };
+    }
+    
+    // Lending Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /lend.*\d+.*tokens?/,
+      /supply.*\d+.*tokens?/,
+      /takara.*lend/,
+      /provide.*liquidity.*lending/
+    ])) {
+      return {
+        intent: IntentType.LEND_TOKENS,
+        confidence: 0.85,
+        entities,
+        rawMessage: message
+      };
+    }
+    
+    // Borrowing Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /borrow.*\d+.*tokens?/,
+      /takara.*borrow/,
+      /loan.*\d+.*tokens?/,
+      /get.*loan/
+    ])) {
+      return {
+        intent: IntentType.BORROW_TOKENS,
+        confidence: 0.85,
+        entities,
+        rawMessage: message
+      };
+    }
+    
+    // Trading Position Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /open.*long.*position/,
+      /open.*short.*position/,
+      /citrex.*trade/,
+      /perpetual.*trade/,
+      /leverage.*trade/
+    ])) {
+      return {
+        intent: IntentType.OPEN_POSITION,
+        confidence: 0.85,
+        entities: { ...entities, ...this.extractTradingEntities(normalizedMessage) },
+        rawMessage: message
+      };
+    }
+    
+    // Position Management Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /show.*positions?/,
+      /my.*positions?/,
+      /open.*positions?/,
+      /trading.*positions?/
+    ])) {
+      return {
+        intent: IntentType.GET_POSITIONS,
+        confidence: 0.8,
+        entities,
+        rawMessage: message
+      };
+    }
+    
+    // Wallet Info Intent
+    if (this.matchesPattern(normalizedMessage, [
+      /wallet.*info/,
+      /my.*wallet/,
+      /account.*info/,
+      /wallet.*details/,
+      /show.*wallet/
+    ])) {
+      return {
+        intent: IntentType.WALLET_INFO,
+        confidence: 0.8,
+        entities,
+        rawMessage: message
+      };
+    }
+    
     // Conversational Intent
     if (this.matchesPattern(normalizedMessage, [
       /how.*are.*you/,
@@ -208,6 +352,37 @@ export class ActionBrain {
           
         case IntentType.CONVERSATION:
           return await this.executeConversation(intentResult);
+          
+        // New CambrianAgents capabilities
+        case IntentType.SYMPHONY_SWAP:
+          return await this.executeSymphonySwap(intentResult);
+          
+        case IntentType.STAKE_TOKENS:
+          return await this.executeStakeTokens(intentResult);
+          
+        case IntentType.UNSTAKE_TOKENS:
+          return await this.executeUnstakeTokens(intentResult);
+          
+        case IntentType.LEND_TOKENS:
+          return await this.executeLendTokens(intentResult);
+          
+        case IntentType.BORROW_TOKENS:
+          return await this.executeBorrowTokens(intentResult);
+          
+        case IntentType.REPAY_LOAN:
+          return await this.executeRepayLoan(intentResult);
+          
+        case IntentType.OPEN_POSITION:
+          return await this.executeOpenPosition(intentResult);
+          
+        case IntentType.CLOSE_POSITION:
+          return await this.executeClosePosition(intentResult);
+          
+        case IntentType.GET_POSITIONS:
+          return await this.executeGetPositions(intentResult);
+          
+        case IntentType.WALLET_INFO:
+          return await this.executeWalletInfo(intentResult);
           
         default:
           return this.executeUnknown(intentResult);
@@ -498,6 +673,48 @@ export class ActionBrain {
     };
   }
   
+  // New Entity Extraction Methods for Cambrian Capabilities
+  private extractSwapEntities(message: string): Partial<ExtractedEntities> {
+    const entities: Partial<ExtractedEntities> = {};
+    
+    // Extract token pairs for swapping
+    if (message.includes('sei') && message.includes('usdc')) {
+      if (message.includes('sei for usdc') || message.includes('sei to usdc')) {
+        entities.tokenIn = '0x0'; // Native SEI
+        entities.tokenOut = '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'; // USDC on Sei (example)
+      } else if (message.includes('usdc for sei') || message.includes('usdc to sei')) {
+        entities.tokenIn = '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'; // USDC
+        entities.tokenOut = '0x0'; // Native SEI
+      }
+    }
+    
+    return entities;
+  }
+  
+  private extractTradingEntities(message: string): Partial<ExtractedEntities> {
+    const entities: Partial<ExtractedEntities> = {};
+    
+    // Extract trading side
+    if (message.includes('long')) {
+      entities.side = 'long';
+    } else if (message.includes('short')) {
+      entities.side = 'short';
+    }
+    
+    // Extract market
+    if (message.includes('sei/usdc') || message.includes('sei-usdc')) {
+      entities.market = 'SEI/USDC';
+    }
+    
+    // Extract leverage
+    const leverageMatch = message.match(/(\d+)x?\s*leverage/i);
+    if (leverageMatch) {
+      entities.leverage = parseInt(leverageMatch[1]);
+    }
+    
+    return entities;
+  }
+
   // Helper Methods
   private extractEntities(message: string): ExtractedEntities {
     const entities: ExtractedEntities = {};
@@ -553,7 +770,303 @@ export class ActionBrain {
     return actionKeywords.some(keyword => message.includes(keyword));
   }
   
-  // Additional action methods would be implemented here for burn and liquidity
+  // NEW CAMBRIAN AGENTS ACTION METHODS
+  
+  // Symphony DEX Swap Action
+  private async executeSymphonySwap(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { amount, tokenIn, tokenOut } = intent.entities;
+      
+      if (!amount || !tokenIn || !tokenOut) {
+        return {
+          success: false,
+          response: `❌ **Missing swap parameters**\n\nPlease specify: amount, input token, and output token.\n\n**Example**: "Swap 10 SEI for USDC"`
+        };
+      }
+      
+      const result = await cambrianSeiAgent.swapTokens({
+        tokenIn: tokenIn as any,
+        tokenOut: tokenOut as any,
+        amount: amount.toString()
+      });
+      
+      return {
+        success: true,
+        response: `🔄 **Symphony DEX Swap**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Swap Failed**: ${error.message}\n\n**💡 Try**: Checking your balance and token addresses`
+      };
+    }
+  }
+  
+  // Stake Tokens Action
+  private async executeStakeTokens(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { amount } = intent.entities;
+      
+      if (!amount) {
+        return {
+          success: false,
+          response: `❌ **Missing staking amount**\n\n**Example**: "Stake 50 SEI"`
+        };
+      }
+      
+      const result = await cambrianSeiAgent.stakeTokens({
+        amount: amount.toString()
+      });
+      
+      return {
+        success: true,
+        response: `🥩 **Silo Staking**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Staking Failed**: ${error.message}`
+      };
+    }
+  }
+  
+  // Unstake Tokens Action
+  private async executeUnstakeTokens(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { amount } = intent.entities;
+      
+      if (!amount) {
+        return {
+          success: false,
+          response: `❌ **Missing unstaking amount**\n\n**Example**: "Unstake 25 SEI"`
+        };
+      }
+      
+      const result = await cambrianSeiAgent.unstakeTokens({
+        amount: amount.toString()
+      });
+      
+      return {
+        success: true,
+        response: `📤 **Silo Unstaking**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Unstaking Failed**: ${error.message}`
+      };
+    }
+  }
+  
+  // Lend Tokens Action
+  private async executeLendTokens(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { amount } = intent.entities;
+      
+      if (!amount) {
+        return {
+          success: false,
+          response: `❌ **Missing lending amount**\n\n**Example**: "Lend 100 USDC"`
+        };
+      }
+      
+      const result = await cambrianSeiAgent.lendTokens({
+        amount: amount.toString(),
+        token: 'USDC'
+      });
+      
+      return {
+        success: true,
+        response: `🏦 **Takara Lending**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Lending Failed**: ${error.message}`
+      };
+    }
+  }
+  
+  // Borrow Tokens Action
+  private async executeBorrowTokens(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { amount } = intent.entities;
+      
+      if (!amount) {
+        return {
+          success: false,
+          response: `❌ **Missing borrowing amount**\n\n**Example**: "Borrow 50 USDC"`
+        };
+      }
+      
+      const result = await cambrianSeiAgent.borrowTokens({
+        amount: amount.toString(),
+        token: 'USDC'
+      });
+      
+      return {
+        success: true,
+        response: `💰 **Takara Borrowing**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Borrowing Failed**: ${error.message}`
+      };
+    }
+  }
+  
+  // Repay Loan Action
+  private async executeRepayLoan(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { amount } = intent.entities;
+      
+      if (!amount) {
+        return {
+          success: false,
+          response: `❌ **Missing repayment amount**\n\n**Example**: "Repay 30 USDC loan"`
+        };
+      }
+      
+      const result = await cambrianSeiAgent.repayLoan({
+        amount: amount.toString(),
+        token: 'USDC'
+      });
+      
+      return {
+        success: true,
+        response: `💸 **Takara Loan Repayment**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Repayment Failed**: ${error.message}`
+      };
+    }
+  }
+  
+  // Open Trading Position Action
+  private async executeOpenPosition(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { amount, side, market, leverage } = intent.entities;
+      
+      if (!amount || !side) {
+        return {
+          success: false,
+          response: `❌ **Missing trading parameters**\n\n**Example**: "Open long position on SEI/USDC with 1000 size"`
+        };
+      }
+      
+      const result = await cambrianSeiAgent.openPosition({
+        market: market || 'SEI/USDC',
+        side: side,
+        size: amount.toString(),
+        leverage: leverage || 1
+      });
+      
+      return {
+        success: true,
+        response: `📈 **Citrex Perpetual Trading**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Position Opening Failed**: ${error.message}`
+      };
+    }
+  }
+  
+  // Close Trading Position Action
+  private async executeClosePosition(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const { positionId } = intent.entities;
+      
+      if (!positionId) {
+        return {
+          success: false,
+          response: `❌ **Missing position ID**\n\n**Example**: "Close position 1"`
+        };
+      }
+      
+      const result = await cambrianSeiAgent.closePosition(positionId);
+      
+      return {
+        success: true,
+        response: `📉 **Citrex Position Closed**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Position Closing Failed**: ${error.message}`
+      };
+    }
+  }
+  
+  // Get Trading Positions Action
+  private async executeGetPositions(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const positions = await cambrianSeiAgent.getPositions();
+      
+      let response = `📊 **Your Trading Positions**\n\n`;
+      
+      if (positions.length === 0) {
+        response += `No open positions found.\n\n**💡 Try**: "Open long position on SEI/USDC"`;
+      } else {
+        positions.forEach((position, index) => {
+          response += `**${index + 1}. ${position.market} ${position.side.toUpperCase()}**\n`;
+          response += `   Size: ${position.size}\n`;
+          response += `   Entry: $${position.entryPrice}\n`;
+          response += `   Current: $${position.currentPrice}\n`;
+          response += `   P&L: ${position.pnl}\n\n`;
+        });
+      }
+      
+      response += `**⚡ Powered by CambrianAgents Sei Kit**`;
+      
+      return {
+        success: true,
+        response,
+        data: { positions }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Failed to get positions**: ${error.message}`
+      };
+    }
+  }
+  
+  // Wallet Info Action
+  private async executeWalletInfo(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      const walletInfo = await cambrianSeiAgent.getWalletInfo();
+      
+      let response = `💼 **Wallet Information**\n\n`;
+      response += `**Address**: \`${walletInfo.address}\`\n`;
+      response += `**SEI Balance**: ${walletInfo.seiBalance} SEI\n`;
+      response += `**Network**: ${walletInfo.network}\n\n`;
+      
+      response += `**🚀 Capabilities:**\n`;
+      walletInfo.capabilities.forEach((capability: string, index: number) => {
+        response += `${index + 1}. ${capability}\n`;
+      });
+      
+      response += `\n**⚡ Powered by CambrianAgents Sei Kit**`;
+      
+      return {
+        success: true,
+        response,
+        data: walletInfo
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Failed to get wallet info**: ${error.message}`
+      };
+    }
+  }
+  
+  // Token Burn Action (Enhanced)
   private async executeTokenBurn(intent: IntentResult): Promise<ActionResponse> {
     // Implementation would go here - similar to current burn logic but cleaner
     return {
@@ -562,6 +1075,7 @@ export class ActionBrain {
     };
   }
   
+  // Liquidity Addition Action (Enhanced)
   private async executeLiquidityAdd(intent: IntentResult): Promise<ActionResponse> {
     // Implementation would go here - similar to current liquidity logic but cleaner  
     return {
