@@ -423,12 +423,31 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         tokenImage: tokenImage
       });
       
+      // Add to DevPlus tracking
+      const trackingData = {
+        address: tokenAddress,
+        name: formData.name,
+        symbol: formData.symbol,
+        totalSupply: formData.totalSupply,
+        decimals: 18,
+        creator: address,
+        createdAt: new Date(),
+        verified: false,
+        securityScore: 75, // Good initial score for newly created tokens
+        holders: 1
+      };
+      
+      // Store in localStorage for DevPlus to access
+      const existingTokens = JSON.parse(localStorage.getItem('devplus_tokens') || '[]');
+      existingTokens.unshift(trackingData);
+      localStorage.setItem('devplus_tokens', JSON.stringify(existingTokens));
+      
       // Show the spotlight after a brief delay for effect
       setTimeout(() => {
         setShowTokenSpotlight(true);
       }, 1000);
       
-      console.log('Token created and listed successfully:', tokenAddress);
+      console.log('✅ Token created and added to DevPlus tracking:', tokenAddress);
       
     } catch (error: any) {
       console.error('Token creation failed:', error);
