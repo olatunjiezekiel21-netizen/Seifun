@@ -317,67 +317,59 @@ const Seilor = () => {
       const contractAddressMatch = userMessage.match(/0x[a-fA-F0-9]{40}/);
       if (contractAddressMatch && !userMessage.toLowerCase().includes('add liquidity') && !userMessage.toLowerCase().includes('burn')) {
         const tokenAddress = contractAddressMatch[0];
-        response = `🔍 **Scanning Token Contract...**\n\n**Address:** \`${tokenAddress}\`\n\n⏳ **Analyzing with real blockchain data...** This may take a moment!`;
         
-        // Execute real token analysis in background
-        setTimeout(async () => {
-          try {
-            // Use both services for comprehensive analysis
-            const [tokenStats, tokenInfo] = await Promise.all([
-              privateKeyWallet.getTokenBalance(tokenAddress).catch(() => null),
-              webBlockchainService.analyzeToken(tokenAddress).catch(() => null)
-            ]);
-            
-            let analysisMessage = `🔍 **REAL Token Analysis Complete!**\n\n`;
-            
-            if (tokenInfo) {
-              analysisMessage += `**📋 Token Information:**\n`;
-              analysisMessage += `• **Name**: ${tokenInfo.name}\n`;
-              analysisMessage += `• **Symbol**: ${tokenInfo.symbol}\n`;
-              analysisMessage += `• **Decimals**: ${tokenInfo.decimals}\n`;
-              analysisMessage += `• **Total Supply**: ${tokenInfo.totalSupply !== '0' ? ethers.formatEther(tokenInfo.totalSupply) : 'N/A'}\n`;
-              analysisMessage += `• **Contract**: ${tokenInfo.isContract ? '✅ Verified' : '❌ Unverified'}\n\n`;
-              
-              analysisMessage += `**🛡️ Security Analysis:**\n`;
-              analysisMessage += `• **Risk Score**: ${tokenInfo.securityScore}/100\n`;
-              analysisMessage += `• **Risk Level**: ${tokenInfo.riskLevel}\n`;
-              
-              const riskEmoji = tokenInfo.riskLevel === 'LOW' ? '✅' : tokenInfo.riskLevel === 'MEDIUM' ? '⚠️' : '🚨';
-              const riskMessage = tokenInfo.riskLevel === 'LOW' ? 'Safe to interact with' :
-                                tokenInfo.riskLevel === 'MEDIUM' ? 'Exercise caution' : 'High risk - avoid trading';
-              analysisMessage += `• **Recommendation**: ${riskEmoji} ${riskMessage}\n\n`;
-            }
-            
-            if (tokenStats) {
-              const myBalance = await privateKeyWallet.getTokenBalance(tokenAddress);
-              analysisMessage += `**💰 My Wallet Balance:**\n`;
-              analysisMessage += `• **${myBalance.name} (${myBalance.symbol})**: ${myBalance.balance}\n\n`;
-            }
-            
-            analysisMessage += `**🚀 Available Actions:**\n`;
-            analysisMessage += `• Say "add liquidity to this token" for liquidity provision\n`;
-            analysisMessage += `• Say "burn [amount] tokens" to burn some supply\n`;
-            analysisMessage += `• Ask me anything else about this token!\n\n`;
-            analysisMessage += `**✨ This is REAL blockchain data from Sei network!**`;
-            
-            const followUpMessage = {
-              id: Date.now(),
-              type: 'assistant' as const,
-              message: analysisMessage,
-              timestamp: new Date()
-            };
-            setChatMessages(prev => [...prev, followUpMessage]);
-            
-          } catch (error) {
-            const errorMessage = {
-              id: Date.now(),
-              type: 'assistant' as const,
-              message: `❌ **Token Analysis Failed**\n\n**Error**: ${error.message}\n\n**Possible reasons:**\n• Invalid contract address\n• Token doesn't exist on Sei network\n• Network connectivity issue\n• Contract is not an ERC20 token\n\n**Try:**\n• Double-check the address\n• Use a different token address\n• Try again in a moment`,
-              timestamp: new Date()
-            };
-            setChatMessages(prev => [...prev, errorMessage]);
+        // Execute real token analysis immediately (no mock "calculating" messages)
+        try {
+          const [tokenBalance, isMyToken] = await Promise.all([
+            privateKeyWallet.getTokenBalance(tokenAddress).catch(() => null),
+            privateKeyWallet.isMyToken(tokenAddress).catch(() => false)
+          ]);
+          
+          let analysisMessage = `🔍 **Token Analysis Results**\n\n`;
+          analysisMessage += `**📋 Contract:** \`${tokenAddress}\`\n\n`;
+          
+          if (tokenBalance) {
+            analysisMessage += `**Token Information:**\n`;
+            analysisMessage += `• **Name**: ${tokenBalance.name}\n`;
+            analysisMessage += `• **Symbol**: ${tokenBalance.symbol}\n`;
+            analysisMessage += `• **My Balance**: ${tokenBalance.balance} ${tokenBalance.symbol}\n\n`;
           }
-        }, 1500);
+          
+          // Ownership status
+          if (isMyToken) {
+            analysisMessage += `🏆 **OWNERSHIP STATUS**: ✅ **You created this token!**\n\n`;
+            analysisMessage += `**🚀 Available Actions (Owner Only):**\n`;
+            analysisMessage += `• **Burn Tokens**: "Burn [amount] tokens"\n`;
+            analysisMessage += `• **Add Liquidity**: "Add liquidity with [amount] tokens and [amount] SEI"\n`;
+            analysisMessage += `• **Transfer**: Send tokens to any address\n`;
+            analysisMessage += `• **Check Supply**: View current total supply\n\n`;
+          } else {
+            analysisMessage += `⚠️ **OWNERSHIP STATUS**: ❌ **Not your token**\n\n`;
+            analysisMessage += `**🔍 Available Actions (View Only):**\n`;
+            analysisMessage += `• **View Balance**: See your current holdings\n`;
+            analysisMessage += `• **Check Details**: Token info and statistics\n`;
+            analysisMessage += `• **Security Scan**: Risk assessment\n\n`;
+            analysisMessage += `**💡 Note**: You can only burn/manage tokens you created!\n\n`;
+          }
+          
+          // Show my tokens if they have any
+          const myTokens = privateKeyWallet.getMyTokens();
+          if (myTokens.length > 0) {
+            analysisMessage += `**🏆 Your Created Tokens:**\n`;
+            myTokens.forEach((token, index) => {
+              analysisMessage += `${index + 1}. **${token.name} (${token.symbol})**\n`;
+              analysisMessage += `   Address: \`${token.address}\`\n`;
+            });
+            analysisMessage += `\n**💡 Tip**: You can manage any of these tokens!\n\n`;
+          }
+          
+          analysisMessage += `**✅ This is REAL blockchain data from Sei network!**`;
+          
+          response = analysisMessage;
+          
+        } catch (error) {
+          response = `❌ **Token Analysis Failed**\n\n**Error**: ${error.message}\n\n**This could be because:**\n• Invalid contract address\n• Token doesn't exist on Sei network\n• Network connectivity issue\n• Contract is not an ERC20 token\n\n**Try pasting a valid token address!**`;
+        }
       }
       
       // Natural conversation starters
@@ -401,59 +393,78 @@ const Seilor = () => {
            const tokenAmount = tokenAmountMatch[1];
            const seiAmount = seiAmountMatch[1];
            
-           response = `💧 **Executing Liquidity Addition!**\n\n**Amounts:**\n• ${tokenAmount} tokens\n• ${seiAmount} SEI\n\n⏳ **Processing transaction...** Using my private key wallet for seamless execution!`;
-           
-           // Execute liquidity addition in background
-           setTimeout(async () => {
-             try {
-               // Get the last mentioned token address from chat history
-               let lastTokenAddress = null;
-               for (let i = chatMessages.length - 1; i >= 0; i--) {
-                 const addressMatch = chatMessages[i].message.match(/0x[a-fA-F0-9]{40}/);
-                 if (addressMatch) {
-                   lastTokenAddress = addressMatch[0];
-                   break;
+           try {
+             // Get the last mentioned token address from chat history
+             let lastTokenAddress = null;
+             for (let i = chatMessages.length - 1; i >= 0; i--) {
+               const addressMatch = chatMessages[i].message.match(/0x[a-fA-F0-9]{40}/);
+               if (addressMatch) {
+                 lastTokenAddress = addressMatch[0];
+                 break;
+               }
+             }
+             
+             if (!lastTokenAddress) {
+               response = `❌ **No Token Address Found**\n\n**I need to know which token to add liquidity to!**\n\n**Options:**\n• First scan a token address\n• Or say "Add liquidity to 0x[address] with ${tokenAmount} tokens and ${seiAmount} SEI"\n\n**💡 I can only add liquidity to tokens you own!**`;
+             } else {
+               // Check ownership immediately
+               const [isMyToken, tokenBalance] = await Promise.all([
+                 privateKeyWallet.isMyToken(lastTokenAddress),
+                 privateKeyWallet.getTokenBalance(lastTokenAddress).catch(() => null)
+               ]);
+               
+               if (!isMyToken) {
+                 response = `❌ **Cannot Add Liquidity**\n\n**Token:** \`${lastTokenAddress}\`\n**Reason:** 🚫 **You don't own this token!**\n\n**🔒 Security Rule**: You can only add liquidity to tokens you created.\n\n**💡 Your tokens:**`;
+                 const myTokens = privateKeyWallet.getMyTokens();
+                 if (myTokens.length > 0) {
+                   myTokens.forEach((token, index) => {
+                     response += `\n${index + 1}. **${token.name} (${token.symbol})**`;
+                     response += `\n   Address: \`${token.address}\``;
+                   });
+                   response += `\n\n**Try**: Scan one of your token addresses first, then add liquidity!`;
+                 } else {
+                   response += `\n\n❌ **You haven't created any tokens yet!**\n\n**💡 Create a token first**: Say "Create a new token called MyToken"`;
+                 }
+               } else if (!tokenBalance || parseFloat(tokenBalance.balance) < parseFloat(tokenAmount)) {
+                 response = `❌ **Insufficient Token Balance**\n\n**Token:** ${tokenBalance?.name || 'Unknown'} (${tokenBalance?.symbol || 'Unknown'})\n**Your Balance:** ${tokenBalance?.balance || '0'}\n**Requested Amount:** ${tokenAmount}\n\n**💡 You need more tokens to add this much liquidity!**`;
+               } else if (!walletBalance || parseFloat(walletBalance.sei) < parseFloat(seiAmount)) {
+                 response = `❌ **Insufficient SEI Balance**\n\n**Your SEI Balance:** ${walletBalance?.sei || '0'} SEI\n**Requested Amount:** ${seiAmount} SEI\n\n**💡 You need more SEI to add this much liquidity!**`;
+               } else {
+                 // Execute liquidity addition immediately
+                 const result = await privateKeyWallet.addLiquidity(lastTokenAddress, tokenAmount, seiAmount);
+                 
+                 if (result.success) {
+                   response = `💧 **Liquidity Added Successfully!**\n\n✅ **Transaction Complete**\n• **Token**: ${tokenBalance.name} (${tokenBalance.symbol})\n• **Token Amount**: ${result.tokenAmount}\n• **SEI Amount**: ${result.seiAmount} SEI\n• **Transaction Hash**: \`${result.txHash}\`\n\n**Your liquidity has been added to the pool!** 🎉\n\nYou can now earn fees from trades on this pair! 💰`;
+                   
+                   // Refresh wallet balance
+                   await loadWalletBalance();
+                 } else {
+                   response = `❌ **Liquidity Addition Failed**\n\n${result.error}\n\nThis could be because:\n• Gas estimation failed\n• Network congestion\n• Contract execution error\n\n**Try again or check the amounts!**`;
                  }
                }
-               
-               if (!lastTokenAddress) {
-                 throw new Error('No token address found in recent conversation. Please specify the token address.');
-               }
-               
-               const result = await privateKeyWallet.addLiquidity(lastTokenAddress, tokenAmount, seiAmount);
-               
-               if (result.success) {
-                 const successMessage = {
-                   id: Date.now(),
-                   type: 'assistant' as const,
-                   message: `💧 **Liquidity Added Successfully!**\n\n✅ **Transaction Complete**\n• Token Amount: ${result.tokenAmount}\n• SEI Amount: ${result.seiAmount} SEI\n• Transaction Hash: \`${result.txHash}\`\n\n**Your liquidity has been added to the pool!** 🎉\n\nYou can now earn fees from trades on this pair! 💰`,
-                   timestamp: new Date()
-                 };
-                 setChatMessages(prev => [...prev, successMessage]);
-                 
-                 // Refresh wallet balance
-                 await loadWalletBalance();
-               } else {
-                 const errorMessage = {
-                   id: Date.now(),
-                   type: 'assistant' as const,
-                   message: `❌ **Liquidity Addition Failed**\n\n${result.error}\n\nThis could be because:\n• Insufficient token balance\n• Insufficient SEI balance\n• Gas estimation failed\n• Token doesn't support liquidity provision\n\nWant me to check your balances first? 💰`,
-                   timestamp: new Date()
-                 };
-                 setChatMessages(prev => [...prev, errorMessage]);
-               }
-             } catch (error) {
-               const errorMessage = {
-                 id: Date.now(),
-                 type: 'assistant' as const,
-                 message: `❌ **Liquidity Transaction Failed**\n\n${error.message}\n\nPlease specify the token address in your message, like:\n"Add 100 tokens and 1 SEI to 0x123..." 💡`,
-                 timestamp: new Date()
-               };
-               setChatMessages(prev => [...prev, errorMessage]);
              }
-           }, 1000);
+           } catch (error) {
+             response = `❌ **Liquidity Transaction Failed**\n\n${error.message}\n\n**Make sure you're using a token address you created!**`;
+           }
          } else {
-           response = `💧 **I need specific amounts!**\n\nPlease tell me exactly how much, like:\n• "Add 100 tokens and 1 SEI"\n• "Provide 50 tokens and 2 SEI"\n\n**My current balance:** ${walletBalance ? `${walletBalance.sei} SEI ($${walletBalance.usd.toFixed(2)})` : 'Loading...'} 🚀`;
+           const myTokens = privateKeyWallet.getMyTokens();
+           response = `💧 **Liquidity Addition (Owner Only)**\n\n`;
+           
+           if (myTokens.length > 0) {
+             response += `**🏆 Your Tokens (Available for Liquidity):**\n`;
+             myTokens.forEach((token, index) => {
+               response += `${index + 1}. **${token.name} (${token.symbol})**\n`;
+               response += `   Address: \`${token.address}\`\n`;
+             });
+             response += `\n**Usage**: "Add [amount] tokens and [amount] SEI"\n`;
+             response += `**Example**: "Add 100 tokens and 1 SEI"\n\n`;
+             response += `**💡 First scan a token, then specify amounts!**\n\n`;
+           } else {
+             response += `❌ **No tokens for liquidity!**\n\n**You haven't created any tokens yet.**\n\n**💡 Create a token first**: Say "Create a new token called MyToken"\n\n`;
+           }
+           
+           response += `**Current Balance:** ${walletBalance ? `${walletBalance.sei} SEI ($${walletBalance.usd.toFixed(2)})` : 'Loading...'}\n`;
+           response += `⚠️ **Remember**: You can only add liquidity to tokens you created!`;
          }
        }
        
@@ -491,57 +502,96 @@ const Seilor = () => {
           response = `💧 **I'd love to help you add liquidity!**\n\nI just need the token contract address. You can:\n• Paste the token address directly\n• Say "add liquidity to [token address]"\n• Or ask me to scan a token first\n\n**My wallet is ready:** \`${privateKeyWallet.getAddress().slice(0, 8)}...\`\nBalance: ${walletBalance ? `${walletBalance.sei} SEI ($${walletBalance.usd.toFixed(2)})` : 'Loading...'} 🚀`;
         }
       }
-      else if (userMessage.toLowerCase().includes('burn') && (userMessage.toLowerCase().includes('token') || userMessage.match(/\d+/))) {
-        const tokenAddressMatch = userMessage.match(/0x[a-fA-F0-9]{40}/);
-        const amountMatch = userMessage.match(/\d+(\.\d+)?/);
+             else if (userMessage.toLowerCase().includes('burn') && (userMessage.toLowerCase().includes('token') || userMessage.match(/\d+/))) {
+         const tokenAddressMatch = userMessage.match(/0x[a-fA-F0-9]{40}/);
+         const amountMatch = userMessage.match(/\d+(\.\d+)?/);
+         
+         if (tokenAddressMatch && amountMatch) {
+           const tokenAddress = tokenAddressMatch[0];
+           const amount = amountMatch[0];
+           
+           // Check ownership immediately
+           try {
+             const [isMyToken, tokenBalance] = await Promise.all([
+               privateKeyWallet.isMyToken(tokenAddress),
+               privateKeyWallet.getTokenBalance(tokenAddress).catch(() => null)
+             ]);
+             
+             if (!isMyToken) {
+               response = `❌ **Cannot Burn Token**\n\n**Token:** \`${tokenAddress}\`\n**Reason:** 🚫 **You don't own this token!**\n\n**🔒 Security Rule**: You can only burn tokens that you created.\n\n**💡 Your tokens:**`;
+               const myTokens = privateKeyWallet.getMyTokens();
+               if (myTokens.length > 0) {
+                 myTokens.forEach((token, index) => {
+                   response += `\n${index + 1}. **${token.name} (${token.symbol})**`;
+                   response += `\n   Address: \`${token.address}\``;
+                 });
+                 response += `\n\n**Try**: "Burn ${amount} tokens at [your token address]"`;
+               } else {
+                 response += `\n\n❌ **You haven't created any tokens yet!**\n\n**💡 Create a token first**: Say "Create a new token called MyToken"`;
+               }
+             } else if (!tokenBalance || parseFloat(tokenBalance.balance) < parseFloat(amount)) {
+               response = `❌ **Insufficient Token Balance**\n\n**Token:** ${tokenBalance?.name || 'Unknown'} (${tokenBalance?.symbol || 'Unknown'})\n**Your Balance:** ${tokenBalance?.balance || '0'}\n**Requested Burn:** ${amount}\n\n**💡 You can only burn tokens you actually have!**`;
+             } else {
+               // Execute burn immediately
+               const result = await privateKeyWallet.burnTokens(tokenAddress, amount);
+               
+               if (result.success) {
+                 response = `🔥 **Tokens Burned Successfully!**\n\n✅ **Transaction Complete**\n• **Token**: ${tokenBalance.name} (${tokenBalance.symbol})\n• **Amount Burned**: ${result.amountBurned} tokens\n• **New Total Supply**: ${result.newTotalSupply}\n• **Transaction Hash**: \`${result.txHash}\`\n\n**The tokens have been permanently removed from circulation!** 🎉`;
+                 
+                 // Refresh wallet balance
+                 await loadWalletBalance();
+               } else {
+                 response = `❌ **Burn Failed**\n\n${result.error}\n\nThis could be because:\n• Gas estimation failed\n• Network congestion\n• Contract execution error\n\n**Try again or check the token contract!**`;
+               }
+             }
+           } catch (error) {
+             response = `❌ **Burn Transaction Failed**\n\n${error.message}\n\n**Make sure you're using a valid token address that you created!**`;
+           }
+         } else {
+           const myTokens = privateKeyWallet.getMyTokens();
+           response = `🔥 **Token Burning (Owner Only)**\n\n`;
+           
+           if (myTokens.length > 0) {
+             response += `**🏆 Your Tokens (Available for Burning):**\n`;
+             myTokens.forEach((token, index) => {
+               response += `${index + 1}. **${token.name} (${token.symbol})**\n`;
+               response += `   Address: \`${token.address}\`\n`;
+             });
+             response += `\n**Usage**: "Burn [amount] tokens at [your token address]"\n`;
+             response += `**Example**: "Burn 1000 tokens at ${myTokens[0].address}"\n\n`;
+           } else {
+             response += `❌ **No tokens to burn!**\n\n**You haven't created any tokens yet.**\n\n**💡 Create a token first**: Say "Create a new token called MyToken"\n\n`;
+           }
+           
+           response += `⚠️ **Remember**: You can only burn tokens you created!`;
+         }
+               }
         
-        if (tokenAddressMatch && amountMatch) {
-          const tokenAddress = tokenAddressMatch[0];
-          const amount = amountMatch[0];
+        // Token creation intent
+        else if (userMessage.toLowerCase().includes('create') && (userMessage.toLowerCase().includes('token') || userMessage.toLowerCase().includes('coin'))) {
+          const tokenNameMatch = userMessage.match(/create.*?(?:token|coin).*?called\s+([a-zA-Z0-9\s]+)/i) || 
+                                userMessage.match(/create\s+([a-zA-Z0-9\s]+)\s+token/i);
           
-          response = `🔥 **Token Burn Request Received!**\n\n**Token:** \`${tokenAddress}\`\n**Amount:** ${amount} tokens\n\n⚠️ **This is permanent and irreversible!**\n\n⏳ **Processing...** I'll execute this burn transaction immediately!`;
-          
-          // Execute burn in background
-          setTimeout(async () => {
-            try {
-              const result = await privateKeyWallet.burnTokens(tokenAddress, amount);
-              
-              if (result.success) {
-                const successMessage = {
-                  id: Date.now(),
-                  type: 'assistant' as const,
-                  message: `🔥 **Tokens Burned Successfully!**\n\n✅ **Transaction Complete**\n• Amount Burned: ${result.amountBurned} tokens\n• New Total Supply: ${result.newTotalSupply}\n• Transaction Hash: \`${result.txHash}\`\n\n**The tokens have been permanently removed from circulation!** 🎉`,
-                  timestamp: new Date()
-                };
-                setChatMessages(prev => [...prev, successMessage]);
-                
-                // Refresh wallet balance
-                await loadWalletBalance();
-              } else {
-                const errorMessage = {
-                  id: Date.now(),
-                  type: 'assistant' as const,
-                  message: `❌ **Burn Failed**\n\n${result.error}\n\nThis could be because:\n• The token doesn't have a burn function\n• Insufficient balance\n• Gas estimation failed\n\nWant me to check the token details first? 🔍`,
-                  timestamp: new Date()
-                };
-                setChatMessages(prev => [...prev, errorMessage]);
-              }
-            } catch (error) {
-              const errorMessage = {
-                id: Date.now(),
-                type: 'assistant' as const,
-                message: `❌ **Burn Transaction Failed**\n\n${error.message}\n\nLet me know if you'd like me to analyze the token first or try a different approach! 🛠️`,
-                timestamp: new Date()
-              };
-              setChatMessages(prev => [...prev, errorMessage]);
-            }
-          }, 1000);
-        } else {
-          response = `🔥 **I can burn tokens for you!**\n\nJust tell me:\n• **Token address** (0x...)\n• **Amount** to burn\n\n**Example:** "Burn 1000 tokens at 0x123..."\n\n⚠️ **Remember:** Token burning is permanent and irreversible!\n\n**My wallet:** \`${privateKeyWallet.getAddress().slice(0, 8)}...\` is ready to execute! 🚀`;
+          if (tokenNameMatch) {
+            const tokenName = tokenNameMatch[1].trim();
+            response = `🚀 **Creating Token: ${tokenName}**\n\n**Redirecting to SeiList for professional token creation...**\n\n**What happens next:**\n• Professional token creation interface\n• Custom logo upload\n• Advanced settings\n• Real blockchain deployment\n• Automatic Dev++ tracking\n\n**✨ Your token will be created with your private key wallet automatically!**`;
+            
+            // Redirect to SeiList with pre-filled data
+            setTimeout(() => {
+              const params = new URLSearchParams({
+                name: tokenName,
+                symbol: tokenName.substring(0, 6).toUpperCase(),
+                totalSupply: '1000000',
+                aiCreated: 'true'
+              });
+              window.location.href = `/app/seilist?${params.toString()}`;
+            }, 2000);
+          } else {
+            response = `🚀 **Token Creation Service**\n\n**Usage Examples:**\n• "Create a new token called SuperCoin"\n• "Create MyToken"\n• "Create a token called AwesomeCoin"\n\n**What you get:**\n• Professional SeiList interface\n• Custom logo upload\n• Advanced token settings\n• Real blockchain deployment\n• Automatic ownership tracking\n• Dev++ integration\n\n**💡 Just tell me what to call your token!**`;
+          }
         }
-      }
-      
-      // Check for AI-powered todo management commands
+        
+        // Check for AI-powered todo management commands
       if (userMessage.toLowerCase().includes('add') && (userMessage.toLowerCase().includes('todo') || userMessage.toLowerCase().includes('task'))) {
         // Extract the task from the message
         const taskMatch = userMessage.match(/add\s+([^"]*?)\s+(?:to\s+(?:my\s+)?(?:todo|task)|task)/i) ||

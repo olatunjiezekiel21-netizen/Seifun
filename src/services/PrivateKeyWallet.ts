@@ -32,6 +32,53 @@ export class PrivateKeyWallet {
     }
   }
 
+  // Get tokens created by this wallet (from Dev++ storage)
+  getMyTokens(): Array<{ address: string; name: string; symbol: string; supply: string; creator: string }> {
+    try {
+      const savedTokens = localStorage.getItem('dev++_tokens');
+      if (savedTokens) {
+        const tokens = JSON.parse(savedTokens);
+        // Filter tokens created by this wallet address
+        return tokens.filter((token: any) => 
+          token.creator && token.creator.toLowerCase() === this.wallet.address.toLowerCase()
+        );
+      }
+      return [];
+    } catch (error) {
+      console.error('Failed to get my tokens:', error);
+      return [];
+    }
+  }
+
+  // Check if I own/created this token
+  async isMyToken(tokenAddress: string): Promise<boolean> {
+    try {
+      // Check if token is in my created tokens list
+      const myTokens = this.getMyTokens();
+      const isInMyList = myTokens.some(token => 
+        token.address.toLowerCase() === tokenAddress.toLowerCase()
+      );
+      
+      if (isInMyList) return true;
+
+      // Also check if I'm the owner of the contract (for tokens with owner function)
+      try {
+        const tokenContract = new ethers.Contract(tokenAddress, [
+          'function owner() view returns (address)'
+        ], this.provider);
+        
+        const owner = await tokenContract.owner();
+        return owner.toLowerCase() === this.wallet.address.toLowerCase();
+      } catch {
+        // Token might not have owner function, that's ok
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to check token ownership:', error);
+      return false;
+    }
+  }
+
   // Get token balance
   async getTokenBalance(tokenAddress: string): Promise<{ balance: string; symbol: string; name: string }> {
     try {
