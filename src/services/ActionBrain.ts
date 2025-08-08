@@ -792,7 +792,7 @@ export class ActionBrain {
       
       return {
         success: true,
-        response: `🔄 **Symphony DEX Swap**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+        response: `🔄 **Symphony DEX Swap**\n${result}`
       };
     } catch (error) {
       return {
@@ -820,7 +820,7 @@ export class ActionBrain {
       
       return {
         success: true,
-        response: `🥩 **Silo Staking**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+        response: `🥩 **Silo Staking**\n${result}`
       };
     } catch (error) {
       return {
@@ -848,7 +848,7 @@ export class ActionBrain {
       
       return {
         success: true,
-        response: `📤 **Silo Unstaking**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+        response: `📤 **Silo Unstaking**\n${result}`
       };
     } catch (error) {
       return {
@@ -877,7 +877,7 @@ export class ActionBrain {
       
       return {
         success: true,
-        response: `🏦 **Takara Lending**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+        response: `🏦 **Takara Lending**\n${result}`
       };
     } catch (error) {
       return {
@@ -906,7 +906,7 @@ export class ActionBrain {
       
       return {
         success: true,
-        response: `💰 **Takara Borrowing**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+        response: `💰 **Takara Borrowing**\n${result}`
       };
     } catch (error) {
       return {
@@ -935,7 +935,7 @@ export class ActionBrain {
       
       return {
         success: true,
-        response: `💸 **Takara Loan Repayment**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+        response: `💸 **Takara Loan Repayment**\n${result}`
       };
     } catch (error) {
       return {
@@ -966,7 +966,7 @@ export class ActionBrain {
       
       return {
         success: true,
-        response: `📈 **Citrex Perpetual Trading**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+        response: `📈 **Citrex Trading**\n${result}`
       };
     } catch (error) {
       return {
@@ -992,7 +992,7 @@ export class ActionBrain {
       
       return {
         success: true,
-        response: `📉 **Citrex Position Closed**\n\n${result}\n\n**⚡ Powered by CambrianAgents Sei Kit**`
+        response: `📉 **Position Closed**\n${result}`
       };
     } catch (error) {
       return {
@@ -1021,8 +1021,6 @@ export class ActionBrain {
         });
       }
       
-      response += `**⚡ Powered by CambrianAgents Sei Kit**`;
-      
       return {
         success: true,
         response,
@@ -1050,8 +1048,6 @@ export class ActionBrain {
       walletInfo.capabilities.forEach((capability: string, index: number) => {
         response += `${index + 1}. ${capability}\n`;
       });
-      
-      response += `\n**⚡ Powered by CambrianAgents Sei Kit**`;
       
       return {
         success: true,
