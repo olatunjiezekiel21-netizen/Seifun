@@ -435,13 +435,90 @@ const Seilor = () => {
         response += `• Enhanced SafeChecker recognition\n`;
         response += `• Real smart contract deployment\n\n`;
         
+        response += `**🤖 AI-Powered Creation:**\n`;
+        response += `• Use **AI Tools** panel for advanced token creation\n`;
+        response += `• Professional image upload interface\n`;
+        response += `• Pre-filled forms with smart defaults\n`;
+        response += `• Seamless integration with SeiList\n\n`;
+        
         response += `**💰 Cost & Requirements:**\n`;
         response += `• Small SEI fee for deployment\n`;
         response += `• Connected wallet required\n`;
         response += `• Sei Network connection\n\n`;
         
-        response += `**🚀 Ready to create?** Visit SeiList in the navigation to start your token launch journey!\n\n`;
+        response += `**🚀 Ready to create?** \n`;
+        response += `• **Quick Start**: Visit SeiList in navigation\n`;
+        response += `• **Advanced**: Use AI Tools panel for sophisticated creation\n\n`;
         response += `💡 **After creation, I can help you monitor and manage your token through Dev++!**`;
+      }
+      // 🔍 SCANNING & ANALYSIS
+      else if (userMessage.toLowerCase().includes('scan') || userMessage.toLowerCase().includes('analyze') || userMessage.toLowerCase().includes('check token') || userMessage.toLowerCase().includes('security')) {
+        response = `🔍 **Token Scanning & Security Analysis**\n\n`;
+        response += `**🛡️ Available Scanning Methods:**\n\n`;
+        response += `**1. SafeChecker** 🛡️\n`;
+        response += `• Comprehensive security analysis\n`;
+        response += `• Risk scoring (HIGH if score < 40)\n`;
+        response += `• Contract verification\n`;
+        response += `• Honeypot detection\n\n`;
+        
+        response += `**2. AI Tools Scanner** 🤖\n`;
+        response += `• Advanced token analysis interface\n`;
+        response += `• Real blockchain data integration\n`;
+        response += `• Security scoring with explanations\n`;
+        response += `• Liquidity pool detection\n\n`;
+        
+        response += `**3. Chat Analysis** 💬\n`;
+        response += `• Send me any contract address\n`;
+        response += `• I'll analyze it using real blockchain data\n`;
+        response += `• Get instant security insights\n\n`;
+        
+        response += `**🚀 How to Scan:**\n`;
+        response += `• **SafeChecker**: Visit SafeChecker in navigation\n`;
+        response += `• **AI Tools**: Click AI Tools panel → Token Scanner\n`;
+        response += `• **Chat**: Just send me a contract address!\n\n`;
+        
+        response += `**⚠️ What We Check:**\n`;
+        response += `• Contract verification status\n`;
+        response += `• Token supply and distribution\n`;
+        response += `• Liquidity pool presence\n`;
+        response += `• Security vulnerabilities\n`;
+        response += `• Burn functionality availability\n\n`;
+        
+        response += `💡 **Send me a contract address right now for instant analysis!**`;
+      }
+      // 🎨 IMAGE & BRANDING
+      else if (userMessage.toLowerCase().includes('image') || userMessage.toLowerCase().includes('logo') || userMessage.toLowerCase().includes('upload') || userMessage.toLowerCase().includes('branding')) {
+        response = `🎨 **Token Branding & Image Management**\n\n`;
+        response += `**📸 Logo Upload Options:**\n\n`;
+        response += `**1. AI Tools Interface** 🤖\n`;
+        response += `• Professional image upload with preview\n`;
+        response += `• Drag & drop functionality\n`;
+        response += `• Real-time preview before creation\n`;
+        response += `• Supports PNG, JPG, GIF up to 5MB\n\n`;
+        
+        response += `**2. SeiList Creation** 📋\n`;
+        response += `• Built-in logo upload in token creation\n`;
+        response += `• Auto-generation if no logo provided\n`;
+        response += `• IPFS storage for permanence\n`;
+        response += `• Stunning preview in token spotlight\n\n`;
+        
+        response += `**🎯 Best Practices:**\n`;
+        response += `• Use square images (1:1 ratio) for best results\n`;
+        response += `• High contrast colors work better\n`;
+        response += `• Simple, recognizable designs\n`;
+        response += `• Avoid text-heavy logos\n\n`;
+        
+        response += `**✨ Auto-Generation:**\n`;
+        response += `• If no logo provided, we create one automatically\n`;
+        response += `• Based on token symbol and name\n`;
+        response += `• Professional SVG generation\n`;
+        response += `• Unique color schemes\n\n`;
+        
+        response += `**🚀 Where to Upload:**\n`;
+        response += `• **AI Tools** → Token Creator → Upload Image\n`;
+        response += `• **SeiList** → Token Details → Logo Upload\n\n`;
+        
+        response += `💡 **Pro tip**: Use AI Tools for the most advanced image handling experience!`;
       }
       // 🔄 SWAP & DEX HELP
       else if (userMessage.toLowerCase().includes('swap') || userMessage.toLowerCase().includes('trade') || userMessage.toLowerCase().includes('dex')) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Upload, 
@@ -220,6 +220,48 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
     initialLiquidityETH: '1',
     addLiquidity: false
   });
+
+  // URL parameter support for AI-created tokens
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const aiCreated = urlParams.get('aiCreated');
+    
+    if (aiCreated === 'true') {
+      const prefillData: Partial<TokenFormData> = {};
+      
+      // Extract all possible parameters
+      const name = urlParams.get('name');
+      const symbol = urlParams.get('symbol');
+      const description = urlParams.get('description');
+      const totalSupply = urlParams.get('totalSupply');
+      const website = urlParams.get('website');
+      const twitter = urlParams.get('twitter');
+      const telegram = urlParams.get('telegram');
+      
+      if (name) prefillData.name = decodeURIComponent(name);
+      if (symbol) prefillData.symbol = decodeURIComponent(symbol).toUpperCase();
+      if (description) prefillData.description = decodeURIComponent(description);
+      if (totalSupply) prefillData.totalSupply = totalSupply;
+      if (website) prefillData.website = decodeURIComponent(website);
+      if (twitter) prefillData.twitter = decodeURIComponent(twitter);
+      if (telegram) prefillData.telegram = decodeURIComponent(telegram);
+      
+      // Only update if we have data to prefill
+      if (Object.keys(prefillData).length > 0) {
+        setFormData(prev => ({ ...prev, ...prefillData }));
+        
+        // Show a notification that the form was pre-filled by AI
+        setShowTokenSpotlight(true);
+        setTimeout(() => {
+          alert('🤖 AI Token Data Loaded!\n\nYour token details have been pre-filled from the AI Tools interface. Review and adjust as needed before creating your token.');
+        }, 500);
+      }
+      
+      // Clean up URL parameters
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
 
   const steps = [
     { number: 1, title: 'Token Details', icon: Upload },

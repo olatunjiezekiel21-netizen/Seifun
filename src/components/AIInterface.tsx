@@ -88,11 +88,19 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
   // AI Token Scanner
   const handleTokenScan = async () => {
     if (!scanAddress) {
-      alert('Please enter a token contract address');
+      alert('⚠️ Please enter a valid token contract address (0x...)');
+      return;
+    }
+
+    // Validate address format
+    if (!scanAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+      alert('❌ Invalid address format. Please enter a valid Ethereum/Sei address.');
       return;
     }
 
     setProcessing(true);
+    setScanResults(null); // Clear previous results
+    
     try {
       // Use real DeFi service to scan token
       const tokenStats = await defiService.getTokenStats(scanAddress, walletState.address || undefined);
@@ -111,8 +119,19 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
 
       setScanResults(scanResult);
       onTokenScan(scanResult);
+      
+      // Success feedback
+      setTimeout(() => {
+        alert(`✅ Token Scan Complete!\n\n${scanResult.name} (${scanResult.symbol}) has been analyzed using real blockchain data. Check the results above!`);
+      }, 500);
+      
     } catch (error) {
-      alert(`Token scan failed: ${error.message}`);
+      console.error('Token scan error:', error);
+      const errorMessage = error.message.includes('Invalid token contract') 
+        ? 'This address does not appear to be a valid ERC20 token contract.'
+        : `Scan failed: ${error.message}`;
+      
+      alert(`❌ Token Scan Failed\n\n${errorMessage}\n\nPlease verify the contract address and try again.`);
     } finally {
       setProcessing(false);
     }
@@ -120,13 +139,30 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
 
   // AI Token Creator
   const handleTokenCreate = async () => {
-    if (!tokenForm.name || !tokenForm.symbol) {
-      alert('Please fill in token name and symbol');
+    // Validation
+    if (!tokenForm.name?.trim()) {
+      alert('⚠️ Please enter a token name');
+      return;
+    }
+
+    if (!tokenForm.symbol?.trim()) {
+      alert('⚠️ Please enter a token symbol');
+      return;
+    }
+
+    if (tokenForm.symbol.length < 2 || tokenForm.symbol.length > 10) {
+      alert('⚠️ Token symbol must be between 2-10 characters');
       return;
     }
 
     if (!walletState.isConnected) {
-      alert('Please connect your wallet first');
+      alert('🔗 Please connect your wallet first to create tokens');
+      return;
+    }
+
+    const totalSupplyNum = parseFloat(tokenForm.totalSupply);
+    if (isNaN(totalSupplyNum) || totalSupplyNum <= 0) {
+      alert('⚠️ Please enter a valid total supply (greater than 0)');
       return;
     }
 
@@ -139,10 +175,13 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
         launchType: 'fair'
       };
 
-      // This would integrate with the actual token creation process
+      // Success feedback before redirect
+      alert(`🚀 AI Token Creation Initiated!\n\n✅ Token: ${tokenForm.name} (${tokenForm.symbol})\n📊 Supply: ${parseInt(tokenForm.totalSupply).toLocaleString()}\n🎨 Logo: ${imagePreview ? 'Custom uploaded' : 'Auto-generated'}\n\n🔄 Redirecting to SeiList for deployment...`);
+
+      // This integrates with the actual token creation process
       onTokenCreate(tokenData);
       
-      // Reset form
+      // Reset form after successful creation
       setTokenForm({
         name: '',
         symbol: '',
@@ -154,8 +193,10 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
       });
       setSelectedImage(null);
       setImagePreview('');
+      
     } catch (error) {
-      alert(`Token creation failed: ${error.message}`);
+      console.error('Token creation error:', error);
+      alert(`❌ Token Creation Failed\n\n${error.message}\n\nPlease check your inputs and try again.`);
     } finally {
       setProcessing(false);
     }
@@ -234,6 +275,7 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
               value={scanAddress}
               onChange={(e) => setScanAddress(e.target.value)}
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none pr-12"
+              disabled={processing}
             />
             <button
               onClick={handleTokenScan}
@@ -247,6 +289,18 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
               )}
             </button>
           </div>
+
+          {processing && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <RefreshCw className="w-5 h-5 text-blue-400 animate-spin" />
+                <div>
+                  <p className="text-blue-400 font-medium">Scanning Token Contract...</p>
+                  <p className="text-sm text-gray-400">Analyzing blockchain data and security features</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {scanResults && (
             <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
