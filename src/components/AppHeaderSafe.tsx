@@ -119,7 +119,7 @@ const AppHeaderSafe = () => {
               to="/app/dev-plus" 
               className={`app-nav-link ${isActive('/app/dev-plus') ? 'active' : ''}`}
             >
-              Dev+
+              Dev++
             </Link>
           </nav>
 

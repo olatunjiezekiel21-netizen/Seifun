@@ -69,7 +69,7 @@ const DevPlus = () => {
       setRefreshing(true);
       
       // Get real data from localStorage (created tokens from SeiList)
-      const storedTokens = JSON.parse(localStorage.getItem('devplus_tokens') || '[]');
+      const storedTokens = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
       const tokenData = storedTokens.map((token: any) => ({
         ...token,
         createdAt: new Date(token.createdAt || Date.now())
@@ -144,8 +144,8 @@ const DevPlus = () => {
   ];
 
   const quickActions = [
-    { name: 'Launch Token', icon: Zap, description: 'Create and deploy a new token', action: () => window.location.href = '/seilist' },
-    { name: 'Security Scan', icon: Shield, description: 'Scan tokens for vulnerabilities', action: () => window.location.href = '/safechecker' },
+    { name: 'Launch Token', icon: Zap, description: 'Create and deploy a new token', action: () => window.location.href = '/app/seilist' },
+    { name: 'Security Scan', icon: Shield, description: 'Scan tokens for vulnerabilities', action: () => window.location.href = '/app/safechecker' },
     { name: 'Analytics', icon: BarChart3, description: 'View detailed metrics', action: () => setActiveTab('analytics') },
     { name: 'Token Watch', icon: Eye, description: 'Monitor token activity', action: () => setActiveTab('token-watch') }
   ];
@@ -174,7 +174,7 @@ const DevPlus = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="app-heading-xl app-text-primary mb-4">
-                DevPlus Dashboard
+                                 Dev++ Dashboard
               </h1>
               <p className="app-text-lg max-w-3xl">
                 Real-time token management, security monitoring, and ecosystem analytics. 

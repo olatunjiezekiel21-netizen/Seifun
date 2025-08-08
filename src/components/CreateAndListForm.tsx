@@ -136,29 +136,61 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
   
   // Metadata management - improved
   const createTokenMetadata = (tokenData: TokenFormData, tokenAddress: string) => {
+    const logoUrl = tokenData.tokenImage || logoPreviewUrl || generateTokenImage(tokenData.symbol, tokenData.name);
+    
     return {
+      // Standard ERC20 metadata
       name: tokenData.name,
       symbol: tokenData.symbol,
-      description: tokenData.description,
-      image: tokenData.tokenImage || generateTokenImage(tokenData.symbol, tokenData.name),
-      external_url: tokenData.website,
+      description: tokenData.description || `${tokenData.name} (${tokenData.symbol}) - Created on SeiList by Seifun`,
+      image: logoUrl,
+      decimals: 18,
+      
+      // Extended metadata for better recognition
+      external_url: tokenData.website || 'https://seifun.io',
+      home_url: tokenData.website || 'https://seifun.io',
+      logo: logoUrl,
+      logoURI: logoUrl,
+      
+      // Social links
       social_links: {
-        website: tokenData.website,
+        website: tokenData.website || 'https://seifun.io',
         github: tokenData.github,
         telegram: tokenData.telegram,
         twitter: tokenData.twitter,
         discord: tokenData.discord
       },
+      
+      // Contract information
       contract_address: tokenAddress,
-      total_supply: tokenData.totalSupply,
-      decimals: 18,
+      address: tokenAddress,
+      chainId: 1329, // Sei Pacific testnet
       chain: 'sei-testnet',
+      network: 'sei',
+      
+      // Token details
+      total_supply: tokenData.totalSupply,
+      totalSupply: tokenData.totalSupply,
+      
+      // Platform information
       created_by: address,
+      creator: address,
       created_at: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
       verified: true,
-      // Add token standards for better recognition
+      
+      // Standards and platform
       token_standard: 'ERC20',
-      platform: 'SeiList by Seifun' // Fixed branding
+      standard: 'ERC20',
+      platform: 'SeiList by Seifun',
+      source: 'SeiList',
+      
+      // Tags for better categorization
+      tags: ['meme', 'community', 'sei', 'seifun'],
+      category: 'meme',
+      
+      // Version
+      version: '1.0.0'
     };
   };
   
@@ -420,7 +452,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         website: formData.website,
         twitter: formData.twitter,
         telegram: formData.telegram,
-        tokenImage: tokenImage
+        tokenImage: formData.tokenImage || logoPreviewUrl || generateTokenImage(formData.symbol, formData.name)
       });
       
       // Add to DevPlus tracking
@@ -437,17 +469,17 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         holders: 1
       };
       
-      // Store in localStorage for DevPlus to access
-      const existingTokens = JSON.parse(localStorage.getItem('devplus_tokens') || '[]');
+      // Store in localStorage for Dev++ to access
+      const existingTokens = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
       existingTokens.unshift(trackingData);
-      localStorage.setItem('devplus_tokens', JSON.stringify(existingTokens));
+      localStorage.setItem('dev++_tokens', JSON.stringify(existingTokens));
       
       // Show the spotlight after a brief delay for effect
       setTimeout(() => {
         setShowTokenSpotlight(true);
       }, 1000);
       
-      console.log('✅ Token created and added to DevPlus tracking:', tokenAddress);
+             console.log('✅ Token created and added to Dev++ tracking:', tokenAddress);
       
     } catch (error: any) {
       console.error('Token creation failed:', error);
@@ -814,14 +846,14 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                   {formData.launchType === 'fair' ? 'Fair Launch' : 'Presale Launch'}
                 </div>
                 
-                {/* DevPlus Connection Status */}
+                {/* Dev++ Connection Status */}
                 <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-center space-x-2">
                     <CheckCircle className="w-5 h-5 text-green-400" />
-                    <span className="text-green-300 font-medium">Connected to DevPlus</span>
+                    <span className="text-green-300 font-medium">Connected to Dev++</span>
                   </div>
                   <p className="text-sm text-green-200 mt-1">
-                    Your token will be automatically monitored and managed through DevPlus
+                    Your token will be automatically monitored and managed through Dev++
                   </p>
                 </div>
               </div>
@@ -1087,8 +1119,15 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
                 Create Another Token
               </button>
               <button
+                onClick={() => window.open('/app/dev-plus', '_blank')}
+                className="app-btn app-btn-primary flex items-center space-x-2"
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span>Open Dev++ Dashboard</span>
+              </button>
+              <button
                 onClick={onBack}
-                className="app-btn app-btn-primary"
+                className="app-btn app-btn-secondary"
               >
                 Back to SeiList
               </button>
