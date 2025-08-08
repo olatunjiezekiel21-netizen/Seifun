@@ -313,10 +313,16 @@ export class ActionBrain {
       /send.*\d+.*to.*0x/,
       /transfer.*\d+.*to.*0x/
     ])) {
+      const transferEntities = this.extractTransferEntities(normalizedMessage);
+      console.log('🎯 SEND_TOKENS intent recognized!');
+      console.log('📝 Message:', message);
+      console.log('🔄 Normalized:', normalizedMessage);
+      console.log('📊 Transfer entities:', transferEntities);
+      
       return {
         intent: IntentType.SEND_TOKENS,
         confidence: 0.9,
-        entities: { ...entities, ...this.extractTransferEntities(normalizedMessage) },
+        entities: { ...entities, ...transferEntities },
         rawMessage: message
       };
     }
@@ -1121,28 +1127,46 @@ export class ActionBrain {
   // ROBUST TOKEN TRANSFER WITH CONFIRMATION
   private async executeSendTokens(intent: IntentResult): Promise<ActionResponse> {
     try {
+      console.log('🔍 ExecuteSendTokens called with entities:', intent.entities);
+      
       const { transferAmount, recipient } = intent.entities;
       
       if (!transferAmount || !recipient) {
+        console.log('❌ Missing transfer details:', { transferAmount, recipient });
         return {
           success: false,
-          response: `❌ **Missing transfer details**\n\n**Usage**: "Send 50 SEI to 0x1234..."\n**Need**: Amount and recipient address`
+          response: `❌ **Missing transfer details**\n\n**Usage**: "Send 50 SEI to 0x1234..."\n**Need**: Amount and recipient address\n\n**Debug**: Amount=${transferAmount}, Recipient=${recipient}`
         };
       }
       
       // Validate recipient address
       if (!recipient.match(/^0x[a-fA-F0-9]{40}$/)) {
+        console.log('❌ Invalid recipient address:', recipient);
         return {
           success: false,
           response: `❌ **Invalid recipient address**\n\n**Address**: ${recipient}\n**Required**: Valid Ethereum address (0x...)`
         };
       }
       
-      // Check current balance
-      const currentBalance = await cambrianSeiAgent.getBalance();
+      console.log('✅ Validation passed, checking balance...');
+      
+      // Check current balance with error handling
+      let currentBalance;
+      try {
+        currentBalance = await cambrianSeiAgent.getBalance();
+        console.log('✅ Balance retrieved:', currentBalance);
+      } catch (balanceError) {
+        console.error('❌ Balance check failed:', balanceError);
+        return {
+          success: false,
+          response: `❌ **Balance Check Failed**\n\n**Error**: ${balanceError.message}\n\n**💡 Try**: Check your wallet connection or try again later`
+        };
+      }
+      
       const balanceNum = parseFloat(currentBalance);
       
       if (balanceNum < transferAmount) {
+        console.log('❌ Insufficient balance:', { available: balanceNum, requested: transferAmount });
         return {
           success: false,
           response: `❌ **Insufficient Balance**\n\n**Available**: ${currentBalance} SEI\n**Requested**: ${transferAmount} SEI\n**Shortfall**: ${(transferAmount - balanceNum).toFixed(4)} SEI\n\n**💡 Try**: A smaller amount or check your balance`
@@ -1151,6 +1175,8 @@ export class ActionBrain {
       
       // Calculate remaining balance after transfer
       const remainingBalance = (balanceNum - transferAmount).toFixed(4);
+      
+      console.log('✅ All checks passed, requesting confirmation');
       
       // Request confirmation with detailed information
       return {
@@ -1167,9 +1193,10 @@ export class ActionBrain {
       };
       
     } catch (error) {
+      console.error('❌ ExecuteSendTokens error:', error);
       return {
         success: false,
-        response: `❌ **Transfer Setup Failed**: ${error.message}`
+        response: `❌ **Transfer Setup Failed**\n\n**Error**: ${error.message}\n\n**Debug**: Please check the console for more details`
       };
     }
   }
