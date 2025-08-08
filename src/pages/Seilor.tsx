@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bot, Send, Wallet, Info, History, List, Activity, 
-  Clock, TrendingUp, AlertCircle, CheckCircle, X, Menu
+  Clock, TrendingUp, AlertCircle, CheckCircle, X, Menu, Settings, Sparkles
 } from 'lucide-react';
 import { ethers } from 'ethers';
 import { ProfessionalAIAgent } from '../utils/professionalAI';
@@ -9,15 +9,17 @@ import { SeiTradingService, type TransactionHistory, type ProtocolInteraction } 
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { mcpService } from '../services/MCPService';
 import { webBlockchainService } from '../services/WebBlockchainService';
+import { AIInterface } from '../components/AIInterface';
 
 const Seilor = () => {
-  const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo'>('chat');
+  const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
   const [aiChat, setAiChat] = useState('');
   const [loading, setLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [professionalAI] = useState(() => new ProfessionalAIAgent());
   const [tradingService] = useState(() => new SeiTradingService());
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [newTodo, setNewTodo] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
@@ -180,6 +182,63 @@ const Seilor = () => {
       console.warn('Failed to get wallet context:', error);
       return null;
     }
+  };
+
+  // AI Interface Handlers
+  const handleTokenScan = (result: any) => {
+    const newMessage = {
+      id: Date.now(),
+      type: 'assistant' as const,
+      message: `🔍 **Token Scan Complete**\n\n**${result.name} (${result.symbol})**\n• Security Score: ${result.securityScore}/100\n• Risk Level: ${result.riskLevel}\n• Total Supply: ${parseInt(result.totalSupply).toLocaleString()}\n• Liquidity Pools: ${result.liquidityPools}\n• Verified: ${result.verified ? 'Yes' : 'No'}\n\n✅ This scan used real blockchain data from the Sei network!`,
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, newMessage]);
+  };
+
+  const handleTokenCreate = async (tokenData: any) => {
+    try {
+      setLoading(true);
+      
+      // Add AI message about starting creation
+      const newMessage = {
+        id: Date.now(),
+        type: 'assistant' as const,
+        message: `🚀 **AI Token Creation Initiated**\n\n**Token Details:**\n• Name: ${tokenData.name}\n• Symbol: ${tokenData.symbol}\n• Supply: ${parseInt(tokenData.totalSupply).toLocaleString()}\n• Description: ${tokenData.description || 'No description'}\n\n🔄 Redirecting to SeiList for deployment...`,
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, newMessage]);
+
+      // Small delay for user to see the message
+      setTimeout(() => {
+        // Navigate to SeiList with pre-filled data
+        const params = new URLSearchParams({
+          name: tokenData.name,
+          symbol: tokenData.symbol,
+          totalSupply: tokenData.totalSupply,
+          description: tokenData.description || '',
+          website: tokenData.website || '',
+          twitter: tokenData.twitter || '',
+          telegram: tokenData.telegram || '',
+          aiCreated: 'true'
+        });
+
+        window.location.href = `/app/seilist?${params.toString()}`;
+      }, 2000);
+    } catch (error) {
+      console.error('AI token creation failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSwapRequest = (fromToken: string, toToken: string, amount: string) => {
+    const newMessage = {
+      id: Date.now(),
+      type: 'assistant' as const,
+      message: `🔄 **AI Swap Request**\n\n**Swap Details:**\n• From: ${fromToken}\n• To: ${toToken}\n• Amount: ${amount}\n\n💡 **Recommended DEXes:**\n• **Astroport**: Advanced AMM with limit orders\n• **Dragonswap**: Community-focused DEX\n\n⚠️ **Always verify token addresses and check slippage before swapping!**\n\n🚀 Real swap functionality coming soon with direct DEX integration!`,
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, newMessage]);
   };
 
   // Intelligent AI chat handler with real-time wallet awareness
@@ -407,7 +466,45 @@ const Seilor = () => {
         response += `• Verify contract addresses\n`;
         response += `• Use slippage protection\n\n`;
         
-        response += `🚀 **I can help you analyze tokens before trading - just send me a contract address!**`;
+        response += `**🚀 Advanced Tools Available:**\n`;
+        response += `• Use **AI Tools** panel for sophisticated swap interface\n`;
+        response += `• Real token selection with image upload\n`;
+        response += `• Advanced slippage and deadline controls\n\n`;
+        response += `💡 **Click "AI Tools" in the sidebar for the advanced interface!**`;
+      }
+      // 🛠️ AI TOOLS GUIDANCE
+      else if (userMessage.toLowerCase().includes('ai tools') || userMessage.toLowerCase().includes('advanced') || userMessage.toLowerCase().includes('sophisticated') || userMessage.toLowerCase().includes('image upload') || userMessage.toLowerCase().includes('token selection')) {
+        response = `🛠️ **AI Tools - Sophisticated Interface**\n\n`;
+        response += `**🎯 Available Tools:**\n\n`;
+        response += `**1. Token Scanner** 🔍\n`;
+        response += `• Advanced token analysis with real blockchain data\n`;
+        response += `• Security scoring and risk assessment\n`;
+        response += `• Liquidity pool detection\n`;
+        response += `• Contract verification\n\n`;
+        
+        response += `**2. Token Creator** 🚀\n`;
+        response += `• Professional token creation interface\n`;
+        response += `• Image upload for custom logos\n`;
+        response += `• Complete social media integration\n`;
+        response += `• Direct deployment to Sei blockchain\n\n`;
+        
+        response += `**3. Token Swapper** 🔄\n`;
+        response += `• Advanced swap interface with token selection\n`;
+        response += `• Real-time slippage protection\n`;
+        response += `• Deadline controls and gas optimization\n`;
+        response += `• Multi-token support\n\n`;
+        
+        response += `**4. Portfolio Analyzer** 📊\n`;
+        response += `• AI-powered portfolio insights\n`;
+        response += `• Risk assessment and optimization\n`;
+        response += `• Performance tracking\n\n`;
+        
+        response += `**✨ Click "AI Tools" in the sidebar to access these advanced features!**\n\n`;
+        response += `💡 **Perfect for:**\n`;
+        response += `• Professional token operations\n`;
+        response += `• Advanced trading strategies\n`;
+        response += `• Comprehensive token analysis\n`;
+        response += `• Sophisticated DeFi interactions`;
       }
       // 🔥 TOKEN BURN FUNCTIONALITY
       else if (userMessage.toLowerCase().includes('burn token') || userMessage.toLowerCase().includes('burn') || userMessage.toLowerCase().includes('reduce supply')) {
@@ -621,6 +718,7 @@ const Seilor = () => {
 
   const panels = [
     { id: 'chat', label: 'AI Chat', icon: Bot },
+    { id: 'ai-tools', label: 'AI Tools', icon: Settings },
     { id: 'history', label: 'History', icon: History },
     { id: 'transactions', label: 'Transactions', icon: Activity },
     { id: 'todo', label: 'Todo', icon: List }
@@ -886,6 +984,36 @@ const Seilor = () => {
                         <span>Send</span>
                       </button>
                     </div>
+                  </div>
+                </>
+              )}
+
+              {/* AI Tools Panel */}
+              {activePanel === 'ai-tools' && (
+                <>
+                  <div className="bg-slate-700/50 px-6 py-4 border-b border-slate-700/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                          <Settings className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white">AI Tools</h3>
+                          <p className="text-xs text-slate-400">Sophisticated token operations</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Sparkles className="w-5 h-5 text-yellow-400" />
+                        <span className="text-sm text-yellow-400 font-medium">Advanced Mode</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <AIInterface
+                      onTokenScan={handleTokenScan}
+                      onTokenCreate={handleTokenCreate}
+                      onSwapRequest={handleSwapRequest}
+                    />
                   </div>
                 </>
               )}
