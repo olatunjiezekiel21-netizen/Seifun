@@ -702,7 +702,7 @@ const Docs = () => {
     }
   };
 
-  // Enhanced search functionality
+  // Enhanced search functionality with content search
   const performSearch = (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -743,8 +743,23 @@ const Docs = () => {
         }
       });
 
-      // Search content based on keywords (skip content search for now as it's React elements)
-      // We'll focus on title and section matching which is more reliable
+      // Search actual content by extracting text from JSX
+      const content = documentationContent[section.id as keyof typeof documentationContent];
+      if (content) {
+        const extractedText = extractTextFromContent(content);
+        if (extractedText.toLowerCase().includes(searchTerm)) {
+          // Find the specific context around the match
+          const contextMatch = findContextAroundMatch(extractedText, searchTerm);
+          results.push({
+            type: 'content',
+            id: section.id,
+            title: `${section.title} (Content Match)`,
+            description: contextMatch,
+            icon: section.icon,
+            relevance: extractedText.toLowerCase().indexOf(searchTerm)
+          });
+        }
+      }
     });
 
     // Search specific keywords and topics
@@ -769,45 +784,90 @@ const Docs = () => {
   // Keyword-based search for common topics
   const searchKeywords = (query: string): any[] => {
     const keywords = {
+      // Core Features
       'token': [
-        { id: 'token-creation', title: 'Token Creation Guide', section: 'SeiList', icon: Code },
-        { id: 'seilist-intro', title: 'SeiList Introduction', section: 'SeiList', icon: Layers }
+        { id: 'seilist-intro', title: 'Token Creation with SeiList', section: 'Token Creation', icon: Layers },
+        { id: 'token-creation', title: 'Token Creation Guide', section: 'SeiList', icon: Code }
       ],
       'ai': [
-        { id: 'seilor-intro', title: 'Seilor 0 AI Agent', section: 'AI Features', icon: Bot },
-        { id: 'ai-trading', title: 'AI Trading Features', section: 'Seilor 0', icon: TrendingUp }
+        { id: 'seilor-intro', title: 'Seilor 0 AI Agent', section: 'AI Agent', icon: Bot },
+        { id: 'ai-features', title: 'AI Features Overview', section: 'AI Agent', icon: TrendingUp }
       ],
       'security': [
-        { id: 'security-overview', title: 'Security Overview', section: 'SafeChecker', icon: Shield },
-        { id: 'token-scanning', title: 'Token Scanning', section: 'SafeChecker', icon: Search }
+        { id: 'security-overview', title: 'Security with SafeChecker', section: 'SafeChecker', icon: Shield },
+        { id: 'token-scanning', title: 'Token Security Scanning', section: 'SafeChecker', icon: Search }
       ],
-      'wallet': [
-        { id: 'wallet-connection', title: 'Wallet Connection', section: 'Getting Started', icon: Lock },
-        { id: 'portfolio-management', title: 'Portfolio Management', section: 'Seilor 0', icon: Settings }
+      'defi': [
+        { id: 'seilor-intro', title: 'DeFi Operations with Seilor', section: 'AI Agent', icon: Bot },
+        { id: 'defi-features', title: 'DeFi Features', section: 'AI Agent', icon: TrendingUp }
       ],
-      'trading': [
-        { id: 'ai-trading', title: 'AI Trading Features', section: 'Seilor 0', icon: TrendingUp },
-        { id: 'trading-strategies', title: 'Trading Strategies', section: 'Seilor 0', icon: Terminal }
-      ],
-      'liquidity': [
-        { id: 'liquidity-management', title: 'Liquidity Management', section: 'SeiList', icon: TrendingUp }
-      ],
-      // Add more comprehensive keywords
+      
+      // Specific Products
       'seilor': [
         { id: 'seilor-intro', title: 'Meet Seilor 0', section: 'AI Agent', icon: Bot }
       ],
       'seilist': [
-        { id: 'seilist-intro', title: 'Introduction to SeiList', section: 'Token Creation', icon: Layers }
+        { id: 'seilist-intro', title: 'SeiList Token Creation', section: 'Token Creation', icon: Layers }
       ],
       'safechecker': [
-        { id: 'security-overview', title: 'Security Overview', section: 'SafeChecker', icon: Shield }
+        { id: 'security-overview', title: 'SafeChecker Security', section: 'SafeChecker', icon: Shield }
       ],
+      'dev++': [
+        { id: 'developer-tools', title: 'Dev++ Developer Tools', section: 'Developer Tools', icon: Code }
+      ],
+      
+      // DeFi Operations
+      'swap': [
+        { id: 'seilor-intro', title: 'Token Swapping with Seilor', section: 'AI Agent', icon: Bot }
+      ],
+      'staking': [
+        { id: 'seilor-intro', title: 'Staking with Seilor', section: 'AI Agent', icon: Bot }
+      ],
+      'lending': [
+        { id: 'seilor-intro', title: 'Lending with Seilor', section: 'AI Agent', icon: Bot }
+      ],
+      'trading': [
+        { id: 'seilor-intro', title: 'AI Trading with Seilor', section: 'AI Agent', icon: TrendingUp }
+      ],
+      
+      // User Actions
+      'wallet': [
+        { id: 'wallet-connection', title: 'Wallet Connection', section: 'Getting Started', icon: Lock }
+      ],
+      'connect': [
+        { id: 'wallet-connection', title: 'Connect Wallet', section: 'Getting Started', icon: Lock }
+      ],
+      'create': [
+        { id: 'seilist-intro', title: 'Create Tokens', section: 'Token Creation', icon: Layers }
+      ],
+      'scan': [
+        { id: 'security-overview', title: 'Scan Tokens', section: 'SafeChecker', icon: Shield }
+      ],
+      
+      // Getting Started
       'quick': [
-        { id: 'quick-start', title: 'Quick Start', section: 'Getting Started', icon: Zap }
+        { id: 'quick-start', title: 'Quick Start Guide', section: 'Getting Started', icon: Zap }
       ],
       'start': [
-        { id: 'quick-start', title: 'Quick Start', section: 'Getting Started', icon: Zap },
-        { id: 'introduction', title: 'Introduction', section: 'Getting Started', icon: Home }
+        { id: 'introduction', title: 'Getting Started', section: 'Getting Started', icon: Home },
+        { id: 'quick-start', title: 'Quick Start', section: 'Getting Started', icon: Zap }
+      ],
+      'guide': [
+        { id: 'introduction', title: 'User Guide', section: 'Getting Started', icon: Home }
+      ],
+      
+      // Technical Terms
+      'blockchain': [
+        { id: 'seilor-intro', title: 'Blockchain Operations', section: 'AI Agent', icon: Bot }
+      ],
+      'sei': [
+        { id: 'introduction', title: 'Sei Network Features', section: 'Getting Started', icon: Home }
+      ],
+      'smart contract': [
+        { id: 'seilist-intro', title: 'Smart Contract Deployment', section: 'Token Creation', icon: Code }
+      ],
+      'portfolio': [
+        { id: 'seilor-intro', title: 'Portfolio Management', section: 'AI Agent', icon: Bot }
       ]
     };
 
@@ -855,6 +915,62 @@ const Docs = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Helper function to extract text content from JSX elements
+  const extractTextFromContent = (contentObj: any): string => {
+    if (!contentObj || !contentObj.content) return '';
+    
+    // Convert JSX to string by extracting text content
+    const extractTextFromJSX = (element: any): string => {
+      if (typeof element === 'string') return element;
+      if (typeof element === 'number') return element.toString();
+      if (!element) return '';
+      
+      if (React.isValidElement(element)) {
+        const props = element.props;
+        let text = '';
+        
+        // Extract text from children
+        if (props.children) {
+          if (Array.isArray(props.children)) {
+            text += props.children.map(extractTextFromJSX).join(' ');
+          } else {
+            text += extractTextFromJSX(props.children);
+          }
+        }
+        
+        return text;
+      }
+      
+      if (Array.isArray(element)) {
+        return element.map(extractTextFromJSX).join(' ');
+      }
+      
+      return '';
+    };
+    
+    return extractTextFromJSX(contentObj.content);
+  };
+
+  // Helper function to find context around a search match
+  const findContextAroundMatch = (text: string, searchTerm: string, contextLength: number = 100): string => {
+    const lowerText = text.toLowerCase();
+    const lowerTerm = searchTerm.toLowerCase();
+    const matchIndex = lowerText.indexOf(lowerTerm);
+    
+    if (matchIndex === -1) return text.substring(0, contextLength) + '...';
+    
+    const start = Math.max(0, matchIndex - contextLength / 2);
+    const end = Math.min(text.length, matchIndex + searchTerm.length + contextLength / 2);
+    
+    let context = text.substring(start, end);
+    
+    // Add ellipsis if we're not at the beginning/end
+    if (start > 0) context = '...' + context;
+    if (end < text.length) context = context + '...';
+    
+    return context;
+  };
 
   const filteredSections = documentationSections.filter(section =>
     section.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
