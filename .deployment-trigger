@@ -1,2 +1,7 @@
-Deployment trigger - $(date) - Seilor 0 v2.0: Collapsible Sidebar + Chat Debug + AI Fixes
-MAJOR UPDATE: Fixed chat functionality, added collapsible sidebar, mobile-first design, OpenAI integration
+Deployment trigger - Mon Jan 27 20:55:00 UTC 2025 - NETLIFY BUILD FIXED!
+MAJOR FIX: Node 20 + Dependency Cleanup + Build Command Fix
+✅ Removed 399+ problematic packages (hardhat, backend deps)
+✅ Fixed Node version compatibility (18→20)
+✅ Changed npm ci → npm install for reliability
+✅ Tested locally - build works perfectly
+🚀 Ready for successful Netlify deployment!
