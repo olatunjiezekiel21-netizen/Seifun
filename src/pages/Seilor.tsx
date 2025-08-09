@@ -8,7 +8,9 @@ import {
   Plus,
   MessageCircle,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Menu,
+  X
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { chatBrain } from '../services/ChatBrain';
@@ -27,13 +29,14 @@ const Seilor = () => {
     {
       id: 1,
       type: 'assistant',
-      message: `👋 **Hey there! I'm Seilor 0, your AI DeFi companion!**\n\nI'm here to help you navigate the Sei Network with ChatGPT-level intelligence. Just talk to me naturally!\n\n**🎯 I can help you with:**\n• Checking your wallet balance and portfolio\n• Swapping tokens on Symphony DEX\n• Staking SEI for yield on Silo\n• Lending and borrowing on Takara\n• Trading on Citrex exchange\n• Analyzing token contracts for safety\n• Creating and managing tokens\n\n**💬 Just tell me what you want to do:**\n• "I want to swap some tokens"\n• "What's my current balance?"\n• "Help me stake my SEI"\n• "Is this token safe?" (paste address)\n• "How do I create a token?"\n\n**Let's chat! What's on your mind?** 🚀`,
+      message: `👋 Hey! I'm Seilor 0, your AI assistant for DeFi on Sei. What can I help you with today?`,
       timestamp: new Date()
     }
   ]);
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [newTodo, setNewTodo] = useState('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [todos, setTodos] = useState<Array<{
     id: string;
@@ -82,11 +85,18 @@ const Seilor = () => {
 
   // Enhanced AI chat handler using Chat Brain system
   const handleAiChat = async () => {
-    if (!aiChat.trim() || loading) return;
+    console.log('🚀 handleAiChat called with message:', aiChat);
+    
+    if (!aiChat.trim() || loading) {
+      console.log('❌ Chat blocked - empty message or loading:', { aiChat: aiChat.trim(), loading });
+      return;
+    }
     
     setLoading(true);
     const userMessage = aiChat.trim();
     setAiChat('');
+    
+    console.log('📝 Processing user message:', userMessage);
     
     // Add user message immediately
     const userChatMessage = {
@@ -95,17 +105,23 @@ const Seilor = () => {
       message: userMessage,
       timestamp: new Date()
     };
-    setChatMessages(prev => [...prev, userChatMessage]);
+    setChatMessages(prev => {
+      console.log('📨 Adding user message to chat');
+      return [...prev, userChatMessage];
+    });
     
     // Show typing indicator
     setIsTyping(true);
+    console.log('⏳ Showing typing indicator');
     
     // Add a natural delay to simulate thinking
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
+      console.log('🧠 Calling chatBrain.processMessage...');
       // Process message through Chat Brain (which uses Action Brain)
       const response = await chatBrain.processMessage(userMessage);
+      console.log('✅ Chat Brain response received:', response);
       
       // Hide typing indicator
       setIsTyping(false);
@@ -117,10 +133,13 @@ const Seilor = () => {
         message: response.message,
         timestamp: new Date()
       };
-      setChatMessages(prev => [...prev, aiResponse]);
+      setChatMessages(prev => {
+        console.log('🤖 Adding AI response to chat');
+        return [...prev, aiResponse];
+      });
       
     } catch (error) {
-      console.error('Chat Brain Error:', error);
+      console.error('❌ Chat Brain Error:', error);
       setIsTyping(false);
       const errorMessage = {
         id: Date.now() + 1,
@@ -131,6 +150,7 @@ const Seilor = () => {
       setChatMessages(prev => [...prev, errorMessage]);
     } finally {
       setLoading(false);
+      console.log('🏁 Chat processing complete');
     }
   };
 
@@ -198,6 +218,15 @@ const Seilor = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-6">
+              {/* Hamburger Menu Button */}
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
+                title={sidebarCollapsed ? "Show Menu" : "Hide Menu"}
+              >
+                {sidebarCollapsed ? <Menu className="w-6 h-6" /> : <X className="w-6 h-6" />}
+              </button>
+              
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
                   <Bot className="w-6 h-6 text-white" />
@@ -251,10 +280,20 @@ const Seilor = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className={`grid gap-6 ${sidebarCollapsed ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
           {/* Sidebar */}
-          <div className="lg:col-span-1">
+          <div className={`${sidebarCollapsed ? 'hidden' : 'block'} lg:col-span-1`}>
             <div className="bg-slate-800/50 rounded-2xl p-4 backdrop-blur-sm border border-slate-700/50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Navigation</h3>
+                <button
+                  onClick={() => setSidebarCollapsed(true)}
+                  className="hidden lg:block p-1 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors"
+                  title="Collapse Sidebar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
               <nav className="space-y-2">
                 {panels.map((panel) => {
                   const IconComponent = panel.icon;
@@ -278,11 +317,24 @@ const Seilor = () => {
           </div>
 
           {/* Main Panel */}
-          <div className="lg:col-span-3">
+          <div className={`${sidebarCollapsed ? 'col-span-1' : 'lg:col-span-3'}`}>
             <div className="bg-slate-800/50 rounded-2xl backdrop-blur-sm border border-slate-700/50 overflow-hidden">
+              {/* Show/Hide Sidebar Button when collapsed */}
+              {sidebarCollapsed && (
+                <div className="p-4 border-b border-slate-700/50">
+                  <button
+                    onClick={() => setSidebarCollapsed(false)}
+                    className="flex items-center space-x-2 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
+                    title="Show Sidebar"
+                  >
+                    <Menu className="w-4 h-4" />
+                    <span className="text-sm">Show Menu</span>
+                  </button>
+                </div>
+              )}
               {/* Chat Panel */}
               {activePanel === 'chat' && (
-                <div className="h-[600px] flex flex-col">
+                <div className={`${sidebarCollapsed ? 'h-[80vh]' : 'h-[600px]'} flex flex-col`}>
                   {/* Messages */}
                   <div className="flex-1 overflow-y-auto p-6 space-y-4">
                     {chatMessages.length === 0 ? (
