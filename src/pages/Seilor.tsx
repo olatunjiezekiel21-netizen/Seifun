@@ -83,6 +83,19 @@ const Seilor = () => {
     }
   };
 
+  // Test function to debug chat functionality
+  const testChatFunction = async () => {
+    console.log('🧪 Testing chat functionality directly...');
+    try {
+      const testResponse = await chatBrain.processMessage("Hello, test message");
+      console.log('✅ Chat test successful:', testResponse);
+      alert(`Chat test successful! Response: ${testResponse.message.substring(0, 100)}...`);
+    } catch (error) {
+      console.error('❌ Chat test failed:', error);
+      alert(`Chat test failed: ${error.message}`);
+    }
+  };
+
   // Enhanced AI chat handler using Chat Brain system
   const handleAiChat = async () => {
     console.log('🚀 handleAiChat called with message:', aiChat);
@@ -321,7 +334,7 @@ const Seilor = () => {
             <div className="bg-slate-800/50 rounded-2xl backdrop-blur-sm border border-slate-700/50 overflow-hidden">
               {/* Show/Hide Sidebar Button when collapsed */}
               {sidebarCollapsed && (
-                <div className="p-4 border-b border-slate-700/50">
+                <div className="p-4 border-b border-slate-700/50 space-y-2">
                   <button
                     onClick={() => setSidebarCollapsed(false)}
                     className="flex items-center space-x-2 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
@@ -329,6 +342,14 @@ const Seilor = () => {
                   >
                     <Menu className="w-4 h-4" />
                     <span className="text-sm">Show Menu</span>
+                  </button>
+                  {/* Debug Test Button */}
+                  <button
+                    onClick={testChatFunction}
+                    className="flex items-center space-x-2 px-3 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors text-sm"
+                    title="Test Chat Function"
+                  >
+                    🧪 Test Chat
                   </button>
                 </div>
               )}
@@ -407,22 +428,31 @@ const Seilor = () => {
                     )}
                     
                     {/* Chat Input */}
-                    <div className="flex space-x-3">
-                      <input
-                        type="text"
-                        value={aiChat}
-                        onChange={(e) => setAiChat(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
-                        placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'"
-                        className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none"
-                        disabled={loading}
-                      />
+                    <div className="space-y-3">
+                      <div className="flex space-x-3">
+                        <input
+                          type="text"
+                          value={aiChat}
+                          onChange={(e) => setAiChat(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
+                          placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'"
+                          className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none"
+                          disabled={loading}
+                        />
+                        <button
+                          onClick={handleAiChat}
+                          disabled={loading || !aiChat.trim()}
+                          className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25"
+                        >
+                          <Send className="w-5 h-5" />
+                        </button>
+                      </div>
+                      {/* Debug Test Button */}
                       <button
-                        onClick={handleAiChat}
-                        disabled={loading || !aiChat.trim()}
-                        className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25"
+                        onClick={testChatFunction}
+                        className="w-full px-4 py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition-colors text-sm border border-yellow-500/30"
                       >
-                        <Send className="w-5 h-5" />
+                        🧪 Test Chat Function (Debug)
                       </button>
                     </div>
                   </div>
