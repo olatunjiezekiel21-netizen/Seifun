@@ -86,7 +86,7 @@ export class ChatBrain {
         console.log('🚀 Trying LangChain AI Agent...');
         const langChainResult = await langChainSeiAgent.processMessage(userMessage);
         
-        if (langChainResult.success && langChainResult.confidence > 0.7) {
+        if (langChainResult.success) {
           console.log('✅ LangChain agent handled the request successfully');
           
           // Add assistant response to history
