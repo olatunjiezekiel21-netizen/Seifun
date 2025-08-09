@@ -1,5 +1,6 @@
 import { actionBrain, IntentType } from './ActionBrain';
 import { cambrianSeiAgent } from './CambrianSeiAgent';
+import { langChainSeiAgent, LangChainResponse } from './LangChainSeiAgent';
 
 // Conversation Context
 interface ConversationContext {
@@ -80,16 +81,53 @@ export class ChatBrain {
         return confirmationResult;
       }
       
-      // Step 2: Intent Recognition through Action Brain
+      // Step 2: Try LangChain AI Agent First (Enhanced Intelligence)
+      try {
+        console.log('🚀 Trying LangChain AI Agent...');
+        const langChainResult = await langChainSeiAgent.processMessage(userMessage);
+        
+        if (langChainResult.success && langChainResult.confidence > 0.7) {
+          console.log('✅ LangChain agent handled the request successfully');
+          
+          // Add assistant response to history
+          const assistantMessage: ChatMessage = {
+            id: Date.now() + 1,
+            type: 'assistant',
+            message: langChainResult.message,
+            timestamp: new Date(),
+            intent: IntentType.CONVERSATION,
+            confidence: langChainResult.confidence,
+            actionSuccess: true
+          };
+          this.conversationHistory.push(assistantMessage);
+          
+          this.context.sessionData!.successfulActions++;
+          
+          return {
+            message: langChainResult.message,
+            success: langChainResult.success,
+            intent: IntentType.CONVERSATION,
+            confidence: langChainResult.confidence,
+            suggestions: this.generateSuggestions(userMessage)
+          };
+        }
+      } catch (langChainError) {
+        console.log('⚠️ LangChain agent failed, falling back to ActionBrain:', langChainError.message);
+      }
+      
+      // Step 3: Fallback to ActionBrain System
+      console.log('🔄 Using ActionBrain fallback system...');
+      
+      // Intent Recognition through Action Brain
       const intentResult = await actionBrain.recognizeIntent(userMessage);
       
-      // Step 3: Context Enhancement
+      // Context Enhancement
       const enhancedIntent = this.enhanceWithContext(intentResult);
       
-      // Step 4: Action Execution
+      // Action Execution
       const actionResponse = await actionBrain.executeAction(enhancedIntent);
       
-      // Step 5: Update Context (including pending transfers)
+      // Update Context (including pending transfers)
       this.updateContext(enhancedIntent, actionResponse);
       
       // Step 6: Generate Conversational Response
