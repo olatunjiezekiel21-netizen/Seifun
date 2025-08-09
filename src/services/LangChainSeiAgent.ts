@@ -15,7 +15,7 @@ export class LangChainSeiAgent {
   
   constructor(private openAIApiKey?: string) {
     // Initialize with a default key or environment variable
-    this.openAIApiKey = openAIApiKey || process.env.OPENAI_API_KEY;
+    this.openAIApiKey = openAIApiKey || import.meta.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
   }
   
   private async initialize() {
