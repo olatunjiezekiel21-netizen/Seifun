@@ -5,13 +5,7 @@ import {
   History, 
   CreditCard, 
   CheckSquare, 
-  Plus,
-  Image,
-  Scan,
-  ArrowUpDown,
-  Paperclip,
-  Camera,
-  Zap
+  Plus
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { chatBrain } from '../services/ChatBrain';
@@ -30,7 +24,7 @@ const Seilor = () => {
     {
       id: 1,
       type: 'assistant',
-      message: `🚀 **Welcome to Seilor 0 - Your AI DeFi Agent!**\n\n**🔥 What I can do:**\n• **Token Operations** - Scan, create, burn tokens\n• **Symphony DEX** - "Swap 10 SEI for USDC" \n• **Silo Staking** - "Stake 50 SEI for yield"\n• **Takara Lending** - "Lend 100 USDC" or "Borrow 50 USDC"\n• **Citrex Trading** - "Open long position on SEI/USDC"\n• **Portfolio** - "Show my wallet info"\n\n**💡 Try saying:**\n• "How are you?"\n• "What's my balance?"\n• Paste any token address for analysis\n• "Swap 5 SEI for USDC"\n• "Stake 25 SEI"\n\n**Ready to help with real DeFi operations!** ⚡`,
+      message: `👋 **Hey there! I'm Seilor 0, your AI DeFi companion!**\n\nI'm here to help you navigate the Sei Network with ChatGPT-level intelligence. Just talk to me naturally!\n\n**🎯 I can help you with:**\n• Checking your wallet balance and portfolio\n• Swapping tokens on Symphony DEX\n• Staking SEI for yield on Silo\n• Lending and borrowing on Takara\n• Trading on Citrex exchange\n• Analyzing token contracts for safety\n• Creating and managing tokens\n\n**💬 Just tell me what you want to do:**\n• "I want to swap some tokens"\n• "What's my current balance?"\n• "Help me stake my SEI"\n• "Is this token safe?" (paste address)\n• "How do I create a token?"\n\n**Let's chat! What's on your mind?** 🚀`,
       timestamp: new Date()
     }
   ]);
@@ -42,7 +36,6 @@ const Seilor = () => {
     completed: boolean;
     timestamp: Date;
   }>>([]);
-  const [showToolbar, setShowToolbar] = useState(true);
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number } | null>(null);
 
   const { isConnected, address } = useReownWallet();
@@ -127,18 +120,7 @@ const Seilor = () => {
     }
   };
 
-  // Quick action handlers
-  const handleTokenScan = () => {
-    setAiChat('Scan token: ');
-  };
-
-  const handleTokenCreate = () => {
-    setAiChat('Create a token called ');
-  };
-
-  const handleSwapRequest = () => {
-    setAiChat('Help me swap tokens');
-  };
+  // Removed quick action handlers - focusing on conversational AI
 
   // Todo management
   const addTodo = (task: string) => {
@@ -280,52 +262,16 @@ const Seilor = () => {
                     )}
                   </div>
 
-                  {/* Chat Input with Toolbar */}
+                  {/* Chat Input */}
                   <div className="border-t border-slate-700/50 p-4">
-                    {/* Quick Action Toolbar */}
-                    {showToolbar && walletBalance && (
+                    {/* Balance Display */}
+                    {walletBalance && (
                       <div className="mb-3 p-3 bg-slate-700/30 rounded-xl border border-slate-600/30">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs font-medium text-slate-300">Quick Actions</div>
-                          <div className="text-xs text-slate-400">
-                            Balance: {walletBalance.sei} SEI (${walletBalance.usd.toFixed(2)})
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs font-medium text-slate-300">💰 Wallet Balance</div>
+                          <div className="text-sm font-medium text-white">
+                            {walletBalance.sei} SEI <span className="text-xs text-slate-400">(${walletBalance.usd.toFixed(2)})</span>
                           </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={handleTokenScan}
-                            className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-xs hover:bg-blue-500/30 transition-colors"
-                          >
-                            <Scan className="w-3 h-3" />
-                            <span>Scan</span>
-                          </button>
-                          <button
-                            onClick={handleTokenCreate}
-                            className="flex items-center space-x-1 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-xs hover:bg-green-500/30 transition-colors"
-                          >
-                            <Plus className="w-3 h-3" />
-                            <span>Create</span>
-                          </button>
-                          <button
-                            onClick={() => setAiChat('Add liquidity with ')}
-                            className="flex items-center space-x-1 px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs hover:bg-purple-500/30 transition-colors"
-                          >
-                            <Zap className="w-3 h-3" />
-                            <span>Liquidity</span>
-                          </button>
-                          <button
-                            onClick={() => setAiChat('Burn tokens: ')}
-                            className="flex items-center space-x-1 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-xs hover:bg-red-500/30 transition-colors"
-                          >
-                            <Camera className="w-3 h-3" />
-                            <span>Burn</span>
-                          </button>
-                          <button
-                            onClick={() => setShowToolbar(false)}
-                            className="flex items-center space-x-1 px-2 py-1.5 bg-slate-600/20 text-slate-400 rounded-lg text-xs hover:bg-slate-600/30 transition-colors"
-                          >
-                            <Paperclip className="w-3 h-3" />
-                          </button>
                         </div>
                       </div>
                     )}
@@ -337,7 +283,7 @@ const Seilor = () => {
                         value={aiChat}
                         onChange={(e) => setAiChat(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
-                        placeholder="Ask Seilor anything... Try: 'How are you?' or paste a token address"
+                        placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'"
                         className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none"
                         disabled={loading}
                       />
@@ -349,15 +295,6 @@ const Seilor = () => {
                         <Send className="w-5 h-5" />
                       </button>
                     </div>
-                    
-                    {!showToolbar && (
-                      <button
-                        onClick={() => setShowToolbar(true)}
-                        className="mt-2 text-xs text-slate-400 hover:text-slate-300 transition-colors"
-                      >
-                        Show quick actions
-                      </button>
-                    )}
                   </div>
                 </div>
               )}
