@@ -3,11 +3,11 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   SECRETS_SCAN_ENABLED = "false"
   FORCE_REBUILD = "true"
-  DEPLOY_TIMESTAMP = "2025-01-27-20:30"
-  BUILD_VERSION = "v2.0-collapsible-debug"
+  DEPLOY_TIMESTAMP = "2025-01-27-20:40"
+  BUILD_VERSION = "v2.0-collapsible-debug-fixed"
 
 [[redirects]]
   from = "/*"
