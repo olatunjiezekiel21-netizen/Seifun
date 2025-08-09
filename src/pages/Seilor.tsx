@@ -5,7 +5,10 @@ import {
   History, 
   CreditCard, 
   CheckSquare, 
-  Plus
+  Plus,
+  MessageCircle,
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { chatBrain } from '../services/ChatBrain';
@@ -120,7 +123,25 @@ const Seilor = () => {
     }
   };
 
-  // Removed quick action handlers - focusing on conversational AI
+  // Chat management functions
+  const startNewChat = () => {
+    setChatMessages([
+      {
+        id: Date.now(),
+        type: 'assistant',
+        message: `👋 **Hey there! I'm Seilor 0, your AI DeFi companion!**\n\nI'm here to help you navigate the Sei Network with ChatGPT-level intelligence. Just talk to me naturally!\n\n**🎯 I can help you with:**\n• Checking your wallet balance and portfolio\n• Swapping tokens on Symphony DEX\n• Staking SEI for yield on Silo\n• Lending and borrowing on Takara\n• Trading on Citrex exchange\n• Analyzing token contracts for safety\n• Creating and managing tokens\n\n**💬 Just tell me what you want to do:**\n• "I want to swap some tokens"\n• "What's my current balance?"\n• "Help me stake my SEI"\n• "Is this token safe?" (paste address)\n• "How do I create a token?"\n\n**Let's chat! What's on your mind?** 🚀`,
+        timestamp: new Date()
+      }
+    ]);
+  };
+
+  const clearChat = () => {
+    if (chatMessages.length > 1) {
+      const confirmClear = window.confirm('Are you sure you want to clear the chat history? This action cannot be undone.');
+      if (!confirmClear) return;
+    }
+    setChatMessages([]);
+  };
 
   // Todo management
   const addTodo = (task: string) => {
@@ -165,7 +186,7 @@ const Seilor = () => {
       <div className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
                   <Bot className="w-6 h-6 text-white" />
@@ -175,6 +196,28 @@ const Seilor = () => {
                   <p className="text-xs text-slate-400">Autonomous AI Trading Agent</p>
                 </div>
               </div>
+              
+              {/* Chat Management Buttons */}
+              {activePanel === 'chat' && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={startNewChat}
+                    className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30 transition-colors border border-blue-500/30"
+                    title="Start New Chat"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span className="hidden sm:inline">New Chat</span>
+                  </button>
+                  <button
+                    onClick={clearChat}
+                    className="flex items-center space-x-2 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors border border-red-500/30"
+                    title="Clear Chat"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Clear</span>
+                  </button>
+                </div>
+              )}
             </div>
             
             {/* Wallet Status */}
@@ -231,25 +274,44 @@ const Seilor = () => {
                 <div className="h-[600px] flex flex-col">
                   {/* Messages */}
                   <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                    {chatMessages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div className={`max-w-3xl p-4 rounded-2xl ${
-                          msg.type === 'user'
-                            ? 'bg-red-500/20 text-white border border-red-500/30'
-                            : 'bg-slate-700/50 text-slate-100 border border-slate-600/50'
-                        }`}>
-                          <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                            {msg.message}
-                          </div>
-                          <div className="text-xs text-slate-400 mt-2">
-                            {msg.timestamp.toLocaleTimeString()}
+                    {chatMessages.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center">
+                        <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
+                          <Bot className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <h3 className="text-lg font-medium text-white mb-2">Ready to Chat!</h3>
+                        <p className="text-slate-400 mb-4 max-w-md">
+                          Start a conversation with Seilor 0, your AI DeFi companion. Ask me anything about crypto, DeFi, or just say hello!
+                        </p>
+                        <button
+                          onClick={startNewChat}
+                          className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors border border-red-500/30"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span>Start New Chat</span>
+                        </button>
+                      </div>
+                    ) : (
+                      chatMessages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`max-w-3xl p-4 rounded-2xl ${
+                            msg.type === 'user'
+                              ? 'bg-red-500/20 text-white border border-red-500/30'
+                              : 'bg-slate-700/50 text-slate-100 border border-slate-600/50'
+                          }`}>
+                            <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                              {msg.message}
+                            </div>
+                            <div className="text-xs text-slate-400 mt-2">
+                              {msg.timestamp.toLocaleTimeString()}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                     {loading && (
                       <div className="flex justify-start">
                         <div className="bg-slate-700/50 text-slate-100 border border-slate-600/50 p-4 rounded-2xl">
