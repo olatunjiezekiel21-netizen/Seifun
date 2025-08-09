@@ -1,13 +1,14 @@
 [build]
-  command = "rm -rf node_modules/.cache && rm -rf dist && npm ci && npm run build"
+  command = "rm -rf node_modules && rm -rf dist && npm install --production=false --no-optional && npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
   SECRETS_SCAN_ENABLED = "false"
   FORCE_REBUILD = "true"
-  DEPLOY_TIMESTAMP = "2025-01-27-20:40"
-  BUILD_VERSION = "v2.0-collapsible-debug-fixed"
+  DEPLOY_TIMESTAMP = "2025-01-27-20:50"
+  BUILD_VERSION = "v2.0-production-build"
+  NPM_FLAGS = "--no-optional"
 
 [[redirects]]
   from = "/*"
