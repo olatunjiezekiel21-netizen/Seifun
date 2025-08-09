@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DocumentationSearchService, SearchResult } from '../services/DocumentationSearchService';
 import { 
   BookOpen, 
   Shield, 
@@ -39,8 +40,12 @@ const Docs = () => {
   const [activeSection, setActiveSection] = useState('introduction');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  
+  // Initialize search service
+  const searchService = DocumentationSearchService.getInstance();
 
   // Documentation structure based on our GitBook SUMMARY.md
   const documentationSections = [
@@ -702,98 +707,23 @@ const Docs = () => {
     }
   };
 
-  // Enhanced search functionality with content search
+  // Enhanced search functionality with comprehensive content search
   const performSearch = (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
+      setSearchSuggestions([]);
       setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
-    const results: any[] = [];
-    const searchTerm = query.toLowerCase();
-
-    // Search through all sections and items
-    documentationSections.forEach(section => {
-      // Check section title match
-      if (section.title.toLowerCase().includes(searchTerm)) {
-        results.push({
-          type: 'section',
-          id: section.id,
-          title: section.title,
-          description: `${section.items.length} topics available`,
-          icon: section.icon,
-          relevance: section.title.toLowerCase().indexOf(searchTerm)
-        });
-      }
-
-      // Check individual items
-      section.items.forEach(item => {
-        if (item.title.toLowerCase().includes(searchTerm)) {
-          results.push({
-            type: 'item',
-            id: item.id,
-            title: item.title,
-            description: `In ${section.title}`,
-            icon: item.icon,
-            sectionId: section.id,
-            relevance: item.title.toLowerCase().indexOf(searchTerm)
-          });
-        }
-      });
-
-      // Search actual content by extracting text from JSX
-      // Map section IDs to content keys
-      const contentKeyMapping: { [key: string]: string } = {
-        'getting-started': 'introduction',
-        'introduction': 'introduction',
-        'features': 'introduction', // For now, all content is in introduction
-        'ai-agent': 'introduction',
-        'token-creation': 'introduction',
-        'safechecker': 'introduction',
-        'developer-tools': 'introduction',
-        'api-reference': 'introduction',
-        'tutorials': 'introduction',
-        'troubleshooting': 'introduction'
-      };
-      
-      const contentKey = contentKeyMapping[section.id] || 'introduction';
-      const content = documentationContent[contentKey as keyof typeof documentationContent];
-      
-      if (content) {
-        const extractedText = extractTextFromContent(content);
-        if (extractedText.toLowerCase().includes(searchTerm)) {
-          // Find the specific context around the match
-          const contextMatch = findContextAroundMatch(extractedText, searchTerm);
-          results.push({
-            type: 'content',
-            id: section.id,
-            title: `${section.title} (Content Match)`,
-            description: contextMatch,
-            icon: section.icon,
-            relevance: extractedText.toLowerCase().indexOf(searchTerm)
-          });
-        }
-      }
-    });
-
-    // Search specific keywords and topics
-    const keywordMatches = searchKeywords(searchTerm);
-    results.push(...keywordMatches);
-
-    // Sort by relevance (exact matches first, then by type priority)
-    results.sort((a, b) => {
-      // Prioritize exact matches
-      if (a.relevance !== b.relevance) {
-        return a.relevance - b.relevance;
-      }
-      // Then prioritize by type: keyword > item > section
-      const typePriority = { keyword: 0, item: 1, section: 2, content: 3 };
-      return typePriority[a.type] - typePriority[b.type];
-    });
+    
+    // Use the comprehensive search service
+    const results = searchService.search(query);
+    const suggestions = searchService.getSuggestions(query);
     
     setSearchResults(results.slice(0, 8)); // Limit to top 8 results for better UX
+    setSearchSuggestions(suggestions);
     setTimeout(() => setIsSearching(false), 100); // Small delay to prevent flickering
   };
 
@@ -1054,12 +984,28 @@ const Docs = () => {
                           Search Results ({searchResults.length})
                         </div>
                         {searchResults.map((result, index) => {
-                          const IconComponent = result.icon;
+                          // Map result sections to actual navigation sections
+                          const sectionMap: { [key: string]: string } = {
+                            'introduction': 'introduction',
+                            'getting-started': 'quick-start',
+                            'seilor-ai': 'ai-agent',
+                            'seilist': 'token-creation',
+                            'safechecker': 'safechecker',
+                            'dev-plus-plus': 'developer-tools',
+                            'wallet-integration': 'quick-start',
+                            'trading-features': 'ai-agent',
+                            'api-reference': 'api-reference',
+                            'security-best-practices': 'safechecker',
+                            'troubleshooting': 'troubleshooting'
+                          };
+                          
+                          const targetSection = sectionMap[result.id.replace('-title', '').replace('-content', '').replace('-keyword', '')] || 'introduction';
+                          
                           return (
                             <button
                               key={`${result.id}-${index}`}
                               onClick={() => {
-                                setActiveSection(result.id);
+                                setActiveSection(targetSection);
                                 setSearchQuery('');
                                 setSearchResults([]);
                               }}
@@ -1067,26 +1013,27 @@ const Docs = () => {
                             >
                               <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0 mt-0.5">
-                                  <IconComponent className="w-4 h-4 text-blue-400" />
+                                  <FileText className="w-4 h-4 text-blue-400" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-medium text-white truncate">
-                                    {result.title}
+                                  <div className="text-sm font-medium text-white">
+                                    <span dangerouslySetInnerHTML={{ __html: result.highlightedText || result.title }} />
                                   </div>
                                   <div className="text-xs text-gray-400 mt-1">
                                     {result.description}
                                   </div>
-                                  <div className="flex items-center mt-1">
+                                  <div className="flex items-center mt-1 space-x-2">
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                      result.type === 'section' ? 'bg-blue-100 text-blue-800' :
-                                      result.type === 'item' ? 'bg-green-100 text-green-800' :
-                                      result.type === 'keyword' ? 'bg-purple-100 text-purple-800' :
-                                      'bg-gray-100 text-gray-800'
+                                      result.matchType === 'title' ? 'bg-blue-100 text-blue-800' :
+                                      result.matchType === 'content' ? 'bg-green-100 text-green-800' :
+                                      'bg-purple-100 text-purple-800'
                                     }`}>
-                                      {result.type === 'section' ? 'Section' :
-                                       result.type === 'item' ? 'Topic' :
-                                       result.type === 'keyword' ? 'Keyword' :
-                                       'Content'}
+                                      {result.matchType === 'title' ? 'Title Match' :
+                                       result.matchType === 'content' ? 'Content Match' :
+                                       'Keyword Match'}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      Score: {result.relevanceScore}
                                     </span>
                                   </div>
                                 </div>
@@ -1097,10 +1044,32 @@ const Docs = () => {
                         })}
                       </div>
                     ) : (
-                      <div className="p-4 text-center text-gray-400">
-                        <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <div className="text-sm">No results found for "{searchQuery}"</div>
-                        <div className="text-xs mt-1">Try searching for: token, ai, security, wallet, trading</div>
+                      <div className="p-4">
+                        <div className="text-center text-gray-400 mb-4">
+                          <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <div className="text-sm">No results found for "{searchQuery}"</div>
+                        </div>
+                        {searchSuggestions.length > 0 && (
+                          <div>
+                            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+                              Try these suggestions:
+                            </div>
+                            <div className="space-y-1">
+                              {searchSuggestions.map((suggestion, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => {
+                                    setSearchQuery(suggestion);
+                                    performSearch(suggestion);
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-sm text-blue-400 hover:bg-gray-700 rounded transition-colors"
+                                >
+                                  {suggestion}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
