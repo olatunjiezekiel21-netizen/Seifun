@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bot, 
   Send, 
@@ -32,7 +32,9 @@ const Seilor = () => {
     }
   ]);
   const [loading, setLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [newTodo, setNewTodo] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [todos, setTodos] = useState<Array<{
     id: string;
     task: string;
@@ -42,6 +44,16 @@ const Seilor = () => {
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number } | null>(null);
 
   const { isConnected, address } = useReownWallet();
+
+  // Auto-scroll to bottom of messages
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages, isTyping]);
 
   // Load wallet balance on component mount
   useEffect(() => {
@@ -85,9 +97,18 @@ const Seilor = () => {
     };
     setChatMessages(prev => [...prev, userChatMessage]);
     
+    // Show typing indicator
+    setIsTyping(true);
+    
+    // Add a natural delay to simulate thinking
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     try {
       // Process message through Chat Brain (which uses Action Brain)
       const response = await chatBrain.processMessage(userMessage);
+      
+      // Hide typing indicator
+      setIsTyping(false);
       
       // Add AI response
       const aiResponse = {
@@ -98,23 +119,13 @@ const Seilor = () => {
       };
       setChatMessages(prev => [...prev, aiResponse]);
       
-      // Add suggestions if available
-      if (response.suggestions && response.suggestions.length > 0) {
-        const suggestionsMessage = {
-          id: Date.now() + 2,
-          type: 'assistant' as const,
-          message: `💡 **Quick Actions:**\n${response.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}`,
-          timestamp: new Date()
-        };
-        setChatMessages(prev => [...prev, suggestionsMessage]);
-      }
-      
     } catch (error) {
       console.error('Chat Brain Error:', error);
+      setIsTyping(false);
       const errorMessage = {
         id: Date.now() + 1,
         type: 'assistant' as const,
-        message: `❌ **I encountered an issue processing your message.**\n\n**Error**: ${error.message}\n\n**Please try**: Being more specific or rephrasing your request.`,
+        message: `❌ Sorry, I encountered an error. ${error.message || 'Please try again.'}`,
         timestamp: new Date()
       };
       setChatMessages(prev => [...prev, errorMessage]);
@@ -129,7 +140,7 @@ const Seilor = () => {
       {
         id: Date.now(),
         type: 'assistant',
-        message: `👋 **Hey there! I'm Seilor 0, your AI DeFi companion!**\n\nI'm here to help you navigate the Sei Network with ChatGPT-level intelligence. Just talk to me naturally!\n\n**🎯 I can help you with:**\n• Checking your wallet balance and portfolio\n• Swapping tokens on Symphony DEX\n• Staking SEI for yield on Silo\n• Lending and borrowing on Takara\n• Trading on Citrex exchange\n• Analyzing token contracts for safety\n• Creating and managing tokens\n\n**💬 Just tell me what you want to do:**\n• "I want to swap some tokens"\n• "What's my current balance?"\n• "Help me stake my SEI"\n• "Is this token safe?" (paste address)\n• "How do I create a token?"\n\n**Let's chat! What's on your mind?** 🚀`,
+        message: `👋 Hey! I'm Seilor 0, your AI assistant for DeFi on Sei. What can I help you with today?`,
         timestamp: new Date()
       }
     ]);
@@ -312,16 +323,21 @@ const Seilor = () => {
                         </div>
                       ))
                     )}
-                    {loading && (
+                    {isTyping && (
                       <div className="flex justify-start">
                         <div className="bg-slate-700/50 text-slate-100 border border-slate-600/50 p-4 rounded-2xl">
                           <div className="flex items-center space-x-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
-                            <span className="text-sm">Seilor is thinking...</span>
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                            <span className="text-sm text-slate-300">Seilor is typing...</span>
                           </div>
                         </div>
                       </div>
                     )}
+                    <div ref={messagesEndRef} />
                   </div>
 
                   {/* Chat Input */}
