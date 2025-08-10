@@ -396,7 +396,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
               website: formData.website,
               twitter: formData.twitter,
               telegram: formData.telegram,
-              tokenImage: tokenImage
+              tokenImage: formData.tokenImage || logoPreviewUrl || generateTokenImage(formData.symbol, formData.name)
             });
             
             // Show the spotlight after a brief delay for effect
@@ -426,7 +426,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
       }
       
       // Real implementation using connected wallet (production)
-      if (reownWallet.isConnected) {
+      if (reownWallet.isConnected && window.ethereum) {
         // Use ReOWN wallet connection
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
@@ -435,7 +435,7 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
         signer = privateKeyWallet.getSigner();
         provider = signer.provider;
       } else {
-        throw new Error('Please connect your wallet first');
+        throw new Error('Please install MetaMask or use a compatible wallet. Alternatively, enable testnet mode for seamless testing.');
       }
       
       // Factory address with fallback to deployed address
