@@ -37,9 +37,9 @@ interface TokenScanResult {
 }
 
 interface AIInterfaceProps {
-  onTokenScan: (result: TokenScanResult) => void;
-  onTokenCreate: (tokenData: any) => void;
-  onSwapRequest: (fromToken: string, toToken: string, amount: string) => void;
+  onTokenScan?: (result: TokenScanResult) => void;
+  onTokenCreate?: (tokenData: any) => void;
+  onSwapRequest?: (fromToken: string, toToken: string, amount: string) => void;
 }
 
 export const AIInterface: React.FC<AIInterfaceProps> = ({
@@ -118,7 +118,7 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
       };
 
       setScanResults(scanResult);
-      onTokenScan(scanResult);
+      onTokenScan?.(scanResult);
       
       // Success feedback
       setTimeout(() => {
@@ -179,7 +179,7 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
       alert(`🚀 AI Token Creation Initiated!\n\n✅ Token: ${tokenForm.name} (${tokenForm.symbol})\n📊 Supply: ${parseInt(tokenForm.totalSupply).toLocaleString()}\n🎨 Logo: ${imagePreview ? 'Custom uploaded' : 'Auto-generated'}\n\n🔄 Redirecting to SeiList for deployment...`);
 
       // This integrates with the actual token creation process
-      onTokenCreate(tokenData);
+      onTokenCreate?.(tokenData);
       
       // Reset form after successful creation
       setTokenForm({
@@ -209,7 +209,7 @@ export const AIInterface: React.FC<AIInterfaceProps> = ({
       return;
     }
 
-    onSwapRequest(swapForm.fromToken, swapForm.toToken, swapForm.amount);
+    onSwapRequest?.(swapForm.fromToken, swapForm.toToken, swapForm.amount);
   };
 
   const modes = [

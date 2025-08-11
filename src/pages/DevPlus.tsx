@@ -114,8 +114,8 @@ const DevPlus = () => {
 
   // REAL LIQUIDITY ADDITION
   const handleAddLiquidity = async () => {
-    if (!selectedToken || !isConnected) {
-      alert('Please connect your wallet first');
+    if (!selectedToken) {
+      alert('Please select a token first');
       return;
     }
 
@@ -126,10 +126,10 @@ const DevPlus = () => {
 
     setProcessing(true);
     try {
-      // Connect DeFi service to user's wallet
-      await defiService.connectWallet();
+      // Use testDefiService with private key for seamless testing
+      console.log('🔧 Using private key wallet for liquidity addition');
       
-      const result = await defiService.addLiquidity({
+      const result = await testDefiService.addLiquidity({
         tokenAddress: selectedToken.address,
         tokenAmount: liquidityAmount.token,
         seiAmount: liquidityAmount.sei,
@@ -175,8 +175,8 @@ const DevPlus = () => {
 
   // REAL TOKEN BURNING
   const handleBurnTokens = async () => {
-    if (!selectedToken || !isConnected) {
-      alert('Please connect your wallet first');
+    if (!selectedToken) {
+      alert('Please select a token first');
       return;
     }
 
@@ -198,10 +198,10 @@ const DevPlus = () => {
 
     setProcessing(true);
     try {
-      // Connect DeFi service to user's wallet
-      await defiService.connectWallet();
+      // Use testDefiService with private key for seamless testing
+      console.log('🔧 Using private key wallet for token burning');
       
-      const result = await defiService.burnTokens({
+      const result = await testDefiService.burnTokens({
         tokenAddress: selectedToken.address,
         amount: burnAmount
       });

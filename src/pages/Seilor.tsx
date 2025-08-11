@@ -10,12 +10,14 @@ import {
   Trash2,
   RefreshCw,
   Menu,
-  X
+  X,
+  Zap
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { chatBrain } from '../services/ChatBrain';
 import { actionBrain, IntentType } from '../services/ActionBrain';
 import { privateKeyWallet } from '../services/PrivateKeyWallet';
+import { AIInterface } from '../components/AIInterface';
 
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
@@ -221,7 +223,8 @@ const Seilor = () => {
     { id: 'chat', label: 'AI Chat', icon: Bot },
     { id: 'history', label: 'History', icon: History },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
-    { id: 'todo', label: 'Todo List', icon: CheckSquare }
+    { id: 'todo', label: 'Todo List', icon: CheckSquare },
+    { id: 'ai-tools', label: 'AI Tools', icon: Zap }
   ];
 
   return (
@@ -536,6 +539,15 @@ const Seilor = () => {
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* AI Tools Panel */}
+              {activePanel === 'ai-tools' && (
+                <div className="p-6">
+                  <h2 className="text-xl font-bold text-white mb-4">AI Tools</h2>
+                  <p className="text-slate-400 mb-6">Scan tokens, create new tokens, and manage swaps directly from the AI interface.</p>
+                  <AIInterface />
                 </div>
               )}
 
