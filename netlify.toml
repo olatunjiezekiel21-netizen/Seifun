@@ -1,13 +1,11 @@
 [build]
-  command = "rm -rf node_modules && rm -rf dist && npm install && npm run build"
+  command = "npm install && npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
-  SECRETS_SCAN_ENABLED = "false"
-  FORCE_REBUILD = "true"
-  DEPLOY_TIMESTAMP = "2025-01-27-21:00"
-  BUILD_VERSION = "v2.0-rollup-fix"
+  DEPLOY_TIMESTAMP = "2025-01-27-21:10"
+  BUILD_VERSION = "v2.0-simple-build"
 
 [[redirects]]
   from = "/*"
