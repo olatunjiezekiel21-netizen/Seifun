@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createSeiTools } from './SeiLangChainTools';
+import { privateKeyWallet } from './PrivateKeyWallet';
 
 export interface LangChainResponse {
   message: string;
@@ -26,9 +27,9 @@ export class LangChainSeiAgent {
       // Create LangChain model
       this.model = new ChatOpenAI({
         modelName: "gpt-3.5-turbo", // Using 3.5-turbo for faster responses
-        temperature: 0.1, // Low temperature for more consistent responses
+        temperature: 0.3, // Slightly higher for more natural responses
         openAIApiKey: this.openAIApiKey,
-        maxTokens: 1000
+        maxTokens: 500 // Shorter responses
       });
       
       this.isInitialized = true;
@@ -36,6 +37,25 @@ export class LangChainSeiAgent {
     } catch (error) {
       console.error('Failed to initialize LangChain agent:', error);
       throw new Error(`LangChain initialization failed: ${error.message}`);
+    }
+  }
+
+  // Get real-time wallet information
+  private async getWalletInfo(): Promise<string> {
+    try {
+      const [seiBalance, usdcBalance, myTokens] = await Promise.all([
+        privateKeyWallet.getSeiBalance(),
+        privateKeyWallet.getUSDCBalance(),
+        privateKeyWallet.getMyTokens()
+      ]);
+
+      return `WALLET INFO:
+- SEI Balance: ${seiBalance.sei} SEI ($${seiBalance.usd.toFixed(2)})
+- USDC Balance: ${usdcBalance.balance} USDC ($${usdcBalance.usd.toFixed(2)})
+- My Tokens: ${myTokens.length} tokens created
+- Wallet Address: ${privateKeyWallet.getAddress()}`;
+    } catch (error) {
+      return `WALLET INFO: Unable to fetch (${error.message})`;
     }
   }
   
@@ -46,33 +66,52 @@ export class LangChainSeiAgent {
         await this.initialize();
       }
       
-      // If no OpenAI key, fall back to basic responses
+      // If no OpenAI key, give a simple response
       if (!this.openAIApiKey || !this.model) {
-        console.log('❌ No OpenAI API key found - falling back to ActionBrain');
+        console.log('❌ No OpenAI API key found');
         return {
-          message: "🔑 **OpenAI API key required for advanced AI features.**\n\nFor now, I can help you with basic commands:\n• 'What's my balance?' → Check SEI balance\n• 'Send X SEI to 0x...' → Transfer tokens\n• 'Swap X SEI for USDC' → Token swaps\n\nTo unlock full ChatGPT-level intelligence, please add an OpenAI API key to your environment variables.",
+          message: "I need an OpenAI API key to be fully intelligent. For now, I can help with basic commands like checking balances or transferring tokens.",
           success: false,
           confidence: 0.3
         };
       }
       
-      console.log('✅ OpenAI API key found - using ChatGPT-level intelligence');
+      console.log('✅ OpenAI API key found - using full intelligence');
       
-      // Create a natural, concise AI prompt
-      const prompt = `You are Seilor 0, a friendly AI assistant for DeFi on Sei Network. Be conversational, helpful, and concise like ChatGPT.
+      // Get real-time wallet information
+      const walletInfo = await this.getWalletInfo();
+      
+      // Create an intelligent, context-aware prompt
+      const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei Network. You have access to real wallet data and can perform actual blockchain operations.
 
-IMPORTANT RULES:
-- Keep responses SHORT (1-3 sentences max unless explaining something complex)
-- Be natural and conversational, not formal or robotic
-- NO long introductions or feature lists
-- NO bullet points or structured lists unless specifically asked
-- Respond to emotions naturally (if someone says "I'm not happy", be empathetic)
-- For DeFi requests, offer to help directly
-- Match the user's energy and tone
+CURRENT WALLET STATUS:
+${walletInfo}
 
-User: "${input}"
+PERSONALITY:
+- Be natural and conversational like ChatGPT
+- NEVER say "I don't quite understand" - always try to help
+- Be confident and knowledgeable about DeFi and crypto
+- Give specific, actionable responses
+- Be friendly but professional
 
-Respond naturally and briefly:`;
+CAPABILITIES:
+- Check real SEI and USDC balances (you have the data above)
+- Help with token swaps, transfers, and DeFi operations
+- Answer questions about Sei Network and DeFi
+- Provide trading advice and market insights
+- Handle any conversation naturally
+
+RESPONSE RULES:
+- Keep responses 1-3 sentences unless explaining something complex
+- Always acknowledge what the user asked about
+- If asking about balances, use the REAL data above
+- If asking about transactions, offer to help execute them
+- If confused, ask clarifying questions instead of saying "I don't understand"
+- Be helpful and solution-oriented
+
+User Message: "${input}"
+
+Respond naturally and helpfully:`;
 
       // Process message through LangChain model
       const result = await this.model.invoke(prompt);
@@ -80,17 +119,17 @@ Respond naturally and briefly:`;
       return {
         message: result.content as string,
         success: true,
-        confidence: 0.9
+        confidence: 0.95
       };
       
     } catch (error) {
       console.error('LangChain processing error:', error);
       
-      // Provide helpful error response
+      // Even for errors, be natural and helpful
       return {
-        message: `🤖 **I encountered an issue processing your request.**\n\n**Error**: ${error.message}\n\n**💡 Try**: Being more specific or rephrasing your request. I can help with balance checks, transfers, swaps, staking, and more!`,
+        message: `I'm having a technical issue right now, but I'm still here to help! Could you try rephrasing your question? I can help with balance checks, transfers, swaps, and more.`,
         success: false,
-        confidence: 0.1
+        confidence: 0.5
       };
     }
   }
@@ -98,45 +137,12 @@ Respond naturally and briefly:`;
   private extractToolsUsed(result: any): string[] {
     // Extract which tools were used from the agent result
     // This is useful for debugging and analytics
-    const toolsUsed: string[] = [];
-    
     if (result.intermediateSteps) {
-      result.intermediateSteps.forEach((step: any) => {
-        if (step.action && step.action.tool) {
-          toolsUsed.push(step.action.tool);
-        }
-      });
+      return result.intermediateSteps.map((step: any) => step.action?.tool || 'unknown');
     }
-    
-    return toolsUsed;
-  }
-  
-  // Health check method
-  async isHealthy(): Promise<boolean> {
-    try {
-      if (!this.isInitialized) {
-        await this.initialize();
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  
-  // Get agent capabilities
-  getCapabilities(): string[] {
-    return [
-      'Balance checking',
-      'Token transfers', 
-      'DEX trading',
-      'Staking operations',
-      'Lending protocols',
-      'Token analysis',
-      'Wallet management',
-      'Natural conversation'
-    ];
+    return [];
   }
 }
 
-// Create singleton instance
+// Export singleton instance
 export const langChainSeiAgent = new LangChainSeiAgent();

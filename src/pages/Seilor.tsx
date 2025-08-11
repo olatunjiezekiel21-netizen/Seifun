@@ -46,7 +46,7 @@ const Seilor = () => {
     completed: boolean;
     timestamp: Date;
   }>>([]);
-  const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number } | null>(null);
+  const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number; usdc: string; usdcUsd: number } | null>(null);
 
   const { isConnected, address } = useReownWallet();
 
@@ -78,8 +78,17 @@ const Seilor = () => {
 
   const loadWalletBalance = async () => {
     try {
-      const balance = await privateKeyWallet.getSeiBalance();
-      setWalletBalance(balance);
+      const [seiBalance, usdcBalance] = await Promise.all([
+        privateKeyWallet.getSeiBalance(),
+        privateKeyWallet.getUSDCBalance()
+      ]);
+      
+      setWalletBalance({
+        sei: seiBalance.sei,
+        usd: seiBalance.usd,
+        usdc: usdcBalance.balance,
+        usdcUsd: usdcBalance.usd
+      });
     } catch (error) {
       console.error('Failed to load wallet balance:', error);
     }
@@ -281,8 +290,8 @@ const Seilor = () => {
             <div className="flex items-center space-x-4">
               {walletBalance && (
                 <div className="text-right">
-                  <div className="text-sm font-medium text-white">{walletBalance.sei} SEI</div>
-                  <div className="text-xs text-slate-400">${walletBalance.usd.toFixed(2)}</div>
+                  <div className="text-sm font-medium text-white">{walletBalance.sei} SEI | {walletBalance.usdc} USDC</div>
+                  <div className="text-xs text-slate-400">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)} total</div>
                 </div>
               )}
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -426,10 +435,26 @@ const Seilor = () => {
                     {/* Balance Display */}
                     {walletBalance && (
                       <div className="mb-3 p-3 bg-slate-700/30 rounded-xl border border-slate-600/30">
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs font-medium text-slate-300">💰 Wallet Balance</div>
-                          <div className="text-sm font-medium text-white">
-                            {walletBalance.sei} SEI <span className="text-xs text-slate-400">(${walletBalance.usd.toFixed(2)})</span>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs font-medium text-slate-300">💰 SEI Balance</div>
+                            <div className="text-sm font-medium text-white">
+                              {walletBalance.sei} SEI <span className="text-xs text-slate-400">(${walletBalance.usd.toFixed(2)})</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs font-medium text-slate-300">💵 USDC Balance</div>
+                            <div className="text-sm font-medium text-white">
+                              {walletBalance.usdc} USDC <span className="text-xs text-slate-400">(${walletBalance.usdcUsd.toFixed(2)})</span>
+                            </div>
+                          </div>
+                          <div className="border-t border-slate-600/30 pt-2">
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs font-medium text-green-300">💎 Total Value</div>
+                              <div className="text-sm font-bold text-green-400">
+                                ${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

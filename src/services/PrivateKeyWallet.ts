@@ -79,6 +79,52 @@ export class PrivateKeyWallet {
     }
   }
 
+  // Get USDC balance specifically
+  async getUSDCBalance(): Promise<{ balance: string; usd: number }> {
+    try {
+      // Common USDC addresses on Sei (you can add more)
+      const USDC_ADDRESSES = [
+        '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1', // Test USDC
+        '0xA0b86a33E6441E47d6D5B4681e8A3F1bF4C3A1C8', // Another potential USDC
+      ];
+      
+      for (const usdcAddress of USDC_ADDRESSES) {
+        try {
+          const tokenContract = new ethers.Contract(usdcAddress, [
+            'function balanceOf(address) view returns (uint256)',
+            'function decimals() view returns (uint8)',
+            'function symbol() view returns (string)'
+          ], this.provider);
+
+          const [balance, decimals, symbol] = await Promise.all([
+            tokenContract.balanceOf(this.wallet.address),
+            tokenContract.decimals(),
+            tokenContract.symbol()
+          ]);
+
+          if (symbol.toLowerCase().includes('usdc')) {
+            const formattedBalance = ethers.formatUnits(balance, decimals);
+            const balanceNum = parseFloat(formattedBalance);
+            
+            return {
+              balance: balanceNum.toFixed(2),
+              usd: balanceNum // USDC is 1:1 with USD
+            };
+          }
+        } catch (error) {
+          // Try next address
+          continue;
+        }
+      }
+      
+      // No USDC found
+      return { balance: '0.00', usd: 0 };
+    } catch (error) {
+      console.error('Failed to get USDC balance:', error);
+      return { balance: '0.00', usd: 0 };
+    }
+  }
+
   // Get token balance
   async getTokenBalance(tokenAddress: string): Promise<{ balance: string; symbol: string; name: string }> {
     try {

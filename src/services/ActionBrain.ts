@@ -704,9 +704,9 @@ export class ActionBrain {
   // UNKNOWN ACTION
   private executeUnknown(intent: IntentResult): ActionResponse {
     return {
-      success: false,
-      response: `🤔 **I didn't quite understand that.**\n\n**💡 Try these commands:**\n• **Token Scanning**: Paste any token address (0x...)\n• **Token Creation**: "Create a token called [name]"\n• **Balance Check**: "What's my balance?"\n• **Protocol Data**: "Show me top tokens"\n• **Conversation**: "How are you?"\n\n**Or be more specific about what you'd like to do!**`,
-      followUp: ["What would you like to help you with?"]
+      success: true,
+      response: `I'm here to help with whatever you need! Whether it's checking balances, creating tokens, swapping, or just having a conversation, I'm ready to assist. What would you like to do?`,
+      followUp: ["Check my balance", "Create a token", "Scan a token", "Tell me about Sei"]
     };
   }
   
