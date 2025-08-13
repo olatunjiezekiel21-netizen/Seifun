@@ -34,14 +34,15 @@ const Landing = () => {
                 <span className="text-2xl font-bold landing-text-primary">
                   Seifun
                 </span>
-                <span className="text-xs landing-text-muted -mt-1">Launch Platform</span>
+                <span className="text-xs landing-text-muted -mt-1">Agentic AI Platform</span>
               </div>
             </Link>
 
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="landing-nav-link">Features</a>
-              <a href="#about" className="landing-nav-link">About</a>
-              <a href="#contact" className="landing-nav-link">Contact</a>
+              <a href="#showcase" className="landing-nav-link">Showcase</a>
+              <Link to="/app/docs" className="landing-nav-link">Docs</Link>
+              <Link to="/app/seilor" className="landing-nav-link">AI Agent</Link>
             </div>
 
             <Link to="/app" className="landing-btn landing-btn-primary">
@@ -52,26 +53,55 @@ const Landing = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="landing-section">
+      <section className="relative overflow-hidden">
+        {/* Decorative gradient background */}
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-red-500/10 blur-3xl" />
+        </div>
         <div className="landing-container">
-          <div className="text-center landing-fade-in">
+          <div className="landing-section text-center landing-fade-in">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border landing-border landing-text-muted mb-6">
+              <span className="h-2 w-2 rounded-full bg-green-500" /> Live on Sei Network
+            </div>
             <h1 className="landing-heading-xl mb-6">
-              Launch Safe Meme Tokens on{' '}
-              <span className="landing-sei-blue">Sei</span>
+              Build, Trade, and Launch with
+              <span className="block landing-sei-blue">Agentic AI for DeFi</span>
             </h1>
             <p className="landing-text-lg max-w-3xl mx-auto mb-8">
-              Discover, launch, and trade tokens on the fastest Layer 1 blockchain. 
-              Built for developers, traders, and creators who want to build the future of DeFi.
+              Seifun combines real-time blockchain awareness with RAG knowledge and secure execution. Chat naturally with Seilor 0, analyze tokens, and automate DeFi workflows—fast, safe, and intuitive.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/app" className="launch-app-btn">
                 <Rocket className="w-5 h-5 mr-2" />
                 Launch App
               </Link>
-              <button className="landing-btn landing-btn-secondary">
+              <Link to="#showcase" className="landing-btn landing-btn-secondary">
                 <Play className="w-5 h-5 mr-2" />
-                Watch Demo
-              </button>
+                See it in action
+              </Link>
+            </div>
+            {/* Mini highlights */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto">
+              <div className="landing-card px-4 py-3 text-sm landing-text-secondary">Agentic Workflows</div>
+              <div className="landing-card px-4 py-3 text-sm landing-text-secondary">RAG Knowledge Base</div>
+              <div className="landing-card px-4 py-3 text-sm landing-text-secondary">Security-first Execution</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Logo Band */}
+      <section className="landing-section-sm">
+        <div className="landing-container">
+          <div className="landing-card py-6 px-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-6 items-center opacity-80">
+              <div className="text-center landing-text-muted text-sm">Sei</div>
+              <div className="text-center landing-text-muted text-sm">Astroport</div>
+              <div className="text-center landing-text-muted text-sm">Dragonswap</div>
+              <div className="text-center landing-text-muted text-sm">Yaka</div>
+              <div className="text-center landing-text-muted text-sm">Nitro</div>
+              <div className="text-center landing-text-muted text-sm">Kryptonite</div>
             </div>
           </div>
         </div>
@@ -80,61 +110,21 @@ const Landing = () => {
       {/* Features Section */}
       <section id="features" className="landing-section-sm">
         <div className="landing-container">
-          <div className="text-center mb-16 landing-slide-up">
-            <h2 className="landing-heading-lg mb-4">Why Choose Seifun?</h2>
+          <div className="text-center mb-12 landing-slide-up">
+            <h2 className="landing-heading-lg mb-4">Everything you need to ship AI agents</h2>
             <p className="landing-text-lg max-w-2xl mx-auto">
-              Experience the next generation of token launching with advanced features and security.
+              From secure token scanning to intelligent chat and real on-chain actions—built with a professional bluish-dark UI.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
-                <Rocket className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="landing-heading-md mb-3">Instant Token Launch</h3>
-              <p className="landing-text-secondary">
-                Launch your token in minutes with our streamlined process. No coding required.
-              </p>
-            </div>
-
-            <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="landing-heading-md mb-3">Advanced Security</h3>
-              <p className="landing-text-secondary">
-                Built-in honeypot detection and security scanning to protect your investments.
-              </p>
-            </div>
-
-            <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="landing-heading-md mb-3">Real-time Analytics</h3>
-              <p className="landing-text-secondary">
-                Track token performance with comprehensive analytics and market insights.
-              </p>
-            </div>
-
-            <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="landing-heading-md mb-3">Community Driven</h3>
-              <p className="landing-text-secondary">
-                Join a vibrant community of creators, traders, and developers.
-              </p>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="landing-card p-6 landing-fade-in">
               <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <h3 className="landing-heading-md mb-3">Lightning Fast</h3>
+              <h3 className="landing-heading-md mb-2">Agentic Workflows</h3>
               <p className="landing-text-secondary">
-                Built on Sei's high-performance blockchain for instant transactions.
+                Natural language to action. Seilor 0 plans, confirms, and executes DeFi tasks with safety rails.
               </p>
             </div>
 
@@ -142,10 +132,89 @@ const Landing = () => {
               <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              <h3 className="landing-heading-md mb-3">Developer Tools</h3>
+              <h3 className="landing-heading-md mb-2">RAG + Knowledge</h3>
               <p className="landing-text-secondary">
-                Advanced tools for developers to build and manage their tokens.
+                MongoDB Atlas Vector Search powers fast, accurate answers grounded in your docs and on-chain context.
               </p>
+            </div>
+
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="landing-heading-md mb-2">Security-first</h3>
+              <p className="landing-text-secondary">
+                Built-in SafeChecker, confirmations, and guardrails before any transfer, swap, or contract call.
+              </p>
+            </div>
+
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="landing-heading-md mb-2">Analytics-ready</h3>
+              <p className="landing-text-secondary">
+                Real-time balances, transaction previews, and token analysis for better decisions.
+              </p>
+            </div>
+
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="landing-heading-md mb-2">Collaborative</h3>
+              <p className="landing-text-secondary">
+                Share analyses, track tasks, and build together with a unified AI-first interface.
+              </p>
+            </div>
+
+            <div className="landing-card p-6 landing-fade-in">
+              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+                <Code className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="landing-heading-md mb-2">Developer-first</h3>
+              <p className="landing-text-secondary">
+                Clear APIs, LangChain agent, and serverless functions to extend actions and data sources.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Product Showcase */}
+      <section id="showcase" className="landing-section">
+        <div className="landing-container">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            <div className="landing-card p-6 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="landing-heading-md">Seilor 0 — Conversational Agent</h3>
+                <span className="text-xs landing-text-muted">Realtime + RAG</span>
+              </div>
+              <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-6">
+                <div className="h-64 w-full rounded-lg bg-slate-800/70 border border-slate-700/50 flex items-center justify-center text-slate-400">
+                  AI Chat UI Preview
+                </div>
+              </div>
+              <div className="mt-4 flex gap-3">
+                <Link to="/app/seilor" className="landing-btn landing-btn-primary">Open Seilor 0</Link>
+                <Link to="/app/docs" className="landing-btn landing-btn-secondary">Agent Docs</Link>
+              </div>
+            </div>
+
+            <div className="landing-card p-6 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="landing-heading-md">SafeChecker — Token Security</h3>
+                <span className="text-xs landing-text-muted">Audits + Warnings</span>
+              </div>
+              <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-6">
+                <div className="h-64 w-full rounded-lg bg-slate-800/70 border border-slate-700/50 flex items-center justify-center text-slate-400">
+                  Security Scanner Preview
+                </div>
+              </div>
+              <div className="mt-4 flex gap-3">
+                <Link to="/app" className="landing-btn landing-btn-primary">Launch SafeChecker</Link>
+                <Link to="/app/docs" className="landing-btn landing-btn-secondary">Learn more</Link>
+              </div>
             </div>
           </div>
         </div>
@@ -179,10 +248,9 @@ const Landing = () => {
       <section className="landing-section-sm">
         <div className="landing-container">
           <div className="landing-card p-12 text-center landing-slide-up">
-            <h2 className="landing-heading-lg mb-4">Ready to Launch Your Token?</h2>
+            <h2 className="landing-heading-lg mb-4">Start building with Agentic AI on Sei</h2>
             <p className="landing-text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of creators who have already launched their tokens on Seifun. 
-              Start your journey today and be part of the future of DeFi.
+              Launch the app to chat with Seilor 0, run SafeChecker scans, and compose on-chain actions instantly.
             </p>
             <Link to="/app" className="launch-app-btn">
               <Rocket className="w-5 h-5 mr-2" />
@@ -203,27 +271,27 @@ const Landing = () => {
                 <span className="text-xl font-bold landing-text-primary">Seifun</span>
               </div>
               <p className="landing-text-secondary">
-                The premier platform for launching and trading tokens on the Sei blockchain.
+                Agentic AI for DeFi on Sei. Build safely, move faster.
               </p>
             </div>
             
             <div>
               <h4 className="landing-heading-md mb-4">Platform</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Launchpad</a></li>
-                <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Token Discovery</a></li>
-                <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Analytics</a></li>
-                <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Developer Tools</a></li>
+                <li><Link to="/app" className="landing-text-secondary hover:landing-text-primary">SafeChecker</Link></li>
+                <li><Link to="/app/seilor" className="landing-text-secondary hover:landing-text-primary">Seilor 0</Link></li>
+                <li><Link to="/app/docs" className="landing-text-secondary hover:landing-text-primary">Docs</Link></li>
+                <li><Link to="/app/dev-plus" className="landing-text-secondary hover:landing-text-primary">Dev Plus</Link></li>
               </ul>
             </div>
             
             <div>
               <h4 className="landing-heading-md mb-4">Resources</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Documentation</a></li>
-                <li><a href="#" className="landing-text-secondary hover:landing-text-primary">API Reference</a></li>
-                <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Community</a></li>
-                <li><a href="#" className="landing-text-secondary hover:landing-text-primary">Support</a></li>
+                <li><a href="#features" className="landing-text-secondary hover:landing-text-primary">Features</a></li>
+                <li><a href="#showcase" className="landing-text-secondary hover:landing-text-primary">Showcase</a></li>
+                <li><a href="https://seitrace.com" target="_blank" rel="noreferrer" className="landing-text-secondary hover:landing-text-primary">SeiTrace</a></li>
+                <li><Link to="/app/docs" className="landing-text-secondary hover:landing-text-primary">API Reference</Link></li>
               </ul>
             </div>
             
@@ -240,7 +308,7 @@ const Landing = () => {
           
           <div className="border-t landing-border mt-8 pt-8 text-center">
             <p className="landing-text-muted">
-              © 2024 Seifun. Built on the Sei blockchain.
+              © 2025 Seifun. Built on the Sei blockchain.
             </p>
           </div>
         </div>
