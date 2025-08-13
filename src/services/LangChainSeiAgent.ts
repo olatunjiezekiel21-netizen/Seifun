@@ -2,6 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createSeiTools } from './SeiLangChainTools';
 import { privateKeyWallet } from './PrivateKeyWallet';
+import { RAGService } from './RAGService';
 
 export interface LangChainResponse {
   message: string;
@@ -80,12 +81,26 @@ export class LangChainSeiAgent {
       
       // Get real-time wallet information
       const walletInfo = await this.getWalletInfo();
+
+      // Retrieve RAG context
+      let ragContext = '';
+      try {
+        const results = await RAGService.query(input, 5);
+        if (results && results.length > 0) {
+          ragContext = results.map((r, i) => `Snippet ${i+1} (score ${r.score.toFixed(3)}):\n${r.text}`).join('\n\n');
+        }
+      } catch (e) {
+        console.warn('RAG retrieval failed or not configured:', e?.message || e);
+      }
       
       // Create an intelligent, context-aware prompt
       const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei Network. You have access to real wallet data and can perform actual blockchain operations.
 
 CURRENT WALLET STATUS:
 ${walletInfo}
+
+RELEVANT CONTEXT (from knowledge base):
+${ragContext || 'No additional context available.'}
 
 PERSONALITY:
 - Be natural and conversational like ChatGPT
@@ -107,7 +122,7 @@ RESPONSE RULES:
 - If asking about balances, use the REAL data above
 - If asking about transactions, offer to help execute them
 - If confused, ask clarifying questions instead of saying "I don't understand"
-- Be helpful and solution-oriented
+- Prefer using the provided RELEVANT CONTEXT; cite it implicitly by referencing facts, not by saying "according to context".
 
 User Message: "${input}"
 

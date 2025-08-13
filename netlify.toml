@@ -7,6 +7,10 @@
   DEPLOY_TIMESTAMP = "2025-01-27-21:10"
   BUILD_VERSION = "v2.0-simple-build"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

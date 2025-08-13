@@ -18,6 +18,7 @@ import { chatBrain } from '../services/ChatBrain';
 import { actionBrain, IntentType } from '../services/ActionBrain';
 import { privateKeyWallet } from '../services/PrivateKeyWallet';
 import { AIInterface } from '../components/AIInterface';
+import { ChatMemoryService } from '../services/ChatMemoryService';
 
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
@@ -133,6 +134,8 @@ const Seilor = () => {
       console.log('📨 Adding user message to chat');
       return [...prev, userChatMessage];
     });
+    // Persist user message
+    ChatMemoryService.append({ type: 'user', message: userMessage }).catch(() => {});
     
     // Show typing indicator
     setIsTyping(true);
@@ -161,6 +164,8 @@ const Seilor = () => {
         console.log('🤖 Adding AI response to chat');
         return [...prev, aiResponse];
       });
+      // Persist assistant message
+      ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
       
     } catch (error) {
       console.error('❌ Chat Brain Error:', error);
@@ -172,6 +177,7 @@ const Seilor = () => {
         timestamp: new Date()
       };
       setChatMessages(prev => [...prev, errorMessage]);
+      ChatMemoryService.append({ type: 'assistant', message: errorMessage.message }).catch(() => {});
     } finally {
       setLoading(false);
       console.log('🏁 Chat processing complete');
