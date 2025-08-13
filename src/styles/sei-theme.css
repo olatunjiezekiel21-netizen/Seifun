@@ -613,3 +613,60 @@
 .launch-app-btn:hover::before {
   left: 100%;
 }
+
+/* Brand Blue-only utilities (avoid green) */
+.brand-blue-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--landing-sei-blue);
+}
+
+.landing-gradient-brand-blue {
+  background: linear-gradient(135deg, var(--app-blue-dark) 0%, var(--app-blue-secondary) 50%, var(--landing-sei-blue) 100%);
+}
+
+/* Subtle bluish hero orbs */
+.landing-hero-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  opacity: 0.5;
+}
+
+/* Logo animation (slow rotate + float) */
+@keyframes slow-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes float-y {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-slow-rotate {
+  animation: slow-rotate 36s linear infinite;
+}
+
+.animate-float-y {
+  animation: float-y 6s ease-in-out infinite;
+}
+
+.landing-logo-hero {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.landing-logo-hero img {
+  width: 420px;
+  height: 420px;
+  opacity: 0.06;
+  filter: drop-shadow(0 20px 80px rgba(59, 130, 246, 0.3));
+}

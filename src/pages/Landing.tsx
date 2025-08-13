@@ -54,15 +54,19 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Decorative gradient background */}
+        {/* Decorative bluish-black gradient background */}
         <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
-          <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-red-500/10 blur-3xl" />
+          <div className="landing-hero-orb absolute -top-24 -left-24 h-80 w-80" style={{background: 'radial-gradient(closest-side, rgba(59,130,246,0.25), rgba(15,23,42,0.0))'}} />
+          <div className="landing-hero-orb absolute -bottom-24 -right-24 h-96 w-96" style={{background: 'radial-gradient(closest-side, rgba(37,99,235,0.18), rgba(2,6,23,0.0))'}} />
+        </div>
+        {/* Subtle brand logo animation */}
+        <div className="landing-logo-hero">
+          <img src="/Seifu.png" alt="Seifun Logo" className="animate-slow-rotate animate-float-y" />
         </div>
         <div className="landing-container">
           <div className="landing-section text-center landing-fade-in">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border landing-border landing-text-muted mb-6">
-              <span className="h-2 w-2 rounded-full bg-green-500" /> Live on Sei Network
+              <span className="brand-blue-dot" /> Live on Sei Network
             </div>
             <h1 className="landing-heading-xl mb-6">
               Build, Trade, and Launch with
@@ -119,7 +123,7 @@ const Landing = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 landing-gradient-brand-blue rounded-lg flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <h3 className="landing-heading-md mb-2">Agentic Workflows</h3>
@@ -129,7 +133,7 @@ const Landing = () => {
             </div>
 
             <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 landing-gradient-brand-blue rounded-lg flex items-center justify-center mb-4">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <h3 className="landing-heading-md mb-2">RAG + Knowledge</h3>
@@ -139,7 +143,7 @@ const Landing = () => {
             </div>
 
             <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 landing-gradient-brand-blue rounded-lg flex items-center justify-center mb-4">
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <h3 className="landing-heading-md mb-2">Security-first</h3>
@@ -149,7 +153,7 @@ const Landing = () => {
             </div>
 
             <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 landing-gradient-brand-blue rounded-lg flex items-center justify-center mb-4">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
               <h3 className="landing-heading-md mb-2">Analytics-ready</h3>
@@ -159,7 +163,7 @@ const Landing = () => {
             </div>
 
             <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 landing-gradient-brand-blue rounded-lg flex items-center justify-center mb-4">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <h3 className="landing-heading-md mb-2">Collaborative</h3>
@@ -169,7 +173,7 @@ const Landing = () => {
             </div>
 
             <div className="landing-card p-6 landing-fade-in">
-              <div className="w-12 h-12 landing-gradient-sei-blue rounded-lg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 landing-gradient-brand-blue rounded-lg flex items-center justify-center mb-4">
                 <Code className="w-6 h-6 text-white" />
               </div>
               <h3 className="landing-heading-md mb-2">Developer-first</h3>
