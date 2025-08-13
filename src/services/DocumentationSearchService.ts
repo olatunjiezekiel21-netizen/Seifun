@@ -82,7 +82,7 @@ export class DocumentationSearchService {
 
   // Main search function
   public search(query: string): SearchResult[] {
-    if (!query || query.trim().length < 2) {
+    if (!query || !query.trim()) {
       return [];
     }
 

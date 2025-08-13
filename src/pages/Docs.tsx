@@ -139,17 +139,17 @@ const Docs = () => {
                 <p className="text-sm text-gray-400">Seilor 0 - Intelligent blockchain assistant with real-time data</p>
               </div>
               <div className="bg-white/5 rounded-lg p-4">
-                <Layers className="w-8 h-8 text-green-400 mb-2" />
+                <Layers className="w-8 h-8 text-blue-400 mb-2" />
                 <h3 className="font-semibold text-white mb-2">SeiList</h3>
                 <p className="text-sm text-gray-400">Professional token creation and listing platform</p>
               </div>
               <div className="bg-white/5 rounded-lg p-4">
-                <Shield className="w-8 h-8 text-red-400 mb-2" />
+                <Shield className="w-8 h-8 text-blue-400 mb-2" />
                 <h3 className="font-semibold text-white mb-2">SafeChecker</h3>
                 <p className="text-sm text-gray-400">Advanced token security scanner</p>
               </div>
               <div className="bg-white/5 rounded-lg p-4">
-                <Code className="w-8 h-8 text-purple-400 mb-2" />
+                <Code className="w-8 h-8 text-blue-400 mb-2" />
                 <h3 className="font-semibold text-white mb-2">Dev++</h3>
                 <p className="text-sm text-gray-400">Professional developer tools and analytics</p>
               </div>
@@ -169,7 +169,7 @@ const Docs = () => {
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold text-green-400 mb-2">Token Creation & Management</h4>
+                <h4 className="font-semibold text-blue-400 mb-2">Token Creation & Management</h4>
                 <ul className="text-gray-300 space-y-1 ml-4">
                   <li>• Professional token deployment</li>
                   <li>• Custom branding and naming</li>
@@ -178,7 +178,7 @@ const Docs = () => {
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold text-red-400 mb-2">Security & Safety</h4>
+                <h4 className="font-semibold text-blue-400 mb-2">Security & Safety</h4>
                 <ul className="text-gray-300 space-y-1 ml-4">
                   <li>• Comprehensive token scanning</li>
                   <li>• Risk score analysis</li>
@@ -256,7 +256,7 @@ const Docs = () => {
             
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-                <Bot className="w-6 h-6 mr-2 text-green-400" />
+                <Bot className="w-6 h-6 mr-2 text-blue-400" />
                 Step 2: Meet Seilor 0
               </h3>
               <p className="text-gray-300 mb-4">
@@ -264,19 +264,19 @@ const Docs = () => {
               </p>
               <ul className="space-y-2 text-gray-300">
                 <li className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-green-400" />
+                  <Check className="w-4 h-4 text-blue-400" />
                   <span>Get real-time wallet balance and transaction history</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-green-400" />
+                  <Check className="w-4 h-4 text-blue-400" />
                   <span>Analyze tokens for security and investment potential</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-green-400" />
+                  <Check className="w-4 h-4 text-blue-400" />
                   <span>Get AI-powered trading recommendations</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-green-400" />
+                  <Check className="w-4 h-4 text-blue-400" />
                   <span>Access your todo list and project management</span>
                 </li>
               </ul>
@@ -284,7 +284,7 @@ const Docs = () => {
             
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-                <Layers className="w-6 h-6 mr-2 text-purple-400" />
+                <Layers className="w-6 h-6 mr-2 text-blue-400" />
                 Step 3: Explore Core Features
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -303,13 +303,13 @@ const Docs = () => {
                 </div>
                 <div className="bg-white/5 rounded-lg p-4">
                   <h4 className="font-semibold text-white mb-2 flex items-center">
-                    <Shield className="w-5 h-5 mr-2 text-red-400" />
+                    <Shield className="w-5 h-5 mr-2 text-blue-400" />
                     SafeChecker
                   </h4>
                   <p className="text-sm text-gray-400 mb-3">Scan tokens for security risks</p>
                   <button 
                     onClick={() => window.location.href = '/app/safechecker'}
-                    className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                    className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
                   >
                     Open SafeChecker
                   </button>
@@ -379,7 +379,7 @@ const Docs = () => {
                   </ul>
                 </div>
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-green-400">Technical Features</h4>
+                  <h4 className="font-semibold text-blue-400">Technical Features</h4>
                   <ul className="text-gray-300 space-y-1 text-sm">
                     <li>• Real smart contract deployment</li>
                     <li>• Automatic Dev++ integration</li>
@@ -431,7 +431,7 @@ const Docs = () => {
                   </ul>
                 </div>
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-green-400 flex items-center">
+                  <h4 className="font-semibold text-blue-400 flex items-center">
                     <Bot className="w-5 h-5 mr-2" />
                     AI Intelligence
                   </h4>
@@ -508,7 +508,7 @@ const Docs = () => {
               <h3 className="text-xl font-bold text-white mb-4">🔍 Security Features</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-red-400 flex items-center">
+                  <h4 className="font-semibold text-blue-400 flex items-center">
                     <Shield className="w-5 h-5 mr-2" />
                     Risk Assessment
                   </h4>
@@ -540,7 +540,7 @@ const Docs = () => {
                 <div className="flex items-center space-x-4 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                   <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">70+</div>
                   <div>
-                    <h4 className="font-semibold text-green-400">Low Risk</h4>
+                    <h4 className="font-semibold text-blue-400">Low Risk</h4>
                     <p className="text-gray-300 text-sm">Well-structured contract with standard functions</p>
                   </div>
                 </div>
@@ -580,7 +580,7 @@ const Docs = () => {
               <div className="mt-4">
                 <button 
                   onClick={() => window.location.href = '/app/safechecker'}
-                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-colors"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors"
                 >
                   Open SafeChecker
                 </button>
@@ -641,7 +641,7 @@ const Docs = () => {
                   <div className="text-sm text-gray-400">Created & Tracked</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 text-center">
-                  <Shield className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                  <Shield className="w-8 h-8 text-blue-400 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-white">Avg Security</div>
                   <div className="text-sm text-gray-400">Score Rating</div>
                 </div>
@@ -651,7 +651,7 @@ const Docs = () => {
                   <div className="text-sm text-gray-400">Tokens</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 text-center">
-                  <Activity className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                  <Activity className="w-8 h-8 text-blue-400 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-white">Alerts</div>
                   <div className="text-sm text-gray-400">Active Monitoring</div>
                 </div>
@@ -673,21 +673,21 @@ const Docs = () => {
                   onClick={() => window.location.href = '/app/safechecker'}
                   className="bg-white/5 hover:bg-white/10 rounded-lg p-4 text-left transition-colors border border-white/10"
                 >
-                  <Shield className="w-8 h-8 text-red-400 mb-2" />
+                  <Shield className="w-8 h-8 text-blue-400 mb-2" />
                   <div className="font-semibold text-white">Security Scan</div>
                   <div className="text-sm text-gray-400">Analyze tokens</div>
                 </button>
                 <button 
                   className="bg-white/5 hover:bg-white/10 rounded-lg p-4 text-left transition-colors border border-white/10"
                 >
-                  <TrendingUp className="w-8 h-8 text-green-400 mb-2" />
+                  <TrendingUp className="w-8 h-8 text-blue-400 mb-2" />
                   <div className="font-semibold text-white">Analytics</div>
                   <div className="text-sm text-gray-400">View metrics</div>
                 </button>
                 <button 
                   className="bg-white/5 hover:bg-white/10 rounded-lg p-4 text-left transition-colors border border-white/10"
                 >
-                  <Database className="w-8 h-8 text-purple-400 mb-2" />
+                  <Database className="w-8 h-8 text-blue-400 mb-2" />
                   <div className="font-semibold text-white">Export Data</div>
                   <div className="text-sm text-gray-400">Download reports</div>
                 </button>
@@ -1025,8 +1025,8 @@ const Docs = () => {
                                   <div className="flex items-center mt-1 space-x-2">
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                                       result.matchType === 'title' ? 'bg-blue-100 text-blue-800' :
-                                      result.matchType === 'content' ? 'bg-green-100 text-green-800' :
-                                      'bg-purple-100 text-purple-800'
+                                      result.matchType === 'content' ? 'bg-blue-100 text-blue-800' :
+                                      'bg-blue-100 text-blue-800'
                                     }`}>
                                       {result.matchType === 'title' ? 'Title Match' :
                                        result.matchType === 'content' ? 'Content Match' :
