@@ -2,6 +2,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createSeiTools } from './SeiLangChainTools';
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { RAGService } from './RAGService';
+import { QdrantService } from './QdrantService';
 
 export interface LangChainResponse {
   message: string;
@@ -50,9 +51,15 @@ export class LangChainSeiAgent {
       // Retrieve RAG context
       let ragContext = '';
       try {
-        const results = await RAGService.query(input, 5);
-        if (results && results.length > 0) {
-          ragContext = results.map((r, i) => `Snippet ${i+1} (score ${r.score.toFixed(3)}):\n${r.text}`).join('\n\n');
+        // Prefer Qdrant first
+        const qdrant = await QdrantService.query(input, 5);
+        if (qdrant && qdrant.length > 0) {
+          ragContext = qdrant.map((p, i) => `Qdrant ${i+1} (score ${p.score?.toFixed(3) ?? ''}):\n${p.payload?.text || ''}`).join('\n\n');
+        } else {
+          const atlas = await RAGService.query(input, 5);
+          if (atlas && atlas.length > 0) {
+            ragContext = atlas.map((r, i) => `Atlas ${i+1} (score ${r.score.toFixed(3)}):\n${r.text}`).join('\n\n');
+          }
         }
       } catch (e: any) {
         console.warn('RAG retrieval failed or not configured:', e?.message || e);
