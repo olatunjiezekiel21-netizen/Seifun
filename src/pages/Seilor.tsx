@@ -259,13 +259,13 @@ const Seilor = () => {
               </button>
               
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                   <Bot className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-white">Seilor 0</h1>
                   <p className="text-xs text-slate-400">Autonomous AI Trading Agent</p>
-                  <p className="text-xs text-green-400">✅ v2.0 - Debug + Collapsible UI</p>
+                  <p className="text-xs text-blue-400">✅ v2.0 - Debug + Collapsible UI</p>
                 </div>
               </div>
               
@@ -282,7 +282,7 @@ const Seilor = () => {
                   </button>
                   <button
                     onClick={clearChat}
-                    className="flex items-center space-x-2 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors border border-red-500/30"
+                    className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30 transition-colors border border-blue-500/30"
                     title="Clear Chat"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -301,7 +301,7 @@ const Seilor = () => {
                 </div>
               )}
               <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                isConnected ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                isConnected ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-300'
               }`}>
                 {isConnected ? 'Connected' : 'Disconnected'}
               </div>
@@ -335,7 +335,7 @@ const Seilor = () => {
                       onClick={() => setActivePanel(panel.id as any)}
                       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                         activePanel === panel.id
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                           : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
                       }`}
                     >
@@ -355,7 +355,7 @@ const Seilor = () => {
               {sidebarCollapsed && (
                 <div className="p-4 border-b border-slate-700/50 space-y-2">
                   {/* Version Indicator */}
-                  <div className="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded border border-green-500/20">
+                  <div className="text-xs text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">
                     ✅ Latest Version: Chat Debug + Collapsible UI (v2.0)
                   </div>
                   <button
@@ -369,7 +369,7 @@ const Seilor = () => {
                   {/* Debug Test Button */}
                   <button
                     onClick={testChatFunction}
-                    className="flex items-center space-x-2 px-3 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors text-sm"
+                    className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors text-sm"
                     title="Test Chat Function"
                   >
                     🧪 Test Chat
@@ -392,7 +392,7 @@ const Seilor = () => {
                         </p>
                         <button
                           onClick={startNewChat}
-                          className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors border border-red-500/30"
+                          className="flex items-center space-x-2 px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm hover:bg-blue-500/30 transition-colors border border-blue-500/30"
                         >
                           <MessageCircle className="w-4 h-4" />
                           <span>Start New Chat</span>
@@ -424,9 +424,9 @@ const Seilor = () => {
                         <div className="bg-slate-700/50 text-slate-100 border border-slate-600/50 p-4 rounded-2xl">
                           <div className="flex items-center space-x-2">
                             <div className="flex space-x-1">
-                              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
-                              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                              <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                             </div>
                             <span className="text-sm text-slate-300">Seilor is typing...</span>
                           </div>
