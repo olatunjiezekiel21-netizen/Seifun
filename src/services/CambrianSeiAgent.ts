@@ -923,6 +923,36 @@ export class CambrianSeiAgent implements AgentCapabilities {
       };
     }
   }
+
+  /**
+   * Create ERC20 token via factory
+   */
+  async createToken(params: { name: string; symbol: string; totalSupply: string; decimals?: number; valueSei?: string }): Promise<{ txHash: string }> {
+    const FACTORY_ADDRESS = (import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || (import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A';
+    const abi = [{
+      type: 'function',
+      name: 'createToken',
+      stateMutability: 'payable',
+      inputs: [
+        { name: 'name', type: 'string' },
+        { name: 'symbol', type: 'string' },
+        { name: 'decimals', type: 'uint8' },
+        { name: 'totalSupply', type: 'uint256' }
+      ],
+      outputs: [{ name: '', type: 'address' }]
+    }];
+    const decimals = params.decimals ?? 18;
+    // viem expects bigints as strings with parse; we pass as string
+    const valueWei = params.valueSei ? BigInt(Math.floor(parseFloat(params.valueSei) * 1e18)) : 0n;
+    const hash = await this.walletClient.writeContract({
+      address: FACTORY_ADDRESS as any,
+      abi: abi as any,
+      functionName: 'createToken',
+      args: [params.name, params.symbol, decimals, BigInt(params.totalSupply)],
+      value: valueWei
+    });
+    return { txHash: hash as string };
+  }
 }
 
 // Export singleton instance using the same private key as our existing system
