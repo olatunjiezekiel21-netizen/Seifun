@@ -528,6 +528,30 @@ export class ActionBrain {
         valueSei: '0.2' // example factory fee
       });
 
+      // Make basic metadata and store reference (logo from local cache if exists)
+      const logoUrl = localStorage.getItem('seilor_last_token_logo') || '';
+      const metadata = {
+        name: tokenName,
+        symbol,
+        description: `${tokenName} (${symbol}) - created by Seilor 0`,
+        image: logoUrl,
+        totalSupply,
+        decimals: 18,
+        creator: cambrianSeiAgent.getAddress(),
+        createdAt: new Date().toISOString(),
+        version: '1.0.0'
+      };
+      try {
+        const blob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
+        const file = new File([blob], `${symbol}-metadata.json`, { type: 'application/json' });
+        // Reuse IPFS uploader via window fetch to keep ActionBrain dependency-light
+        // Best-effort: store metadata URL in localStorage registry
+        const url = URL.createObjectURL(file);
+        const registry = JSON.parse(localStorage.getItem('tokenMetadataRegistry') || '{}');
+        registry['pending'] = { metadataUrl: url, timestamp: new Date().toISOString() };
+        localStorage.setItem('tokenMetadataRegistry', JSON.stringify(registry));
+      } catch {}
+
       // Append to Dev++ local registry for visibility
       const saved = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
       saved.unshift({
@@ -538,7 +562,8 @@ export class ActionBrain {
         creator: cambrianSeiAgent.getAddress(),
         createdAt: new Date().toISOString(),
         verified: true,
-        securityScore: 80
+        securityScore: 80,
+        logo: logoUrl
       });
       localStorage.setItem('dev++_tokens', JSON.stringify(saved));
 

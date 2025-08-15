@@ -20,6 +20,8 @@ import { actionBrain, IntentType } from '../services/ActionBrain';
 import { privateKeyWallet } from '../services/PrivateKeyWallet';
 import { AIInterface } from '../components/AIInterface';
 import { ChatMemoryService } from '../services/ChatMemoryService';
+import { LocalLLMService } from '../services/LocalLLMService';
+import { IPFSUploader } from '../utils/ipfsUpload';
 
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
@@ -153,6 +155,14 @@ const Seilor = () => {
       const response = await chatBrain.processMessage(userMessage);
       console.log('✅ Chat Brain response received:', response);
       
+      // If user initiated token creation and an image is attached, upload it now for metadata use
+      if (/create\s+(a\s+)?token/i.test(userMessage) && attachedImage) {
+        try {
+          const url = await IPFSUploader.uploadLogo(attachedImage);
+          localStorage.setItem('seilor_last_token_logo', url);
+        } catch {}
+      }
+      
       // Hide typing indicator
       setIsTyping(false);
       
@@ -170,7 +180,7 @@ const Seilor = () => {
       // Persist assistant message
       ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Chat Brain Error:', error);
       setIsTyping(false);
       const errorMessage = {
