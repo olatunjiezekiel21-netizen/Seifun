@@ -1,4 +1,3 @@
-import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createSeiTools } from './SeiLangChainTools';
 import { privateKeyWallet } from './PrivateKeyWallet';
@@ -14,29 +13,17 @@ export interface LangChainResponse {
 }
 
 export class LangChainSeiAgent {
-  private model: ChatOpenAI | null = null;
   private isInitialized = false;
   
-  constructor(private openAIApiKey?: string) {
-    // Initialize with a default key or environment variable
-    this.openAIApiKey = openAIApiKey || (import.meta as any).env?.VITE_OPENAI_API_KEY || (process as any).env?.OPENAI_API_KEY;
-    console.log('🔑 LangChain Agent initialized with API key:', this.openAIApiKey ? 'Present' : 'Missing');
+  constructor() {
+    // No client-side secrets; all LLM calls go through serverless
   }
   
   private async initialize() {
     if (this.isInitialized) return;
-    
     try {
-      // Create LangChain model
-      this.model = new ChatOpenAI({
-        model: "gpt-3.5-turbo",
-        temperature: 0.3,
-        apiKey: this.openAIApiKey,
-        maxTokens: 500
-      } as any);
-      
+      // Placeholder for any future client-side init (none needed now)
       this.isInitialized = true;
-      
     } catch (error: any) {
       console.error('Failed to initialize LangChain agent:', error?.message || error);
       throw new Error(`LangChain initialization failed: ${error.message || error}`);
@@ -68,25 +55,6 @@ export class LangChainSeiAgent {
       if (!this.isInitialized) {
         await this.initialize();
       }
-      
-      // If no OpenAI key, try local LLM (Ollama)
-      if (!this.openAIApiKey || !this.model) {
-        try {
-          const walletInfo = await this.getWalletInfo();
-          const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei.\n\nWALLET:\n${walletInfo}\n\nCONTEXT:\n${input}\n\nReply briefly and helpfully.`;
-          const text = await LocalLLMService.generate(prompt);
-          return { message: text, success: true, confidence: 0.7 };
-        } catch (e: any) {
-          console.log('Local LLM unavailable:', e?.message || e);
-          return {
-            message: "I need an LLM backend (Ollama or OpenAI) to be fully intelligent. Basic commands are still available.",
-            success: false,
-            confidence: 0.3
-          };
-        }
-      }
-      
-      console.log('✅ OpenAI API key found - using full intelligence');
       
       // Get real-time wallet information
       const walletInfo = await this.getWalletInfo();
@@ -143,11 +111,11 @@ User Message: "${input}"
 
 Respond naturally and helpfully:`;
 
-      // Process message through LangChain model
-      const result = await (this.model as ChatOpenAI).invoke(prompt);
+      // Generate via serverless (Ollama preferred, OpenAI fallback). No client-side secrets.
+      const text = await LocalLLMService.generate(prompt);
       
       return {
-        message: (result as any).content as string,
+        message: text,
         success: true,
         confidence: 0.95
       };
@@ -155,18 +123,17 @@ Respond naturally and helpfully:`;
     } catch (error: any) {
       console.error('LangChain processing error:', error);
       
-      // Even for errors, be natural and helpful
+      // Graceful fallback when no LLM backend is configured
       return {
-        message: `I'm having a technical issue right now, but I'm still here to help! Could you try rephrasing your question? I can help with balance checks, transfers, swaps, and more.`,
+        message: "I need an LLM backend (Ollama or OpenAI) to be fully intelligent. Basic commands are still available.",
         success: false,
-        confidence: 0.5
+        confidence: 0.3
       };
     }
   }
   
   private extractToolsUsed(result: any): string[] {
-    // Extract which tools were used from the agent result
-    // This is useful for debugging and analytics
+    // Placeholder for future tool extraction
     if ((result as any).intermediateSteps) {
       return (result as any).intermediateSteps.map((step: any) => step.action?.tool || 'unknown');
     }
