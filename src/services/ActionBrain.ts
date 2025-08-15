@@ -517,25 +517,55 @@ export class ActionBrain {
         response: `🚀 **Token Creation**\n\n**Usage Examples:**\n• "Create a token called SuperCoin"\n• "Create MyToken"\n• "Make a token named AwesomeCoin"\n\n**💡 Just tell me what to call your token!**`
       };
     }
-    
-    const response = `🚀 **Creating Token: ${tokenName}**\n\n**✨ Redirecting to SeiList Professional Interface...**\n\n**What happens next:**\n• Professional token creation wizard\n• Custom logo upload capability\n• Advanced tokenomics settings\n• Real blockchain deployment\n• Automatic ownership tracking\n• Dev++ integration\n\n**🔥 Your token will be created with full functionality!**`;
-    
-    // Redirect to SeiList with pre-filled data
-    setTimeout(() => {
-      const params = new URLSearchParams({
+
+    try {
+      const symbol = tokenName.substring(0, 6).toUpperCase();
+      const totalSupply = '1000000'; // default 1,000,000
+      const { txHash } = await cambrianSeiAgent.createToken({
         name: tokenName,
-        symbol: tokenName.substring(0, 6).toUpperCase(),
-        totalSupply: '1000000',
-        aiCreated: 'true'
+        symbol,
+        totalSupply,
+        valueSei: '0.2' // example factory fee
       });
-      window.location.href = `/app/seilist?${params.toString()}`;
-    }, 2000);
-    
-    return {
-      success: true,
-      response,
-      data: { tokenName, redirecting: true }
-    };
+
+      // Append to Dev++ local registry for visibility
+      const saved = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
+      saved.unshift({
+        address: 'pending',
+        name: tokenName,
+        symbol,
+        supply: totalSupply,
+        creator: cambrianSeiAgent.getAddress(),
+        createdAt: new Date().toISOString(),
+        verified: true,
+        securityScore: 80
+      });
+      localStorage.setItem('dev++_tokens', JSON.stringify(saved));
+
+      // Log tx (best-effort)
+      fetch('/.netlify/functions/tx-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: cambrianSeiAgent.getAddress(),
+          action: 'create_token',
+          params: { name: tokenName, symbol, totalSupply },
+          txHash,
+          status: 'success'
+        })
+      }).catch(() => {});
+
+      return {
+        success: true,
+        response: `✅ **Token Created**\n\n• Name: ${tokenName}\n• Symbol: ${symbol}\n• Supply: ${parseInt(totalSupply).toLocaleString()}\n• Tx: \`${txHash}\`\n\nYou can now add a logo and liquidity. Say: "Add liquidity" or "Upload token logo".`,
+        data: { tokenName, symbol, txHash }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Creation Failed**: ${error.message}`
+      };
+    }
   }
   
   // BALANCE CHECK ACTION
