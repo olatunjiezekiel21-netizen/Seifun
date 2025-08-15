@@ -19,7 +19,7 @@ export class LangChainSeiAgent {
   
   constructor(private openAIApiKey?: string) {
     // Initialize with a default key or environment variable
-    this.openAIApiKey = openAIApiKey || import.meta.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+    this.openAIApiKey = openAIApiKey || (import.meta as any).env?.VITE_OPENAI_API_KEY || (process as any).env?.OPENAI_API_KEY;
     console.log('🔑 LangChain Agent initialized with API key:', this.openAIApiKey ? 'Present' : 'Missing');
   }
   
@@ -29,17 +29,17 @@ export class LangChainSeiAgent {
     try {
       // Create LangChain model
       this.model = new ChatOpenAI({
-        modelName: "gpt-3.5-turbo", // Using 3.5-turbo for faster responses
-        temperature: 0.3, // Slightly higher for more natural responses
-        openAIApiKey: this.openAIApiKey,
-        maxTokens: 500 // Shorter responses
-      });
+        model: "gpt-3.5-turbo",
+        temperature: 0.3,
+        apiKey: this.openAIApiKey,
+        maxTokens: 500
+      } as any);
       
       this.isInitialized = true;
       
-    } catch (error) {
-      console.error('Failed to initialize LangChain agent:', error);
-      throw new Error(`LangChain initialization failed: ${error.message}`);
+    } catch (error: any) {
+      console.error('Failed to initialize LangChain agent:', error?.message || error);
+      throw new Error(`LangChain initialization failed: ${error.message || error}`);
     }
   }
 
@@ -57,7 +57,7 @@ export class LangChainSeiAgent {
 - USDC Balance: ${usdcBalance.balance} USDC ($${usdcBalance.usd.toFixed(2)})
 - My Tokens: ${myTokens.length} tokens created
 - Wallet Address: ${privateKeyWallet.getAddress()}`;
-    } catch (error) {
+    } catch (error: any) {
       return `WALLET INFO: Unable to fetch (${error.message})`;
     }
   }
@@ -76,7 +76,7 @@ export class LangChainSeiAgent {
           const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei.\n\nWALLET:\n${walletInfo}\n\nCONTEXT:\n${input}\n\nReply briefly and helpfully.`;
           const text = await LocalLLMService.generate(prompt);
           return { message: text, success: true, confidence: 0.7 };
-        } catch (e) {
+        } catch (e: any) {
           console.log('Local LLM unavailable:', e?.message || e);
           return {
             message: "I need an LLM backend (Ollama or OpenAI) to be fully intelligent. Basic commands are still available.",
@@ -104,7 +104,7 @@ export class LangChainSeiAgent {
             ragContext = atlas.map((r, i) => `Atlas ${i+1} (score ${r.score.toFixed(3)}):\n${r.text}`).join('\n\n');
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         console.warn('RAG retrieval failed or not configured:', e?.message || e);
       }
       
@@ -144,15 +144,15 @@ User Message: "${input}"
 Respond naturally and helpfully:`;
 
       // Process message through LangChain model
-      const result = await this.model.invoke(prompt);
+      const result = await (this.model as ChatOpenAI).invoke(prompt);
       
       return {
-        message: result.content as string,
+        message: (result as any).content as string,
         success: true,
         confidence: 0.95
       };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('LangChain processing error:', error);
       
       // Even for errors, be natural and helpful
@@ -167,8 +167,8 @@ Respond naturally and helpfully:`;
   private extractToolsUsed(result: any): string[] {
     // Extract which tools were used from the agent result
     // This is useful for debugging and analytics
-    if (result.intermediateSteps) {
-      return result.intermediateSteps.map((step: any) => step.action?.tool || 'unknown');
+    if ((result as any).intermediateSteps) {
+      return (result as any).intermediateSteps.map((step: any) => step.action?.tool || 'unknown');
     }
     return [];
   }
