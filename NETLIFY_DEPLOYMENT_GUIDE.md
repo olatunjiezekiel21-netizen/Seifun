@@ -20,8 +20,9 @@ Your Netlify app needs to be updated with our latest changes to get:
 
 ```bash
 # AI Configuration - REQUIRED for chat to work
-VITE_OPENAI_API_KEY=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
-
+OPENAI_API_KEY=sk-your-actual-api-key-here
+# (Optional legacy) VITE_OPENAI_API_KEY=sk-your-actual-api-key-here
+ 
 # Token Factory Configuration
 VITE_FACTORY_ADDRESS_TESTNET=0x742d35Cc6634C0532925a3b8D7389B4Df8f8b3Dd
 VITE_FACTORY_ADDRESS_MAINNET=0x742d35Cc6634C0532925a3b8D7389B4Df8f8b3Dd

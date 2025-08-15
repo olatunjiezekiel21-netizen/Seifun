@@ -47,7 +47,8 @@
 1. **Go to Netlify Dashboard** → Your Site → **Site Settings** → **Environment Variables**
 2. **Add this variable**:
    ```
-   VITE_OPENAI_API_KEY = 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
+   OPENAI_API_KEY=sk-your-actual-api-key-here
+   # (Optional legacy) VITE_OPENAI_API_KEY=sk-your-actual-api-key-here
    ```
 
 ---

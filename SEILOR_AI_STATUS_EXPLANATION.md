@@ -14,15 +14,10 @@ All AI improvements are **CODED AND WORKING** - they're just not deployed yet!
 
 ### **✅ What's Already Implemented:**
 
-#### **🤖 1. Real OpenAI Integration:**
+#### **🤖 1. Real LLM Integration (via serverless):**
 ```typescript
-// In LangChainSeiAgent.ts
-this.model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
-  temperature: 0.1,
-  openAIApiKey: this.openAIApiKey,
-  maxTokens: 1000
-});
+// In Netlify function llm-generate.ts (server-side)
+// Prefers local Ollama; falls back to OpenAI using OPENAI_API_KEY env (not exposed to client)
 ```
 
 #### **💬 2. Natural Conversation System:**
@@ -114,7 +109,8 @@ If you have the OpenAI API key in your local `.env` file, the AI will give **rea
 1. **Netlify Dashboard** → **Environment Variables**
 2. **Add**:
    ```
-   VITE_OPENAI_API_KEY = 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
+   OPENAI_API_KEY=sk-your-actual-api-key-here
+   # (Optional legacy) VITE_OPENAI_API_KEY=sk-your-actual-api-key-here
    ```
 
 ### **🔄 Step 2: Force Fresh Deployment**
