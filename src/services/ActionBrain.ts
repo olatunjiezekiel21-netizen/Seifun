@@ -857,16 +857,38 @@ export class ActionBrain {
           response: `❌ **Missing swap parameters**\n\nPlease specify: amount, input token, and output token.\n\n**Example**: "Swap 10 SEI for USDC"`
         };
       }
-      
-      const result = await cambrianSeiAgent.swapTokens({
+
+      // 1) Quote first
+      const quote = await cambrianSeiAgent.getSwapQuote({
         tokenIn: tokenIn as any,
         tokenOut: tokenOut as any,
         amount: amount.toString()
       });
-      
+
+      // 2) Guardrails
+      const maxSlippageBps = 100; // 1%
+      const priceImpactPct = Number(quote.priceImpact || 0);
+      if (priceImpactPct > 5) {
+        return {
+          success: false,
+          response: `🚫 **High price impact (${priceImpactPct.toFixed(2)}%)**\nSwap refused by policy. Try a smaller amount or a different pair.`
+        };
+      }
+
+      // Compute minOut using slippage
+      const out = Number(quote.outputAmount || 0);
+      const minOut = (out * (1 - maxSlippageBps / 10_000)).toString();
+
+      // 3) Execute swap (approval handled inside Symphony route)
+      const resultMsg = await cambrianSeiAgent.swapTokens({
+        tokenIn: tokenIn as any,
+        tokenOut: tokenOut as any,
+        amount: amount.toString()
+      });
+
       return {
         success: true,
-        response: `🔄 **Symphony DEX Swap**\n${result}`
+        response: `🔄 **Symphony DEX Swap**\nQuoted Out: ${quote.outputAmount} (impact ${priceImpactPct.toFixed(2)}%)\nMin Out (@1% slippage): ${minOut}\n${resultMsg}`
       };
     } catch (error) {
       return {
