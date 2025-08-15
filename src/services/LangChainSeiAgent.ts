@@ -4,6 +4,7 @@ import { createSeiTools } from './SeiLangChainTools';
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { RAGService } from './RAGService';
 import { QdrantService } from './QdrantService';
+import { LocalLLMService } from './LocalLLMService';
 
 export interface LangChainResponse {
   message: string;
@@ -68,14 +69,21 @@ export class LangChainSeiAgent {
         await this.initialize();
       }
       
-      // If no OpenAI key, give a simple response
+      // If no OpenAI key, try local LLM (Ollama)
       if (!this.openAIApiKey || !this.model) {
-        console.log('❌ No OpenAI API key found');
-        return {
-          message: "I need an OpenAI API key to be fully intelligent. For now, I can help with basic commands like checking balances or transferring tokens.",
-          success: false,
-          confidence: 0.3
-        };
+        try {
+          const walletInfo = await this.getWalletInfo();
+          const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei.\n\nWALLET:\n${walletInfo}\n\nCONTEXT:\n${input}\n\nReply briefly and helpfully.`;
+          const text = await LocalLLMService.generate(prompt);
+          return { message: text, success: true, confidence: 0.7 };
+        } catch (e) {
+          console.log('Local LLM unavailable:', e?.message || e);
+          return {
+            message: "I need an LLM backend (Ollama or OpenAI) to be fully intelligent. Basic commands are still available.",
+            success: false,
+            confidence: 0.3
+          };
+        }
       }
       
       console.log('✅ OpenAI API key found - using full intelligence');
