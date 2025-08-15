@@ -1,6 +1,7 @@
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { webBlockchainService } from './WebBlockchainService';
 import { cambrianSeiAgent, SwapParams, StakeParams, LendingParams, TradingParams } from './CambrianSeiAgent';
+import { TokenMetadataManager } from '../utils/tokenMetadata';
 
 // Intent Types for NLP Processing
 export enum IntentType {
@@ -542,14 +543,11 @@ export class ActionBrain {
         version: '1.0.0'
       };
       try {
-        const blob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
-        const file = new File([blob], `${symbol}-metadata.json`, { type: 'application/json' });
-        // Reuse IPFS uploader via window fetch to keep ActionBrain dependency-light
-        // Best-effort: store metadata URL in localStorage registry
-        const url = URL.createObjectURL(file);
-        const registry = JSON.parse(localStorage.getItem('tokenMetadataRegistry') || '{}');
-        registry['pending'] = { metadataUrl: url, timestamp: new Date().toISOString() };
-        localStorage.setItem('tokenMetadataRegistry', JSON.stringify(registry));
+        // Upload metadata JSON to IPFS and store in pending registry keyed by tx
+        const metadataUrl = await TokenMetadataManager.uploadMetadata(metadata as any);
+        const pending = JSON.parse(localStorage.getItem('pendingTokenMetadataByTx') || '{}');
+        pending[txHash] = { metadataUrl, name: tokenName, symbol, createdAt: new Date().toISOString() };
+        localStorage.setItem('pendingTokenMetadataByTx', JSON.stringify(pending));
       } catch {}
 
       // Append to Dev++ local registry for visibility
