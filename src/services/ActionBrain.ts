@@ -578,6 +578,33 @@ export class ActionBrain {
         })
       }).catch(() => {});
 
+      // Wait for receipt and resolve token address (ERC20 Transfer event contract address)
+      try {
+        const receipt = await cambrianSeiAgent.publicClient.waitForTransactionReceipt({ hash: txHash as any });
+        const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+        const transferLog = receipt.logs.find((l: any) => (l.topics?.[0] || '').toLowerCase() === TRANSFER_TOPIC);
+        if (transferLog && transferLog.address) {
+          const tokenAddress = transferLog.address;
+          // Update Dev++ list, replacing first 'pending'
+          const tokens = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
+          const idx = tokens.findIndex((t: any) => t.address === 'pending' && t.symbol === symbol);
+          if (idx >= 0) {
+            tokens[idx].address = tokenAddress;
+            localStorage.setItem('dev++_tokens', JSON.stringify(tokens));
+          }
+          // Move metadata from pendingTx to registry
+          const pending = JSON.parse(localStorage.getItem('pendingTokenMetadataByTx') || '{}');
+          const entry = pending[txHash];
+          if (entry?.metadataUrl) {
+            const registry = JSON.parse(localStorage.getItem('tokenMetadataRegistry') || '{}');
+            registry[tokenAddress.toLowerCase()] = { metadataUrl: entry.metadataUrl, timestamp: new Date().toISOString() };
+            localStorage.setItem('tokenMetadataRegistry', JSON.stringify(registry));
+            delete pending[txHash];
+            localStorage.setItem('pendingTokenMetadataByTx', JSON.stringify(pending));
+          }
+        }
+      } catch {}
+
       return {
         success: true,
         response: `✅ **Token Created**\n\n• Name: ${tokenName}\n• Symbol: ${symbol}\n• Supply: ${parseInt(totalSupply).toLocaleString()}\n• Tx: \`${txHash}\`\n\nYou can now add a logo and liquidity. Say: "Add liquidity" or "Upload token logo".`,
@@ -919,6 +946,21 @@ export class ActionBrain {
         tokenOut: tokenOut as any,
         amount: amount.toString()
       });
+
+      // Extract tx hash for logging
+      const match = /TX:\s*(0x[a-fA-F0-9]{64})/i.exec(resultMsg);
+      const txHash = match ? match[1] : '';
+      fetch('/.netlify/functions/tx-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: cambrianSeiAgent.getAddress(),
+          action: 'swap',
+          params: { tokenIn, tokenOut, amount, minOut },
+          txHash,
+          status: 'success'
+        })
+      }).catch(() => {});
 
       return {
         success: true,
