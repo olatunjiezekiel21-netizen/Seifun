@@ -11,6 +11,12 @@
   }
 }
 
+/* Prevent horizontal scroll on mobile */
+html, body, #root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -96,6 +102,13 @@
 
 .app-container {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Safer grid spacing on mobile to avoid overflow */
+@media (max-width: 640px) {
+  .app-container { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .app-heading-xl { font-size: 1.75rem; }
+  .app-heading-lg { font-size: 1.5rem; }
 }
 
 .app-category-tabs {
