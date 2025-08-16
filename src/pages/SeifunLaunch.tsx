@@ -27,20 +27,23 @@ const SeifunLaunch = () => {
     { id: 'community', name: 'Community', icon: Users },
   ];
 
-  // Fetch trending pairs for Sei network
+  // Fetch trending pairs for Sei network via serverless (more reliable in browsers)
   useEffect(() => {
     let isMounted = true;
     (async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const trending = await tradingDataService.getTrendingPairs('sei', 24);
+        const res = await fetch('/.netlify/functions/seifun-trending?limit=30');
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json() as { pairs?: any[] };
+        const list = (data.pairs || []) as unknown as TokenPair[];
         if (!isMounted) return;
-        setPairs(trending);
-        if (trending.length && !selectedPair) setSelectedPair(trending[0]);
+        setPairs(list);
+        if (list.length && !selectedPair) setSelectedPair(list[0]);
       } catch (e: any) {
         if (!isMounted) return;
-        setError(e?.message || 'Failed to load trending pairs');
+        setError('Failed to load trending tokens');
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -174,8 +177,16 @@ const SeifunLaunch = () => {
           </div>
         )}
 
+        {/* Empty fetch hint */}
+        {!isLoading && !error && pairs.length === 0 && (
+          <div className="text-center py-12">
+            <div className="app-text-secondary mb-2">No trending data yet.</div>
+            <div className="text-sm app-text-muted">If this stays blank, your Netlify functions may be blocked from external APIs. We added a serverless endpoint `/.netlify/functions/seifun-trending`—ensure your site has outbound access.</div>
+          </div>
+        )}
+
         {/* Content */}
-        {!isLoading && !error && (
+        {!isLoading && !error && filteredPairs.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Pairs List */}
             <div className="lg:col-span-2">
@@ -268,22 +279,6 @@ const SeifunLaunch = () => {
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && !error && filteredPairs.length === 0 && (
-          <div className="text-center py-12">
-            <div className="app-text-secondary mb-4">No tokens found matching your criteria.</div>
-            <button 
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedCategory('all');
-              }} 
-              className="app-btn app-btn-secondary"
-            >
-              Clear Filters
-            </button>
           </div>
         )}
       </div>
