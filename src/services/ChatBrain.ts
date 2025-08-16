@@ -82,40 +82,59 @@ export class ChatBrain {
       }
       
       // Step 2: Try LangChain AI Agent First (Enhanced Intelligence)
+      let langChainResult: LangChainResponse | null = null;
       try {
         console.log('🚀 Trying LangChain AI Agent...');
-        const langChainResult = await langChainSeiAgent.processMessage(userMessage);
-        
-        if (langChainResult.success) {
-          console.log('✅ LangChain agent handled the request successfully');
-          
-          // Add assistant response to history
-          const assistantMessage: ChatMessage = {
-            id: Date.now() + 1,
-            type: 'assistant',
-            message: langChainResult.message,
-            timestamp: new Date(),
-            intent: IntentType.CONVERSATION,
-            confidence: langChainResult.confidence,
-            actionSuccess: true
-          };
-          this.conversationHistory.push(assistantMessage);
-          
-          this.context.sessionData!.successfulActions++;
-          
-          return {
-            message: langChainResult.message,
-            success: langChainResult.success,
-            intent: IntentType.CONVERSATION,
-            confidence: langChainResult.confidence,
-            suggestions: this.generateSuggestions(userMessage)
-          };
-        }
-      } catch (langChainError) {
-        console.log('⚠️ LangChain agent failed, falling back to ActionBrain:', langChainError.message);
+        langChainResult = await langChainSeiAgent.processMessage(userMessage);
+      } catch (langChainError: any) {
+        console.log('⚠️ LangChain agent failed, will use ActionBrain fallback:', langChainError?.message || langChainError);
       }
       
-      // Step 3: Fallback to ActionBrain System
+      // Decide whether to accept or fallback based on heuristics
+      const looksActionable = /\b(swap|quote|min\s*out|sell|buy|transfer|send|create\s+token|launch|add\s+liquidity|burn|scan|balance|approve)\b/i.test(userMessage);
+      const isGeneric = (resp: string) => {
+        const lower = resp.toLowerCase();
+        const tooShort = resp.length < 40;
+        const genericPhrases = [
+          'what would you like to do',
+          'i can help with',
+          'i am here to help',
+          'let me know',
+          'how can i assist'
+        ];
+        const lacksDetails = !/(0x[0-9a-f]{40})|\b(minout|quote|slippage|tx|hash|approved|router|amount|usdc|sei)\b/i.test(lower);
+        const hasGeneric = genericPhrases.some(p => lower.includes(p));
+        return tooShort || (hasGeneric && lacksDetails);
+      };
+      const shouldFallback = !!langChainResult && looksActionable && isGeneric(langChainResult.message);
+      
+      if (langChainResult && langChainResult.success && !shouldFallback) {
+        console.log('✅ LangChain agent handled the request successfully');
+        
+        // Add assistant response to history
+        const assistantMessage: ChatMessage = {
+          id: Date.now() + 1,
+          type: 'assistant',
+          message: langChainResult.message,
+          timestamp: new Date(),
+          intent: IntentType.CONVERSATION,
+          confidence: langChainResult.confidence,
+          actionSuccess: true
+        };
+        this.conversationHistory.push(assistantMessage);
+        
+        this.context.sessionData!.successfulActions++;
+        
+        return {
+          message: langChainResult.message,
+          success: langChainResult.success,
+          intent: IntentType.CONVERSATION,
+          confidence: langChainResult.confidence,
+          suggestions: this.generateSuggestions(userMessage)
+        };
+      }
+      
+      // Step 3: ActionBrain fallback (when LLM generic or failed)
       console.log('🔄 Using ActionBrain fallback system...');
       
       // Intent Recognition through Action Brain
@@ -157,7 +176,7 @@ export class ChatBrain {
       
       return chatResponse;
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat Brain Error:', error);
       return {
         message: `🤖 **I encountered an issue processing your message.**\n\n**Error**: ${error.message}\n\n**Please try**: Being more specific or rephrasing your request.`,
@@ -252,7 +271,7 @@ export class ChatBrain {
         confidence: 1.0
       };
       
-    } catch (error) {
+    } catch (error: any) {
       // Clear pending transfer even on error
       this.context.pendingTransfer = undefined;
       
@@ -412,7 +431,7 @@ export class ChatBrain {
         "\n\n🔥 **Fresh data served!** This is fascinating!",
         "\n\n📊 **Intelligence delivered!** Knowledge is power!"
       ]
-    };
+    } as any;
     
     const options = personalities[intent] || ["\n\n✨ **Success!** Happy to help!"];
     const randomPersonality = options[Math.floor(Math.random() * options.length)];
@@ -456,7 +475,7 @@ export class ChatBrain {
         "Check your balances?",
         "Look at trading data?"
       ]
-    };
+    } as any;
     
     return suggestions[intent] || ["What else can I help you with?"];
   }
