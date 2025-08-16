@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   Zap,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Activity
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { chatBrain } from '../services/ChatBrain';
@@ -53,6 +54,7 @@ const Seilor = () => {
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number; usdc: string; usdcUsd: number } | null>(null);
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [llmBackend, setLlmBackend] = useState<'ollama' | 'openai' | 'none' | 'unknown'>('unknown');
 
   const { isConnected, address } = useReownWallet();
 
@@ -69,6 +71,11 @@ const Seilor = () => {
   // Load wallet balance on component mount
   useEffect(() => {
     loadWalletBalance();
+    // Check LLM backend health
+    fetch('/.netlify/functions/llm-health')
+      .then(r => r.json())
+      .then(d => setLlmBackend((d.backend as any) || 'unknown'))
+      .catch(() => setLlmBackend('unknown'));
     
     // Load saved todos
     const savedTodos = localStorage.getItem('seilor_todos');
@@ -255,13 +262,24 @@ const Seilor = () => {
     { id: 'ai-tools', label: 'AI Tools', icon: Zap }
   ];
 
+  const backendPill = (
+    <div className={`px-2 py-1 rounded-full text-[10px] font-semibold leading-none border ${
+      llmBackend === 'ollama' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' :
+      llmBackend === 'openai' ? 'bg-blue-500/15 text-blue-300 border-blue-500/30' :
+      llmBackend === 'none' ? 'bg-red-500/15 text-red-300 border-red-500/30' :
+      'bg-slate-700/50 text-slate-300 border-slate-600/50'
+    }`}>
+      {llmBackend === 'ollama' ? 'Local LLM' : llmBackend === 'openai' ? 'OpenAI' : llmBackend === 'none' ? 'No LLM' : 'LLM: unknown'}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
       <div className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4 sm:space-x-6">
               {/* Hamburger Menu Button */}
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -276,15 +294,17 @@ const Seilor = () => {
                   <Bot className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">Seilor 0</h1>
-                  <p className="text-xs text-slate-400">Autonomous AI Trading Agent</p>
-                  <p className="text-xs text-blue-400">✅ v2.0 - Debug + Collapsible UI</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">Seilor 0</h1>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[10px] sm:text-xs text-slate-400">Autonomous AI Trading Agent</p>
+                    {backendPill}
+                  </div>
                 </div>
               </div>
               
               {/* Chat Management Buttons */}
               {activePanel === 'chat' && (
-                <div className="flex items-center space-x-2">
+                <div className="hidden sm:flex items-center space-x-2">
                   <button
                     onClick={startNewChat}
                     className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30 transition-colors border border-blue-500/30"
@@ -306,9 +326,9 @@ const Seilor = () => {
             </div>
             
             {/* Wallet Status */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
               {walletBalance && (
-                <div className="text-right">
+                <div className="hidden sm:block text-right">
                   <div className="text-sm font-medium text-white">{walletBalance.sei} SEI | {walletBalance.usdc} USDC</div>
                   <div className="text-xs text-slate-400">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)} total</div>
                 </div>
@@ -324,8 +344,8 @@ const Seilor = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className={`grid gap-6 ${sidebarCollapsed ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className={`grid gap-4 sm:gap-6 ${sidebarCollapsed ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
           {/* Sidebar */}
           <div className={`${sidebarCollapsed ? 'hidden' : 'block'} lg:col-span-1`}>
             <div className="bg-slate-800/50 rounded-2xl p-4 backdrop-blur-sm border border-slate-700/50">
@@ -393,7 +413,7 @@ const Seilor = () => {
               {activePanel === 'chat' && (
                 <div className={`${sidebarCollapsed ? 'h-[80vh]' : 'h-[600px]'} flex flex-col`}>
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                     {chatMessages.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-center">
                         <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mb-4">
@@ -417,7 +437,7 @@ const Seilor = () => {
                           key={msg.id}
                           className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                          <div className={`max-w-3xl p-4 rounded-2xl ${
+                          <div className={`max-w-3xl p-3 sm:p-4 rounded-2xl ${
                             msg.type === 'user'
                               ? 'bg-red-500/20 text-white border border-red-500/30'
                               : 'bg-slate-700/50 text-slate-100 border border-slate-600/50'
@@ -450,7 +470,7 @@ const Seilor = () => {
                   </div>
 
                   {/* Chat Input */}
-                  <div className="border-t border-slate-700/50 p-4">
+                  <div className="border-t border-slate-700/50 p-3 sm:p-4">
                     {/* Balance Display */}
                     {walletBalance && (
                       <div className="mb-3 p-3 bg-slate-700/30 rounded-xl border border-slate-600/30">
@@ -481,7 +501,7 @@ const Seilor = () => {
                     
                     {/* Chat Input */}
                     <div className="space-y-3">
-                      <div className="flex space-x-3 items-center">
+                      <div className="flex space-x-2 sm:space-x-3 items-center">
                         <button
                           onClick={() => fileInputRef.current?.click()}
                           className="p-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70"
@@ -505,19 +525,19 @@ const Seilor = () => {
                           onChange={(e) => setAiChat(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleAiChat()}
                           placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'"
-                          className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none"
+                                                    className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-3 sm:px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none"
                           disabled={loading}
-                        />
+                          />
                         <button
                           onClick={handleAiChat}
                           disabled={loading || !aiChat.trim()}
-                          className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25"
+                          className="px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25"
                         >
                           <Send className="w-5 h-5" />
                         </button>
                       </div>
                       {attachedImage && (
-                        <div className="text-xs text-slate-300">Attached: {attachedImage.name}</div>
+                        <div className="text-xs text-slate-300 truncate">Attached: {attachedImage.name}</div>
                       )}
                       {/* Debug Test Button */}
                       <button
