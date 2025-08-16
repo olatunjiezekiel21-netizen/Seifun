@@ -380,6 +380,18 @@ export class ChatBrain {
   private generateConversationalResponse(intentResult: any, actionResponse: any): ChatResponse {
     let message = actionResponse.response;
     const suggestions: string[] = [];
+
+    // For pure conversation, keep it minimal and natural (no success/failure tags)
+    if (intentResult.intent === IntentType.CONVERSATION) {
+      return {
+        message,
+        success: actionResponse.success,
+        intent: intentResult.intent,
+        confidence: intentResult.confidence,
+        suggestions,
+        data: actionResponse.data
+      };
+    }
     
     // Add conversational elements based on intent and success
     if (actionResponse.success) {
