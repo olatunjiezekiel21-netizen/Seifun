@@ -28,7 +28,10 @@ export enum IntentType {
   WALLET_INFO = 'wallet_info',
   // Token Transfer Operations
   SEND_TOKENS = 'send_tokens',
-  TRANSFER_CONFIRMATION = 'transfer_confirmation'
+  TRANSFER_CONFIRMATION = 'transfer_confirmation',
+  // NFT operations
+  NFT_BROWSE = 'nft_browse',
+  NFT_BUY = 'nft_buy'
 }
 
 // Entity Extraction Results
@@ -48,6 +51,9 @@ interface ExtractedEntities {
   // Transfer entities
   recipient?: string;
   transferAmount?: number;
+  // NFT entities
+  collection?: string;
+  tokenId?: string;
 }
 
 // Intent Recognition Result
@@ -104,6 +110,22 @@ export class ActionBrain {
         intent: IntentType.TOKEN_SCAN,
         confidence: 0.95,
         entities,
+        rawMessage: message
+      };
+    }
+    
+    // NFT Browse / Buy Intents
+    if (this.matchesPattern(normalizedMessage, [
+      /(buy|shop|browse|find).*nfts?/,
+      /(nft|collectible).*market/,
+      /mint.*nft/
+    ])) {
+      const nftEntities = this.extractNftEntities(normalizedMessage);
+      const wantsBuy = /buy.*nfts?|mint.*nft/.test(normalizedMessage) || !!nftEntities.tokenId;
+      return {
+        intent: wantsBuy ? IntentType.NFT_BUY : IntentType.NFT_BROWSE,
+        confidence: 0.85,
+        entities: { ...entities, ...nftEntities },
         rawMessage: message
       };
     }
@@ -330,7 +352,7 @@ export class ActionBrain {
       };
     }
     
-
+    
     
     // Conversational Intent
     if (this.matchesPattern(normalizedMessage, [
@@ -423,6 +445,12 @@ export class ActionBrain {
           
         case IntentType.TRANSFER_CONFIRMATION:
           return await this.executeTransferConfirmation(intentResult);
+          
+        case IntentType.NFT_BROWSE:
+          return await this.executeNftBrowse(intentResult);
+        
+        case IntentType.NFT_BUY:
+          return await this.executeNftBuy(intentResult);
           
         default:
           return this.executeUnknown(intentResult);
@@ -855,6 +883,16 @@ export class ActionBrain {
       entities.transferAmount = parseFloat(amountMatch[1]);
     }
     
+    return entities;
+  }
+
+  private extractNftEntities(message: string): Partial<ExtractedEntities> {
+    const entities: Partial<ExtractedEntities> = {};
+    // Try to extract collection contract address and tokenId
+    const addr = message.match(/0x[a-fA-F0-9]{40}/);
+    if (addr) entities.collection = addr[0];
+    const id = message.match(/token\s*id\s*:?\s*(\d+)/i) || message.match(/#(\d+)/);
+    if (id) entities.tokenId = id[1];
     return entities;
   }
 
@@ -1351,6 +1389,30 @@ export class ActionBrain {
     return {
       success: false,
       response: "Liquidity addition functionality - implementation in progress"
+    };
+  }
+
+  private async executeNftBrowse(intent: IntentResult): Promise<ActionResponse> {
+    // Guided response until a marketplace integration is configured
+    return {
+      success: true,
+      response: `🖼️ **NFTs on Sei**\n\nI can help you browse or buy NFTs once you provide a marketplace or collection.\n\n**Next steps:**\n• Paste a collection contract (0x...) to browse listings\n• Or tell me the marketplace you use on Sei (and the collection slug)\n\nIf you already know a specific NFT, say: \"Buy NFT tokenId [id] from [collection address]\"`,
+    };
+  }
+
+  private async executeNftBuy(intent: IntentResult): Promise<ActionResponse> {
+    const { collection, tokenId } = intent.entities;
+    if (!collection || !tokenId) {
+      return {
+        success: false,
+        response: `❌ **Missing purchase details**\n\n**Need**: collection address (0x...) and tokenId.\n**Example**: \"Buy NFT tokenId 123 from 0xABC...\"`,
+      };
+    }
+    // We need marketplace contract to execute a purchase. Ask for marketplace info.
+    return {
+      success: false,
+      response: `🛒 **NFT Purchase Setup**\n\nTo buy tokenId ${tokenId} from ${collection}, I need the marketplace (contract) where it's listed.\n**Please provide**: marketplace name or contract address + listing ID/price.\n\nOnce provided, I'll prepare an on-chain buy transaction with balance checks and confirmations.`,
+      data: { collection, tokenId }
     };
   }
 }
