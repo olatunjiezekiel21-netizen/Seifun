@@ -206,7 +206,9 @@ export class ActionBrain {
     // Symphony DEX Swap Intent
     if (this.matchesPattern(normalizedMessage, [
       /swap.*\d+.*sei.*for.*usdc/,
+      /swap.*\d+.*sei.*to.*usdc/,
       /swap.*\d+.*usdc.*for.*sei/,
+      /swap.*\d+.*usdc.*to.*sei/,
       /exchange.*\d+.*tokens?/,
       /trade.*\d+.*sei/,
       /symphony.*swap/,
@@ -793,6 +795,12 @@ export class ActionBrain {
   // New Entity Extraction Methods for Cambrian Capabilities
   private extractSwapEntities(message: string): Partial<ExtractedEntities> {
     const entities: Partial<ExtractedEntities> = {};
+
+    // Extract amount
+    const amt = message.match(/(\d+(?:\.\d+)?)\s*(sei|usdc)?/i);
+    if (amt) {
+      entities.amount = parseFloat(amt[1]);
+    }
     
     // Extract token pairs for swapping
     if (message.includes('sei') && message.includes('usdc')) {
