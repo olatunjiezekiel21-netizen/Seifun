@@ -68,6 +68,7 @@ export class CambrianSeiAgent implements AgentCapabilities {
   public walletClient: WalletClient;
   public walletAddress: Address;
   private symphonySDK: Symphony;
+  private vortexApiUrl: string;
 
   constructor(privateKey: string) {
     const account = privateKeyToAccount(privateKey as Address);
@@ -88,6 +89,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
     // Initialize Symphony SDK for DEX operations
     this.symphonySDK = new Symphony({ walletClient: this.walletClient });
     this.symphonySDK.connectWalletClient(this.walletClient);
+
+    this.vortexApiUrl = (process as any).env?.VORTEX_API_URL || (import.meta as any).env?.VITE_VORTEX_API_URL || 'https://api.vortexprotocol.io/v1/quote'
   }
 
   /**
@@ -222,9 +225,32 @@ export class CambrianSeiAgent implements AgentCapabilities {
   }
 
   /**
-   * Get swap quote from Symphony
+   * Get swap quote (Vortex preferred, Symphony fallback)
    */
   async getSwapQuote(params: SwapParams): Promise<any> {
+    // Try Vortex REST first
+    try {
+      const url = new URL(this.vortexApiUrl)
+      url.searchParams.set('tokenIn', params.tokenIn)
+      url.searchParams.set('tokenOut', params.tokenOut)
+      url.searchParams.set('amount', params.amount)
+      const res = await fetch(url.toString())
+      if (!res.ok) throw new Error(`Vortex quote error ${res.status}`)
+      const data = await res.json()
+      // Normalize fields (best-effort)
+      const outputAmount = data.outputAmount || data.amountOut || data.out || '0'
+      const priceImpact = data.priceImpact || data.impact || 0
+      return {
+        inputAmount: params.amount,
+        outputAmount,
+        priceImpact: Number(priceImpact),
+        route: data.route || data.path || []
+      }
+    } catch (e) {
+      console.warn('Vortex quote failed, falling back to Symphony:', (e as any)?.message || e)
+    }
+
+    // Fallback to Symphony route
     try {
       const route = await this.symphonySDK.getRoute(
         params.tokenIn,
