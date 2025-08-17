@@ -127,12 +127,6 @@ const AppHeaderSafe = () => {
             >
               Charts
             </Link>
-            <Link
-              to="/app/ai-dashboard"
-              className={`app-nav-link ${isActive('/app/ai-dashboard') ? 'active' : ''}`}
-            >
-              AI Dashboard
-            </Link>
           </nav>
 
           {/* Right Side */}
@@ -287,15 +281,6 @@ const AppHeaderSafe = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Charts
-              </Link>
-              <Link
-                to="/app/ai-dashboard"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/ai-dashboard') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                AI Dashboard
               </Link>
             </nav>
           </div>

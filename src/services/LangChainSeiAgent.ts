@@ -3,6 +3,8 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createSeiTools } from './SeiLangChainTools';
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { unifiedTokenService } from './UnifiedTokenService';
+import { portfolioOptimizer } from './PortfolioOptimizer';
+import { marketIntelligence } from './MarketIntelligence';
 
 export interface LangChainResponse {
   message: string;
@@ -109,6 +111,22 @@ export class LangChainSeiAgent {
       return `Market data unavailable: ${error.message}`;
     }
   }
+
+  // Get portfolio analysis summary
+  private async getPortfolioSummary(): Promise<string> {
+    try {
+      const analysis = await portfolioOptimizer.analyzePortfolio();
+      return `PORTFOLIO ANALYSIS:
+- Total Value: $${analysis.totalValue.toFixed(2)}
+- Risk Score: ${analysis.riskScore.toFixed(1)}/3.0
+- Expected Return: ${(analysis.expectedReturn * 100).toFixed(1)}% APY
+- Top Holdings: ${analysis.allocation.slice(0, 3).map(asset => 
+    `${asset.symbol} (${asset.percentage.toFixed(1)}%)`
+  ).join(', ')}`;
+    } catch (error) {
+      return `Portfolio analysis unavailable: ${error.message}`;
+    }
+  }
   
   async processMessage(input: string): Promise<LangChainResponse> {
     try {
@@ -126,50 +144,65 @@ export class LangChainSeiAgent {
       console.log('✅ OpenAI API key found - using enhanced AI intelligence');
       
       // Get real-time data
-      const [walletInfo, marketInfo] = await Promise.all([
+      const [walletInfo, marketInfo, portfolioInfo] = await Promise.all([
         this.getWalletInfo(),
-        this.getMarketIntelligence()
+        this.getMarketIntelligence(),
+        this.getPortfolioSummary()
       ]);
       
       // Enhanced prompt with advanced capabilities
-      const prompt = `You are Seilor 0, the most advanced AI assistant for DeFi on Sei Network. You have comprehensive knowledge about blockchain, DeFi, trading, and portfolio management.
+      const prompt = `You are Seilor 0, the most advanced AI assistant for DeFi on Sei Network. You are the ONE comprehensive AI that handles everything - portfolio optimization, market intelligence, trading strategies, and more. Users should never need another AI tool.
 
 CURRENT REAL-TIME DATA:
 ${walletInfo}
 
 ${marketInfo}
 
-ADVANCED CAPABILITIES:
+${portfolioInfo}
+
+COMPREHENSIVE AI CAPABILITIES:
 
 1. **PORTFOLIO OPTIMIZATION**:
-   - Analyze risk/reward ratios
-   - Suggest optimal asset allocation
-   - Identify rebalancing opportunities
-   - Calculate expected returns
+   - Risk assessment and scoring (0-3.0 scale)
+   - Asset allocation analysis and recommendations
+   - Rebalancing strategies and actions
+   - Performance metrics (Sharpe ratio, volatility, max drawdown)
+   - Expected return calculations and projections
 
-2. **MARKET ANALYSIS**:
-   - Technical analysis patterns
-   - Market sentiment analysis
-   - Trend identification
-   - Risk assessment
+2. **MARKET INTELLIGENCE**:
+   - Real-time market sentiment analysis (-100 to +100)
+   - Technical analysis with trend prediction
+   - Trading opportunity identification
+   - Market alerts and notifications
+   - Top performers and market overview
 
 3. **TRADING STRATEGIES**:
    - DCA (Dollar Cost Averaging) recommendations
-   - Swing trading opportunities
+   - Swing trading opportunities with entry/exit points
    - Yield farming optimization
    - Liquidity provision strategies
+   - Risk management and position sizing
 
 4. **DEFI INSIGHTS**:
    - Protocol comparison and analysis
-   - APY optimization
+   - APY optimization across platforms
    - Impermanent loss calculations
    - Cross-chain opportunities
+   - Security assessment and verification
 
 5. **RISK MANAGEMENT**:
-   - Portfolio diversification
+   - Portfolio diversification strategies
    - Stop-loss recommendations
-   - Position sizing
-   - Market timing
+   - Position sizing guidelines
+   - Market timing insights
+   - Volatility management
+
+6. **ADVANCED ANALYTICS**:
+   - Real-time portfolio tracking
+   - Risk-adjusted return calculations
+   - Market correlation analysis
+   - Predictive modeling insights
+   - Automated strategy suggestions
 
 COMPREHENSIVE KNOWLEDGE BASE:
 
@@ -194,24 +227,25 @@ DEFI PROTOCOLS:
 - Astroport: AMM and liquidity pools
 - Crescent: Liquid staking and governance
 
-ADVANCED FEATURES:
-- Real-time portfolio tracking
-- Risk-adjusted return calculations
-- Market correlation analysis
-- Predictive modeling
-- Automated strategy suggestions
-
 RESPONSE STYLE:
-- Be analytical and data-driven
+- Be the ONE comprehensive AI that users need
 - Provide specific, actionable insights
-- Include risk assessments
+- Include risk assessments and recommendations
 - Offer multiple strategy options
 - Use professional financial language
 - Include relevant metrics and calculations
+- Always try to help with comprehensive solutions
+
+USER EXPERIENCE:
+- Users should NEVER need another AI tool
+- Provide complete analysis and recommendations
+- Offer to execute actions when possible
+- Give comprehensive answers to all questions
+- Be the ultimate DeFi AI assistant
 
 User Message: "${input}"
 
-Provide a comprehensive, intelligent response leveraging your advanced capabilities:`;
+Provide a comprehensive, intelligent response leveraging ALL your advanced capabilities. Be the ONE AI that users need for everything:`;
 
       // Process message through enhanced LangChain model
       const result = await this.model.invoke(prompt);
@@ -227,6 +261,7 @@ Provide a comprehensive, intelligent response leveraging your advanced capabilit
         data: {
           walletInfo,
           marketInfo,
+          portfolioInfo,
           timestamp: new Date().toISOString()
         }
       };
@@ -246,7 +281,7 @@ Provide a comprehensive, intelligent response leveraging your advanced capabilit
     
     // Portfolio-related suggestions
     if (normalizedInput.includes('portfolio') || normalizedInput.includes('balance') || normalizedInput.includes('assets')) {
-      suggestions.push('📊 View detailed portfolio analysis');
+      suggestions.push('📊 Get detailed portfolio analysis');
       suggestions.push('⚖️ Get rebalancing recommendations');
       suggestions.push('📈 Check performance metrics');
     }
@@ -374,6 +409,78 @@ Provide a comprehensive, intelligent response leveraging your advanced capabilit
         success: true,
         confidence: 0.9,
         suggestions: ['🎯 Execute strategy', '📊 View opportunities', '⚠️ Risk assessment']
+      };
+    }
+    
+    if (normalizedInput.includes('risk') || normalizedInput.includes('assessment') || normalizedInput.includes('volatility')) {
+      return {
+        message: `⚠️ **Risk Assessment & Management:**
+
+**Current Risk Profile:**
+• Portfolio Risk Score: 2.1/3.0 (Medium-High)
+• Volatility: 18.5%
+• Max Drawdown: -12.3%
+• Sharpe Ratio: 1.2
+
+**Risk Factors Identified:**
+1. **High Concentration**: 45% in single asset (SEI)
+2. **Volatile Assets**: 30% in growth tokens
+3. **Liquidity Risk**: Some positions may be hard to exit
+4. **Market Risk**: Overall crypto market volatility
+
+**Risk Mitigation Strategies:**
+• **Diversification**: Add more stable assets (USDC, USDT)
+• **Position Sizing**: Limit any single asset to 20%
+• **Stop-Losses**: Set at 15-20% for volatile positions
+• **Regular Rebalancing**: Monthly portfolio adjustments
+
+**Want me to analyze your specific risk profile?** I can provide personalized recommendations! 🛡️`,
+        success: true,
+        confidence: 0.9,
+        suggestions: ['📊 Risk analysis', '⚖️ Portfolio rebalancing', '🛡️ Risk mitigation']
+      };
+    }
+    
+    if (normalizedInput.includes('yield') || normalizedInput.includes('farming') || normalizedInput.includes('apy')) {
+      return {
+        message: `💰 **Yield Farming & APY Optimization:**
+
+**Current Best Opportunities:**
+
+1. **Silo Protocol (SEI Staking):**
+   • APY: 8-12%
+   • Risk: Low
+   • Lock-up: None
+   • Minimum: 100 SEI
+
+2. **Symphony DEX (Liquidity Provision):**
+   • APY: 15-25%
+   • Risk: Medium
+   • Pairs: SEI/USDC, SEI/USDT
+   • Impermanent Loss: 2-5%
+
+3. **Crescent (Liquid Staking):**
+   • APY: 10-15%
+   • Risk: Low
+   • Benefits: Governance rights
+   • Flexibility: Can trade staked tokens
+
+4. **Takara Finance (Lending):**
+   • APY: 5-15%
+   • Risk: Medium
+   • Collateral: Required
+   • Liquidity: High
+
+**Portfolio Allocation Recommendation:**
+• 40% Core staking (SEI)
+• 30% Liquidity provision
+• 20% Lending protocols
+• 10% Liquid staking
+
+**Ready to optimize your yields?** I can help you implement these strategies! 🚀`,
+        success: true,
+        confidence: 0.9,
+        suggestions: ['💰 Start yield farming', '📊 Compare APYs', '⚖️ Optimize allocation']
       };
     }
     
@@ -583,23 +690,41 @@ Just paste the token address (0x...) and I'll analyze it for you!
     
     // Default response for other questions
     return {
-      message: `🤖 I'm Seilor 0, your advanced AI assistant for DeFi on Sei Network!
+      message: `🤖 I'm Seilor 0, your ONE comprehensive AI assistant for DeFi on Sei Network!
 
-**Advanced Capabilities:**
-• **Portfolio Optimization**: Risk-adjusted allocation, rebalancing
-• **Market Intelligence**: Real-time analysis, trend prediction
-• **Trading Strategies**: DCA, swing trading, yield optimization
-• **Risk Management**: Portfolio diversification, position sizing
-• **DeFi Insights**: Protocol analysis, APY optimization
+**I'm the ONLY AI you need for everything:**
 
-**Ask me about:**
-• Portfolio optimization strategies
-• Advanced trading techniques
-• Market analysis and predictions
-• Risk management strategies
-• DeFi protocol comparisons
+**Portfolio Management:**
+• Portfolio analysis and optimization
+• Risk assessment and management
+• Asset allocation and rebalancing
+• Performance tracking and metrics
 
-**What would you like to explore?** I'm here to maximize your DeFi success! 🚀`,
+**Market Intelligence:**
+• Real-time market analysis
+• Sentiment analysis and trends
+• Trading opportunities and strategies
+• Market alerts and notifications
+
+**DeFi Operations:**
+• Staking and yield farming
+• Trading and liquidity provision
+• Lending and borrowing
+• Cross-chain operations
+
+**Advanced Features:**
+• AI-powered recommendations
+• Risk-adjusted strategies
+• Technical analysis insights
+• Automated portfolio optimization
+
+**Ask me ANYTHING about DeFi, and I'll provide comprehensive solutions!** 🚀
+
+**Examples:**
+• "Analyze my portfolio and optimize it"
+• "What's the market sentiment and find trading opportunities?"
+• "Help me stake SEI and maximize yields"
+• "Assess the risk of my current positions"`,
       success: true,
       confidence: 0.8
     };
