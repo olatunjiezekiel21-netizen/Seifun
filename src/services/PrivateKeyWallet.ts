@@ -9,7 +9,7 @@ export class PrivateKeyWallet {
   private seiPrice = 0.834; // SEI price in USD
 
   constructor() {
-    this.provider = new ethers.JsonRpcProvider('https://evm-rpc.sei-apis.com');
+    this.provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
     this.wallet = new ethers.Wallet(PRIVATE_KEY, this.provider);
   }
 

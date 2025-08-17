@@ -95,7 +95,7 @@ export class MCPService {
       console.log('💰 MCP: Getting wallet balance for:', this.walletAddress);
       
       // Real balance query using ethers.js
-      const provider = new ethers.JsonRpcProvider('https://evm-rpc.sei-apis.com');
+      const provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
       const balance = await provider.getBalance(this.walletAddress || '0x');
       const seiBalance = parseFloat(ethers.formatEther(balance));
       
@@ -126,7 +126,7 @@ export class MCPService {
       // For now, simulate real token analysis
       // TODO: Replace with actual MCP calls
       // Real token info query using ethers.js
-      const provider = new ethers.JsonRpcProvider('https://evm-rpc.sei-apis.com');
+      const provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
       const tokenContract = new ethers.Contract(address, [
         'function name() view returns (string)',
         'function symbol() view returns (string)', 

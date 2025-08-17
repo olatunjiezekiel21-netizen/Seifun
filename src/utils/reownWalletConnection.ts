@@ -759,7 +759,7 @@ export const useReownWallet = () => {
   useEffect(() => {
     if (typeof window !== 'undefined' && !walletConnection) {
       console.log('🔄 Creating ReOWN wallet connection instance...');
-      const connection = new ReownWalletConnection(true); // Use mainnet
+      const connection = new ReownWalletConnection(false); // Use testnet for QA
       setWalletConnection(connection);
     }
   }, [walletConnection]);

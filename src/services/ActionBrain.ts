@@ -557,8 +557,7 @@ export class ActionBrain {
       const { txHash } = await cambrianSeiAgent.createToken({
         name: tokenName,
         symbol,
-        totalSupply,
-        valueSei: '0.2' // example factory fee
+        totalSupply
       });
 
       // Make basic metadata and store reference (logo from local cache if exists)

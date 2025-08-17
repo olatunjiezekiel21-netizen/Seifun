@@ -445,7 +445,10 @@ export class CambrianSeiAgent implements AgentCapabilities {
    * Create ERC20 token via factory
    */
   async createToken(params: { name: string; symbol: string; totalSupply: string; decimals?: number; valueSei?: string }): Promise<{ txHash: string }> {
-    const FACTORY_ADDRESS = (import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || (import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A';
+    const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
+    const FACTORY_ADDRESS = mode === 'mainnet'
+      ? ((import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
+      : ((import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
     const abi = [{
       type: 'function',
       name: 'createToken',
@@ -459,8 +462,10 @@ export class CambrianSeiAgent implements AgentCapabilities {
       outputs: [{ name: '', type: 'address' }]
     }];
     const decimals = params.decimals ?? 18;
-    // viem expects bigints as strings with parse; we pass as string
-    const valueWei = params.valueSei ? BigInt(Math.floor(parseFloat(params.valueSei) * 1e18)) : 0n;
+    // Default fee: 0 on testnet, allow override
+    const defaultFeeSei = mode === 'mainnet' ? '0.2' : '0';
+    const feeSei = params.valueSei ?? defaultFeeSei;
+    const valueWei = feeSei ? BigInt(Math.floor(parseFloat(feeSei) * 1e18)) : 0n;
     const hash = await this.walletClient.writeContract({
       address: FACTORY_ADDRESS as any,
       abi: abi as any,

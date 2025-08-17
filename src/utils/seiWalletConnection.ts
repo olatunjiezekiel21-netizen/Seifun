@@ -335,7 +335,7 @@ Need help? Visit our docs for detailed setup instructions.`;
 
   const fetchBalance = async (address: string): Promise<string> => {
     try {
-      // Use Sei testnet RPC to fetch real balance
+             // Use Sei mainnet/testnet RPC based on env
       const rpcUrl = import.meta.env.VITE_SEI_MAINNET_RPC || 'https://evm-rpc.sei-apis.com';
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       const balance = await provider.getBalance(address);
