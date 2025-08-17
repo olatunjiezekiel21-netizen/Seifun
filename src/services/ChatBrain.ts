@@ -391,3 +391,6 @@ export class ChatBrain {
     return this.context.sessionData;
   }
 }
+
+// Export singleton instance
+export const chatBrain = new ChatBrain();

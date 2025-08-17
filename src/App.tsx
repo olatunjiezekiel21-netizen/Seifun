@@ -2,11 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AppHeaderSafe from './components/AppHeaderSafe';
 import AppFooter from './components/AppFooter';
-import SeifunLaunch from './components/SeifunLaunch';
-import SeiList from './components/SeiList';
-import SafeChecker from './components/SafeChecker';
+import SeifunLaunch from './pages/SeifunLaunch';
+import SeiList from './pages/SeiList';
+import SafeChecker from './pages/SafeChecker';
 import Seilor from './pages/Seilor';
-import DevPlus from './components/DevPlus';
+import DevPlus from './pages/DevPlus';
 import RealTimeChart from './components/RealTimeChart';
 
 function App() {
