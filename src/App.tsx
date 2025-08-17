@@ -14,6 +14,7 @@ import DevPlus from './pages/DevPlus';
 import RealTimeChart from './components/RealTimeChart';
 import WalletConnectionTest from './components/WalletConnectionTest';
 import ErrorBoundary from './components/ErrorBoundary';
+import AIDashboard from './components/AIDashboard';
 
 function App() {
   React.useEffect(() => {
@@ -117,6 +118,14 @@ function App() {
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSafe />
             <WalletConnectionTest />
+            <AppFooter />
+          </div>
+        } />
+
+        <Route path="/app/ai-dashboard" element={
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <AIDashboard />
             <AppFooter />
           </div>
         } />
