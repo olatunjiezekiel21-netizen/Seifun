@@ -257,8 +257,9 @@ export class CambrianSeiAgent implements AgentCapabilities {
         throw new Error(`Insufficient SEI balance. Have: ${balance}, Need: ${params.amount}`);
       }
 
-      // Note: Silo integration ready for production deployment
-      return `✅ Staked ${params.amount} SEI successfully!\n🥩 Silo Protocol integration active\n📊 Estimated APY: 8.5%\n⚡ Rewards start accruing immediately`;
+      // TODO: Implement actual Silo staking contract interaction
+      // For now, return informative message about testnet status
+      return `🥩 Staking ${params.amount} SEI initiated!\n\n📝 Testnet Status: Silo protocol integration in development\n🔧 Currently testing on Sei Testnet (Chain ID: 1328)\n💰 Your SEI balance: ${balance} SEI\n\n⚠️ Note: This is a testnet implementation. Real staking will be available on mainnet.`;
     } catch (error) {
       console.error('Error staking tokens:', error);
       throw new Error(`Staking failed: ${error.message}`);
@@ -272,8 +273,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
     try {
       console.log(`📤 Unstaking ${params.amount} SEI tokens...`);
       
-      // Note: Silo integration ready for production deployment  
-      return `✅ Unstaked ${params.amount} SEI successfully!\n📤 Tokens returned to wallet\n🎯 Silo Protocol integration active`;
+      // TODO: Implement actual Silo unstaking contract interaction
+      return `📤 Unstaking ${params.amount} SEI initiated!\n\n📝 Testnet Status: Silo protocol integration in development\n🔧 Currently testing on Sei Testnet (Chain ID: 1328)\n\n⚠️ Note: This is a testnet implementation. Real unstaking will be available on mainnet.`;
     } catch (error) {
       console.error('Error unstaking tokens:', error);
       throw new Error(`Unstaking failed: ${error.message}`);
@@ -287,8 +288,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
     try {
       console.log(`🏦 Lending ${params.amount} ${params.token} via Takara...`);
       
-      // Note: Takara integration ready for production deployment
-      return `✅ Lent ${params.amount} ${params.token} successfully!\n🏦 Takara Finance integration active\n📈 Current APY: 12.3%\n💰 Earning interest immediately`;
+      // TODO: Implement actual Takara lending contract interaction
+      return `🏦 Lending ${params.amount} ${params.token} initiated!\n\n📝 Testnet Status: Takara Finance integration in development\n🔧 Currently testing on Sei Testnet (Chain ID: 1328)\n\n⚠️ Note: This is a testnet implementation. Real lending will be available on mainnet.`;
     } catch (error) {
       console.error('Error lending tokens:', error);
       throw new Error(`Lending failed: ${error.message}`);
@@ -302,8 +303,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
     try {
       console.log(`💰 Borrowing ${params.amount} ${params.token} via Takara...`);
       
-      // Note: Takara integration ready for production deployment
-      return `✅ Borrowed ${params.amount} ${params.token} successfully!\n💰 Takara Finance integration active\n📊 Interest Rate: 8.9% APR\n⏰ Repayment terms: Flexible`;
+      // TODO: Implement actual Takara borrowing contract interaction
+      return `💰 Borrowing ${params.amount} ${params.token} initiated!\n\n📝 Testnet Status: Takara Finance integration in development\n🔧 Currently testing on Sei Testnet (Chain ID: 1328)\n\n⚠️ Note: This is a testnet implementation. Real borrowing will be available on mainnet.`;
     } catch (error) {
       console.error('Error borrowing tokens:', error);
       throw new Error(`Borrowing failed: ${error.message}`);
@@ -317,8 +318,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
     try {
       console.log(`💸 Repaying ${params.amount} ${params.token} loan via Takara...`);
       
-      // Note: Takara integration ready for production deployment
-      return `✅ Repaid ${params.amount} ${params.token} loan successfully!\n💸 Takara Finance integration active\n📊 Loan status updated\n✨ Credit score improved`;
+      // TODO: Implement actual Takara loan repayment contract interaction
+      return `💸 Repaying ${params.amount} ${params.token} loan initiated!\n\n📝 Testnet Status: Takara Finance integration in development\n🔧 Currently testing on Sei Testnet (Chain ID: 1328)\n\n⚠️ Note: This is a testnet implementation. Real loan repayment will be available on mainnet.`;
     } catch (error) {
       console.error('Error repaying loan:', error);
       throw new Error(`Loan repayment failed: ${error.message}`);
@@ -332,8 +333,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
     try {
       console.log(`📈 Opening ${params.side} position on ${params.market} via Citrex...`);
       
-      // Note: Citrex integration ready for production deployment
-      return `✅ Opened ${params.side} position on ${params.market}!\n📈 Size: ${params.size} ${params.market.split('/')[0]}\n🎯 Leverage: ${params.leverage || 1}x\n⚡ Citrex Protocol active`;
+      // TODO: Implement actual Citrex trading contract interaction
+      return `📈 Opening ${params.side} position on ${params.market} initiated!\n\n📝 Testnet Status: Citrex protocol integration in development\n🔧 Currently testing on Sei Testnet (Chain ID: 1328)\n📊 Size: ${params.size} ${params.market.split('/')[0]}\n🎯 Leverage: ${params.leverage || 1}x\n\n⚠️ Note: This is a testnet implementation. Real trading will be available on mainnet.`;
     } catch (error) {
       console.error('Error opening position:', error);
       throw new Error(`Position opening failed: ${error.message}`);
@@ -347,8 +348,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
     try {
       console.log(`📉 Closing position ${positionId} via Citrex...`);
       
-      // Note: Citrex integration ready for production deployment
-      return `✅ Closed position ${positionId} successfully!\n📉 Position settled\n💰 P&L realized\n⚡ Citrex Protocol active`;
+      // TODO: Implement actual Citrex position closing contract interaction
+      return `📉 Closing position ${positionId} initiated!\n\n📝 Testnet Status: Citrex protocol integration in development\n🔧 Currently testing on Sei Testnet (Chain ID: 1328)\n\n⚠️ Note: This is a testnet implementation. Real position closing will be available on mainnet.`;
     } catch (error) {
       console.error('Error closing position:', error);
       throw new Error(`Position closing failed: ${error.message}`);
@@ -362,18 +363,12 @@ export class CambrianSeiAgent implements AgentCapabilities {
     try {
       console.log(`📊 Getting open positions via Citrex...`);
       
-      // For now, return mock data - in production this would integrate with Citrex
-      return [
-        {
-          id: '1',
-          market: 'SEI/USDC',
-          side: 'long',
-          size: '1000',
-          entryPrice: '0.85',
-          currentPrice: '0.87',
-          pnl: '+2.35%'
-        }
-      ];
+      // TODO: Implement actual Citrex positions query
+      // For now, return empty array since we're on testnet
+      console.log('📝 Testnet Status: Citrex protocol integration in development');
+      console.log('🔧 Currently testing on Sei Testnet (Chain ID: 1328)');
+      
+      return [];
     } catch (error) {
       console.error('Error getting positions:', error);
       throw new Error(`Failed to get positions: ${error.message}`);

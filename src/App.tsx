@@ -11,6 +11,7 @@ import TradingView from './pages/TradingView';
 import TradingSearch from './pages/TradingSearch';
 import Docs from './pages/Docs';
 import DevPlus from './pages/DevPlus';
+import RealTimeChart from './components/RealTimeChart';
 import WalletConnectionTest from './components/WalletConnectionTest';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -100,6 +101,14 @@ function App() {
           <div className="min-h-screen app-bg-primary">
             <AppHeaderSafe />
             <DevPlus />
+            <AppFooter />
+          </div>
+        } />
+        
+        <Route path="/app/charts" element={
+          <div className="min-h-screen app-bg-primary">
+            <AppHeaderSafe />
+            <RealTimeChart />
             <AppFooter />
           </div>
         } />

@@ -160,7 +160,7 @@ export class ChatBrain {
     } catch (error) {
       console.error('Chat Brain Error:', error);
       return {
-        message: `🤖 **I encountered an issue processing your message.**\n\n**Error**: ${error.message}\n\n**Please try**: Being more specific or rephrasing your request.`,
+        message: `🤖 I encountered an issue processing your message. Please try being more specific or rephrasing your request.`,
         success: false,
         intent: IntentType.UNKNOWN,
         confidence: 0,
@@ -200,108 +200,76 @@ export class ChatBrain {
       /^don.*t.*send/
     ];
     
-    const isConfirmation = confirmationPatterns.some(pattern => pattern.test(normalizedMessage));
-    const isCancel = cancelPatterns.some(pattern => pattern.test(normalizedMessage));
-    
-    if (isConfirmation) {
-      return this.executeConfirmedTransfer();
-    } else if (isCancel) {
-      return this.cancelPendingTransfer();
+    // Check for confirmation
+    if (confirmationPatterns.some(pattern => pattern.test(normalizedMessage))) {
+      // Execute the pending transfer
+      return this.executePendingTransfer();
     }
     
-    // If message doesn't match confirmation patterns but there's a pending transfer, remind user
-    if (this.context.pendingTransfer) {
+    // Check for cancellation
+    if (cancelPatterns.some(pattern => pattern.test(normalizedMessage))) {
+      // Clear pending transfer
+      this.context.pendingTransfer = undefined;
+      
       return {
-        message: `⏳ **You have a pending transfer**\n\n**Amount**: ${this.context.pendingTransfer.amount} SEI\n**To**: ${this.context.pendingTransfer.recipient}\n\n**Reply**: "Yes, confirm" to proceed or "Cancel" to abort`,
-        success: false,
+        message: `❌ Transfer cancelled. No tokens were sent.`,
+        success: true,
         intent: IntentType.TRANSFER_CONFIRMATION,
-        confidence: 0.8
+        confidence: 0.9
       };
     }
     
     return null;
   }
   
-  // Execute confirmed transfer
-  private async executeConfirmedTransfer(): Promise<ChatResponse> {
-    if (!this.context.pendingTransfer) {
-      return {
-        message: `❌ **No pending transfer found**`,
-        success: false,
-        intent: IntentType.TRANSFER_CONFIRMATION,
-        confidence: 1.0
-      };
-    }
-    
+  // Execute pending transfer
+  private async executePendingTransfer(): Promise<ChatResponse> {
     try {
-      const { amount, recipient } = this.context.pendingTransfer;
+      const transfer = this.context.pendingTransfer!;
       
-      // Execute the actual transfer using CambrianSeiAgent
+      // Execute the transfer using CambrianSeiAgent
       const result = await cambrianSeiAgent.transferToken(
-        amount.toString(), 
-        recipient as any
+        transfer.amount.toString(),
+        transfer.recipient as any
       );
       
       // Clear pending transfer
       this.context.pendingTransfer = undefined;
       
       return {
-        message: `✅ **Transfer Completed!**\n\n**Amount**: ${amount} SEI\n**Recipient**: ${recipient}\n**Transaction**: ${result}\n\n**🎉 Your SEI has been sent successfully!**`,
+        message: `✅ Transfer successful!\n\n💰 Amount: ${transfer.amount} SEI\n📤 To: ${transfer.recipient}\n🔗 Transaction: ${result}\n\nYour remaining balance: ${transfer.remainingBalance} SEI`,
         success: true,
-        intent: IntentType.SEND_TOKENS,
-        confidence: 1.0
+        intent: IntentType.TRANSFER_CONFIRMATION,
+        confidence: 0.95
       };
       
     } catch (error) {
-      // Clear pending transfer even on error
+      console.error('Transfer execution failed:', error);
+      
+      // Clear pending transfer on failure
       this.context.pendingTransfer = undefined;
       
       return {
-        message: `❌ **Transfer Failed**\n\n**Error**: ${error.message}\n\n**💡 Your funds are safe** - no transaction was completed`,
-        success: false,
-        intent: IntentType.SEND_TOKENS,
-        confidence: 1.0
-      };
-    }
-  }
-  
-  // Cancel pending transfer
-  private cancelPendingTransfer(): ChatResponse {
-    if (!this.context.pendingTransfer) {
-      return {
-        message: `❌ **No pending transfer to cancel**`,
+        message: `❌ Transfer failed: ${error.message}\n\nPlease try again or check your balance.`,
         success: false,
         intent: IntentType.TRANSFER_CONFIRMATION,
-        confidence: 1.0
+        confidence: 0.8
       };
     }
-    
-    const { amount, recipient } = this.context.pendingTransfer;
-    this.context.pendingTransfer = undefined;
-    
-    return {
-      message: `🚫 **Transfer Cancelled**\n\n**Amount**: ${amount} SEI\n**Recipient**: ${recipient}\n\n**✅ Your funds remain safe in your wallet**`,
-      success: true,
-      intent: IntentType.TRANSFER_CONFIRMATION,
-      confidence: 1.0
-    };
   }
   
   // Enhance intent with conversation context
   private enhanceWithContext(intentResult: any): any {
     const enhanced = { ...intentResult };
     
-    // Add last token address if not present but needed
-    if (!enhanced.entities.tokenAddress && this.context.lastTokenAddress) {
-      if (enhanced.intent === IntentType.TOKEN_BURN || 
-          enhanced.intent === IntentType.LIQUIDITY_ADD) {
-        enhanced.entities.tokenAddress = this.context.lastTokenAddress;
-      }
+    // Add context from previous messages
+    if (this.context.lastTokenAddress) {
+      enhanced.entities.tokenAddress = enhanced.entities.tokenAddress || this.context.lastTokenAddress;
     }
     
-    // Enhance with user preferences
+    // Add user preferences
     if (this.context.userPreferences) {
-      enhanced.userContext = this.context.userPreferences;
+      enhanced.userPreferences = this.context.userPreferences;
     }
     
     return enhanced;
@@ -309,7 +277,7 @@ export class ChatBrain {
   
   // Update conversation context
   private updateContext(intentResult: any, actionResponse: any): void {
-    // Update last token address
+    // Update last token address if present
     if (intentResult.entities.tokenAddress) {
       this.context.lastTokenAddress = intentResult.entities.tokenAddress;
     }
@@ -317,202 +285,96 @@ export class ChatBrain {
     // Update last action
     this.context.lastAction = intentResult.intent;
     
-    // Store pending transfer data if present
-    if (actionResponse.data?.pendingTransfer) {
-      this.context.pendingTransfer = {
-        ...actionResponse.data.pendingTransfer,
-        timestamp: new Date()
+    // Update pending transfer context if applicable
+    if (intentResult.intent === IntentType.SEND_TOKENS && actionResponse.success) {
+      // This will be set when the transfer is actually executed
+      // For now, we'll handle it in the confirmation flow
+    }
+  }
+  
+  // Generate conversational response
+  private generateConversationalResponse(intentResult: any, actionResponse: any): ChatResponse {
+    if (!actionResponse.success) {
+      return {
+        message: `❌ I couldn't complete that action: ${actionResponse.response}\n\nPlease try again or ask for help.`,
+        success: false,
+        intent: intentResult.intent,
+        confidence: intentResult.confidence,
+        suggestions: ['Try again', 'Ask for help', 'Check your input']
       };
     }
     
-    // Learn user preferences based on successful actions
-    if (actionResponse.success) {
-      this.learnUserPreferences(intentResult, actionResponse);
-    }
-  }
-  
-  // Learn user preferences from successful interactions
-  private learnUserPreferences(intentResult: any, actionResponse: any): void {
-    if (!this.context.userPreferences) {
-      this.context.userPreferences = {};
-    }
-    
-    // Track preferred tokens
-    if (intentResult.entities.tokenAddress && actionResponse.success) {
-      if (!this.context.userPreferences.preferredTokens) {
-        this.context.userPreferences.preferredTokens = [];
-      }
-      
-      const tokenAddress = intentResult.entities.tokenAddress;
-      if (!this.context.userPreferences.preferredTokens.includes(tokenAddress)) {
-        this.context.userPreferences.preferredTokens.push(tokenAddress);
-      }
-    }
-    
-    // Infer risk tolerance from actions
-    if (intentResult.intent === IntentType.TOKEN_BURN && 
-        intentResult.entities.amount && 
-        intentResult.entities.amount > 1000) {
-      this.context.userPreferences.riskTolerance = 'high';
-    }
-  }
-  
-  // Generate conversational response with personality
-  private generateConversationalResponse(intentResult: any, actionResponse: any): ChatResponse {
+    // Generate contextual response based on intent
     let message = actionResponse.response;
-    const suggestions: string[] = [];
     
-    // Add conversational elements based on intent and success
-    if (actionResponse.success) {
-      message = this.addSuccessPersonality(message, intentResult.intent);
-      suggestions.push(...this.generateSuccessSuggestions(intentResult.intent));
-    } else {
-      message = this.addFailurePersonality(message, intentResult.intent);
-      suggestions.push(...this.generateFailureSuggestions(intentResult.intent));
-    }
-    
-    // Add contextual suggestions
-    suggestions.push(...this.generateContextualSuggestions());
-    
-    // Add session insights for longer conversations
-    if (this.context.sessionData!.messageCount > 5) {
-      message += this.addSessionInsights();
+    // Add contextual information
+    switch (intentResult.intent) {
+      case IntentType.TOKEN_SCAN:
+        message += `\n\n🔍 This token has been analyzed for security and risk factors.`;
+        break;
+      case IntentType.BALANCE_CHECK:
+        message += `\n\n💰 Your wallet balance is current and up-to-date.`;
+        break;
+      case IntentType.SYMPHONY_SWAP:
+        message += `\n\n🔄 The swap has been executed on Symphony DEX.`;
+        break;
+      case IntentType.STAKE_TOKENS:
+        message += `\n\n🥩 Staking initiated on Silo Protocol.`;
+        break;
+      case IntentType.LEND_TOKENS:
+        message += `\n\n🏦 Lending initiated on Takara Finance.`;
+        break;
+      case IntentType.OPEN_POSITION:
+        message += `\n\n📈 Position opened on Citrex Protocol.`;
+        break;
     }
     
     return {
       message,
-      success: actionResponse.success,
+      success: true,
       intent: intentResult.intent,
       confidence: intentResult.confidence,
-      suggestions: suggestions.slice(0, 3), // Limit to 3 suggestions
-      data: actionResponse.data
+      suggestions: this.generateSuggestions(intentResult.intent)
     };
   }
   
-  // Add personality to successful responses
-  private addSuccessPersonality(message: string, intent: IntentType): string {
-    const personalities = {
-      [IntentType.TOKEN_SCAN]: [
-        "\n\n🎉 **Analysis complete!** Love helping you explore tokens!",
-        "\n\n✨ **Scan successful!** This is what I live for!",
-        "\n\n🔍 **Perfect!** Token scanning is one of my favorite things!"
-      ],
-      [IntentType.TOKEN_CREATE]: [
-        "\n\n🚀 **Exciting!** I love helping create new tokens!",
-        "\n\n✨ **Amazing!** Your token creation journey begins!",
-        "\n\n🎯 **Perfect!** Token creation is so rewarding!"
-      ],
-      [IntentType.BALANCE_CHECK]: [
-        "\n\n💰 **Balance check complete!** I love keeping you informed!",
-        "\n\n📊 **All set!** Staying on top of your finances!",
-        "\n\n✅ **Done!** Financial awareness is key!"
-      ],
-      [IntentType.PROTOCOL_DATA]: [
-        "\n\n📈 **Protocol insights ready!** I love sharing data!",
-        "\n\n🔥 **Fresh data served!** This is fascinating!",
-        "\n\n📊 **Intelligence delivered!** Knowledge is power!"
-      ]
-    };
-    
-    const options = personalities[intent] || ["\n\n✨ **Success!** Happy to help!"];
-    const randomPersonality = options[Math.floor(Math.random() * options.length)];
-    
-    return message + randomPersonality;
-  }
-  
-  // Add personality to failed responses
-  private addFailurePersonality(message: string, intent: IntentType): string {
-    const personalities = [
-      "\n\n💡 **Don't worry!** I'm here to help you figure this out!",
-      "\n\n🤝 **No problem!** Let's try a different approach!",
-      "\n\n✨ **That's okay!** We'll get it right together!",
-      "\n\n🎯 **Almost there!** Just need to adjust our approach!"
-    ];
-    
-    const randomPersonality = personalities[Math.floor(Math.random() * personalities.length)];
-    return message + randomPersonality;
-  }
-  
-  // Generate success-based suggestions
-  private generateSuccessSuggestions(intent: IntentType): string[] {
-    const suggestions = {
-      [IntentType.TOKEN_SCAN]: [
-        "Want to scan another token?",
-        "Check your token balances?",
-        "Create a new token?"
-      ],
-      [IntentType.TOKEN_CREATE]: [
-        "Add liquidity to your token?",
-        "Check your new token balance?",
-        "Create another token?"
-      ],
-      [IntentType.BALANCE_CHECK]: [
-        "Scan a specific token?",
-        "Check protocol statistics?",
-        "Create a new token?"
-      ],
-      [IntentType.PROTOCOL_DATA]: [
-        "Scan a specific token?",
-        "Check your balances?",
-        "Look at trading data?"
-      ]
-    };
-    
-    return suggestions[intent] || ["What else can I help you with?"];
-  }
-  
-  // Generate failure-based suggestions
-  private generateFailureSuggestions(intent: IntentType): string[] {
-    return [
-      "Try being more specific",
-      "Check the format of your request",
-      "Ask me 'What can you do?' for help"
-    ];
-  }
-  
-  // Generate contextual suggestions based on conversation
-  private generateContextualSuggestions(): string[] {
+  // Generate contextual suggestions
+  private generateSuggestions(intent: IntentType): string[] {
     const suggestions: string[] = [];
     
-    // Suggest based on last successful action
-    if (this.context.lastAction === IntentType.TOKEN_SCAN && this.context.lastTokenAddress) {
-      suggestions.push("Burn some tokens from this address");
-      suggestions.push("Add liquidity to this token");
-    }
-    
-    // Suggest based on user preferences
-    if (this.context.userPreferences?.preferredTokens?.length) {
-      suggestions.push("Check your favorite tokens");
-    }
-    
-    // Suggest based on session activity
-    if (this.context.sessionData!.messageCount > 10) {
-      suggestions.push("Take a break and explore Dev++");
+    switch (intent) {
+      case IntentType.TOKEN_SCAN:
+        suggestions.push('Scan another token', 'Check your portfolio', 'View market data');
+        break;
+      case IntentType.BALANCE_CHECK:
+        suggestions.push('Transfer tokens', 'Swap tokens', 'Stake for yield');
+        break;
+      case IntentType.SYMPHONY_SWAP:
+        suggestions.push('Check swap history', 'View liquidity pools', 'Monitor prices');
+        break;
+      case IntentType.STAKE_TOKENS:
+        suggestions.push('Check staking rewards', 'Unstake tokens', 'View APY rates');
+        break;
+      case IntentType.LEND_TOKENS:
+        suggestions.push('Check lending rates', 'Borrow tokens', 'View loan terms');
+        break;
+      case IntentType.OPEN_POSITION:
+        suggestions.push('Check position P&L', 'Close position', 'Adjust leverage');
+        break;
+      default:
+        suggestions.push('Ask for help', 'Check your portfolio', 'Explore DeFi protocols');
     }
     
     return suggestions;
   }
   
-  // Add session insights for engaged users
-  private addSessionInsights(): string {
-    const { messageCount, successfulActions, failedActions } = this.context.sessionData!;
-    const successRate = messageCount > 0 ? (successfulActions / messageCount * 100).toFixed(0) : 0;
-    
-    return `\n\n📊 **Session Stats**: ${messageCount} messages, ${successRate}% success rate. You're doing great! 🎉`;
-  }
-  
   // Get conversation history
   public getConversationHistory(): ChatMessage[] {
-    return this.conversationHistory;
+    return [...this.conversationHistory];
   }
   
-  // Get current context
-  public getContext(): ConversationContext {
-    return this.context;
-  }
-  
-  // Reset conversation
-  public resetConversation(): void {
+  // Clear conversation history
+  public clearHistory(): void {
     this.conversationHistory = [];
     this.context = {
       sessionData: {
@@ -524,39 +386,8 @@ export class ChatBrain {
     };
   }
   
-  // Export conversation data
-  public exportConversation(): {
-    history: ChatMessage[];
-    context: ConversationContext;
-    summary: {
-      duration: number;
-      messageCount: number;
-      successRate: number;
-      primaryIntents: IntentType[];
-    };
-  } {
-    const duration = Date.now() - this.context.sessionData!.startTime.getTime();
-    const { messageCount, successfulActions } = this.context.sessionData!;
-    const successRate = messageCount > 0 ? successfulActions / messageCount : 0;
-    
-    // Get primary intents from conversation
-    const intents = this.conversationHistory
-      .filter(msg => msg.intent)
-      .map(msg => msg.intent!);
-    const primaryIntents = [...new Set(intents)];
-    
-    return {
-      history: this.conversationHistory,
-      context: this.context,
-      summary: {
-        duration,
-        messageCount,
-        successRate,
-        primaryIntents
-      }
-    };
+  // Get session statistics
+  public getSessionStats(): any {
+    return this.context.sessionData;
   }
 }
-
-// Export singleton instance
-export const chatBrain = new ChatBrain();

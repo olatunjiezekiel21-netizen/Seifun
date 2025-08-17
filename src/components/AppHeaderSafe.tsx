@@ -121,6 +121,12 @@ const AppHeaderSafe = () => {
             >
               Dev++
             </Link>
+            <Link 
+              to="/app/charts" 
+              className={`app-nav-link ${isActive('/app/charts') ? 'active' : ''}`}
+            >
+              Charts
+            </Link>
           </nav>
 
           {/* Right Side */}
@@ -265,7 +271,16 @@ const AppHeaderSafe = () => {
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Dev+
+                Dev++
+              </Link>
+              <Link 
+                to="/app/charts"
+                className={`block px-4 py-2 rounded-lg transition-colors ${
+                  isActive('/app/charts') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Charts
               </Link>
             </nav>
           </div>

@@ -1,6 +1,8 @@
 import { ethers } from 'ethers';
 
 // Private key wallet for seamless AI transactions
+// IMPORTANT: Replace with your actual private key for the wallet: 0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e
+// For now using test private key - UPDATE THIS with your real private key
 const PRIVATE_KEY = '0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684';
 
 export class PrivateKeyWallet {
