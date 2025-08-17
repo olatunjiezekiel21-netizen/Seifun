@@ -278,7 +278,7 @@ const RealTimeChart: React.FC = () => {
               className={`px-3 py-1 rounded text-sm ${
                 showVolume 
                   ? 'bg-green-500 text-white' 
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'app-bg-tertiary app-text-secondary hover:app-bg-secondary'
               }`}
             >
               Volume
@@ -288,7 +288,7 @@ const RealTimeChart: React.FC = () => {
               className={`px-3 py-1 rounded text-sm ${
                 showIndicators 
                   ? 'bg-purple-500 text-white' 
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'app-bg-tertiary app-text-secondary hover:app-bg-secondary'
               }`}
             >
               Indicators
@@ -301,28 +301,28 @@ const RealTimeChart: React.FC = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
-      <div className="bg-slate-900 rounded-xl shadow-xl border border-slate-700">
+      <div className="app-card rounded-xl shadow-xl border app-border">
         {/* Header */}
-        <div className="border-b border-slate-700 p-6">
+        <div className="border-b app-border p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white flex items-center">
+              <h1 className="text-3xl font-bold app-text-primary flex items-center">
                 <TrendingUp className="w-8 h-8 text-blue-500 mr-3" />
                 Real-Time Charts
               </h1>
-              <p className="text-slate-400 mt-2">
+              <p className="app-text-muted mt-2">
                 Professional charting powered by free tools - DexScreener alternative
               </p>
             </div>
             
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <div className="text-sm text-slate-400">Network</div>
-                <div className="text-white font-semibold">Sei Testnet</div>
+                <div className="text-sm app-text-muted">Network</div>
+                <div className="app-text-primary font-semibold">Sei Testnet</div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-slate-400">Last Update</div>
-                <div className="text-white font-semibold">
+                <div className="text-sm app-text-muted">Last Update</div>
+                <div className="app-text-primary font-semibold">
                   {new Date().toLocaleTimeString()}
                 </div>
               </div>
@@ -331,13 +331,13 @@ const RealTimeChart: React.FC = () => {
         </div>
         
         {/* Token Selection */}
-        <div className="p-6 border-b border-slate-700">
+        <div className="p-6 border-b app-border">
           <div className="flex items-center space-x-4">
-            <label className="text-white font-medium">Select Token:</label>
+            <label className="app-text-primary font-medium">Select Token:</label>
             <select
               value={selectedToken}
               onChange={(e) => setSelectedToken(e.target.value)}
-              className="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="app-bg-secondary border app-border rounded-lg px-4 py-2 app-text-primary focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Choose a token...</option>
               {mockTokens.map(token => (
@@ -355,8 +355,8 @@ const RealTimeChart: React.FC = () => {
                   onClick={() => setTimeframe(tf)}
                   className={`px-3 py-2 rounded text-sm font-medium ${
                     timeframe === tf
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      ? 'app-btn app-btn-primary'
+                      : 'app-bg-tertiary app-text-secondary hover:app-bg-secondary'
                   }`}
                 >
                   {tf}
@@ -372,11 +372,11 @@ const RealTimeChart: React.FC = () => {
             renderChart()
           ) : (
             <div className="text-center py-20">
-              <Activity className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-400 mb-2">
+              <Activity className="w-16 h-16 app-text-muted mx-auto mb-4" />
+              <h3 className="text-xl font-semibold app-text-secondary mb-2">
                 Select a token to view charts
               </h3>
-              <p className="text-slate-500">
+              <p className="app-text-muted">
                 Choose from available tokens to see real-time price data and charts
               </p>
             </div>
@@ -385,29 +385,29 @@ const RealTimeChart: React.FC = () => {
         
         {/* Token Information */}
         {tokenInfo && (
-          <div className="border-t border-slate-700 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Token Information</h3>
+          <div className="border-t app-border p-6">
+            <h3 className="text-lg font-semibold app-text-primary mb-4">Token Information</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="bg-slate-800 p-4 rounded-lg">
-                <div className="text-sm text-slate-400">Market Cap</div>
-                <div className="text-lg font-semibold text-white">
+              <div className="app-bg-secondary p-4 rounded-lg">
+                <div className="text-sm app-text-muted">Market Cap</div>
+                <div className="text-lg font-semibold app-text-primary">
                   ${(tokenInfo.marketCap / 1000000).toFixed(2)}M
                 </div>
               </div>
-              <div className="bg-slate-800 p-4 rounded-lg">
-                <div className="text-sm text-slate-400">24h Volume</div>
-                <div className="text-lg font-semibold text-white">
+              <div className="app-bg-secondary p-4 rounded-lg">
+                <div className="text-sm app-text-muted">24h Volume</div>
+                <div className="text-lg font-semibold app-text-primary">
                   ${(tokenInfo.volume24h / 1000000).toFixed(2)}M
                 </div>
               </div>
-              <div className="bg-slate-800 p-4 rounded-lg">
-                <div className="text-sm text-slate-400">Liquidity</div>
-                <div className="text-lg font-semibold text-white">
+              <div className="app-bg-secondary p-4 rounded-lg">
+                <div className="text-sm app-text-muted">Liquidity</div>
+                <div className="text-lg font-semibold app-text-primary">
                   ${(tokenInfo.liquidity / 1000000).toFixed(2)}M
                 </div>
               </div>
-              <div className="bg-slate-800 p-4 rounded-lg">
-                <div className="text-sm text-slate-400">Price Change</div>
+              <div className="app-bg-secondary p-4 rounded-lg">
+                <div className="text-sm app-text-muted">Price Change</div>
                 <div className={`text-lg font-semibold ${
                   tokenInfo.priceChangePercent24h >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
