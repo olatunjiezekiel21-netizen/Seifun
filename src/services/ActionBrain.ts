@@ -660,6 +660,16 @@ export class ActionBrain {
       const balance = await privateKeyWallet.getSeiBalance();
       const myTokens = privateKeyWallet.getMyTokens();
       
+      // Query discovered ERC-20s from serverless scan
+      let discovered: Array<{ address: string; symbol: string; balance: string; name?: string }> = []
+      try {
+        const res = await fetch('/.netlify/functions/wallet-erc20s?wallet=' + encodeURIComponent(privateKeyWallet.getAddress()))
+        if (res.ok) {
+          const data = await res.json()
+          discovered = (data.tokens || []).slice(0, 20)
+        }
+      } catch {}
+      
       // Include stablecoins and known tokens (testnet addresses can be adjusted via env later)
       const probeTokens: string[] = [
         '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1', // USDC test
@@ -667,6 +677,10 @@ export class ActionBrain {
         '0xbd82f3bfe1df0c84faec88a22ebc34c9a86595dc'  // CHIPS sample
       ];
       const erc20s = await privateKeyWallet.getErc20Balances(probeTokens);
+      const merged = [...discovered, ...erc20s].reduce((acc: any[], t: any) => {
+        if (!acc.find(x => x.address.toLowerCase() === t.address.toLowerCase())) acc.push(t)
+        return acc
+      }, [])
       
       let response = `💰 **Wallet Balance Report**\n\n`;
       response += `**🏦 SEI Balance:**\n`;
@@ -674,10 +688,11 @@ export class ActionBrain {
       response += `• **USD Value**: $${balance.usd.toFixed(2)}\n`;
       response += `• **Address**: \`${privateKeyWallet.getAddress()}\`\n\n`;
       
-      if (erc20s.length > 0) {
+      if (merged.length > 0) {
         response += `**💵 ERC-20 Balances:**\n`;
-        for (const t of erc20s) {
-          response += `• ${t.symbol}: ${t.balance}\n`;
+        for (const t of merged) {
+          const label = t.name ? `${t.name} (${t.symbol})` : t.symbol
+          response += `• ${label}: ${t.balance}\n`;
         }
         response += `\n`;
       }
@@ -702,7 +717,7 @@ export class ActionBrain {
       return {
         success: true,
         response,
-        data: { balance, myTokens, erc20s }
+        data: { balance, myTokens, erc20s: merged }
       };
     } catch (error) {
       return {
