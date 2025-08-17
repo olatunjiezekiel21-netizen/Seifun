@@ -655,11 +655,27 @@ export class ActionBrain {
       const balance = await privateKeyWallet.getSeiBalance();
       const myTokens = privateKeyWallet.getMyTokens();
       
+      // Include stablecoins and known tokens (testnet addresses can be adjusted via env later)
+      const probeTokens: string[] = [
+        '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1', // USDC test
+        '0x95597eb8d227a7c4b4f5e807a815c5178ee6dbe1', // MILLI sample
+        '0xbd82f3bfe1df0c84faec88a22ebc34c9a86595dc'  // CHIPS sample
+      ];
+      const erc20s = await privateKeyWallet.getErc20Balances(probeTokens);
+      
       let response = `💰 **Wallet Balance Report**\n\n`;
       response += `**🏦 SEI Balance:**\n`;
       response += `• **Amount**: ${balance.sei} SEI\n`;
       response += `• **USD Value**: $${balance.usd.toFixed(2)}\n`;
       response += `• **Address**: \`${privateKeyWallet.getAddress()}\`\n\n`;
+      
+      if (erc20s.length > 0) {
+        response += `**💵 ERC-20 Balances:**\n`;
+        for (const t of erc20s) {
+          response += `• ${t.symbol}: ${t.balance}\n`;
+        }
+        response += `\n`;
+      }
       
       if (myTokens.length > 0) {
         response += `**🏆 Your Created Tokens:**\n`;
@@ -681,7 +697,7 @@ export class ActionBrain {
       return {
         success: true,
         response,
-        data: { balance, myTokens }
+        data: { balance, myTokens, erc20s }
       };
     } catch (error) {
       return {
