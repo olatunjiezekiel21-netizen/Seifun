@@ -634,7 +634,12 @@ export class ActionBrain {
             localStorage.setItem('pendingTokenMetadataByTx', JSON.stringify(pending));
           }
         }
-      } catch {}
+      } catch (error) {
+        return {
+          success: false,
+          response: `❌ **Creation Failed**: ${error.message || error}\n\nIf you are on testnet, ensure the token factory is deployed and set VITE_FACTORY_ADDRESS_TESTNET. If on mainnet, set VITE_FACTORY_ADDRESS_MAINNET.`
+        };
+      }
 
       return {
         success: true,

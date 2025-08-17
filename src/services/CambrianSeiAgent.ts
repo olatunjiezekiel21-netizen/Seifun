@@ -460,6 +460,13 @@ export class CambrianSeiAgent implements AgentCapabilities {
     const FACTORY_ADDRESS = mode === 'mainnet'
       ? ((import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
       : ((import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
+
+    // Preflight: ensure factory exists on this network
+    const bytecode = await this.publicClient.getBytecode({ address: FACTORY_ADDRESS as any }).catch(() => null)
+    if (!bytecode || bytecode === '0x') {
+      throw new Error(`Token factory not deployed on ${mode}. Set VITE_FACTORY_ADDRESS_${mode.toUpperCase()} to a valid contract.`)
+    }
+
     const abi = [{
       type: 'function',
       name: 'createToken',
