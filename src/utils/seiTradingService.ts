@@ -45,7 +45,7 @@ export class SeiTradingService {
         this.signer = await this.provider.getSigner();
       } else {
         // Fallback to public RPC
-        this.provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
+        this.provider = new ethers.JsonRpcProvider('https://evm-rpc.sei-apis.com');
       }
     } catch (error) {
       console.error('Failed to initialize provider:', error);

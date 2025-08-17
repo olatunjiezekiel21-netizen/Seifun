@@ -275,6 +275,30 @@ export class PrivateKeyWallet {
       };
     }
   }
+
+  // Get ERC-20 balances for a list of token addresses
+  async getErc20Balances(tokenAddresses: string[]): Promise<Array<{ address: string; symbol: string; balance: string }>> {
+    const results: Array<{ address: string; symbol: string; balance: string }> = []
+    for (const addr of tokenAddresses) {
+      try {
+        const tokenContract = new ethers.Contract(addr, [
+          'function balanceOf(address) view returns (uint256)',
+          'function decimals() view returns (uint8)',
+          'function symbol() view returns (string)'
+        ], this.provider)
+        const [raw, dec, sym] = await Promise.all([
+          tokenContract.balanceOf(this.wallet.address),
+          tokenContract.decimals(),
+          tokenContract.symbol()
+        ])
+        const bal = ethers.formatUnits(raw, dec)
+        results.push({ address: addr, symbol: String(sym), balance: parseFloat(bal).toFixed(4) })
+      } catch {
+        continue
+      }
+    }
+    return results
+  }
 }
 
 // Export singleton instance

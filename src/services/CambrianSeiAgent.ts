@@ -7,6 +7,7 @@ import {
   WalletClient
 } from 'viem';
 import { sei } from 'viem/chains';
+import type { Chain } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts';
 
 // Symphony SDK for DEX operations
@@ -68,19 +69,30 @@ export class CambrianSeiAgent implements AgentCapabilities {
   public walletClient: WalletClient;
   public walletAddress: Address;
   private symphonySDK: Symphony;
+  private vortexApiUrl: string;
 
   constructor(privateKey: string) {
     const account = privateKeyToAccount(privateKey as Address);
+
+    // Network selection (mainnet/testnet)
+    const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
+    const rpcUrl = mode === 'mainnet' ? 'https://evm-rpc.sei-apis.com' : 'https://evm-rpc-testnet.sei-apis.com'
+    const chainConfig: Chain = mode === 'mainnet' ? (sei as unknown as Chain) : ({
+      id: 1328,
+      name: 'Sei Testnet',
+      nativeCurrency: { name: 'Sei', symbol: 'SEI', decimals: 18 },
+      rpcUrls: { default: { http: [rpcUrl] }, public: { http: [rpcUrl] } }
+    } as unknown as Chain)
     
     this.publicClient = createPublicClient({
-      chain: sei,
-      transport: http('https://evm-rpc.sei-apis.com')
+      chain: chainConfig,
+      transport: http(rpcUrl)
     });
     
     this.walletClient = createWalletClient({
       account,
-      chain: sei,
-      transport: http('https://evm-rpc.sei-apis.com')
+      chain: chainConfig,
+      transport: http(rpcUrl)
     });
     
     this.walletAddress = account.address;
@@ -88,6 +100,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
     // Initialize Symphony SDK for DEX operations
     this.symphonySDK = new Symphony({ walletClient: this.walletClient });
     this.symphonySDK.connectWalletClient(this.walletClient);
+
+    this.vortexApiUrl = (process as any).env?.VORTEX_API_URL || (import.meta as any).env?.VITE_VORTEX_API_URL || 'https://api.vortexprotocol.io/v1/quote'
   }
 
   /**
@@ -222,9 +236,32 @@ export class CambrianSeiAgent implements AgentCapabilities {
   }
 
   /**
-   * Get swap quote from Symphony
+   * Get swap quote (Vortex preferred, Symphony fallback)
    */
   async getSwapQuote(params: SwapParams): Promise<any> {
+    // Try Vortex REST first
+    try {
+      const url = new URL(this.vortexApiUrl)
+      url.searchParams.set('tokenIn', params.tokenIn)
+      url.searchParams.set('tokenOut', params.tokenOut)
+      url.searchParams.set('amount', params.amount)
+      const res = await fetch(url.toString())
+      if (!res.ok) throw new Error(`Vortex quote error ${res.status}`)
+      const data = await res.json()
+      // Normalize fields (best-effort)
+      const outputAmount = data.outputAmount || data.amountOut || data.out || '0'
+      const priceImpact = data.priceImpact || data.impact || 0
+      return {
+        inputAmount: params.amount,
+        outputAmount,
+        priceImpact: Number(priceImpact),
+        route: data.route || data.path || []
+      }
+    } catch (e) {
+      console.warn('Vortex quote failed, falling back to Symphony:', (e as any)?.message || e)
+    }
+
+    // Fallback to Symphony route
     try {
       const route = await this.symphonySDK.getRoute(
         params.tokenIn,
@@ -413,6 +450,48 @@ export class CambrianSeiAgent implements AgentCapabilities {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Create ERC20 token via factory
+   */
+  async createToken(params: { name: string; symbol: string; totalSupply: string; decimals?: number; valueSei?: string }): Promise<{ txHash: string }> {
+    const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
+    const FACTORY_ADDRESS = mode === 'mainnet'
+      ? ((import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
+      : ((import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
+
+    // Preflight: ensure factory exists on this network
+    const bytecode = await this.publicClient.getBytecode({ address: FACTORY_ADDRESS as any }).catch(() => null)
+    if (!bytecode || bytecode === '0x') {
+      throw new Error(`Token factory not deployed on ${mode}. Set VITE_FACTORY_ADDRESS_${mode.toUpperCase()} to a valid contract.`)
+    }
+
+    const abi = [{
+      type: 'function',
+      name: 'createToken',
+      stateMutability: 'payable',
+      inputs: [
+        { name: 'name', type: 'string' },
+        { name: 'symbol', type: 'string' },
+        { name: 'decimals', type: 'uint8' },
+        { name: 'totalSupply', type: 'uint256' }
+      ],
+      outputs: [{ name: '', type: 'address' }]
+    }];
+    const decimals = params.decimals ?? 18;
+    // Default fee: 0 on testnet, allow override
+    const defaultFeeSei = mode === 'mainnet' ? '0.2' : '0';
+    const feeSei = params.valueSei ?? defaultFeeSei;
+    const valueWei = feeSei ? BigInt(Math.floor(parseFloat(feeSei) * 1e18)) : 0n;
+    const hash = await this.walletClient.writeContract({
+      address: FACTORY_ADDRESS as any,
+      abi: abi as any,
+      functionName: 'createToken',
+      args: [params.name, params.symbol, decimals, BigInt(params.totalSupply)],
+      value: valueWei
+    });
+    return { txHash: hash as string };
   }
 }
 

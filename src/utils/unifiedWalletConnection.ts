@@ -40,7 +40,7 @@ export class UnifiedWalletConnection {
     this.isMainnet = isMainnet;
     const rpcUrl = isMainnet 
       ? 'https://evm-rpc.sei-apis.com'
-      : 'https://evm-rpc-testnet.sei-apis.com';
+      : 'https://evm-rpc.sei-apis.com';
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
   }
 
@@ -188,7 +188,7 @@ export class UnifiedWalletConnection {
     if (!window.keplr) throw new Error('Keplr Wallet not found');
 
     try {
-      const chainId = this.isMainnet ? 'sei-network' : 'atlantic-2';
+      const chainId = 'sei-network';
       
       await window.keplr.enable(chainId);
       const offlineSigner = window.keplr.getOfflineSigner(chainId);
@@ -288,14 +288,8 @@ export class UnifiedWalletConnection {
         symbol: 'SEI',
         decimals: 18
       },
-      rpcUrls: [this.isMainnet 
-        ? 'https://evm-rpc.sei-apis.com'
-        : 'https://evm-rpc-testnet.sei-apis.com'
-      ],
-      blockExplorerUrls: [this.isMainnet 
-        ? 'https://seitrace.com'
-        : 'https://seitrace.com/?chain=sei-testnet'
-      ]
+      rpcUrls: ['https://evm-rpc.sei-apis.com'],
+      blockExplorerUrls: ['https://seitrace.com']
     };
 
     try {

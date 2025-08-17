@@ -46,7 +46,7 @@ class TokenService {
   private alerts: SecurityAlert[] = [];
 
   constructor() {
-    this.provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
+    this.provider = new ethers.JsonRpcProvider('https://evm-rpc.sei-apis.com');
   }
 
   // Add a new token to tracking (called when token is created)

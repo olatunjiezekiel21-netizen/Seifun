@@ -685,7 +685,7 @@ const DevPlus = () => {
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Token: {selectedToken.name} ({selectedToken.symbol})
+                  Token Amount ({selectedToken.symbol})
                 </label>
                 <input
                   type="number"
@@ -695,7 +695,6 @@ const DevPlus = () => {
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   SEI Amount
@@ -709,18 +708,10 @@ const DevPlus = () => {
                 />
               </div>
 
-                        {!isConnected && (
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-              <p className="text-yellow-400 text-sm">
-                ⚠️ Please connect your wallet to add liquidity
-              </p>
-            </div>
-          )}
-
+              {/* Info note: test wallet used automatically */}
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                 <p className="text-blue-400 text-sm">
-                  💡 This will create a real liquidity pool with your tokens and SEI. 
-                  Make sure you have sufficient balance of both tokens.
+                  💡 Using built-in test wallet for this action. No manual wallet connection required in Dev++.
                 </p>
               </div>
             </div>
@@ -733,9 +724,9 @@ const DevPlus = () => {
                 Cancel
               </button>
               <button
-                            onClick={handleAddLiquidity}
-            disabled={processing || !isConnected}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+                onClick={handleAddLiquidity}
+                disabled={processing}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 {processing ? (
                   <>
@@ -785,13 +776,12 @@ const DevPlus = () => {
                 />
               </div>
 
-                        {!isConnected && (
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-              <p className="text-yellow-400 text-sm">
-                ⚠️ Please connect your wallet to burn tokens
-              </p>
-            </div>
-          )}
+              {/* Info note: test wallet used automatically */}
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                <p className="text-blue-400 text-sm">
+                  💡 Using built-in test wallet for this action. No manual wallet connection required in Dev++.
+                </p>
+              </div>
 
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                 <h4 className="text-red-400 font-medium mb-2">⚠️ DANGER ZONE</h4>
@@ -813,8 +803,8 @@ const DevPlus = () => {
                 Cancel
               </button>
               <button
-                            onClick={handleBurnTokens}
-            disabled={processing || !isConnected}
+                onClick={handleBurnTokens}
+                disabled={processing}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 {processing ? (

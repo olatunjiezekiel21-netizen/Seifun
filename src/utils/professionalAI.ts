@@ -178,7 +178,7 @@ export class ProfessionalAIAgent {
       name: 'Blockchain Info',
       description: 'Sei blockchain and DeFi information',
       handler: async (query: string, context: AIContext) => {
-        return `⛓️ **Sei Blockchain Information**\n\n🌟 **Network**: Sei Testnet\n🔗 **Chain ID**: 1328\n⚡ **RPC**: https://evm-rpc-testnet.sei-apis.com\n🔍 **Explorer**: https://seitrace.com\n\n📊 **Key Features**:\n• High-speed transactions\n• Low fees\n• EVM compatibility\n• DeFi-focused ecosystem\n\n🏗️ **Popular Protocols**: Astroport, Dragonswap, Nitro, Kryptonite\n\nWhat specific aspect of Sei would you like to learn about?`;
+        return `⛓️ **Sei Blockchain Information**\n\n🌟 **Network**: Sei Mainnet\n🔗 **Chain ID**: 1329\n⚡ **RPC**: https://evm-rpc.sei-apis.com\n🔍 **Explorer**: https://seitrace.com\n\n📊 **Key Features**:\n• High-speed transactions\n• Low fees\n• EVM compatibility\n• DeFi-focused ecosystem\n\n🏗️ **Popular Protocols**: Astroport, Dragonswap, Nitro, Kryptonite\n\nWhat specific aspect of Sei would you like to learn about?`;
       }
     });
   }

@@ -25,6 +25,16 @@ interface ConversationContext {
     remainingBalance: string;
     timestamp: Date;
   };
+  // Swap confirmation context
+  pendingSwap?: {
+    amount: number;
+    tokenIn: string;
+    tokenOut: string;
+    minOut: string;
+    quoteOut: string;
+    priceImpact: number;
+    timestamp: Date;
+  };
 }
 
 // Chat Message
@@ -82,40 +92,59 @@ export class ChatBrain {
       }
       
       // Step 2: Try LangChain AI Agent First (Enhanced Intelligence)
+      let langChainResult: LangChainResponse | null = null;
       try {
         console.log('🚀 Trying LangChain AI Agent...');
-        const langChainResult = await langChainSeiAgent.processMessage(userMessage);
-        
-        if (langChainResult.success) {
-          console.log('✅ LangChain agent handled the request successfully');
-          
-          // Add assistant response to history
-          const assistantMessage: ChatMessage = {
-            id: Date.now() + 1,
-            type: 'assistant',
-            message: langChainResult.message,
-            timestamp: new Date(),
-            intent: IntentType.CONVERSATION,
-            confidence: langChainResult.confidence,
-            actionSuccess: true
-          };
-          this.conversationHistory.push(assistantMessage);
-          
-          this.context.sessionData!.successfulActions++;
-          
-          return {
-            message: langChainResult.message,
-            success: langChainResult.success,
-            intent: IntentType.CONVERSATION,
-            confidence: langChainResult.confidence,
-            suggestions: this.generateSuggestions(userMessage)
-          };
-        }
-      } catch (langChainError) {
-        console.log('⚠️ LangChain agent failed, falling back to ActionBrain:', langChainError.message);
+        langChainResult = await langChainSeiAgent.processMessage(userMessage);
+      } catch (langChainError: any) {
+        console.log('⚠️ LangChain agent failed, will use ActionBrain fallback:', langChainError?.message || langChainError);
       }
       
-      // Step 3: Fallback to ActionBrain System
+      // Decide whether to accept or fallback based on heuristics
+      const looksActionable = /\b(swap|quote|min\s*out|sell|buy|transfer|send|create\s+token|launch|add\s+liquidity|burn|scan|balance|approve)\b/i.test(userMessage);
+      const isGeneric = (resp: string) => {
+        const lower = resp.toLowerCase();
+        const tooShort = resp.length < 40;
+        const genericPhrases = [
+          'what would you like to do',
+          'i can help with',
+          'i am here to help',
+          'let me know',
+          'how can i assist'
+        ];
+        const lacksDetails = !/(0x[0-9a-f]{40})|\b(minout|quote|slippage|tx|hash|approved|router|amount|usdc|sei)\b/i.test(lower);
+        const hasGeneric = genericPhrases.some(p => lower.includes(p));
+        return tooShort || (hasGeneric && lacksDetails);
+      };
+      const shouldFallback = !!langChainResult && looksActionable && isGeneric(langChainResult.message);
+      
+      if (langChainResult && langChainResult.success && !shouldFallback) {
+        console.log('✅ LangChain agent handled the request successfully');
+        
+        // Add assistant response to history
+        const assistantMessage: ChatMessage = {
+          id: Date.now() + 1,
+          type: 'assistant',
+          message: langChainResult.message,
+          timestamp: new Date(),
+          intent: IntentType.CONVERSATION,
+          confidence: langChainResult.confidence,
+          actionSuccess: true
+        };
+        this.conversationHistory.push(assistantMessage);
+        
+        this.context.sessionData!.successfulActions++;
+        
+        return {
+          message: langChainResult.message,
+          success: langChainResult.success,
+          intent: IntentType.CONVERSATION,
+          confidence: langChainResult.confidence,
+          suggestions: this.generateSuggestions(userMessage)
+        };
+      }
+      
+      // Step 3: ActionBrain fallback (when LLM generic or failed)
       console.log('🔄 Using ActionBrain fallback system...');
       
       // Intent Recognition through Action Brain
@@ -157,7 +186,7 @@ export class ChatBrain {
       
       return chatResponse;
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Chat Brain Error:', error);
       return {
         message: `🤖 **I encountered an issue processing your message.**\n\n**Error**: ${error.message}\n\n**Please try**: Being more specific or rephrasing your request.`,
@@ -173,6 +202,55 @@ export class ChatBrain {
   private checkForConfirmation(message: string): ChatResponse | null {
     const normalizedMessage = message.toLowerCase().trim();
     
+    // Handle pending swap confirmations first
+    if (this.context.pendingSwap) {
+      const yes = /^(yes|y|confirm|proceed|go ahead|do it|ok|okay)\b/.test(normalizedMessage);
+      const no = /^(no|n|cancel|stop|abort|not now)\b/.test(normalizedMessage);
+      if (yes) {
+        const ps = this.context.pendingSwap;
+        this.context.pendingSwap = undefined;
+        // Force confirm flag on ActionBrain by appending a hint
+        return {
+          message: `Proceeding to execute your swap of ${ps.amount} SEI to USDC...`,
+          success: true,
+          intent: IntentType.SYMPHONY_SWAP,
+          confidence: 0.95,
+          data: { confirmSwap: true, swapParams: ps }
+        };
+      }
+      if (no) {
+        this.context.pendingSwap = undefined;
+        return {
+          message: `✅ Cancelled. No swap executed.`,
+          success: true,
+          intent: IntentType.SYMPHONY_SWAP,
+          confidence: 0.9
+        };
+      }
+      // Remind user
+      return {
+        message: `⏳ **Pending swap**\nAmount: ${this.context.pendingSwap.amount} SEI → Min Out: ${this.context.pendingSwap.minOut} USDC\nSay "Yes" to proceed or "Cancel" to abort.`,
+        success: false,
+        intent: IntentType.SYMPHONY_SWAP,
+        confidence: 0.7
+      };
+    }
+
+    // Emotional support heuristic for trading frustration
+    if (/\b(i\s*am|i'm|im)\b.*(not feeling|sad|down|bad|loss|losing|hurt|frustrat|depress|anxious|worried|stressed)/i.test(normalizedMessage) && /trade|trading|position|market|sei/i.test(normalizedMessage)) {
+      return {
+        message: `I hear you. Trading can be rough—especially on Sei where things move fast. Do you want to break down the last trade together (entry, exit, size) and see what to adjust next time? I can also review recent performance and suggest safer position sizing.`,
+        success: true,
+        intent: IntentType.CONVERSATION,
+        confidence: 0.9,
+        suggestions: [
+          'Run a quick post-trade review',
+          'Check my recent trading stats',
+          'Suggest safer sizing for my next trade'
+        ]
+      };
+    }
+
     // Check if there's a pending transfer
     if (!this.context.pendingTransfer) {
       return null;
@@ -252,7 +330,7 @@ export class ChatBrain {
         confidence: 1.0
       };
       
-    } catch (error) {
+    } catch (error: any) {
       // Clear pending transfer even on error
       this.context.pendingTransfer = undefined;
       
@@ -324,6 +402,13 @@ export class ChatBrain {
         timestamp: new Date()
       };
     }
+    // Store pending swap if present
+    if (actionResponse.data?.pendingSwap) {
+      this.context.pendingSwap = {
+        ...actionResponse.data.pendingSwap,
+        timestamp: new Date()
+      };
+    }
     
     // Learn user preferences based on successful actions
     if (actionResponse.success) {
@@ -361,6 +446,18 @@ export class ChatBrain {
   private generateConversationalResponse(intentResult: any, actionResponse: any): ChatResponse {
     let message = actionResponse.response;
     const suggestions: string[] = [];
+
+    // For pure conversation, keep it minimal and natural (no success/failure tags)
+    if (intentResult.intent === IntentType.CONVERSATION) {
+      return {
+        message,
+        success: actionResponse.success,
+        intent: intentResult.intent,
+        confidence: intentResult.confidence,
+        suggestions,
+        data: actionResponse.data
+      };
+    }
     
     // Add conversational elements based on intent and success
     if (actionResponse.success) {
@@ -412,7 +509,7 @@ export class ChatBrain {
         "\n\n🔥 **Fresh data served!** This is fascinating!",
         "\n\n📊 **Intelligence delivered!** Knowledge is power!"
       ]
-    };
+    } as any;
     
     const options = personalities[intent] || ["\n\n✨ **Success!** Happy to help!"];
     const randomPersonality = options[Math.floor(Math.random() * options.length)];
@@ -456,7 +553,7 @@ export class ChatBrain {
         "Check your balances?",
         "Look at trading data?"
       ]
-    };
+    } as any;
     
     return suggestions[intent] || ["What else can I help you with?"];
   }

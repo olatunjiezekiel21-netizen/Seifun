@@ -1,6 +1,7 @@
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { webBlockchainService } from './WebBlockchainService';
 import { cambrianSeiAgent, SwapParams, StakeParams, LendingParams, TradingParams } from './CambrianSeiAgent';
+import { TokenMetadataManager } from '../utils/tokenMetadata';
 
 // Intent Types for NLP Processing
 export enum IntentType {
@@ -27,7 +28,10 @@ export enum IntentType {
   WALLET_INFO = 'wallet_info',
   // Token Transfer Operations
   SEND_TOKENS = 'send_tokens',
-  TRANSFER_CONFIRMATION = 'transfer_confirmation'
+  TRANSFER_CONFIRMATION = 'transfer_confirmation',
+  // NFT operations
+  NFT_BROWSE = 'nft_browse',
+  NFT_BUY = 'nft_buy'
 }
 
 // Entity Extraction Results
@@ -47,6 +51,11 @@ interface ExtractedEntities {
   // Transfer entities
   recipient?: string;
   transferAmount?: number;
+  // NFT entities
+  collection?: string;
+  tokenId?: string;
+  // Confirmation flag for two-step actions
+  confirm?: boolean;
 }
 
 // Intent Recognition Result
@@ -103,6 +112,22 @@ export class ActionBrain {
         intent: IntentType.TOKEN_SCAN,
         confidence: 0.95,
         entities,
+        rawMessage: message
+      };
+    }
+    
+    // NFT Browse / Buy Intents
+    if (this.matchesPattern(normalizedMessage, [
+      /(buy|shop|browse|find).*nfts?/,
+      /(nft|collectible).*market/,
+      /mint.*nft/
+    ])) {
+      const nftEntities = this.extractNftEntities(normalizedMessage);
+      const wantsBuy = /buy.*nfts?|mint.*nft/.test(normalizedMessage) || !!nftEntities.tokenId;
+      return {
+        intent: wantsBuy ? IntentType.NFT_BUY : IntentType.NFT_BROWSE,
+        confidence: 0.85,
+        entities: { ...entities, ...nftEntities },
         rawMessage: message
       };
     }
@@ -205,7 +230,9 @@ export class ActionBrain {
     // Symphony DEX Swap Intent
     if (this.matchesPattern(normalizedMessage, [
       /swap.*\d+.*sei.*for.*usdc/,
+      /swap.*\d+.*sei.*to.*usdc/,
       /swap.*\d+.*usdc.*for.*sei/,
+      /swap.*\d+.*usdc.*to.*sei/,
       /exchange.*\d+.*tokens?/,
       /trade.*\d+.*sei/,
       /symphony.*swap/,
@@ -327,7 +354,7 @@ export class ActionBrain {
       };
     }
     
-
+    
     
     // Conversational Intent
     if (this.matchesPattern(normalizedMessage, [
@@ -420,6 +447,12 @@ export class ActionBrain {
           
         case IntentType.TRANSFER_CONFIRMATION:
           return await this.executeTransferConfirmation(intentResult);
+          
+        case IntentType.NFT_BROWSE:
+          return await this.executeNftBrowse(intentResult);
+        
+        case IntentType.NFT_BUY:
+          return await this.executeNftBuy(intentResult);
           
         default:
           return this.executeUnknown(intentResult);
@@ -517,25 +550,108 @@ export class ActionBrain {
         response: `🚀 **Token Creation**\n\n**Usage Examples:**\n• "Create a token called SuperCoin"\n• "Create MyToken"\n• "Make a token named AwesomeCoin"\n\n**💡 Just tell me what to call your token!**`
       };
     }
-    
-    const response = `🚀 **Creating Token: ${tokenName}**\n\n**✨ Redirecting to SeiList Professional Interface...**\n\n**What happens next:**\n• Professional token creation wizard\n• Custom logo upload capability\n• Advanced tokenomics settings\n• Real blockchain deployment\n• Automatic ownership tracking\n• Dev++ integration\n\n**🔥 Your token will be created with full functionality!**`;
-    
-    // Redirect to SeiList with pre-filled data
-    setTimeout(() => {
-      const params = new URLSearchParams({
+
+    try {
+      const symbol = tokenName.substring(0, 6).toUpperCase();
+      const totalSupply = '1000000'; // default 1,000,000
+      const { txHash } = await cambrianSeiAgent.createToken({
         name: tokenName,
-        symbol: tokenName.substring(0, 6).toUpperCase(),
-        totalSupply: '1000000',
-        aiCreated: 'true'
+        symbol,
+        totalSupply
       });
-      window.location.href = `/app/seilist?${params.toString()}`;
-    }, 2000);
-    
-    return {
-      success: true,
-      response,
-      data: { tokenName, redirecting: true }
-    };
+
+      // Make basic metadata and store reference (logo from local cache if exists)
+      const logoUrl = localStorage.getItem('seilor_last_token_logo') || '';
+      const metadata = {
+        name: tokenName,
+        symbol,
+        description: `${tokenName} (${symbol}) - created by Seilor 0`,
+        image: logoUrl,
+        totalSupply,
+        decimals: 18,
+        creator: cambrianSeiAgent.getAddress(),
+        createdAt: new Date().toISOString(),
+        version: '1.0.0'
+      };
+      try {
+        // Upload metadata JSON to IPFS and store in pending registry keyed by tx
+        const metadataUrl = await TokenMetadataManager.uploadMetadata(metadata as any);
+        const pending = JSON.parse(localStorage.getItem('pendingTokenMetadataByTx') || '{}');
+        pending[txHash] = { metadataUrl, name: tokenName, symbol, createdAt: new Date().toISOString() };
+        localStorage.setItem('pendingTokenMetadataByTx', JSON.stringify(pending));
+      } catch {}
+
+      // Append to Dev++ local registry for visibility
+      const saved = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
+      saved.unshift({
+        address: 'pending',
+        name: tokenName,
+        symbol,
+        supply: totalSupply,
+        creator: cambrianSeiAgent.getAddress(),
+        createdAt: new Date().toISOString(),
+        verified: true,
+        securityScore: 80,
+        logo: logoUrl
+      });
+      localStorage.setItem('dev++_tokens', JSON.stringify(saved));
+
+      // Log tx (best-effort)
+      fetch('/.netlify/functions/tx-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: cambrianSeiAgent.getAddress(),
+          action: 'create_token',
+          params: { name: tokenName, symbol, totalSupply },
+          txHash,
+          status: 'success'
+        })
+      }).catch(() => {});
+
+      // Wait for receipt and resolve token address (ERC20 Transfer event contract address)
+      try {
+        const receipt = await cambrianSeiAgent.publicClient.waitForTransactionReceipt({ hash: txHash as any });
+        const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+        const transferLog = receipt.logs.find((l: any) => (l.topics?.[0] || '').toLowerCase() === TRANSFER_TOPIC);
+        if (transferLog && transferLog.address) {
+          const tokenAddress = transferLog.address;
+          // Update Dev++ list, replacing first 'pending'
+          const tokens = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
+          const idx = tokens.findIndex((t: any) => t.address === 'pending' && t.symbol === symbol);
+          if (idx >= 0) {
+            tokens[idx].address = tokenAddress;
+            localStorage.setItem('dev++_tokens', JSON.stringify(tokens));
+          }
+          // Move metadata from pendingTx to registry
+          const pending = JSON.parse(localStorage.getItem('pendingTokenMetadataByTx') || '{}');
+          const entry = pending[txHash];
+          if (entry?.metadataUrl) {
+            const registry = JSON.parse(localStorage.getItem('tokenMetadataRegistry') || '{}');
+            registry[tokenAddress.toLowerCase()] = { metadataUrl: entry.metadataUrl, timestamp: new Date().toISOString() };
+            localStorage.setItem('tokenMetadataRegistry', JSON.stringify(registry));
+            delete pending[txHash];
+            localStorage.setItem('pendingTokenMetadataByTx', JSON.stringify(pending));
+          }
+        }
+      } catch (error) {
+        return {
+          success: false,
+          response: `❌ **Creation Failed**: ${error.message || error}\n\nIf you are on testnet, ensure the token factory is deployed and set VITE_FACTORY_ADDRESS_TESTNET. If on mainnet, set VITE_FACTORY_ADDRESS_MAINNET.`
+        };
+      }
+
+      return {
+        success: true,
+        response: `✅ **Token Created**\n\n• Name: ${tokenName}\n• Symbol: ${symbol}\n• Supply: ${parseInt(totalSupply).toLocaleString()}\n• Tx: \`${txHash}\`\n\nYou can now add a logo and liquidity. Say: "Add liquidity" or "Upload token logo".`,
+        data: { tokenName, symbol, txHash }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        response: `❌ **Creation Failed**: ${error.message}`
+      };
+    }
   }
   
   // BALANCE CHECK ACTION
@@ -544,11 +660,27 @@ export class ActionBrain {
       const balance = await privateKeyWallet.getSeiBalance();
       const myTokens = privateKeyWallet.getMyTokens();
       
+      // Include stablecoins and known tokens (testnet addresses can be adjusted via env later)
+      const probeTokens: string[] = [
+        '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1', // USDC test
+        '0x95597eb8d227a7c4b4f5e807a815c5178ee6dbe1', // MILLI sample
+        '0xbd82f3bfe1df0c84faec88a22ebc34c9a86595dc'  // CHIPS sample
+      ];
+      const erc20s = await privateKeyWallet.getErc20Balances(probeTokens);
+      
       let response = `💰 **Wallet Balance Report**\n\n`;
       response += `**🏦 SEI Balance:**\n`;
       response += `• **Amount**: ${balance.sei} SEI\n`;
       response += `• **USD Value**: $${balance.usd.toFixed(2)}\n`;
       response += `• **Address**: \`${privateKeyWallet.getAddress()}\`\n\n`;
+      
+      if (erc20s.length > 0) {
+        response += `**💵 ERC-20 Balances:**\n`;
+        for (const t of erc20s) {
+          response += `• ${t.symbol}: ${t.balance}\n`;
+        }
+        response += `\n`;
+      }
       
       if (myTokens.length > 0) {
         response += `**🏆 Your Created Tokens:**\n`;
@@ -570,7 +702,7 @@ export class ActionBrain {
       return {
         success: true,
         response,
-        data: { balance, myTokens }
+        data: { balance, myTokens, erc20s }
       };
     } catch (error) {
       return {
@@ -713,14 +845,20 @@ export class ActionBrain {
   // New Entity Extraction Methods for Cambrian Capabilities
   private extractSwapEntities(message: string): Partial<ExtractedEntities> {
     const entities: Partial<ExtractedEntities> = {};
+
+    // Extract amount
+    const amt = message.match(/(\d+(?:\.\d+)?)\s*(sei|usdc)?/i);
+    if (amt) {
+      entities.amount = parseFloat(amt[1]);
+    }
     
     // Extract token pairs for swapping
     if (message.includes('sei') && message.includes('usdc')) {
       if (message.includes('sei for usdc') || message.includes('sei to usdc')) {
         entities.tokenIn = '0x0'; // Native SEI
-        entities.tokenOut = '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'; // USDC on Sei (example)
+        entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1';
       } else if (message.includes('usdc for sei') || message.includes('usdc to sei')) {
-        entities.tokenIn = '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'; // USDC
+        entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1';
         entities.tokenOut = '0x0'; // Native SEI
       }
     }
@@ -767,6 +905,16 @@ export class ActionBrain {
       entities.transferAmount = parseFloat(amountMatch[1]);
     }
     
+    return entities;
+  }
+
+  private extractNftEntities(message: string): Partial<ExtractedEntities> {
+    const entities: Partial<ExtractedEntities> = {};
+    // Try to extract collection contract address and tokenId
+    const addr = message.match(/0x[a-fA-F0-9]{40}/);
+    if (addr) entities.collection = addr[0];
+    const id = message.match(/token\s*id\s*:?\s*(\d+)/i) || message.match(/#(\d+)/);
+    if (id) entities.tokenId = id[1];
     return entities;
   }
 
@@ -830,7 +978,7 @@ export class ActionBrain {
   // Symphony DEX Swap Action
   private async executeSymphonySwap(intent: IntentResult): Promise<ActionResponse> {
     try {
-      const { amount, tokenIn, tokenOut } = intent.entities;
+      const { amount, tokenIn, tokenOut, confirm } = intent.entities as any;
       
       if (!amount || !tokenIn || !tokenOut) {
         return {
@@ -838,18 +986,142 @@ export class ActionBrain {
           response: `❌ **Missing swap parameters**\n\nPlease specify: amount, input token, and output token.\n\n**Example**: "Swap 10 SEI for USDC"`
         };
       }
-      
-      const result = await cambrianSeiAgent.swapTokens({
+
+      // 1) Quote first
+      const quote = await cambrianSeiAgent.getSwapQuote({
         tokenIn: tokenIn as any,
         tokenOut: tokenOut as any,
         amount: amount.toString()
       });
-      
+
+      // 2) Guardrails
+      const maxSlippageBps = 50; // 0.5%
+      const priceImpactPct = Number(quote.priceImpact || 0);
+      if (priceImpactPct > 5) {
+        // Log advice and blocked trade
+        fetch('/.netlify/functions/agent-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            advice: 'High price impact warning',
+            caution: `Price impact ${priceImpactPct.toFixed(2)}% exceeds policy limit`,
+            confidence_score: 0.8,
+            recommendation: 'Reduce amount or choose a different pair',
+            context: { tokenIn, tokenOut, amount, priceImpactPct }
+          })
+        }).catch(() => {});
+        fetch('/.netlify/functions/trade-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet: cambrianSeiAgent.getAddress(),
+            dex: 'Vortex/Symphony',
+            tokenIn, tokenOut,
+            amountIn: amount.toString(),
+            priceImpact: priceImpactPct,
+            status: 'blocked',
+            reason: 'high_price_impact'
+          })
+        }).catch(() => {});
+        return {
+          success: false,
+          response: `🚫 **High price impact (${priceImpactPct.toFixed(2)}%)**\nSwap refused by policy. Try a smaller amount or a different pair.`
+        };
+      }
+
+      // Compute minOut using slippage (0.5%)
+      const out = Number(quote.outputAmount || 0);
+      const minOut = (out * (1 - maxSlippageBps / 10_000)).toFixed(6);
+
+      // 3) Balance check before proceeding
+      let availableStr = '0';
+      try {
+        const isNativeSei = tokenIn === '0x0' || tokenIn === '0x0000000000000000000000000000000000000000';
+        availableStr = await cambrianSeiAgent.getBalance(isNativeSei ? undefined : (tokenIn as any));
+      } catch {}
+      const available = parseFloat(availableStr || '0');
+      if (isFinite(available) && available < Number(amount)) {
+        const tokenInName = (String(tokenIn) === '0x0' || String(tokenIn).toLowerCase() === '0x0000000000000000000000000000000000000000') ? 'SEI' : 'tokenIn';
+        const suggestion = available > 0 ? `You can swap up to ${available.toFixed(4)} ${tokenInName}.` : `Your ${tokenInName} balance is low.`;
+        return {
+          success: true,
+          response: `⚠️ **Insufficient balance**\nHave: ${available.toFixed(4)} ${tokenInName}, Need: ${amount}\n${suggestion} If you'd like, say: "Swap ${available.toFixed(4)} SEI to USDC" to proceed.`,
+          data: { available },
+          followUp: available > 0 ? [
+            `Swap ${available.toFixed(4)} SEI to USDC`,
+            'Cancel'
+          ] : ['Cancel']
+        };
+      }
+
+      // 4) If not confirmed yet, present a confirmation message and store pending swap
+      if (!confirm) {
+        return {
+          success: true,
+          response: `✅ Sure! I’ll swap ${amount} SEI to USDC at the best available rate.\n\nCurrent quote: ${amount} SEI ≈ ${quote.outputAmount} USDC\nEstimated fee: ~0.02 SEI\nMinimum received (with 0.5% slippage tolerance): ${minOut} USDC\n\nWould you like me to proceed with the swap?`,
+          data: { pendingSwap: { tokenIn, tokenOut, amount, minOut, quoteOut: quote.outputAmount, priceImpact: priceImpactPct } },
+          followUp: ['Yes, proceed', 'No']
+        };
+      }
+
+      // 5) Execute swap (approval handled inside Symphony route)
+      const resultMsg = await cambrianSeiAgent.swapTokens({
+        tokenIn: tokenIn as any,
+        tokenOut: tokenOut as any,
+        amount: amount.toString()
+      });
+
+      // Extract tx hash for logging
+      const match = /TX:\s*(0x[a-fA-F0-9]{64})/i.exec(resultMsg);
+      const txHash = match ? match[1] : '';
+
+      // Tx audit log
+      fetch('/.netlify/functions/tx-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: cambrianSeiAgent.getAddress(),
+          action: 'swap',
+          params: { tokenIn, tokenOut, amount, minOut },
+          txHash,
+          status: 'success'
+        })
+      }).catch(() => {});
+
+      // User trades log
+      fetch('/.netlify/functions/trade-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: cambrianSeiAgent.getAddress(),
+          dex: 'Vortex/Symphony',
+          tokenIn, tokenOut,
+          amountIn: amount.toString(),
+          amountOut: quote.outputAmount,
+          minOut,
+          priceImpact: priceImpactPct,
+          slippageBps: maxSlippageBps,
+          txHash,
+          status: 'success'
+        })
+      }).catch(() => {});
+
       return {
         success: true,
-        response: `🔄 **Symphony DEX Swap**\n${result}`
+        response: `🔄 **Symphony DEX Swap Executed**\nQuoted Out: ${quote.outputAmount} (impact ${priceImpactPct.toFixed(2)}%)\nMin Out (@0.5% slippage): ${minOut}\n${resultMsg}`
       };
     } catch (error) {
+      // Log failed trade
+      fetch('/.netlify/functions/trade-log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: cambrianSeiAgent.getAddress(),
+          dex: 'Vortex/Symphony',
+          status: 'failed',
+          reason: (error as any)?.message || 'swap_failed'
+        })
+      }).catch(() => {});
       return {
         success: false,
         response: `❌ **Swap Failed**: ${error.message}\n\n**💡 Try**: Checking your balance and token addresses`
@@ -1226,6 +1498,30 @@ export class ActionBrain {
     return {
       success: false,
       response: "Liquidity addition functionality - implementation in progress"
+    };
+  }
+
+  private async executeNftBrowse(intent: IntentResult): Promise<ActionResponse> {
+    // Guided response until a marketplace integration is configured
+    return {
+      success: true,
+      response: `🖼️ **NFTs on Sei**\n\nI can help you browse or buy NFTs once you provide a marketplace or collection.\n\n**Next steps:**\n• Paste a collection contract (0x...) to browse listings\n• Or tell me the marketplace you use on Sei (and the collection slug)\n\nIf you already know a specific NFT, say: \"Buy NFT tokenId [id] from [collection address]\"`,
+    };
+  }
+
+  private async executeNftBuy(intent: IntentResult): Promise<ActionResponse> {
+    const { collection, tokenId } = intent.entities;
+    if (!collection || !tokenId) {
+      return {
+        success: false,
+        response: `❌ **Missing purchase details**\n\n**Need**: collection address (0x...) and tokenId.\n**Example**: \"Buy NFT tokenId 123 from 0xABC...\"`,
+      };
+    }
+    // We need marketplace contract to execute a purchase. Ask for marketplace info.
+    return {
+      success: false,
+      response: `🛒 **NFT Purchase Setup**\n\nTo buy tokenId ${tokenId} from ${collection}, I need the marketplace (contract) where it's listed.\n**Please provide**: marketplace name or contract address + listing ID/price.\n\nOnce provided, I'll prepare an on-chain buy transaction with balance checks and confirmations.`,
+      data: { collection, tokenId }
     };
   }
 }

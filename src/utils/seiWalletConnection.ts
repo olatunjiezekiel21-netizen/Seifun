@@ -251,9 +251,9 @@ Need help? Visit our docs for detailed setup instructions.`;
 
     try {
       // Enable Sei chain in Keplr
-      await window.keplr.enable('sei-devnet-3'); // Use testnet chain ID
+      await window.keplr.enable('sei-network'); // Use mainnet chain ID
       
-      const key = await window.keplr.getKey('sei-devnet-3');
+      const key = await window.keplr.getKey('sei-network');
       const address = key.bech32Address;
       const balance = await fetchBalance(address);
       
@@ -335,7 +335,7 @@ Need help? Visit our docs for detailed setup instructions.`;
 
   const fetchBalance = async (address: string): Promise<string> => {
     try {
-      // Use Sei testnet RPC to fetch real balance
+             // Use Sei mainnet/testnet RPC based on env
       const rpcUrl = import.meta.env.VITE_SEI_MAINNET_RPC || 'https://evm-rpc.sei-apis.com';
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       const balance = await provider.getBalance(address);
