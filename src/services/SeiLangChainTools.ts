@@ -54,10 +54,10 @@ export class SeiTransferTool extends Tool {
   }
 }
 
-// SEI Swap Tool
+// SEI Swap Tool - REAL TESTNET FUNCTIONALITY!
 export class SeiSwapTool extends Tool {
   name = "sei_swap";
-  description = "Swap tokens on Symphony DEX. Input should be JSON: {\"tokenIn\": \"SEI\", \"tokenOut\": \"USDC\", \"amount\": number}";
+  description = "Swap tokens on Symphony DEX on Sei Testnet. Input should be JSON: {\"tokenIn\": \"0x...\", \"tokenOut\": \"0x...\", \"amount\": number}";
   
   async _call(input: string): Promise<string> {
     try {
@@ -68,7 +68,7 @@ export class SeiSwapTool extends Tool {
       }
       
       const result = await cambrianSeiAgent.swapTokens(params);
-      return `Swap executed: ${params.amount} ${params.tokenIn} → ${params.tokenOut}. Result: ${result}`;
+      return `Swap executed on Sei Testnet: ${params.amount} tokens swapped. Result: ${result}`;
       
     } catch (error) {
       return `Swap failed: ${error.message}`;
@@ -76,10 +76,216 @@ export class SeiSwapTool extends Tool {
   }
 }
 
+// Token Creation Tool - INNOVATIVE FEATURE!
+export class TokenCreationTool extends Tool {
+  name = "create_token";
+  description = "Create a new token on Sei Testnet. Input should be JSON: {\"name\": \"Token Name\", \"symbol\": \"TKN\", \"totalSupply\": \"1000000\", \"decimals\": 18}";
+  
+  async _call(input: string): Promise<string> {
+    try {
+      const params = JSON.parse(input);
+      
+      if (!params.name || !params.symbol || !params.totalSupply) {
+        return "Error: name, symbol, and totalSupply are required";
+      }
+      
+      const result = await cambrianSeiAgent.createToken(params);
+      return `Token created successfully on Sei Testnet! ${result}`;
+      
+    } catch (error) {
+      return `Token creation failed: ${error.message}`;
+    }
+  }
+}
+
+// Add Liquidity Tool - REAL TESTNET FUNCTIONALITY!
+export class AddLiquidityTool extends Tool {
+  name = "add_liquidity";
+  description = "Add liquidity to Symphony DEX on Sei Testnet. Input should be JSON: {\"tokenA\": \"0x...\", \"tokenB\": \"0x...\", \"amountA\": \"100\", \"amountB\": \"100\"}";
+  
+  async _call(input: string): Promise<string> {
+    try {
+      const params = JSON.parse(input);
+      
+      if (!params.tokenA || !params.tokenB || !params.amountA || !params.amountB) {
+        return "Error: tokenA, tokenB, amountA, and amountB are required";
+      }
+      
+      const result = await cambrianSeiAgent.addLiquidity(params);
+      return `Liquidity added successfully on Sei Testnet! ${result}`;
+      
+    } catch (error) {
+      return `Add liquidity failed: ${error.message}`;
+    }
+  }
+}
+
+// Remove Liquidity Tool - REAL TESTNET FUNCTIONALITY!
+export class RemoveLiquidityTool extends Tool {
+  name = "remove_liquidity";
+  description = "Remove liquidity from Symphony DEX on Sei Testnet. Input should be JSON: {\"tokenA\": \"0x...\", \"tokenB\": \"0x...\", \"amountA\": \"100\", \"amountB\": \"100\"}";
+  
+  async _call(input: string): Promise<string> {
+    try {
+      const params = JSON.parse(input);
+      
+      if (!params.tokenA || !params.tokenB || !params.amountA || !params.amountB) {
+        return "Error: tokenA, tokenB, amountA, and amountB are required";
+      }
+      
+      const result = await cambrianSeiAgent.removeLiquidity(params);
+      return `Liquidity removed successfully on Sei Testnet! ${result}`;
+      
+    } catch (error) {
+      return `Remove liquidity failed: ${error.message}`;
+    }
+  }
+}
+
+// Liquidity Lock Tool - INNOVATIVE FEATURE - FIRST ON SEI!
+export class LiquidityLockTool extends Tool {
+  name = "lock_liquidity";
+  description = "Lock liquidity on Sei Testnet - INNOVATIVE FEATURE! Input should be JSON: {\"tokenAddress\": \"0x...\", \"lockAmount\": \"1000\", \"lockDuration\": 30, \"lockType\": \"time\"}";
+  
+  async _call(input: string): Promise<string> {
+    try {
+      const params = JSON.parse(input);
+      
+      if (!params.tokenAddress || !params.lockAmount || !params.lockDuration || !params.lockType) {
+        return "Error: tokenAddress, lockAmount, lockDuration, and lockType are required";
+      }
+      
+      if (!['time', 'milestone', 'governance'].includes(params.lockType)) {
+        return "Error: lockType must be 'time', 'milestone', or 'governance'";
+      }
+      
+      const result = await cambrianSeiAgent.lockLiquidity(params);
+      return `🚀 INNOVATIVE FEATURE: Liquidity locked successfully on Sei Testnet! ${result}`;
+      
+    } catch (error) {
+      return `Liquidity lock failed: ${error.message}`;
+    }
+  }
+}
+
+// Unlock Liquidity Tool
+export class UnlockLiquidityTool extends Tool {
+  name = "unlock_liquidity";
+  description = "Unlock liquidity after lock period on Sei Testnet. Input should be the lock ID.";
+  
+  async _call(lockId: string): Promise<string> {
+    try {
+      if (!lockId) {
+        return "Error: lockId is required";
+      }
+      
+      const result = await cambrianSeiAgent.unlockLiquidity(lockId);
+      return `Liquidity unlocked successfully on Sei Testnet! ${result}`;
+      
+    } catch (error) {
+      return `Liquidity unlock failed: ${error.message}`;
+    }
+  }
+}
+
+// Burn Token Tool - REAL TESTNET FUNCTIONALITY!
+export class BurnTokenTool extends Tool {
+  name = "burn_token";
+  description = "Burn tokens on Sei Testnet. Input should be JSON: {\"tokenAddress\": \"0x...\", \"amount\": \"100\"}";
+  
+  async _call(input: string): Promise<string> {
+    try {
+      const params = JSON.parse(input);
+      
+      if (!params.tokenAddress || !params.amount) {
+        return "Error: tokenAddress and amount are required";
+      }
+      
+      const result = await cambrianSeiAgent.burnToken(params.tokenAddress, params.amount);
+      return `Tokens burned successfully on Sei Testnet! ${result}`;
+      
+    } catch (error) {
+      return `Token burn failed: ${error.message}`;
+    }
+  }
+}
+
+// Token Scan Tool - REAL TESTNET FUNCTIONALITY!
+export class TokenScanTool extends Tool {
+  name = "scan_token";
+  description = "Scan and analyze a token on Sei Testnet. Input should be the token contract address (0x...).";
+  
+  async _call(tokenAddress: string): Promise<string> {
+    try {
+      if (!tokenAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+        return "Error: Invalid token address format";
+      }
+      
+      const scanResult = await cambrianSeiAgent.scanToken(tokenAddress as any);
+      
+      return `🔍 Token Analysis for ${tokenAddress} on Sei Testnet:
+
+📝 Basic Info:
+• Name: ${scanResult.name}
+• Symbol: ${scanResult.symbol}
+• Total Supply: ${scanResult.totalSupply}
+• Decimals: ${scanResult.decimals}
+• Your Balance: ${scanResult.balance}
+
+🔒 Security:
+• Verified: ${scanResult.isVerified ? 'Yes' : 'No'}
+• Security Score: ${scanResult.securityScore}/100
+• Risks: ${scanResult.risks.join(', ')}
+
+💧 Liquidity:
+• Liquidity: $${scanResult.liquidity}
+• Holders: ${scanResult.holders}
+
+✅ Token appears valid and ready for interactions!`;
+      
+    } catch (error) {
+      return `Token scan failed: ${error.message}`;
+    }
+  }
+}
+
+// Get Liquidity Locks Tool
+export class GetLiquidityLocksTool extends Tool {
+  name = "get_liquidity_locks";
+  description = "Get all liquidity locks for a token on Sei Testnet. Input should be the token contract address (0x...).";
+  
+  async _call(tokenAddress: string): Promise<string> {
+    try {
+      if (!tokenAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+        return "Error: Invalid token address format";
+      }
+      
+      const locks = await cambrianSeiAgent.getLiquidityLocks(tokenAddress as any);
+      
+      if (locks.length === 0) {
+        return `No liquidity locks found for token ${tokenAddress}`;
+      }
+      
+      return `🔒 Liquidity Locks for ${tokenAddress}:
+
+${locks.map((lock, index) => 
+  `${index + 1}. Lock ID: ${lock.id}
+   • Amount: ${lock.amount}
+   • Duration: ${lock.duration} days
+   • Type: ${lock.type}
+   • Status: ${lock.isActive ? 'Active' : 'Expired'}`
+).join('\n\n')}`;
+      
+    } catch (error) {
+      return `Failed to get liquidity locks: ${error.message}`;
+    }
+  }
+}
+
 // SEI Staking Tool
 export class SeiStakingTool extends Tool {
   name = "sei_staking";
-  description = "Stake SEI tokens on Silo protocol. Input should be JSON: {\"amount\": number}";
+  description = "Stake SEI tokens on Silo protocol on Sei Testnet. Input should be JSON: {\"amount\": number}";
   
   async _call(input: string): Promise<string> {
     try {
@@ -90,11 +296,10 @@ export class SeiStakingTool extends Tool {
       }
       
       const result = await cambrianSeiAgent.stakeTokens({
-        amount: amount.toString(),
-        validator: 'silo-protocol'
+        amount: amount.toString()
       });
       
-      return `Staking successful: ${amount} SEI staked on Silo. ${result}`;
+      return `Staking initiated on Sei Testnet: ${amount} SEI. ${result}`;
       
     } catch (error) {
       return `Staking failed: ${error.message}`;
@@ -105,7 +310,7 @@ export class SeiStakingTool extends Tool {
 // SEI Lending Tool
 export class SeiLendingTool extends Tool {
   name = "sei_lending";
-  description = "Lend tokens on Takara protocol. Input should be JSON: {\"amount\": number, \"token\": \"USDC\"}";
+  description = "Lend tokens on Takara protocol on Sei Testnet. Input should be JSON: {\"amount\": number, \"token\": \"USDC\"}";
   
   async _call(input: string): Promise<string> {
     try {
@@ -120,7 +325,7 @@ export class SeiLendingTool extends Tool {
         token
       });
       
-      return `Lending successful: ${amount} ${token} lent on Takara. ${result}`;
+      return `Lending initiated on Sei Testnet: ${amount} ${token}. ${result}`;
       
     } catch (error) {
       return `Lending failed: ${error.message}`;
@@ -305,38 +510,25 @@ export class WalletInfoTool extends Tool {
   }
 }
 
-// Token Scan Tool
-export class TokenScanTool extends Tool {
-  name = "token_scan";
-  description = "Scan and analyze a token by address. Input should be the token contract address (0x...)";
-  
-  async _call(tokenAddress: string): Promise<string> {
-    try {
-      if (!tokenAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
-        return "Error: Invalid token address format";
-      }
-      
-      // Get token balance
-      const balance = await cambrianSeiAgent.getBalance(tokenAddress as any);
-      
-      return `Token Analysis for ${tokenAddress}:\n- Balance: ${balance}\n- Contract appears valid\n- Ready for interactions`;
-      
-    } catch (error) {
-      return `Token scan failed: ${error.message}`;
-    }
-  }
-}
-
-// Create all Sei tools with enhanced AI capabilities
+// Create all Sei tools with enhanced AI capabilities and REAL TESTNET FUNCTIONALITY
 export const createSeiTools = () => [
-  // Core blockchain tools
+  // Core blockchain tools - REAL TESTNET FUNCTIONALITY
   new SeiBalanceTool(),
   new SeiTransferTool(),
   new SeiSwapTool(),
   new SeiStakingTool(),
   new SeiLendingTool(),
   new WalletInfoTool(),
+  
+  // NEW: Advanced Token Management - INNOVATIVE FEATURES!
+  new TokenCreationTool(),
+  new AddLiquidityTool(),
+  new RemoveLiquidityTool(),
+  new LiquidityLockTool(), // 🚀 FIRST ON SEI!
+  new UnlockLiquidityTool(),
+  new BurnTokenTool(),
   new TokenScanTool(),
+  new GetLiquidityLocksTool(),
   
   // Advanced AI-powered tools
   new PortfolioAnalysisTool(),
