@@ -2,8 +2,10 @@ export type ChatMessageType = 'user' | 'assistant'
 
 export class ChatMemoryService {
 	static getUserId(): string {
-		// Use wallet address if available, else fallback to local storage id
+		// Prefer Supabase UID if available, then wallet address, else anon id
 		try {
+			const supabaseUid = (window as any)?.supabaseUser?.id || localStorage.getItem('supabase_uid')
+			if (supabaseUid) return supabaseUid
 			const addr = (window as any)?.ethereumAddress || localStorage.getItem('seifu_wallet_address')
 			if (addr) return addr
 			let id = localStorage.getItem('seilor_user_id')
