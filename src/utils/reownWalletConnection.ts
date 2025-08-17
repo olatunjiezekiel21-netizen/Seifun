@@ -113,7 +113,7 @@ export class ReownWalletConnection {
       console.log('🔧 Creating simple WalletConnect modal...');
 
       // Get Sei network configuration
-      const seiNetwork = getSeiNetworkConfig(false); // Use testnet for now
+      const seiNetwork = getSeiNetworkConfig(true); // Use mainnet
       
       // Create WalletConnect modal with proper Sei network support
       this.appKit = createAppKit({
@@ -759,7 +759,7 @@ export const useReownWallet = () => {
   useEffect(() => {
     if (typeof window !== 'undefined' && !walletConnection) {
       console.log('🔄 Creating ReOWN wallet connection instance...');
-      const connection = new ReownWalletConnection(false); // Use testnet for now
+      const connection = new ReownWalletConnection(true); // Use mainnet
       setWalletConnection(connection);
     }
   }, [walletConnection]);

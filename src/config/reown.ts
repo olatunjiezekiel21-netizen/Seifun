@@ -12,7 +12,7 @@ export const reownConfig = {
   }
 };
 
-export const getSeiNetworkConfig = (isMainnet = false) => {
+export const getSeiNetworkConfig = (isMainnet = true) => {
   return {
     chainId: isMainnet ? 1329 : 1328,
     rpcUrl: isMainnet 

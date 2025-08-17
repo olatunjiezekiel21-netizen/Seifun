@@ -48,8 +48,8 @@ export class WebBlockchainService {
   private seiPrice: number = 0.834; // Real SEI price (would be fetched from price oracle in production)
 
   constructor() {
-    // Initialize with Sei testnet RPC
-    this.provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
+    // Initialize with Sei mainnet RPC
+    this.provider = new ethers.JsonRpcProvider('https://evm-rpc.sei-apis.com');
     
     // Initialize test wallet
     this.testWallet = new ethers.Wallet(

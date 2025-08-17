@@ -37,7 +37,7 @@ export const useWallet = () => {
           // Keplr with Sei support
           const keplr = (window as any).keplr;
           try {
-            await keplr.enable('sei-devnet-3');
+            await keplr.enable('sei-network');
             seiWallet = keplr;
             walletType = 'Keplr Wallet';
           } catch (error) {
@@ -64,7 +64,7 @@ export const useWallet = () => {
           });
           address = accounts[0];
         } else if (walletType === 'Keplr Wallet') {
-          const key = await seiWallet.getKey('sei-devnet-3');
+          const key = await seiWallet.getKey('sei-network');
           address = key.bech32Address;
           // Convert to EVM format if needed
           if (!address.startsWith('0x')) {
