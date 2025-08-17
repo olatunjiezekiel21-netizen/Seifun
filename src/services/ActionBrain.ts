@@ -54,6 +54,8 @@ interface ExtractedEntities {
   // NFT entities
   collection?: string;
   tokenId?: string;
+  // Confirmation flag for two-step actions
+  confirm?: boolean;
 }
 
 // Intent Recognition Result
@@ -956,7 +958,7 @@ export class ActionBrain {
   // Symphony DEX Swap Action
   private async executeSymphonySwap(intent: IntentResult): Promise<ActionResponse> {
     try {
-      const { amount, tokenIn, tokenOut } = intent.entities;
+      const { amount, tokenIn, tokenOut, confirm } = intent.entities as any;
       
       if (!amount || !tokenIn || !tokenOut) {
         return {
@@ -973,7 +975,7 @@ export class ActionBrain {
       });
 
       // 2) Guardrails
-      const maxSlippageBps = 100; // 1%
+      const maxSlippageBps = 50; // 0.5%
       const priceImpactPct = Number(quote.priceImpact || 0);
       if (priceImpactPct > 5) {
         // Log advice and blocked trade
@@ -1007,11 +1009,42 @@ export class ActionBrain {
         };
       }
 
-      // Compute minOut using slippage
+      // Compute minOut using slippage (0.5%)
       const out = Number(quote.outputAmount || 0);
-      const minOut = (out * (1 - maxSlippageBps / 10_000)).toString();
+      const minOut = (out * (1 - maxSlippageBps / 10_000)).toFixed(6);
 
-      // 3) Execute swap (approval handled inside Symphony route)
+      // 3) Balance check before proceeding
+      let availableStr = '0';
+      try {
+        const isNativeSei = tokenIn === '0x0' || tokenIn === '0x0000000000000000000000000000000000000000';
+        availableStr = await cambrianSeiAgent.getBalance(isNativeSei ? undefined : (tokenIn as any));
+      } catch {}
+      const available = parseFloat(availableStr || '0');
+      if (isFinite(available) && available < Number(amount)) {
+        const tokenInName = (String(tokenIn) === '0x0' || String(tokenIn).toLowerCase() === '0x0000000000000000000000000000000000000000') ? 'SEI' : 'tokenIn';
+        const suggestion = available > 0 ? `You can swap up to ${available.toFixed(4)} ${tokenInName}.` : `Your ${tokenInName} balance is low.`;
+        return {
+          success: true,
+          response: `⚠️ **Insufficient balance**\nHave: ${available.toFixed(4)} ${tokenInName}, Need: ${amount}\n${suggestion} If you'd like, say: "Swap ${available.toFixed(4)} SEI to USDC" to proceed.`,
+          data: { available },
+          followUp: available > 0 ? [
+            `Swap ${available.toFixed(4)} SEI to USDC`,
+            'Cancel'
+          ] : ['Cancel']
+        };
+      }
+
+      // 4) If not confirmed yet, present a confirmation message and store pending swap
+      if (!confirm) {
+        return {
+          success: true,
+          response: `✅ Sure! I’ll swap ${amount} SEI to USDC at the best available rate.\n\nCurrent quote: ${amount} SEI ≈ ${quote.outputAmount} USDC\nEstimated fee: ~0.02 SEI\nMinimum received (with 0.5% slippage tolerance): ${minOut} USDC\n\nWould you like me to proceed with the swap?`,
+          data: { pendingSwap: { tokenIn, tokenOut, amount, minOut, quoteOut: quote.outputAmount, priceImpact: priceImpactPct } },
+          followUp: ['Yes, proceed', 'No']
+        };
+      }
+
+      // 5) Execute swap (approval handled inside Symphony route)
       const resultMsg = await cambrianSeiAgent.swapTokens({
         tokenIn: tokenIn as any,
         tokenOut: tokenOut as any,
@@ -1021,6 +1054,8 @@ export class ActionBrain {
       // Extract tx hash for logging
       const match = /TX:\s*(0x[a-fA-F0-9]{64})/i.exec(resultMsg);
       const txHash = match ? match[1] : '';
+
+      // Tx audit log
       fetch('/.netlify/functions/tx-log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1032,6 +1067,7 @@ export class ActionBrain {
           status: 'success'
         })
       }).catch(() => {});
+
       // User trades log
       fetch('/.netlify/functions/trade-log', {
         method: 'POST',
@@ -1052,7 +1088,7 @@ export class ActionBrain {
 
       return {
         success: true,
-        response: `🔄 **Symphony DEX Swap**\nQuoted Out: ${quote.outputAmount} (impact ${priceImpactPct.toFixed(2)}%)\nMin Out (@1% slippage): ${minOut}\n${resultMsg}`
+        response: `🔄 **Symphony DEX Swap Executed**\nQuoted Out: ${quote.outputAmount} (impact ${priceImpactPct.toFixed(2)}%)\nMin Out (@0.5% slippage): ${minOut}\n${resultMsg}`
       };
     } catch (error) {
       // Log failed trade

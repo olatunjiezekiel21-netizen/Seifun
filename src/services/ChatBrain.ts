@@ -25,6 +25,16 @@ interface ConversationContext {
     remainingBalance: string;
     timestamp: Date;
   };
+  // Swap confirmation context
+  pendingSwap?: {
+    amount: number;
+    tokenIn: string;
+    tokenOut: string;
+    minOut: string;
+    quoteOut: string;
+    priceImpact: number;
+    timestamp: Date;
+  };
 }
 
 // Chat Message
@@ -192,6 +202,55 @@ export class ChatBrain {
   private checkForConfirmation(message: string): ChatResponse | null {
     const normalizedMessage = message.toLowerCase().trim();
     
+    // Handle pending swap confirmations first
+    if (this.context.pendingSwap) {
+      const yes = /^(yes|y|confirm|proceed|go ahead|do it|ok|okay)\b/.test(normalizedMessage);
+      const no = /^(no|n|cancel|stop|abort|not now)\b/.test(normalizedMessage);
+      if (yes) {
+        const ps = this.context.pendingSwap;
+        this.context.pendingSwap = undefined;
+        // Force confirm flag on ActionBrain by appending a hint
+        return {
+          message: `Proceeding to execute your swap of ${ps.amount} SEI to USDC...`,
+          success: true,
+          intent: IntentType.SYMPHONY_SWAP,
+          confidence: 0.95,
+          data: { confirmSwap: true, swapParams: ps }
+        };
+      }
+      if (no) {
+        this.context.pendingSwap = undefined;
+        return {
+          message: `✅ Cancelled. No swap executed.`,
+          success: true,
+          intent: IntentType.SYMPHONY_SWAP,
+          confidence: 0.9
+        };
+      }
+      // Remind user
+      return {
+        message: `⏳ **Pending swap**\nAmount: ${this.context.pendingSwap.amount} SEI → Min Out: ${this.context.pendingSwap.minOut} USDC\nSay "Yes" to proceed or "Cancel" to abort.`,
+        success: false,
+        intent: IntentType.SYMPHONY_SWAP,
+        confidence: 0.7
+      };
+    }
+
+    // Emotional support heuristic for trading frustration
+    if (/\b(i\s*am|i'm|im)\b.*(not feeling|sad|down|bad|loss|losing|hurt|frustrat|depress|anxious|worried|stressed)/i.test(normalizedMessage) && /trade|trading|position|market|sei/i.test(normalizedMessage)) {
+      return {
+        message: `I hear you. Trading can be rough—especially on Sei where things move fast. Do you want to break down the last trade together (entry, exit, size) and see what to adjust next time? I can also review recent performance and suggest safer position sizing.`,
+        success: true,
+        intent: IntentType.CONVERSATION,
+        confidence: 0.9,
+        suggestions: [
+          'Run a quick post-trade review',
+          'Check my recent trading stats',
+          'Suggest safer sizing for my next trade'
+        ]
+      };
+    }
+
     // Check if there's a pending transfer
     if (!this.context.pendingTransfer) {
       return null;
@@ -340,6 +399,13 @@ export class ChatBrain {
     if (actionResponse.data?.pendingTransfer) {
       this.context.pendingTransfer = {
         ...actionResponse.data.pendingTransfer,
+        timestamp: new Date()
+      };
+    }
+    // Store pending swap if present
+    if (actionResponse.data?.pendingSwap) {
+      this.context.pendingSwap = {
+        ...actionResponse.data.pendingSwap,
         timestamp: new Date()
       };
     }
