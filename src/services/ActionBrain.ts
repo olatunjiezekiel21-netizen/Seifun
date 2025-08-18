@@ -737,9 +737,9 @@ export class ActionBrain {
     if (message.includes('sei') && message.includes('usdc')) {
       if (message.includes('sei for usdc') || message.includes('sei to usdc')) {
         entities.tokenIn = '0x0'; // Native SEI
-        entities.tokenOut = '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'; // USDC on Sei (example)
+        entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1';
       } else if (message.includes('usdc for sei') || message.includes('usdc to sei')) {
-        entities.tokenIn = '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'; // USDC
+        entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1';
         entities.tokenOut = '0x0'; // Native SEI
       }
     }

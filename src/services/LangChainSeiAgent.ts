@@ -3,6 +3,7 @@ import { createSeiTools } from './SeiLangChainTools';
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { RAGService } from './RAGService';
 import { QdrantService } from './QdrantService';
+import { LocalLLMService } from './LocalLLMService';
 
 export interface LangChainResponse {
   message: string;
@@ -45,7 +46,35 @@ export class LangChainSeiAgent {
   
   async processMessage(input: string): Promise<LangChainResponse> {
     try {
+<<<<<<< HEAD
       if (!this.isInitialized) await this.initialize();
+=======
+      // Initialize if not already done
+      if (!this.isInitialized) {
+        await this.initialize();
+      }
+      
+      // If no OpenAI key, try local LLM (Ollama)
+      if (!this.openAIApiKey || !this.model) {
+        try {
+          const walletInfo = await this.getWalletInfo();
+          const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei.\n\nWALLET:\n${walletInfo}\n\nCONTEXT:\n${input}\n\nReply briefly and helpfully.`;
+          const text = await LocalLLMService.generate(prompt);
+          return { message: text, success: true, confidence: 0.7 };
+        } catch (e) {
+          console.log('Local LLM unavailable:', e?.message || e);
+          return {
+            message: "I need an LLM backend (Ollama or OpenAI) to be fully intelligent. Basic commands are still available.",
+            success: false,
+            confidence: 0.3
+          };
+        }
+      }
+      
+      console.log('✅ OpenAI API key found - using full intelligence');
+      
+      // Get real-time wallet information
+>>>>>>> 75392e0 (Add image upload and local LLM fallback for Seilor assistant)
       const walletInfo = await this.getWalletInfo();
 
       // Retrieve RAG context

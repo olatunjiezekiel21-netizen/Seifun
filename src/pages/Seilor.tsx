@@ -11,7 +11,8 @@ import {
   RefreshCw,
   Menu,
   X,
-  Zap
+  Zap,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { chatBrain } from '../services/ChatBrain';
@@ -48,7 +49,12 @@ const Seilor = () => {
     timestamp: Date;
   }>>([]);
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number; usdc: string; usdcUsd: number } | null>(null);
+<<<<<<< HEAD
   const [isProcessingAction, setIsProcessingAction] = useState(false);
+=======
+  const [attachedImage, setAttachedImage] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+>>>>>>> 75392e0 (Add image upload and local LLM fallback for Seilor assistant)
 
   const { isConnected, address } = useReownWallet();
 
@@ -463,7 +469,24 @@ const Seilor = () => {
                     
                     {/* Chat Input */}
                     <div className="space-y-3">
-                      <div className="flex space-x-3">
+                      <div className="flex space-x-3 items-center">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="p-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70"
+                          title="Attach image"
+                        >
+                          <ImageIcon className="w-5 h-5" />
+                        </button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0] || null;
+                            setAttachedImage(f || null);
+                          }}
+                        />
                         <input
                           type="text"
                           value={aiChat}
@@ -481,6 +504,9 @@ const Seilor = () => {
                           <Send className="w-5 h-5" />
                         </button>
                       </div>
+                      {attachedImage && (
+                        <div className="text-xs text-slate-300">Attached: {attachedImage.name}</div>
+                      )}
                       {/* Debug Test Button */}
                       <button
                         onClick={testChatFunction}
