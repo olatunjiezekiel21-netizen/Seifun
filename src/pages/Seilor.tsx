@@ -107,18 +107,7 @@ const Seilor = () => {
     }
   };
 
-  // Test function to debug chat functionality
-  const testChatFunction = async () => {
-    console.log('🧪 Testing chat functionality directly...');
-    try {
-      const testResponse = await chatBrain.processMessage("Hello, test message");
-      console.log('✅ Chat test successful:', testResponse);
-      alert(`Chat test successful! Response: ${testResponse.message.substring(0, 100)}...`);
-    } catch (error) {
-      console.error('❌ Chat test failed:', error);
-      alert(`Chat test failed: ${error.message}`);
-    }
-  };
+  // Removed test chat function for production cleanliness
 
   // Enhanced AI chat handler using Chat Brain system
   const handleAiChat = async () => {
@@ -387,10 +376,6 @@ const Seilor = () => {
               {/* Show/Hide Sidebar Button when collapsed */}
               {sidebarCollapsed && (
                 <div className="p-4 border-b border-slate-700/50 space-y-2">
-                  {/* Version Indicator */}
-                  <div className="text-xs text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">
-                    ✅ Latest Version: Chat Debug + Collapsible UI (v2.0)
-                  </div>
                   <button
                     onClick={() => setSidebarCollapsed(false)}
                     className="flex items-center space-x-2 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
@@ -398,14 +383,6 @@ const Seilor = () => {
                   >
                     <Menu className="w-4 h-4" />
                     <span className="text-sm">Show Menu</span>
-                  </button>
-                  {/* Debug Test Button */}
-                  <button
-                    onClick={testChatFunction}
-                    className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors text-sm"
-                    title="Test Chat Function"
-                  >
-                    🧪 Test Chat
                   </button>
                 </div>
               )}
@@ -539,13 +516,6 @@ const Seilor = () => {
                       {attachedImage && (
                         <div className="text-xs text-slate-300 truncate">Attached: {attachedImage.name}</div>
                       )}
-                      {/* Debug Test Button */}
-                      <button
-                        onClick={testChatFunction}
-                        className="w-full px-4 py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition-colors text-sm border border-yellow-500/30"
-                      >
-                        🧪 Test Chat Function (Debug)
-                      </button>
                     </div>
                   </div>
                 </div>

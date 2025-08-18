@@ -857,23 +857,35 @@ export class ActionBrain {
   private extractSwapEntities(message: string): Partial<ExtractedEntities> {
     const entities: Partial<ExtractedEntities> = {};
 
-    // Extract amount
+    // Extract amount first
     const amt = message.match(/(\d+(?:\.\d+)?)\s*(sei|usdc)?/i);
     if (amt) {
       entities.amount = parseFloat(amt[1]);
     }
     
-    // Extract token pairs for swapping
-    if (message.includes('sei') && message.includes('usdc')) {
-      if (message.includes('sei for usdc') || message.includes('sei to usdc')) {
-        entities.tokenIn = '0x0'; // Native SEI
-        entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1';
-      } else if (message.includes('usdc for sei') || message.includes('usdc to sei')) {
-        entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1';
-        entities.tokenOut = '0x0'; // Native SEI
+    const lower = message.toLowerCase()
+    const mentionsSei = /\bsei\b/.test(lower)
+    const mentionsUsdc = /\busdc\b/.test(lower)
+
+    // Decide directions based on mentions
+    if (mentionsSei && mentionsUsdc) {
+      if (/sei\s*(to|for)\s*usdc/.test(lower)) {
+        entities.tokenIn = '0x0'
+        entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'
+      } else if (/usdc\s*(to|for)\s*sei/.test(lower)) {
+        entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'
+        entities.tokenOut = '0x0'
       }
+    } else if (mentionsSei && !mentionsUsdc) {
+      // Default other side to USDC if not specified
+      entities.tokenIn = '0x0'
+      entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'
+    } else if (!mentionsSei && mentionsUsdc) {
+      // Default other side to SEI
+      entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'
+      entities.tokenOut = '0x0'
     }
-    
+
     return entities;
   }
   
