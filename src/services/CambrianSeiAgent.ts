@@ -249,13 +249,14 @@ export class CambrianSeiAgent implements AgentCapabilities {
       if (!res.ok) throw new Error(`Vortex quote error ${res.status}`)
       const data = await res.json()
       // Normalize fields (best-effort)
-      const outputAmount = data.outputAmount || data.amountOut || data.out || '0'
-      const priceImpact = data.priceImpact || data.impact || 0
+      const outputRaw = data.outputAmount ?? data.amountOut ?? data.out
+      const outputAmount = outputRaw ? String(outputRaw) : '0'
+      const priceImpact = Number(data.priceImpact ?? data.impact ?? 0) || 0
       return {
-        inputAmount: params.amount,
+        inputAmount: String(params.amount),
         outputAmount,
-        priceImpact: Number(priceImpact),
-        route: data.route || data.path || []
+        priceImpact,
+        route: Array.isArray(data.route) ? data.route : (Array.isArray(data.path) ? data.path : [])
       }
     } catch (e) {
       console.warn('Vortex quote failed, falling back to Symphony:', (e as any)?.message || e)
@@ -270,9 +271,9 @@ export class CambrianSeiAgent implements AgentCapabilities {
       );
       
       return {
-        inputAmount: params.amount,
-        outputAmount: route.outputAmount,
-        priceImpact: route.priceImpact,
+        inputAmount: String(params.amount),
+        outputAmount: String(route.outputAmount || '0'),
+        priceImpact: Number(route.priceImpact || 0),
         route: route.path
       };
     } catch (error) {
