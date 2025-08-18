@@ -1002,7 +1002,10 @@ export class ActionBrain {
         amount: amount.toString()
       });
 
-<<<<<<< HEAD
+      // Extract tx hash for logging if present in result message
+      const match = /TX:\s*(0x[a-fA-F0-9]{64})/i.exec(resultMsg);
+      const txHash = match ? match[1] : undefined;
+
       // Tx audit log (best-effort)
       try {
         fetch('/.netlify/functions/tx-log', {
@@ -1012,7 +1015,7 @@ export class ActionBrain {
             wallet: cambrianSeiAgent.getAddress(),
             action: 'swap',
             params: { tokenIn, tokenOut, amount, quote },
-            txHash: undefined,
+            txHash,
             status: 'success'
           })
         }).catch(() => {});
@@ -1028,27 +1031,11 @@ export class ActionBrain {
             minOut,
             priceImpact: priceImpactPct,
             slippageBps: 100,
-            txHash: undefined,
+            txHash,
             status: 'success'
           })
         }).catch(() => {});
       } catch {}
-=======
-      // Extract tx hash for logging
-      const match = /TX:\s*(0x[a-fA-F0-9]{64})/i.exec(resultMsg);
-      const txHash = match ? match[1] : '';
-      fetch('/.netlify/functions/tx-log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wallet: cambrianSeiAgent.getAddress(),
-          action: 'swap',
-          params: { tokenIn, tokenOut, amount, minOut },
-          txHash,
-          status: 'success'
-        })
-      }).catch(() => {});
->>>>>>> 3e4ac38 (Add token address resolution and transaction logging for token creation and swap)
 
       return {
         success: true,
