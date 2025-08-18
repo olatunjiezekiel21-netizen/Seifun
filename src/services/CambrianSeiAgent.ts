@@ -633,7 +633,7 @@ export class CambrianSeiAgent implements AgentCapabilities {
    */
   async stakeTokens(params: StakeParams): Promise<string> {
     try {
-      console.log(`🥩 Staking ${params.amount} SEI tokens on Sei Testnet...`);
+      console.log(`🥩 Staking ${params.amount} SEI tokens...`);
       
       // Check SEI balance
       const balance = await this.getBalance();
@@ -641,10 +641,15 @@ export class CambrianSeiAgent implements AgentCapabilities {
         throw new Error(`Insufficient SEI balance. Have: ${balance}, Need: ${params.amount}`);
       }
 
-      // TODO: Implement actual Silo staking contract interaction
-      // For now, return informative message about testnet status
-      return `🥩 Staking ${params.amount} SEI initiated!\n\n📝 Testnet Status: Silo protocol integration in development\n🔧 Currently testing on Sei Testnet (Chain ID: 1328)\n💰 Your SEI balance: ${balance} SEI\n\n⚠️ Note: This is a testnet implementation. Real staking will be available on mainnet.`;
-    } catch (error) {
+      const stakeAddress = ((process as any).env?.STAKING_CONTRACT_ADDRESS as string) || ((import.meta as any).env?.VITE_STAKING_CONTRACT_TESTNET as string) || ''
+      if (!stakeAddress) throw new Error('Missing staking contract address (set VITE_STAKING_CONTRACT_TESTNET)')
+      const code = await this.publicClient.getBytecode({ address: stakeAddress as any }).catch(() => null)
+      if (!code || code === '0x') throw new Error('Staking contract not found on this network')
+
+      const valueWei = BigInt(Math.floor(parseFloat(params.amount) * 1e18))
+      const hash = await this.walletClient.sendTransaction({ to: stakeAddress as any, value: valueWei })
+      return `✅ Staked ${params.amount} SEI successfully! TX: ${hash}`
+    } catch (error: any) {
       console.error('Error staking tokens:', error);
       throw new Error(`Staking failed: ${error.message}`);
     }

@@ -27,7 +27,13 @@ export enum IntentType {
   WALLET_INFO = 'wallet_info',
   // Token Transfer Operations
   SEND_TOKENS = 'send_tokens',
-  TRANSFER_CONFIRMATION = 'transfer_confirmation'
+  TRANSFER_CONFIRMATION = 'transfer_confirmation',
+  // NFT operations
+  NFT_BROWSE = 'nft_browse',
+  NFT_BUY = 'nft_buy',
+  // TODOs
+  TODO_ADD = 'todo_add',
+  TODO_LIST = 'todo_list'
 }
 
 // Entity Extraction Results
@@ -73,6 +79,14 @@ export class ActionBrain {
   public async recognizeIntent(message: string): Promise<IntentResult> {
     const normalizedMessage = message.toLowerCase().trim();
     const entities = this.extractEntities(message);
+    
+    // TODO intents
+    if (/\b(add|create|make)\b.*\b(todo|task)\b/.test(normalizedMessage)) {
+      return { intent: IntentType.TODO_ADD, confidence: 0.9, entities, rawMessage: message }
+    }
+    if (/(what are we doing today|today'?s todo|my tasks|list todos)/i.test(normalizedMessage)) {
+      return { intent: IntentType.TODO_LIST, confidence: 0.9, entities, rawMessage: message }
+    }
     
     // Send/Transfer Tokens Intent (HIGHEST PRIORITY)
     if (this.matchesPattern(normalizedMessage, [
@@ -420,6 +434,11 @@ export class ActionBrain {
           
         case IntentType.TRANSFER_CONFIRMATION:
           return await this.executeTransferConfirmation(intentResult);
+          
+        case IntentType.TODO_ADD:
+          return this.executeTodoAdd(intentResult);
+        case IntentType.TODO_LIST:
+          return this.executeTodoList(intentResult);
           
         default:
           return this.executeUnknown(intentResult);
@@ -1227,6 +1246,26 @@ export class ActionBrain {
       success: false,
       response: "Liquidity addition functionality - implementation in progress"
     };
+  }
+
+  private executeTodoAdd(intent: IntentResult): ActionResponse {
+    const m = intent.rawMessage
+    const match = m.match(/todo\s*[:\-]\s*(.*)$/i) || m.match(/add\s*(.*)\s*to\s*my\s*todo/i)
+    const task = match ? match[1].trim() : m.replace(/^(add|create|make)\s*(a\s*)?(todo|task)\s*/i, '').trim()
+    if (!task) return { success: false, response: 'Please specify the task. Example: add todo: review contracts' }
+    const key = 'seilor_todos'
+    const arr = JSON.parse(localStorage.getItem(key) || '[]')
+    arr.unshift({ id: Date.now(), task, completed: false, timestamp: new Date().toISOString() })
+    localStorage.setItem(key, JSON.stringify(arr))
+    return { success: true, response: `✅ Added to today\'s list: ${task}` }
+  }
+
+  private executeTodoList(intent: IntentResult): ActionResponse {
+    const key = 'seilor_todos'
+    const arr = JSON.parse(localStorage.getItem(key) || '[]')
+    if (!arr.length) return { success: true, response: 'No tasks yet. You can add one by saying: add todo: ...' }
+    const lines = arr.slice(0, 5).map((t: any, i: number) => `${i+1}. ${t.task}`)
+    return { success: true, response: `🗓️ **Today\'s Tasks**\n\n${lines.join('\n')}` }
   }
 }
 

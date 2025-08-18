@@ -48,6 +48,7 @@ const Seilor = () => {
     timestamp: Date;
   }>>([]);
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number; usdc: string; usdcUsd: number } | null>(null);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
 
   const { isConnected, address } = useReownWallet();
 
@@ -134,42 +135,32 @@ const Seilor = () => {
       console.log('📨 Adding user message to chat');
       return [...prev, userChatMessage];
     });
-    // Persist user message
     ChatMemoryService.append({ type: 'user', message: userMessage }).catch(() => {});
     
-    // Show typing indicator
     setIsTyping(true);
-    console.log('⏳ Showing typing indicator');
     
-    // Add a natural delay to simulate thinking
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Actionable hint: show processing pill for swaps/stakes
+    if (/\b(swap|stake|create token|add liquidity|burn)\b/i.test(userMessage)) setIsProcessingAction(true)
+    
+    await new Promise(resolve => setTimeout(resolve, 400));
     
     try {
-      console.log('🧠 Calling chatBrain.processMessage...');
-      // Process message through Chat Brain (which uses Action Brain)
       const response = await chatBrain.processMessage(userMessage);
-      console.log('✅ Chat Brain response received:', response);
-      
-      // Hide typing indicator
       setIsTyping(false);
+      setIsProcessingAction(false);
       
-      // Add AI response
       const aiResponse = {
         id: Date.now() + 1,
         type: 'assistant' as const,
         message: response.message,
         timestamp: new Date()
       };
-      setChatMessages(prev => {
-        console.log('🤖 Adding AI response to chat');
-        return [...prev, aiResponse];
-      });
-      // Persist assistant message
+      setChatMessages(prev => [...prev, aiResponse]);
       ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
       
-    } catch (error) {
-      console.error('❌ Chat Brain Error:', error);
+    } catch (error: any) {
       setIsTyping(false);
+      setIsProcessingAction(false);
       const errorMessage = {
         id: Date.now() + 1,
         type: 'assistant' as const,
@@ -180,7 +171,6 @@ const Seilor = () => {
       ChatMemoryService.append({ type: 'assistant', message: errorMessage.message }).catch(() => {});
     } finally {
       setLoading(false);
-      console.log('🏁 Chat processing complete');
     }
   };
 
@@ -431,6 +421,11 @@ const Seilor = () => {
                             <span className="text-sm text-slate-300">Seilor is typing...</span>
                           </div>
                         </div>
+                      </div>
+                    )}
+                    {isProcessingAction && (
+                      <div className="px-2 py-1 text-xs rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 inline-flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" /> Processing on-chain...
                       </div>
                     )}
                     <div ref={messagesEndRef} />

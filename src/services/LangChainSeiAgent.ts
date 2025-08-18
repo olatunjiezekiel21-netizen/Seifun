@@ -2,7 +2,6 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createSeiTools } from './SeiLangChainTools';
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { RAGService } from './RAGService';
-import { LocalLLMService } from './LocalLLMService';
 
 export interface LangChainResponse {
   message: string;
@@ -59,32 +58,8 @@ export class LangChainSeiAgent {
         console.warn('RAG retrieval failed or not configured:', e?.message || e);
       }
       
-      const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei Network. You have access to real wallet data and can perform actual blockchain operations.
-
-CURRENT WALLET STATUS:
-${walletInfo}
-
-RELEVANT CONTEXT (from knowledge base):
-${ragContext || 'No additional context available.'}
-
-PERSONALITY:
-- Be natural and conversational like ChatGPT
-- NEVER say "I don't quite understand" - always try to help
-- Be confident and knowledgeable about DeFi and crypto
-- Give specific, actionable responses
-- Be friendly but professional
-
-User Message: "${input}"
-
-Respond naturally and helpfully:`;
-
-      const text = await LocalLLMService.generate(prompt);
-      
-      return {
-        message: text,
-        success: true,
-        confidence: 0.95
-      };
+      const message = `Got it. ${input}`;
+      return { message, success: true, confidence: 0.8 };
       
     } catch (error: any) {
       console.error('LangChain processing error:', error);
