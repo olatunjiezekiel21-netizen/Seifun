@@ -822,13 +822,14 @@ export class ActionBrain {
     const entities: Partial<ExtractedEntities> = {};
     
     // Extract token pairs for swapping
-    if (message.includes('sei') && message.includes('usdc')) {
-      if (message.includes('sei for usdc') || message.includes('sei to usdc')) {
+    const usdcTestnet = (import.meta as any).env?.VITE_USDC_TESTNET || '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1'
+    if (/\bsei\b/.test(message) && /\busdc\b/.test(message)) {
+      if (/sei\s*(for|to)\s*usdc/.test(message)) {
         entities.tokenIn = '0x0'; // Native SEI
-        entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1';
-      } else if (message.includes('usdc for sei') || message.includes('usdc to sei')) {
-        entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1';
-        entities.tokenOut = '0x0'; // Native SEI
+        entities.tokenOut = usdcTestnet as any
+      } else if (/usdc\s*(for|to)\s*sei/.test(message)) {
+        entities.tokenIn = usdcTestnet as any
+        entities.tokenOut = '0x0';
       }
     }
     

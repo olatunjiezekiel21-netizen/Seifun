@@ -899,8 +899,8 @@ export class CambrianSeiAgent implements AgentCapabilities {
       outputs: [{ name: '', type: 'address' }]
     }];
     const decimals = params.decimals ?? 18;
-    // Default factory fee if not provided
-    const defaultFeeSei = params.valueSei ?? (mode === 'mainnet' ? '0.2' : '2');
+    // Default factory fee if not provided (testnet may be zero)
+    const defaultFeeSei = params.valueSei ?? (mode === 'mainnet' ? '0.2' : '0');
     const valueWei = BigInt(Math.floor(parseFloat(defaultFeeSei) * 1e18));
     const hash = await this.walletClient.writeContract({
       address: FACTORY_ADDRESS as any,
