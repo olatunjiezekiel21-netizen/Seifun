@@ -479,12 +479,31 @@ export class CambrianSeiAgent implements AgentCapabilities {
         { name: 'totalSupply', type: 'uint256' }
       ],
       outputs: [{ name: '', type: 'address' }]
+    }, {
+      type: 'function',
+      name: 'creationFee',
+      stateMutability: 'view',
+      inputs: [],
+      outputs: [{ name: '', type: 'uint256' }]
     }];
     const decimals = params.decimals ?? 18;
-    // Default fee: 0 on testnet, allow override
+    // Query creation fee if available
+    let creationFeeWei: bigint | null = null
+    try {
+      creationFeeWei = await this.publicClient.readContract({ address: FACTORY_ADDRESS as any, abi: abi as any, functionName: 'creationFee' }) as any
+    } catch {}
+
     const defaultFeeSei = mode === 'mainnet' ? '0.2' : '2';
-    const feeSei = params.valueSei ?? defaultFeeSei;
-    const valueWei = feeSei ? BigInt(Math.floor(parseFloat(feeSei) * 1e18)) : 0n;
+    const feeSei = params.valueSei ?? (creationFeeWei ? (Number(creationFeeWei) / 1e18).toString() : defaultFeeSei);
+    const valueWei = creationFeeWei ?? (feeSei ? BigInt(Math.floor(parseFloat(feeSei) * 1e18)) : 0n);
+
+    // Simulate to catch reverts
+    try {
+      await this.publicClient.simulateContract({ address: FACTORY_ADDRESS as any, abi: abi as any, functionName: 'createToken', args: [params.name, params.symbol, decimals, BigInt(params.totalSupply)], value: valueWei } as any)
+    } catch (e: any) {
+      throw new Error(`Factory simulation failed: ${e?.shortMessage || e?.message || e}`)
+    }
+
     const hash = await this.walletClient.writeContract({
       address: FACTORY_ADDRESS as any,
       abi: abi as any,

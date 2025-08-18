@@ -877,12 +877,10 @@ export class ActionBrain {
         entities.tokenOut = '0x0'
       }
     } else if (mentionsSei && !mentionsUsdc) {
-      // Default other side to USDC if not specified
+      // Ask for clarification instead of assuming
       entities.tokenIn = '0x0'
-      entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
     } else if (!mentionsSei && mentionsUsdc) {
-      // Default other side to SEI
-      entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
+      // Ask for clarification instead of assuming
       entities.tokenOut = '0x0'
     }
 
@@ -1003,11 +1001,20 @@ export class ActionBrain {
     try {
       const { amount, tokenIn, tokenOut, confirm } = intent.entities as any;
       
-      if (!amount || !tokenIn || !tokenOut) {
+      if (!amount) {
         return {
           success: false,
-          response: `❌ **Missing swap parameters**\n\nPlease specify: amount, input token, and output token.\n\n**Example**: "Swap 10 SEI for USDC"`
+          response: `❌ **Missing swap parameters**\n\nPlease specify an amount.\n**Example**: "Swap 10 SEI for USDC"`
         };
+      }
+
+      if (!tokenIn || !tokenOut) {
+        const need = !tokenIn && !tokenOut ? 'input and output tokens' : !tokenIn ? 'input token (from)' : 'output token (to)'
+        return {
+          success: true,
+          response: `I can do that. Which ${need}? For example: "from SEI to USDC" or "from USDC to SEI".`,
+          followUp: ['from SEI to USDC', 'from USDC to SEI']
+        }
       }
 
       // 1) Quote first
