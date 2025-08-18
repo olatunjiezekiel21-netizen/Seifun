@@ -99,7 +99,7 @@ export interface AgentCapabilities {
   getPositions: () => Promise<any[]>;
 
   // NEW: Advanced Token Management
-  createToken: (params: TokenCreationParams) => Promise<string>;
+  createToken: (params: TokenCreationParams & { decimals?: number; valueSei?: string }) => Promise<{ txHash: string }>;
   addLiquidity: (params: LiquidityParams) => Promise<string>;
   removeLiquidity: (params: LiquidityParams) => Promise<string>;
   lockLiquidity: (params: LiquidityLockParams) => Promise<string>;
