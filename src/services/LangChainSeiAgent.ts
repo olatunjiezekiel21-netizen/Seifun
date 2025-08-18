@@ -3,7 +3,6 @@ import { createSeiTools } from './SeiLangChainTools';
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { RAGService } from './RAGService';
 import { QdrantService } from './QdrantService';
-import { LocalLLMService } from './LocalLLMService';
 
 export interface LangChainResponse {
   message: string;
@@ -18,38 +17,11 @@ export class LangChainSeiAgent {
   private isInitialized = false;
   private tools = createSeiTools();
   
-<<<<<<< HEAD
   constructor() {}
   
   private async initialize() {
     if (this.isInitialized) return;
     this.isInitialized = true;
-=======
-  constructor(private openAIApiKey?: string) {
-    // Initialize with a default key or environment variable
-    this.openAIApiKey = openAIApiKey || (import.meta as any).env?.VITE_OPENAI_API_KEY || (process as any).env?.OPENAI_API_KEY;
-    console.log('🔑 LangChain Agent initialized with API key:', this.openAIApiKey ? 'Present' : 'Missing');
-  }
-  
-  private async initialize() {
-    if (this.isInitialized) return;
-    
-    try {
-      // Create LangChain model
-      this.model = new ChatOpenAI({
-        model: "gpt-3.5-turbo",
-        temperature: 0.3,
-        apiKey: this.openAIApiKey,
-        maxTokens: 500
-      } as any);
-      
-      this.isInitialized = true;
-      
-    } catch (error: any) {
-      console.error('Failed to initialize LangChain agent:', error?.message || error);
-      throw new Error(`LangChain initialization failed: ${error.message || error}`);
-    }
->>>>>>> 45081cf (Fix TypeScript type issues in LangChainSeiAgent with type assertions)
   }
 
   // Get real-time wallet information
@@ -73,41 +45,12 @@ export class LangChainSeiAgent {
   
   async processMessage(input: string): Promise<LangChainResponse> {
     try {
-<<<<<<< HEAD
       if (!this.isInitialized) await this.initialize();
-=======
-      // Initialize if not already done
-      if (!this.isInitialized) {
-        await this.initialize();
-      }
-      
-      // If no OpenAI key, try local LLM (Ollama)
-      if (!this.openAIApiKey || !this.model) {
-        try {
-          const walletInfo = await this.getWalletInfo();
-          const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei.\n\nWALLET:\n${walletInfo}\n\nCONTEXT:\n${input}\n\nReply briefly and helpfully.`;
-          const text = await LocalLLMService.generate(prompt);
-          return { message: text, success: true, confidence: 0.7 };
-        } catch (e: any) {
-          console.log('Local LLM unavailable:', e?.message || e);
-          return {
-            message: "I need an LLM backend (Ollama or OpenAI) to be fully intelligent. Basic commands are still available.",
-            success: false,
-            confidence: 0.3
-          };
-        }
-      }
-      
-      console.log('✅ OpenAI API key found - using full intelligence');
-      
-      // Get real-time wallet information
->>>>>>> 75392e0 (Add image upload and local LLM fallback for Seilor assistant)
       const walletInfo = await this.getWalletInfo();
 
-      // Retrieve RAG context
+      // Retrieve RAG context (Qdrant preferred, Atlas fallback)
       let ragContext = '';
       try {
-        // Prefer Qdrant first
         const qdrant = await QdrantService.query(input, 5);
         if (qdrant && qdrant.length > 0) {
           ragContext = qdrant.map((p, i) => `Qdrant ${i+1} (score ${p.score?.toFixed(3) ?? ''}):\n${p.payload?.text || ''}`).join('\n\n');
@@ -121,56 +64,9 @@ export class LangChainSeiAgent {
         console.warn('RAG retrieval failed or not configured:', e?.message || e);
       }
       
-<<<<<<< HEAD
       const message = `Got it. ${input}`;
       return { message, success: true, confidence: 0.8 };
       
-=======
-      // Create an intelligent, context-aware prompt
-      const prompt = `You are Seilor 0, an intelligent AI assistant for DeFi on Sei Network. You have access to real wallet data and can perform actual blockchain operations.
-
-CURRENT WALLET STATUS:
-${walletInfo}
-
-RELEVANT CONTEXT (from knowledge base):
-${ragContext || 'No additional context available.'}
-
-PERSONALITY:
-- Be natural and conversational like ChatGPT
-- NEVER say "I don't quite understand" - always try to help
-- Be confident and knowledgeable about DeFi and crypto
-- Give specific, actionable responses
-- Be friendly but professional
-
-CAPABILITIES:
-- Check real SEI and USDC balances (you have the data above)
-- Help with token swaps, transfers, and DeFi operations
-- Answer questions about Sei Network and DeFi
-- Provide trading advice and market insights
-- Handle any conversation naturally
-
-RESPONSE RULES:
-- Keep responses 1-3 sentences unless explaining something complex
-- Always acknowledge what the user asked about
-- If asking about balances, use the REAL data above
-- If asking about transactions, offer to help execute them
-- If confused, ask clarifying questions instead of saying "I don't understand"
-- Prefer using the provided RELEVANT CONTEXT; cite it implicitly by referencing facts, not by saying "according to context".
-
-User Message: "${input}"
-
-Respond naturally and helpfully:`;
-
-      // Process message through LangChain model
-      const result = await (this.model as ChatOpenAI).invoke(prompt);
-      
-      return {
-        message: (result as any).content as string,
-        success: true,
-        confidence: 0.95
-      };
-      
->>>>>>> 45081cf (Fix TypeScript type issues in LangChainSeiAgent with type assertions)
     } catch (error: any) {
       console.error('LangChain processing error:', error);
       return {
@@ -182,11 +78,6 @@ Respond naturally and helpfully:`;
   }
 
   private extractToolsUsed(result: any): string[] {
-<<<<<<< HEAD
-=======
-    // Extract which tools were used from the agent result
-    // This is useful for debugging and analytics
->>>>>>> 45081cf (Fix TypeScript type issues in LangChainSeiAgent with type assertions)
     if ((result as any).intermediateSteps) {
       return (result as any).intermediateSteps.map((step: any) => step.action?.tool || 'unknown');
     }
