@@ -24,6 +24,22 @@ export class LangChainSeiAgent {
     this.isInitialized = true;
   }
 
+  private isActionableIntent(input: string): boolean {
+    const s = input.toLowerCase();
+    if (/\b(0x[a-f0-9]{40})\b/i.test(s)) return true; // token address => scan
+    const patterns = [
+      /\b(swap|exchange|trade)\b/,
+      /\b(create|deploy)\b.*\btoken\b/,
+      /\b(burn)\b.*\btoken\b/,
+      /\b(add|provide)\b.*\bliquidity\b/,
+      /\b(stake|unstake|redelegate|delegate|claim)\b/,
+      /\b(lend|borrow|repay)\b/,
+      /\b(open|close)\b.*\bposition\b/,
+      /\b(send|transfer)\b.*\bsei|0x/,
+    ];
+    return patterns.some((p) => p.test(s));
+  }
+
   // Get real-time wallet information
   private async getWalletInfo(): Promise<string> {
     try {
@@ -63,9 +79,43 @@ export class LangChainSeiAgent {
       } catch (e: any) {
         console.warn('RAG retrieval failed or not configured:', e?.message || e);
       }
-      
-      const message = `Got it. ${input}`;
-      return { message, success: true, confidence: 0.8 };
+      // If the user intent looks actionable, prefer deterministic tools (fallback)
+      if (this.isActionableIntent(input)) {
+        return {
+          message: 'Using tools for precise execution…',
+          success: false,
+          confidence: 0.2
+        };
+      }
+
+      // Otherwise, use the LLM backend via serverless function
+      const prompt = [
+        'You are Seilor, a helpful AI for the Sei blockchain.',
+        'Be concise, natural, and practical. Avoid placeholders.',
+        '',
+        'WALLET:',
+        walletInfo,
+        '',
+        ragContext ? 'CONTEXT:\n' + ragContext : '',
+        '',
+        'USER:\n' + input
+      ].filter(Boolean).join('\n');
+
+      try {
+        const res = await fetch('/.netlify/functions/llm-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        if (!res.ok) {
+          return { message: 'LLM is unavailable right now. I can still run tools for you.', success: false, confidence: 0.2 };
+        }
+        const data = await res.json();
+        const text = (data && (data.text as string)) || 'Okay.';
+        return { message: text, success: true, confidence: 0.8 };
+      } catch (e: any) {
+        return { message: 'LLM backend error. Switching to tools.', success: false, confidence: 0.2 };
+      }
       
     } catch (error: any) {
       console.error('LangChain processing error:', error);
