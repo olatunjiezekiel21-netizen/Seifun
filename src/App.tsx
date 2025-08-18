@@ -8,6 +8,8 @@ import SafeChecker from './pages/SafeChecker';
 import Seilor from './pages/Seilor';
 import DevPlus from './pages/DevPlus';
 import Landing from './pages/Landing';
+import Docs from './pages/Docs';
+import RealTimeChart from './components/RealTimeChart';
 
 function App() {
   return (
@@ -54,6 +56,20 @@ function App() {
             <div className="min-h-screen app-bg-primary">
               <AppHeaderSafe />
               <DevPlus />
+              <AppFooter />
+            </div>
+          } />
+          <Route path="/app/docs" element={
+            <div className="min-h-screen app-bg-primary">
+              <AppHeaderSafe />
+              <Docs />
+              <AppFooter />
+            </div>
+          } />
+          <Route path="/app/charts" element={
+            <div className="min-h-screen app-bg-primary">
+              <AppHeaderSafe />
+              <RealTimeChart />
               <AppFooter />
             </div>
           } />
