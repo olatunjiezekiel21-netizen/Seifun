@@ -5,6 +5,13 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   base: '/', // Root path for Netlify deployment
+  resolve: {
+    alias: {
+      // Fix Netlify build: some plugins require('uniqBy')
+      // Map it to lodash.uniqby implementation
+      'uniqBy': 'lodash.uniqby'
+    }
+  },
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
