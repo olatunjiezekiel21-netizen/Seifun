@@ -295,60 +295,7 @@ export class CambrianSeiAgent implements AgentCapabilities {
     }
   }
 
-  /**
-   * Create a new token on Sei Testnet - REAL FUNCTIONALITY!
-   */
-  async createToken(params: TokenCreationParams): Promise<string> {
-    try {
-      console.log(`🚀 Creating new token: ${params.name} (${params.symbol}) on Sei Testnet...`);
-      
-      // Basic ERC-20 token contract ABI
-      const tokenABI = [
-        {
-          "inputs": [
-            {"name": "name", "type": "string"},
-            {"name": "symbol", "type": "string"},
-            {"name": "decimals", "type": "uint8"},
-            {"name": "totalSupply", "type": "uint256"}
-          ],
-          "stateMutability": "nonpayable",
-          "type": "constructor"
-        },
-        {
-          "inputs": [{"name": "account", "type": "address"}],
-          "name": "balanceOf",
-          "outputs": [{"name": "", "type": "uint256"}],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {"name": "to", "type": "address"},
-            {"name": "amount", "type": "uint256"}
-          ],
-          "name": "transfer",
-          "outputs": [{"name": "", "type": "bool"}],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        }
-      ];
-
-      const decimals = params.decimals || 18;
-      const totalSupply = parseEther(params.totalSupply);
-
-      // Deploy token contract
-      const hash = await this.walletClient.deployContract({
-        abi: tokenABI,
-        bytecode: '0x...', // Simplified bytecode for demo
-        args: [params.name, params.symbol, decimals, totalSupply]
-      });
-
-      return `✅ Token created successfully on Sei Testnet!\n\n📝 Token Details:\n• Name: ${params.name}\n• Symbol: ${params.symbol}\n• Total Supply: ${params.totalSupply}\n• Decimals: ${decimals}\n\n🔗 Transaction: ${hash}\n🌐 Explorer: https://testnet.sei.io/tx/${hash}`;
-    } catch (error) {
-      console.error('Error creating token:', error);
-      throw new Error(`Token creation failed: ${error.message}`);
-    }
-  }
+  // (Removed obsolete demo createToken; factory-based createToken is implemented below)
 
   /**
    * Add liquidity to Symphony DEX - REAL TESTNET FUNCTIONALITY!
