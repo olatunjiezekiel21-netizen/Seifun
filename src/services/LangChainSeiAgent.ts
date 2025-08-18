@@ -17,12 +17,19 @@ export class LangChainSeiAgent {
   private isInitialized = false;
   private tools = createSeiTools();
   
-<<<<<<< HEAD
-  constructor() {}
+  constructor() {
+    // No client-side secrets; all LLM calls go through serverless
+  }
   
   private async initialize() {
     if (this.isInitialized) return;
-    this.isInitialized = true;
+    try {
+      // Placeholder for any future client-side init (none needed now)
+      this.isInitialized = true;
+    } catch (error: any) {
+      console.error('Failed to initialize LangChain agent:', error?.message || error);
+      throw new Error(`LangChain initialization failed: ${error.message || error}`);
+    }
   }
 
   private isActionableIntent(input: string): boolean {
@@ -39,21 +46,6 @@ export class LangChainSeiAgent {
       /\b(send|transfer)\b.*\bsei|0x/,
     ];
     return patterns.some((p) => p.test(s));
-=======
-  constructor() {
-    // No client-side secrets; all LLM calls go through serverless
-  }
-  
-  private async initialize() {
-    if (this.isInitialized) return;
-    try {
-      // Placeholder for any future client-side init (none needed now)
-      this.isInitialized = true;
-    } catch (error: any) {
-      console.error('Failed to initialize LangChain agent:', error?.message || error);
-      throw new Error(`LangChain initialization failed: ${error.message || error}`);
-    }
->>>>>>> 257647c (Checkpoint before follow-up message)
   }
 
   // Get real-time wallet information
@@ -77,16 +69,12 @@ export class LangChainSeiAgent {
   
   async processMessage(input: string): Promise<LangChainResponse> {
     try {
-<<<<<<< HEAD
-      if (!this.isInitialized) await this.initialize();
-=======
       // Initialize if not already done
       if (!this.isInitialized) {
         await this.initialize();
       }
       
       // Get real-time wallet information
->>>>>>> 257647c (Checkpoint before follow-up message)
       const walletInfo = await this.getWalletInfo();
 
       // Retrieve RAG context (Qdrant preferred, Atlas fallback)
@@ -126,7 +114,6 @@ export class LangChainSeiAgent {
         'USER:\n' + input
       ].filter(Boolean).join('\n');
 
-<<<<<<< HEAD
       try {
         const res = await fetch('/.netlify/functions/llm-generate', {
           method: 'POST',
@@ -145,50 +132,6 @@ export class LangChainSeiAgent {
       
     } catch (error: any) {
       console.error('LangChain processing error:', error);
-=======
-RELEVANT CONTEXT (from knowledge base):
-${ragContext || 'No additional context available.'}
-
-PERSONALITY:
-- Be natural and conversational like ChatGPT
-- NEVER say "I don't quite understand" - always try to help
-- Be confident and knowledgeable about DeFi and crypto
-- Give specific, actionable responses
-- Be friendly but professional
-
-CAPABILITIES:
-- Check real SEI and USDC balances (you have the data above)
-- Help with token swaps, transfers, and DeFi operations
-- Answer questions about Sei Network and DeFi
-- Provide trading advice and market insights
-- Handle any conversation naturally
-
-RESPONSE RULES:
-- Keep responses 1-3 sentences unless explaining something complex
-- Always acknowledge what the user asked about
-- If asking about balances, use the REAL data above
-- If asking about transactions, offer to help execute them
-- If confused, ask clarifying questions instead of saying "I don't understand"
-- Prefer using the provided RELEVANT CONTEXT; cite it implicitly by referencing facts, not by saying "according to context".
-
-User Message: "${input}"
-
-Respond naturally and helpfully:`;
-
-      // Generate via serverless (Ollama preferred, OpenAI fallback). No client-side secrets.
-      const text = await LocalLLMService.generate(prompt);
-      
-      return {
-        message: text,
-        success: true,
-        confidence: 0.95
-      };
-      
-    } catch (error: any) {
-      console.error('LangChain processing error:', error);
-      
-      // Graceful fallback when no LLM backend is configured
->>>>>>> 257647c (Checkpoint before follow-up message)
       return {
         message: "I need an LLM backend (Ollama or OpenAI) to be fully intelligent. Basic commands are still available.",
         success: false,
@@ -198,10 +141,6 @@ Respond naturally and helpfully:`;
   }
 
   private extractToolsUsed(result: any): string[] {
-<<<<<<< HEAD
-=======
-    // Placeholder for future tool extraction
->>>>>>> 257647c (Checkpoint before follow-up message)
     if ((result as any).intermediateSteps) {
       return (result as any).intermediateSteps.map((step: any) => step.action?.tool || 'unknown');
     }
