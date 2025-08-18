@@ -23,6 +23,9 @@ export interface SwapParams {
 
 export interface StakeParams {
   amount: string;
+  action?: 'delegate' | 'undelegate' | 'redelegate';
+  validator?: Address;
+  newValidator?: Address; // for redelegate
 }
 
 export interface LendingParams {
@@ -634,21 +637,53 @@ export class CambrianSeiAgent implements AgentCapabilities {
   async stakeTokens(params: StakeParams): Promise<string> {
     try {
       console.log(`🥩 Staking ${params.amount} SEI tokens...`);
+      const action = params.action || 'delegate'
       
-      // Check SEI balance
       const balance = await this.getBalance();
       if (Number(balance) < Number(params.amount)) {
         throw new Error(`Insufficient SEI balance. Have: ${balance}, Need: ${params.amount}`);
       }
 
-      const stakeAddress = ((process as any).env?.STAKING_CONTRACT_ADDRESS as string) || ((import.meta as any).env?.VITE_STAKING_CONTRACT_TESTNET as string) || ''
-      if (!stakeAddress) throw new Error('Missing staking contract address (set VITE_STAKING_CONTRACT_TESTNET)')
-      const code = await this.publicClient.getBytecode({ address: stakeAddress as any }).catch(() => null)
-      if (!code || code === '0x') throw new Error('Staking contract not found on this network')
+      const precompile = '0x0000000000000000000000000000000000001005' as Address
+      const code = await this.publicClient.getBytecode({ address: precompile }).catch(() => null)
+      if (!code || code === '0x') throw new Error('Staking precompile not available on this network')
 
       const valueWei = BigInt(Math.floor(parseFloat(params.amount) * 1e18))
-      const hash = await this.walletClient.sendTransaction({ to: stakeAddress as any, value: valueWei })
-      return `✅ Staked ${params.amount} SEI successfully! TX: ${hash}`
+
+      // Minimal ABI for delegation via precompile (selector-based)
+      // Assuming standard function signatures for illustration:
+      // delegate(address validator) payable
+      // undelegate(address validator, uint256 amount)
+      // redelegate(address srcValidator, address dstValidator, uint256 amount)
+      if (action === 'delegate') {
+        if (!params.validator) throw new Error('Provide validator address')
+        const hash = await this.walletClient.writeContract({
+          address: precompile,
+          abi: [{ type: 'function', name: 'delegate', stateMutability: 'payable', inputs: [{ name: 'validator', type: 'address' }], outputs: [] }] as any,
+          functionName: 'delegate',
+          args: [params.validator],
+          value: valueWei
+        })
+        return `✅ Delegated ${params.amount} SEI to ${params.validator}. TX: ${hash}`
+      } else if (action === 'undelegate') {
+        if (!params.validator) throw new Error('Provide validator address')
+        const hash = await this.walletClient.writeContract({
+          address: precompile,
+          abi: [{ type: 'function', name: 'undelegate', stateMutability: 'nonpayable', inputs: [{ name: 'validator', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [] }] as any,
+          functionName: 'undelegate',
+          args: [params.validator, valueWei]
+        })
+        return `✅ Undelegated ${params.amount} SEI from ${params.validator}. TX: ${hash}`
+      } else {
+        if (!params.validator || !params.newValidator) throw new Error('Provide src and dst validator addresses')
+        const hash = await this.walletClient.writeContract({
+          address: precompile,
+          abi: [{ type: 'function', name: 'redelegate', stateMutability: 'nonpayable', inputs: [{ name: 'src', type: 'address' }, { name: 'dst', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [] }] as any,
+          functionName: 'redelegate',
+          args: [params.validator, params.newValidator, valueWei]
+        })
+        return `✅ Redelegated ${params.amount} SEI from ${params.validator} to ${params.newValidator}. TX: ${hash}`
+      }
     } catch (error: any) {
       console.error('Error staking tokens:', error);
       throw new Error(`Staking failed: ${error.message}`);
