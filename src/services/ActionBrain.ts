@@ -227,10 +227,11 @@ export class ActionBrain {
     
     // Symphony DEX Swap Intent
     if (this.matchesPattern(normalizedMessage, [
-      /swap.*\d+.*sei.*for.*usdc/,
-      /swap.*\d+.*usdc.*for.*sei/,
-      /exchange.*\d+.*tokens?/,
-      /trade.*\d+.*sei/,
+      /swap\s+\d+(?:\.\d+)?\s*(sei|usdc)?\s*(to|for)\s*(sei|usdc)/,
+      /swap.*\d+.*sei.*(for|to).*usdc/,
+      /swap.*\d+.*usdc.*(for|to).*sei/,
+      /exchange.*\d+.*(sei|usdc)/,
+      /trade.*\d+.*(sei|usdc)/,
       /symphony.*swap/,
       /dex.*swap/
     ])) {
@@ -936,9 +937,10 @@ export class ActionBrain {
   // Symphony DEX Swap Action
   private async executeSymphonySwap(intent: IntentResult): Promise<ActionResponse> {
     try {
-      const { amount, tokenIn, tokenOut } = intent.entities;
+      const { amount, tokenIn, tokenOut, seiAmount, tokenAmount } = intent.entities as any;
+      const effectiveAmount = (amount ?? seiAmount ?? tokenAmount) as number | undefined;
       
-      if (!amount || !tokenIn || !tokenOut) {
+      if (!effectiveAmount || !tokenIn || !tokenOut) {
         return {
           success: false,
           response: `❌ **Missing swap parameters**\n\nPlease specify: amount, input token, and output token.\n\n**Example**: "Swap 10 SEI for USDC"`
@@ -949,7 +951,7 @@ export class ActionBrain {
       const quote = await cambrianSeiAgent.getSwapQuote({
         tokenIn: tokenIn as any,
         tokenOut: tokenOut as any,
-        amount: amount.toString()
+        amount: String(effectiveAmount)
       });
 
       // 2) Guardrails
@@ -999,7 +1001,7 @@ export class ActionBrain {
       const resultMsg = await cambrianSeiAgent.swapTokens({
         tokenIn: tokenIn as any,
         tokenOut: tokenOut as any,
-        amount: amount.toString()
+        amount: String(effectiveAmount)
       });
 
       // Extract tx hash for logging if present in result message

@@ -82,37 +82,39 @@ export class ChatBrain {
       }
       
       // Step 2: Try LangChain AI Agent First (Enhanced Intelligence)
-      try {
-        console.log('🚀 Trying LangChain AI Agent...');
-        const langChainResult = await langChainSeiAgent.processMessage(userMessage);
-        
-        if (langChainResult.success) {
-          console.log('✅ LangChain agent handled the request successfully');
+      // But if the message seems actionable (swap/stake/create), skip straight to ActionBrain
+      const lcShouldRun = !/\b(swap|exchange|trade|stake|unstake|redelegate|delegate|claim|create\s+token|add\s+liquidity|burn|send|transfer)\b/i.test(userMessage)
+      if (lcShouldRun) {
+        try {
+          console.log('🚀 Trying LangChain AI Agent...');
+          const langChainResult = await langChainSeiAgent.processMessage(userMessage);
           
-          // Add assistant response to history
-          const assistantMessage: ChatMessage = {
-            id: Date.now() + 1,
-            type: 'assistant',
-            message: langChainResult.message,
-            timestamp: new Date(),
-            intent: IntentType.CONVERSATION,
-            confidence: langChainResult.confidence,
-            actionSuccess: true
-          };
-          this.conversationHistory.push(assistantMessage);
-          
-          this.context.sessionData!.successfulActions++;
-          
-          return {
-            message: langChainResult.message,
-            success: langChainResult.success,
-            intent: IntentType.CONVERSATION,
-            confidence: langChainResult.confidence,
-            suggestions: this.generateSuggestions(userMessage)
-          };
+          if (langChainResult.success) {
+            console.log('✅ LangChain agent handled the request successfully');
+            
+            const assistantMessage: ChatMessage = {
+              id: Date.now() + 1,
+              type: 'assistant',
+              message: langChainResult.message,
+              timestamp: new Date(),
+              intent: IntentType.CONVERSATION,
+              confidence: langChainResult.confidence,
+              actionSuccess: true
+            };
+            this.conversationHistory.push(assistantMessage);
+            this.context.sessionData!.successfulActions++;
+            
+            return {
+              message: langChainResult.message,
+              success: langChainResult.success,
+              intent: IntentType.CONVERSATION,
+              confidence: langChainResult.confidence,
+              suggestions: this.generateSuggestions(userMessage)
+            };
+          }
+        } catch (langChainError: any) {
+          console.log('⚠️ LangChain agent failed, falling back to ActionBrain:', langChainError?.message || langChainError);
         }
-      } catch (langChainError) {
-        console.log('⚠️ LangChain agent failed, falling back to ActionBrain:', langChainError.message);
       }
       
       // Step 3: Fallback to ActionBrain System
