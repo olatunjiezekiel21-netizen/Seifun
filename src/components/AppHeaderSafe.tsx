@@ -89,19 +89,19 @@ const AppHeaderSafe = () => {
               to="/app" 
               className={`app-nav-link ${isActive('/app') ? 'active' : ''}`}
             >
+              Home
+            </Link>
+            <Link 
+              to="/app/safechecker"
+              className={`app-nav-link ${isActive('/app/seilist') ? 'active' : ''}`}
+            >
               SafeChecker
             </Link>
             <Link 
-              to="/app/seilist"
-              className={`app-nav-link ${isActive('/app/seilist') ? 'active' : ''}`}
+              to="/app/launch" 
+              className={`app-nav-link ${isActive('/app/launch') ? 'active' : ''}`}
             >
-              SeiList
-            </Link>
-            <Link 
-              to="/app/seifun-launch" 
-              className={`app-nav-link ${isActive('/app/seifun-launch') ? 'active' : ''}`}
-            >
-              SeiFun Launch
+              Launch
             </Link>
             <Link 
               to="/app/seilor" 
@@ -116,16 +116,10 @@ const AppHeaderSafe = () => {
               Docs
             </Link>
             <Link 
-              to="/app/dev-plus" 
-              className={`app-nav-link ${isActive('/app/dev-plus') ? 'active' : ''}`}
+              to="/app/devplus" 
+              className={`app-nav-link ${isActive('/app/devplus') ? 'active' : ''}`}
             >
               Dev++
-            </Link>
-            <Link 
-              to="/app/charts" 
-              className={`app-nav-link ${isActive('/app/charts') ? 'active' : ''}`}
-            >
-              Charts
             </Link>
           </nav>
 
@@ -226,25 +220,25 @@ const AppHeaderSafe = () => {
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
+                Home
+              </Link>
+              <Link 
+                to="/app/safechecker"
+                className={`block px-4 py-2 rounded-lg transition-colors ${
+                  isActive('/app/safechecker') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 SafeChecker
               </Link>
               <Link 
-                to="/app/seilist"
+                to="/app/launch"
                 className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/seilist') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                  isActive('/app/launch') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                SeiList
-              </Link>
-              <Link 
-                to="/app/seifun-launch"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/seifun-launch') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                SeiFun Launch
+                Launch
               </Link>
               <Link 
                 to="/app/seilor"
@@ -265,22 +259,13 @@ const AppHeaderSafe = () => {
                 Docs
               </Link>
               <Link 
-                to="/app/dev-plus"
+                to="/app/devplus"
                 className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/dev-plus') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                  isActive('/app/devplus') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Dev++
-              </Link>
-              <Link 
-                to="/app/charts"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/charts') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Charts
               </Link>
             </nav>
           </div>

@@ -7,13 +7,14 @@ import SeiList from './pages/SeiList';
 import SafeChecker from './pages/SafeChecker';
 import Seilor from './pages/Seilor';
 import DevPlus from './pages/DevPlus';
-import RealTimeChart from './components/RealTimeChart';
+import Landing from './pages/Landing';
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
+          <Route path="/app" element={<Landing />} />
           <Route path="/" element={
             <div className="min-h-screen app-bg-primary">
               <AppHeaderSafe />
@@ -56,13 +57,7 @@ function App() {
               <AppFooter />
             </div>
           } />
-          <Route path="/app/charts" element={
-            <div className="min-h-screen app-bg-primary">
-              <AppHeaderSafe />
-              <RealTimeChart />
-              <AppFooter />
-            </div>
-          } />
+          {/* Charts route removed as charts are embedded within token views */}
         </Routes>
       </div>
     </Router>
