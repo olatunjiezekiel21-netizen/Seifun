@@ -907,6 +907,35 @@ export class ActionBrain {
       const maxSlippageBps = 100; // 1%
       const priceImpactPct = Number(quote.priceImpact || 0);
       if (priceImpactPct > 5) {
+        // Log advice and blocked trade (best-effort)
+        try {
+          fetch('/.netlify/functions/agent-feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              wallet: cambrianSeiAgent.getAddress(),
+              advice: `High price impact detected: ${priceImpactPct.toFixed(2)}%`,
+              caution: 'Swap blocked by guardrail (>5% impact). Consider smaller size or different pair.',
+              confidence_score: 0.9,
+              recommendation: 'Reduce amount or change token pair',
+              context: { amount, tokenIn, tokenOut, quote }
+            })
+          }).catch(() => {});
+          fetch('/.netlify/functions/trade-log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              wallet: cambrianSeiAgent.getAddress(),
+              dex: 'Symphony',
+              tokenIn, tokenOut,
+              amountIn: String(amount),
+              amountOut: String(quote?.outputAmount || ''),
+              priceImpact: priceImpactPct,
+              status: 'blocked',
+              reason: 'high_price_impact'
+            })
+          }).catch(() => {});
+        } catch {}
         return {
           success: false,
           response: `🚫 **High price impact (${priceImpactPct.toFixed(2)}%)**\nSwap refused by policy. Try a smaller amount or a different pair.`
@@ -924,11 +953,54 @@ export class ActionBrain {
         amount: amount.toString()
       });
 
+      // Tx audit log (best-effort)
+      try {
+        fetch('/.netlify/functions/tx-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet: cambrianSeiAgent.getAddress(),
+            action: 'swap',
+            params: { tokenIn, tokenOut, amount, quote },
+            txHash: undefined,
+            status: 'success'
+          })
+        }).catch(() => {});
+        fetch('/.netlify/functions/trade-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet: cambrianSeiAgent.getAddress(),
+            dex: 'Symphony',
+            tokenIn, tokenOut,
+            amountIn: String(amount),
+            amountOut: String(quote?.outputAmount || ''),
+            minOut,
+            priceImpact: priceImpactPct,
+            slippageBps: 100,
+            txHash: undefined,
+            status: 'success'
+          })
+        }).catch(() => {});
+      } catch {}
+
       return {
         success: true,
         response: `🔄 **Symphony DEX Swap**\nQuoted Out: ${quote.outputAmount} (impact ${priceImpactPct.toFixed(2)}%)\nMin Out (@1% slippage): ${minOut}\n${resultMsg}`
       };
     } catch (error) {
+      try {
+        fetch('/.netlify/functions/trade-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            wallet: cambrianSeiAgent.getAddress(),
+            dex: 'Symphony',
+            status: 'failed',
+            reason: String((error as any)?.message || error)
+          })
+        }).catch(() => {});
+      } catch {}
       return {
         success: false,
         response: `❌ **Swap Failed**: ${error.message}\n\n**💡 Try**: Checking your balance and token addresses`

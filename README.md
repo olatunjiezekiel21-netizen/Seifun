@@ -82,6 +82,20 @@ VITE_FACTORY_ADDRESS_TESTNET=0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F
 # Optional for enhanced features
 VITE_PINATA_API_KEY=your_pinata_key
 VITE_WEB3_STORAGE_TOKEN=your_web3_storage_token
+ 
+# Serverless (Netlify) — set in Netlify UI (Do NOT expose client-side)
+MONGODB_URI=your_mongodb_atlas_connection_string
+MONGODB_DB=seifu
+MONGODB_TX_COLLECTION=tx_logs
+MONGODB_TRADES_COLLECTION=user_trades
+MONGODB_FEEDBACK_COLLECTION=agent_feedback
+MONGODB_RAG_COLLECTION=rag_documents
+MONGODB_VECTOR_INDEX=seifun
+OPENAI_API_KEY=your_server_side_openai_key
+QDRANT_URL=https://your-qdrant
+QDRANT_API_KEY=your_qdrant_api_key
+QDRANT_COLLECTION=docs_vectors
+OLLAMA_URL=http://localhost:11434 # optional local LLM
 ```
 
 ## 🏗️ **Architecture**
@@ -143,6 +157,14 @@ const seiTestnet = {
 };
 ```
 
+### **Serverless Endpoints**
+- `/.netlify/functions/llm-generate` — LLM backend (Ollama preferred, OpenAI fallback)
+- `/.netlify/functions/tx-log` — Transaction audit logs to MongoDB (`tx_logs`)
+- `/.netlify/functions/trade-log` — User trades to MongoDB (`user_trades`)
+- `/.netlify/functions/agent-feedback` — Agent advice/feedback (`agent_feedback`)
+- `/.netlify/functions/qdrant-ingest|qdrant-query` — Qdrant RAG
+- `/.netlify/functions/rag-ingest|rag-query` — Atlas RAG
+
 ## 🛡️ **Security Features**
 
 ### **Professional Security Scoring**
@@ -179,6 +201,14 @@ const seiTestnet = {
 # Build and deploy
 npm run build
 netlify deploy --prod --dir=dist
+```
+
+Ensure Netlify functions directory is configured:
+netlify.toml
+```toml
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 ```
 
 ### **Vercel**
