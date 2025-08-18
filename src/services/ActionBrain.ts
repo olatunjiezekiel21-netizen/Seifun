@@ -871,18 +871,18 @@ export class ActionBrain {
     if (mentionsSei && mentionsUsdc) {
       if (/sei\s*(to|for)\s*usdc/.test(lower)) {
         entities.tokenIn = '0x0'
-        entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'
+        entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
       } else if (/usdc\s*(to|for)\s*sei/.test(lower)) {
-        entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'
+        entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
         entities.tokenOut = '0x0'
       }
     } else if (mentionsSei && !mentionsUsdc) {
       // Default other side to USDC if not specified
       entities.tokenIn = '0x0'
-      entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'
+      entities.tokenOut = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
     } else if (!mentionsSei && mentionsUsdc) {
       // Default other side to SEI
-      entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0xB75D0B03c06A926e488e2659DF1A861F860bD3d1'
+      entities.tokenIn = (import.meta.env.VITE_SEI_USDC_ADDRESS as any) || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
       entities.tokenOut = '0x0'
     }
 
