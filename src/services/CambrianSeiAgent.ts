@@ -5,8 +5,8 @@ import {
   Address,
   PublicClient,
   WalletClient,
-  parseEther,
-  formatEther
+  formatEther,
+  type Chain
 } from 'viem';
 import { sei } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -122,20 +122,21 @@ export class CambrianSeiAgent implements AgentCapabilities {
 
   constructor(privateKey: string) {
     const account = privateKeyToAccount(privateKey as Address);
-    
-    this.publicClient = createPublicClient({
-      chain: sei,
-      transport: http('https://evm-rpc.sei-apis.com')
-    });
-    
-    this.walletClient = createWalletClient({
-      account,
-      chain: sei,
-      transport: http('https://evm-rpc.sei-apis.com')
-    });
-    
+
+    // Dynamic network mode (default testnet)
+    const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
+    const rpcUrl = mode === 'mainnet' ? 'https://evm-rpc.sei-apis.com' : 'https://evm-rpc-testnet.sei-apis.com'
+    const chainConfig: Chain = mode === 'mainnet' ? (sei as unknown as Chain) : ({
+      id: 1328,
+      name: 'Sei Testnet',
+      nativeCurrency: { name: 'Sei', symbol: 'SEI', decimals: 18 },
+      rpcUrls: { default: { http: [rpcUrl] }, public: { http: [rpcUrl] } }
+    } as unknown as Chain)
+
+    this.publicClient = createPublicClient({ chain: chainConfig, transport: http(rpcUrl) });
+    this.walletClient = createWalletClient({ account, chain: chainConfig, transport: http(rpcUrl) });
     this.walletAddress = account.address;
-    
+
     // Initialize Symphony SDK for DEX operations
     this.symphonySDK = new Symphony({ walletClient: this.walletClient });
     this.symphonySDK.connectWalletClient(this.walletClient);
@@ -875,7 +876,10 @@ export class CambrianSeiAgent implements AgentCapabilities {
    * Create ERC20 token via factory
    */
   async createToken(params: { name: string; symbol: string; totalSupply: string; decimals?: number; valueSei?: string }): Promise<{ txHash: string }> {
-    const FACTORY_ADDRESS = (import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || (import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A';
+    const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
+    const FACTORY_ADDRESS = mode === 'mainnet'
+      ? ((import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
+      : ((import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F')
     const abi = [{
       type: 'function',
       name: 'createToken',
@@ -889,8 +893,9 @@ export class CambrianSeiAgent implements AgentCapabilities {
       outputs: [{ name: '', type: 'address' }]
     }];
     const decimals = params.decimals ?? 18;
-    // viem expects bigints as strings with parse; we pass as string
-    const valueWei = params.valueSei ? BigInt(Math.floor(parseFloat(params.valueSei) * 1e18)) : 0n;
+    // Default factory fee if not provided
+    const defaultFeeSei = params.valueSei ?? (mode === 'mainnet' ? '0.2' : '2');
+    const valueWei = BigInt(Math.floor(parseFloat(defaultFeeSei) * 1e18));
     const hash = await this.walletClient.writeContract({
       address: FACTORY_ADDRESS as any,
       abi: abi as any,
