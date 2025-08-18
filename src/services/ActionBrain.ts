@@ -478,6 +478,39 @@ export class ActionBrain {
     }
     
     try {
+      // Prefer mainnet security scan using TokenScanner
+      const { TokenScanner } = await import('../utils/tokenScanner')
+      const scanner = new TokenScanner()
+      const analysis = await scanner.analyzeToken(tokenAddress)
+
+      const b = analysis.basicInfo
+      const s = analysis.safetyChecks
+      const parts: string[] = []
+      parts.push(`🔍 **Token Scan** — ${b.name} (${b.symbol})`)
+      parts.push(`Contract: \`${b.address}\``)
+      if (b.marketData?.price) parts.push(`Price: $${b.marketData.price.toFixed(6)}  •  MC: ${scanner.formatNumber(b.marketData.marketCap || 0)}`)
+      parts.push(`Supply: ${b.formattedTotalSupply || scanner.formatNumber(Number(b.totalSupply))}`)
+      parts.push(`Risk Score: ${analysis.riskScore}/100 (${analysis.isSafe ? 'Likely Safe' : 'Use Caution'})`)
+      const flags: string[] = []
+      if (s.ownership && !s.ownership.isRenounced) flags.push('Owner not renounced')
+      if (s.blacklist && s.blacklist.hasBlacklist) flags.push('Blacklist enabled')
+      if (s.fees && s.fees.hasExcessiveFees) flags.push('High taxes')
+      if (s.holderDistribution && (s.holderDistribution.topHolderPercentage || 0) > 50) flags.push('High holder concentration')
+      if (flags.length) parts.push(`Flags: ${flags.join(' | ')}`)
+      const msg = parts.join('\n')
+
+      return {
+        success: true,
+        response: msg,
+        data: analysis,
+        followUp: [
+          'Swap a small test amount',
+          'Add to watchlist',
+          'Scan another token'
+        ]
+      }
+    } catch (error) {
+      // Fallback to basic on-chain read if scanner fails
       const [tokenBalance, isMyToken] = await Promise.all([
         privateKeyWallet.getTokenBalance(tokenAddress).catch(() => null),
         privateKeyWallet.isMyToken(tokenAddress).catch(() => false)
@@ -497,46 +530,9 @@ export class ActionBrain {
       response += `• **Contract**: \`${tokenAddress}\`\n`;
       response += `• **Your Balance**: ${tokenBalance.balance} ${tokenBalance.symbol}\n\n`;
       
-      // Ownership Status
-      if (isMyToken) {
-        response += `🏆 **OWNERSHIP**: ✅ **You created this token!**\n\n`;
-        response += `**🚀 Available Actions:**\n`;
-        response += `• "Burn [amount] tokens" - Reduce supply\n`;
-        response += `• "Add [amount] tokens and [amount] SEI" - Add liquidity\n`;
-        response += `• "Check supply" - View total supply\n`;
-      } else {
-        response += `⚠️ **OWNERSHIP**: ❌ **Not your token**\n\n`;
-        response += `**🔍 Available Actions:**\n`;
-        response += `• View balance and token info only\n`;
-        response += `• Cannot burn or manage this token\n`;
-      }
+      if (isMyToken) response += `🏆 **OWNERSHIP**: ✅ You created this token\n`;
       
-      // Show user's tokens
-      const myTokens = privateKeyWallet.getMyTokens();
-      if (myTokens.length > 0) {
-        response += `\n**🏆 Your Created Tokens:**\n`;
-        myTokens.slice(0, 3).forEach((token, index) => {
-          response += `${index + 1}. **${token.name} (${token.symbol})**\n`;
-        });
-        if (myTokens.length > 3) {
-          response += `... and ${myTokens.length - 3} more\n`;
-        }
-      }
-      
-      return {
-        success: true,
-        response,
-        data: { tokenBalance, isMyToken, myTokens },
-        followUp: isMyToken ? 
-          ["What would you like to do with your token?"] : 
-          ["Want to create your own token? Say 'Create a token called [name]'"]
-      };
-      
-    } catch (error) {
-      return {
-        success: false,
-        response: `❌ **Scan Failed**: ${error.message}\n\nThe token address might be invalid or the network is unreachable.`
-      };
+      return { success: true, response };
     }
   }
   
