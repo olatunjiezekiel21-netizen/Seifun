@@ -9,7 +9,8 @@ export default defineConfig({
     alias: {
       // Fix Netlify build: some plugins require('uniqBy')
       // Map it to lodash.uniqby implementation
-      'uniqBy': 'lodash.uniqby'
+      'uniqBy': 'lodash.uniqby',
+      'uniqby': 'lodash.uniqby'
     }
   },
   optimizeDeps: {
