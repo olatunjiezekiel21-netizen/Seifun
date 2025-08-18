@@ -1155,20 +1155,15 @@ export class ActionBrain {
           response: `❌ **Missing staking amount**\n\n**Example**: "Stake 50 SEI"`
         };
       }
-      
-      const result = await cambrianSeiAgent.stakeTokens({
-        amount: amount.toString()
-      });
-      
-      return {
-        success: true,
-        response: `🥩 **Silo Staking**\n${result}`
-      };
-    } catch (error) {
-      return {
-        success: false,
-        response: `❌ **Staking Failed**: ${error.message}`
-      };
+      const res = await fetch('/.netlify/functions/stake-quote?token=SEI&amount=' + encodeURIComponent(String(amount)))
+      if (res.ok) {
+        const data = await res.json()
+        if (!data.canStake) return { success: false, response: `⚠️ ${data.reason || 'Cannot stake this amount'}` }
+        return { success: true, response: `🛡️ **Staking Quote**\nToken: ${data.token}\nAmount: ${amount}\nAPY: ${data.apy}%\nMin: ${data.minAmount}\n\nSay "Confirm stake" to proceed (coming soon).` }
+      }
+      return { success: false, response: `❌ **Staking service unavailable**` }
+    } catch (e: any) {
+      return { success: false, response: `❌ **Stake Failed**: ${e?.message || e}` }
     }
   }
   
@@ -1518,9 +1513,23 @@ export class ActionBrain {
 
   private async executeNftBrowse(intent: IntentResult): Promise<ActionResponse> {
     // Guided response until a marketplace integration is configured
+    const collection = intent.entities.collection
+    if (collection) {
+      try {
+        const res = await fetch('/.netlify/functions/nft-listings?collection=' + encodeURIComponent(collection))
+        if (res.ok) {
+          const data = await res.json()
+          const items = Array.isArray(data?.listings) ? data.listings.slice(0,5) : []
+          if (items.length > 0) {
+            const lines = items.map((it: any, i: number) => `${i+1}. ${it.tokenId} • ${it.price} ${it.currency} • ${it.market || 'Paloma'}`)
+            return { success: true, response: `🖼️ **NFT Listings**\n\n${lines.join('\n')}` }
+          }
+        }
+      } catch {}
+    }
     return {
       success: true,
-      response: `🖼️ **NFTs on Sei**\n\nI can help you browse or buy NFTs once you provide a marketplace or collection.\n\n**Next steps:**\n• Paste a collection contract (0x...) to browse listings\n• Or tell me the marketplace you use on Sei (and the collection slug)\n\nIf you already know a specific NFT, say: \"Buy NFT tokenId [id] from [collection address]\"`,
+      response: `🖼️ **NFTs on Sei**\n\nI can help you browse or buy NFTs once you provide a marketplace or collection.\n\n**Next steps:**\n• Paste a collection contract (0x...) to browse listings\n• Or tell me the marketplace you use on Sei (and the collection slug)`
     };
   }
 
