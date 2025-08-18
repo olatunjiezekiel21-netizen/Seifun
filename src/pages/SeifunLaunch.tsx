@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Search, TrendingUp, TrendingDown, Star, Eye, Users, DollarSign } from 'lucide-react';
-import MemeTokenGrid from '../components/MemeTokenGrid';
+import { Search, TrendingUp, Star, Eye, Users, DollarSign } from 'lucide-react';
+import { unifiedTokenService, TokenData } from '../services/UnifiedTokenService';
+import { useNavigate } from 'react-router-dom';
 
 const SeifunLaunch = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<TokenData[]>([]);
+  const navigate = useNavigate();
 
   const categories = [
     { id: 'all', name: 'All Tokens', icon: Star },
@@ -16,114 +19,29 @@ const SeifunLaunch = () => {
     { id: 'community', name: 'Community', icon: Users },
   ];
 
-  const featuredTokens = [
-    {
-      id: '1',
-      name: 'SeiDoge',
-      symbol: 'SEIDOGE',
-      price: 0.000123,
-      change24h: 15.67,
-      marketCap: 1250000,
-      volume24h: 450000,
-      holders: 1250,
-      liquidity: 850000,
-      isVerified: true,
-      isHoneypot: false,
-      launchDate: '2024-01-15',
-      description: 'The first meme token on Sei blockchain',
-      image: '/Seifu.png'
-    },
-    {
-      id: '2',
-      name: 'SeiCat',
-      symbol: 'SEICAT',
-      price: 0.000089,
-      change24h: -8.45,
-      marketCap: 890000,
-      volume24h: 320000,
-      holders: 890,
-      liquidity: 650000,
-      isVerified: true,
-      isHoneypot: false,
-      launchDate: '2024-01-20',
-      description: 'Cat lovers unite on Sei',
-      image: '/Seifu.png'
-    },
-    {
-      id: '3',
-      name: 'SeiMoon',
-      symbol: 'SEIMOON',
-      price: 0.000456,
-      change24h: 45.23,
-      marketCap: 2100000,
-      volume24h: 780000,
-      holders: 2100,
-      liquidity: 1200000,
-      isVerified: false,
-      isHoneypot: true,
-      launchDate: '2024-01-10',
-      description: 'To the moon and beyond',
-      image: '/Seifu.png'
-    },
-    {
-      id: '4',
-      name: 'SeiRocket',
-      symbol: 'SEIROCKET',
-      price: 0.000234,
-      change24h: 32.15,
-      marketCap: 1560000,
-      volume24h: 520000,
-      holders: 1680,
-      liquidity: 950000,
-      isVerified: true,
-      isHoneypot: false,
-      launchDate: '2024-01-18',
-      description: 'Fastest growing token on Sei',
-      image: '/Seifu.png'
-    },
-    {
-      id: '5',
-      name: 'SeiDiamond',
-      symbol: 'SEIDIAMOND',
-      price: 0.000789,
-      change24h: 67.89,
-      marketCap: 3200000,
-      volume24h: 1200000,
-      holders: 3200,
-      liquidity: 1800000,
-      isVerified: true,
-      isHoneypot: false,
-      launchDate: '2024-01-12',
-      description: 'Diamond hands only',
-      image: '/Seifu.png'
-    },
-    {
-      id: '6',
-      name: 'SeiLambo',
-      symbol: 'SEILAMBO',
-      price: 0.000345,
-      change24h: -12.34,
-      marketCap: 980000,
-      volume24h: 280000,
-      holders: 750,
-      liquidity: 480000,
-      isVerified: false,
-      isHoneypot: false,
-      launchDate: '2024-01-25',
-      description: 'Lamborghini dreams',
-      image: '/Seifu.png'
-    }
-  ];
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        const all = await unifiedTokenService.getAllTokens();
+        setTokens(all);
+      } catch (e: any) {
+        setError(e?.message || 'Failed to load tokens');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  const filteredTokens = featuredTokens.filter(token => {
+  const filteredTokens = tokens.filter(token => {
     const matchesSearch = token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          token.symbol.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || 
-                          (selectedCategory === 'trending' && token.change24h > 10) ||
-                          (selectedCategory === 'new' && new Date(token.launchDate) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) ||
-                          (selectedCategory === 'top' && token.marketCap > 1000000) ||
+                          (selectedCategory === 'trending' && (token.volume24h || 0) > 1000) ||
+                          (selectedCategory === 'new' && (Date.now() - token.createdAt.getTime()) < 7 * 24 * 60 * 60 * 1000) ||
+                          (selectedCategory === 'top' && (token.marketCap || 0) > 1000000) ||
                           (selectedCategory === 'community' && token.holders > 1000);
-    
     return matchesSearch && matchesCategory;
   });
 
@@ -199,25 +117,20 @@ const SeifunLaunch = () => {
         {!isLoading && !error && (
           <div className="app-token-grid">
             {filteredTokens.map((token) => (
-              <div key={token.id} className="app-token-card">
+              <div key={token.address} className="app-token-card">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <img 
-                      src={token.image} 
-                      alt={token.name} 
+                    <img
+                      src={token.tokenImage || '/Seifu.png'}
+                      alt={token.name}
                       className="w-10 h-10 rounded-full"
                     />
                     <div>
                       <div className="flex items-center space-x-2">
                         <h3 className="font-semibold app-text-primary">{token.name}</h3>
-                        {token.isVerified && (
+                        {token.verified && (
                           <span className="text-xs bg-green-500 text-white px-2 py-1 rounded">
                             Verified
-                          </span>
-                        )}
-                        {token.isHoneypot && (
-                          <span className="text-xs bg-red-500 text-white px-2 py-1 rounded">
-                            Honeypot
                           </span>
                         )}
                       </div>
@@ -226,12 +139,12 @@ const SeifunLaunch = () => {
                   </div>
                   <div className="text-right">
                     <div className="font-semibold app-text-primary">
-                      ${token.price.toFixed(6)}
+                      {(token.price ?? 0).toFixed(6)}
                     </div>
                     <div className={`text-sm ${
-                      token.change24h >= 0 ? 'text-green-500' : 'text-red-500'
+                      (token.priceChange24h ?? 0) >= 0 ? 'text-green-500' : 'text-red-500'
                     }`}>
-                      {token.change24h >= 0 ? '+' : ''}{token.change24h.toFixed(2)}%
+                      {(token.priceChange24h ?? 0) >= 0 ? '+' : ''}{(token.priceChange24h ?? 0).toFixed(2)}%
                     </div>
                   </div>
                 </div>
@@ -239,11 +152,11 @@ const SeifunLaunch = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <div className="app-text-muted">Market Cap</div>
-                    <div className="app-text-primary">${(token.marketCap / 1000000).toFixed(2)}M</div>
+                    <div className="app-text-primary">${((token.marketCap || 0) / 1000000).toFixed(2)}M</div>
                   </div>
                   <div>
                     <div className="app-text-muted">Volume 24h</div>
-                    <div className="app-text-primary">${(token.volume24h / 1000).toFixed(0)}K</div>
+                    <div className="app-text-primary">${((token.volume24h || 0) / 1000).toFixed(0)}K</div>
                   </div>
                   <div>
                     <div className="app-text-muted">Holders</div>
@@ -251,17 +164,20 @@ const SeifunLaunch = () => {
                   </div>
                   <div>
                     <div className="app-text-muted">Liquidity</div>
-                    <div className="app-text-primary">${(token.liquidity / 1000).toFixed(0)}K</div>
+                    <div className="app-text-primary">${((token.liquidity || 0) / 1000).toFixed(0)}K</div>
                   </div>
                 </div>
 
                 <div className="mt-4 pt-4 border-t app-border">
-                  <p className="text-sm app-text-secondary mb-3">{token.description}</p>
+                  <p className="text-sm app-text-secondary mb-3">Created {token.createdAt.toLocaleDateString()}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-xs app-text-muted">
-                      Launched {new Date(token.launchDate).toLocaleDateString()}
+                      Address: {token.address.slice(0, 6)}...{token.address.slice(-4)}
                     </span>
-                    <button className="app-btn app-btn-primary text-sm">
+                    <button
+                      onClick={() => navigate(`/app/charts?token=${token.address}`)}
+                      className="app-btn app-btn-primary text-sm"
+                    >
                       View Details
                     </button>
                   </div>
