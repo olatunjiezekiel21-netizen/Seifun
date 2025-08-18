@@ -49,12 +49,9 @@ const Seilor = () => {
     timestamp: Date;
   }>>([]);
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number; usdc: string; usdcUsd: number } | null>(null);
-<<<<<<< HEAD
   const [isProcessingAction, setIsProcessingAction] = useState(false);
-=======
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
->>>>>>> 75392e0 (Add image upload and local LLM fallback for Seilor assistant)
 
   const { isConnected, address } = useReownWallet();
 

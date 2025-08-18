@@ -800,6 +800,91 @@ export class CambrianSeiAgent implements AgentCapabilities {
   }
 
   /**
+   * Query delegations for current wallet via precompile
+   */
+  async getDelegations(): Promise<Array<{ validator: Address; amount: string }>> {
+    const precompile = '0x0000000000000000000000000000000000001005' as Address
+    const out: Array<{ validator: Address; amount: string }> = []
+    try {
+      // Try tuple[] return
+      const abi1 = [{ type: 'function', name: 'delegationsOf', stateMutability: 'view', inputs: [{ name: 'delegator', type: 'address' }], outputs: [{ name: '', type: 'tuple[]', components: [{ name: 'validator', type: 'address' }, { name: 'amount', type: 'uint256' }] }] }] as const
+      const res1 = await this.publicClient.readContract({ address: precompile, abi: abi1 as any, functionName: 'delegationsOf', args: [this.walletAddress] }) as any[]
+      if (Array.isArray(res1) && res1.length) {
+        for (const row of res1) {
+          out.push({ validator: row.validator as Address, amount: formatEther(row.amount as bigint) })
+        }
+        return out
+      }
+    } catch {}
+    try {
+      // Try separate arrays
+      const abi2 = [{ type: 'function', name: 'getDelegations', stateMutability: 'view', inputs: [{ name: 'delegator', type: 'address' }], outputs: [{ name: 'validators', type: 'address[]' }, { name: 'amounts', type: 'uint256[]' }] }] as const
+      const res2 = await this.publicClient.readContract({ address: precompile, abi: abi2 as any, functionName: 'getDelegations', args: [this.walletAddress] }) as any
+      const validators: Address[] = res2?.[0] || []
+      const amounts: bigint[] = res2?.[1] || []
+      for (let i = 0; i < Math.min(validators.length, amounts.length); i++) {
+        out.push({ validator: validators[i], amount: formatEther(amounts[i]) })
+      }
+      return out
+    } catch {}
+    return out
+  }
+
+  /**
+   * Query pending staking rewards (optionally per validator)
+   */
+  async getPendingRewards(validator?: Address): Promise<{ total: string; byValidator: Array<{ validator: Address; amount: string }> }> {
+    const precompile = '0x0000000000000000000000000000000000001005' as Address
+    const byValidator: Array<{ validator: Address; amount: string }> = []
+    let total = 0n
+    try {
+      if (validator) {
+        const abi1 = [{ type: 'function', name: 'pendingRewards', stateMutability: 'view', inputs: [{ name: 'delegator', type: 'address' }, { name: 'validator', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }] as const
+        const r = await this.publicClient.readContract({ address: precompile, abi: abi1 as any, functionName: 'pendingRewards', args: [this.walletAddress, validator] }) as bigint
+        total += r
+        byValidator.push({ validator, amount: formatEther(r) })
+      } else {
+        const delegations = await this.getDelegations()
+        // Try fetch per-validator rewards
+        for (const d of delegations) {
+          try {
+            const abi1 = [{ type: 'function', name: 'pendingRewards', stateMutability: 'view', inputs: [{ name: 'delegator', type: 'address' }, { name: 'validator', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }] as const
+            const r = await this.publicClient.readContract({ address: precompile, abi: abi1 as any, functionName: 'pendingRewards', args: [this.walletAddress, d.validator] }) as bigint
+            total += r
+            byValidator.push({ validator: d.validator, amount: formatEther(r) })
+          } catch {}
+        }
+        // Fallback to total
+        if (byValidator.length === 0) {
+          try {
+            const abi2 = [{ type: 'function', name: 'pendingRewards', stateMutability: 'view', inputs: [{ name: 'delegator', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }] as const
+            const r = await this.publicClient.readContract({ address: precompile, abi: abi2 as any, functionName: 'pendingRewards', args: [this.walletAddress] }) as bigint
+            total = r
+          } catch {}
+        }
+      }
+    } catch {}
+    return { total: formatEther(total), byValidator }
+  }
+
+  /**
+   * Claim staking rewards (all or per validator)
+   */
+  async claimRewards(validator?: Address): Promise<string> {
+    const precompile = '0x0000000000000000000000000000000000001005' as Address
+    try {
+      if (validator) {
+        const hash = await this.walletClient.writeContract({ address: precompile, abi: [{ type: 'function', name: 'withdrawRewards', stateMutability: 'nonpayable', inputs: [{ name: 'validator', type: 'address' }], outputs: [] }] as any, functionName: 'withdrawRewards', args: [validator] })
+        return `✅ Claimed rewards from ${validator}. TX: ${hash}`
+      }
+      const hash2 = await this.walletClient.writeContract({ address: precompile, abi: [{ type: 'function', name: 'withdrawAllRewards', stateMutability: 'nonpayable', inputs: [], outputs: [] }] as any, functionName: 'withdrawAllRewards', args: [] as any })
+      return `✅ Claimed all rewards. TX: ${hash2}`
+    } catch (e: any) {
+      throw new Error(`Claim failed: ${e?.message || e}`)
+    }
+  }
+
+  /**
    * Get wallet address
    */
   getAddress(): string {

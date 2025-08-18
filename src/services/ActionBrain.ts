@@ -87,6 +87,14 @@ export class ActionBrain {
     if (/(what are we doing today|today'?s todo|my tasks|list todos)/i.test(normalizedMessage)) {
       return { intent: IntentType.TODO_LIST, confidence: 0.9, entities, rawMessage: message }
     }
+
+    // Staking query/claim intents
+    if (/(my\s+delegations|delegations|staked\s+balance|staking\s+positions)/i.test(normalizedMessage)) {
+      return { intent: IntentType.STAKE_TOKENS, confidence: 0.9, entities: { ...entities, action: 'query' as any }, rawMessage: message }
+    }
+    if (/(claim\s+rewards|how\s+much\s+can\s+i\s+claim|withdraw\s+rewards)/i.test(normalizedMessage)) {
+      return { intent: IntentType.STAKE_TOKENS, confidence: 0.9, entities: { ...entities, action: 'claim' as any }, rawMessage: message }
+    }
     
     // Send/Transfer Tokens Intent (HIGHEST PRIORITY)
     if (this.matchesPattern(normalizedMessage, [
@@ -901,28 +909,30 @@ export class ActionBrain {
   // Stake Tokens Action
   private async executeStakeTokens(intent: IntentResult): Promise<ActionResponse> {
     try {
-      const { amount } = intent.entities;
+      const { amount, action, validator, newValidator } = (intent.entities as any);
       
+      if (action === 'query') {
+        const delegations = await cambrianSeiAgent.getDelegations()
+        if (!delegations.length) return { success: true, response: 'No delegations found.' }
+        const lines = delegations.slice(0, 10).map((d, i) => `${i+1}. ${d.amount} SEI → ${d.validator}`)
+        const rewards = await cambrianSeiAgent.getPendingRewards()
+        return { success: true, response: `🧾 **Delegations**\n\n${lines.join('\n')}\n\nPending rewards (approx): ${rewards.total} SEI` }
+      }
+      if (action === 'claim') {
+        const res = await cambrianSeiAgent.claimRewards(validator)
+        return { success: true, response: res }
+      }
+
       if (!amount) {
         return {
           success: false,
           response: `❌ **Missing staking amount**\n\n**Example**: "Stake 50 SEI"`
         };
       }
-      
-      const result = await cambrianSeiAgent.stakeTokens({
-        amount: amount.toString()
-      });
-      
-      return {
-        success: true,
-        response: `🥩 **Silo Staking**\n${result}`
-      };
-    } catch (error) {
-      return {
-        success: false,
-        response: `❌ **Staking Failed**: ${error.message}`
-      };
+      const res = await cambrianSeiAgent.stakeTokens({ amount: String(amount), action: 'delegate', validator })
+      return { success: true, response: res }
+    } catch (e: any) {
+      return { success: false, response: `❌ **Stake Failed**: ${e?.message || e}` }
     }
   }
   
