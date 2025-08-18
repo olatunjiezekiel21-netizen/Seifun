@@ -1066,7 +1066,8 @@ export class ActionBrain {
   // Stake Tokens Action
   private async executeStakeTokens(intent: IntentResult): Promise<ActionResponse> {
     try {
-      const { amount, action, validator, newValidator } = (intent.entities as any);
+      const { amount, action, validator, newValidator, seiAmount, tokenAmount } = (intent.entities as any);
+      const effectiveAmount = amount ?? seiAmount ?? tokenAmount;
       
       if (action === 'query') {
         const delegations = await cambrianSeiAgent.getDelegations()
@@ -1080,13 +1081,13 @@ export class ActionBrain {
         return { success: true, response: res }
       }
 
-      if (!amount) {
+      if (!effectiveAmount) {
         return {
           success: false,
           response: `❌ **Missing staking amount**\n\n**Example**: "Stake 50 SEI"`
         };
       }
-      const res = await cambrianSeiAgent.stakeTokens({ amount: String(amount), action: 'delegate', validator })
+      const res = await cambrianSeiAgent.stakeTokens({ amount: String(effectiveAmount), action: 'delegate', validator })
       return { success: true, response: res }
     } catch (e: any) {
       return { success: false, response: `❌ **Stake Failed**: ${e?.message || e}` }
