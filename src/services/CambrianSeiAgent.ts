@@ -8,7 +8,6 @@ import {
   formatEther,
   type Chain
 } from 'viem';
-import { sei } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 
 // Symphony SDK for DEX operations
@@ -126,12 +125,19 @@ export class CambrianSeiAgent implements AgentCapabilities {
     // Dynamic network mode (default testnet)
     const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
     const rpcUrl = mode === 'mainnet' ? 'https://evm-rpc.sei-apis.com' : 'https://evm-rpc-testnet.sei-apis.com'
-    const chainConfig: Chain = mode === 'mainnet' ? (sei as unknown as Chain) : ({
+    const seiMainnet: Chain = {
+      id: 1329,
+      name: 'Sei Mainnet',
+      nativeCurrency: { name: 'Sei', symbol: 'SEI', decimals: 18 },
+      rpcUrls: { default: { http: [rpcUrl] }, public: { http: [rpcUrl] } }
+    } as unknown as Chain
+    const seiTestnet: Chain = {
       id: 1328,
       name: 'Sei Testnet',
       nativeCurrency: { name: 'Sei', symbol: 'SEI', decimals: 18 },
       rpcUrls: { default: { http: [rpcUrl] }, public: { http: [rpcUrl] } }
-    } as unknown as Chain)
+    } as unknown as Chain
+    const chainConfig: Chain = mode === 'mainnet' ? seiMainnet : seiTestnet
 
     this.publicClient = createPublicClient({ chain: chainConfig, transport: http(rpcUrl) });
     this.walletClient = createWalletClient({ account, chain: chainConfig, transport: http(rpcUrl) });
