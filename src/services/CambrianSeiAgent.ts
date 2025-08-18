@@ -459,7 +459,7 @@ export class CambrianSeiAgent implements AgentCapabilities {
     const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
     const FACTORY_ADDRESS = mode === 'mainnet'
       ? ((import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
-      : ((import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
+      : ((import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F')
 
     // Preflight: ensure factory exists on this network
     const bytecode = await this.publicClient.getBytecode({ address: FACTORY_ADDRESS as any }).catch(() => null)
@@ -481,7 +481,7 @@ export class CambrianSeiAgent implements AgentCapabilities {
     }];
     const decimals = params.decimals ?? 18;
     // Default fee: 0 on testnet, allow override
-    const defaultFeeSei = mode === 'mainnet' ? '0.2' : '0';
+    const defaultFeeSei = mode === 'mainnet' ? '0.2' : '2';
     const feeSei = params.valueSei ?? defaultFeeSei;
     const valueWei = feeSei ? BigInt(Math.floor(parseFloat(feeSei) * 1e18)) : 0n;
     const hash = await this.walletClient.writeContract({
