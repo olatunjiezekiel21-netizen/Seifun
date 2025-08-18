@@ -151,8 +151,6 @@ const Seilor = () => {
     
     try {
       const response = await chatBrain.processMessage(userMessage);
-<<<<<<< HEAD
-=======
       console.log('✅ Chat Brain response received:', response);
       
       // If user initiated token creation and an image is attached, upload it now for metadata use
@@ -164,7 +162,6 @@ const Seilor = () => {
       }
       
       // Hide typing indicator
->>>>>>> fab1d82 (Add IPFS upload for token logo and metadata during token creation)
       setIsTyping(false);
       setIsProcessingAction(false);
       
@@ -178,10 +175,7 @@ const Seilor = () => {
       ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
       
     } catch (error: any) {
-<<<<<<< HEAD
-=======
       console.error('❌ Chat Brain Error:', error);
->>>>>>> fab1d82 (Add IPFS upload for token logo and metadata during token creation)
       setIsTyping(false);
       setIsProcessingAction(false);
       const errorMessage = {
