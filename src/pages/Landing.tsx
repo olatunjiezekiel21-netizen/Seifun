@@ -45,7 +45,7 @@ const Landing = () => {
               <Link to="/app/seilor" className="landing-nav-link">AI Agent</Link>
             </div>
 
-            <Link to="/app" className="landing-btn landing-btn-primary">
+            <Link to="/app/launch" className="landing-btn landing-btn-primary">
               Launch App
             </Link>
           </div>
@@ -76,7 +76,7 @@ const Landing = () => {
               Seifun combines real-time blockchain awareness with RAG knowledge and secure execution. Chat naturally with Seilor 0, analyze tokens, and automate DeFi workflows—fast, safe, and intuitive.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/app" className="launch-app-btn">
+              <Link to="/app/launch" className="launch-app-btn">
                 <Rocket className="w-5 h-5 mr-2" />
                 Launch App
               </Link>
@@ -216,7 +216,7 @@ const Landing = () => {
                 </div>
               </div>
               <div className="mt-4 flex gap-3">
-                <Link to="/app" className="landing-btn landing-btn-primary">Launch SafeChecker</Link>
+                <Link to="/app/safechecker" className="landing-btn landing-btn-primary">Launch SafeChecker</Link>
                 <Link to="/app/docs" className="landing-btn landing-btn-secondary">Learn more</Link>
               </div>
             </div>
@@ -256,7 +256,7 @@ const Landing = () => {
             <p className="landing-text-lg mb-8 max-w-2xl mx-auto">
               Launch the app to chat with Seilor 0, run SafeChecker scans, and compose on-chain actions instantly.
             </p>
-            <Link to="/app" className="launch-app-btn">
+            <Link to="/app/launch" className="launch-app-btn">
               <Rocket className="w-5 h-5 mr-2" />
               Launch App Now
               <ArrowRight className="w-5 h-5 ml-2" />
@@ -282,10 +282,10 @@ const Landing = () => {
             <div>
               <h4 className="landing-heading-md mb-4">Platform</h4>
               <ul className="space-y-2">
-                <li><Link to="/app" className="landing-text-secondary hover:landing-text-primary">SafeChecker</Link></li>
+                <li><Link to="/app/safechecker" className="landing-text-secondary hover:landing-text-primary">SafeChecker</Link></li>
                 <li><Link to="/app/seilor" className="landing-text-secondary hover:landing-text-primary">Seilor 0</Link></li>
                 <li><Link to="/app/docs" className="landing-text-secondary hover:landing-text-primary">Docs</Link></li>
-                <li><Link to="/app/dev-plus" className="landing-text-secondary hover:landing-text-primary">Dev Plus</Link></li>
+                <li><Link to="/app/devplus" className="landing-text-secondary hover:landing-text-primary">Dev Plus</Link></li>
               </ul>
             </div>
             

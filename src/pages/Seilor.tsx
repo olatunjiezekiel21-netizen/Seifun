@@ -101,18 +101,8 @@ const Seilor = () => {
     }
   };
 
-  // Test function to debug chat functionality
-  const testChatFunction = async () => {
-    console.log('🧪 Testing chat functionality directly...');
-    try {
-      const testResponse = await chatBrain.processMessage("Hello, test message");
-      console.log('✅ Chat test successful:', testResponse);
-      alert(`Chat test successful! Response: ${testResponse.message.substring(0, 100)}...`);
-    } catch (error) {
-      console.error('❌ Chat test failed:', error);
-      alert(`Chat test failed: ${error.message}`);
-    }
-  };
+  // Debug function removed for production UI
+  const testChatFunction = undefined as unknown as never;
 
   // Enhanced AI chat handler using Chat Brain system
   const handleAiChat = async () => {
@@ -272,7 +262,7 @@ const Seilor = () => {
                 <div>
                   <h1 className="text-2xl font-bold text-white">Seilor 0</h1>
                   <p className="text-xs text-slate-400">Autonomous AI Trading Agent</p>
-                  <p className="text-xs text-blue-400">✅ v2.0 - Debug + Collapsible UI</p>
+                  <p className="text-xs text-blue-400">✅ v2.0</p>
                 </div>
               </div>
               
@@ -363,7 +353,7 @@ const Seilor = () => {
                 <div className="p-4 border-b border-slate-700/50 space-y-2">
                   {/* Version Indicator */}
                   <div className="text-xs text-blue-400 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">
-                    ✅ Latest Version: Chat Debug + Collapsible UI (v2.0)
+                    ✅ Latest Version: v2.0
                   </div>
                   <button
                     onClick={() => setSidebarCollapsed(false)}
@@ -373,14 +363,7 @@ const Seilor = () => {
                     <Menu className="w-4 h-4" />
                     <span className="text-sm">Show Menu</span>
                   </button>
-                  {/* Debug Test Button */}
-                  <button
-                    onClick={testChatFunction}
-                    className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors text-sm"
-                    title="Test Chat Function"
-                  >
-                    🧪 Test Chat
-                  </button>
+                  {/* Debug controls removed for production */}
                 </div>
               )}
               {/* Chat Panel */}
@@ -518,13 +501,7 @@ const Seilor = () => {
                       {attachedImage && (
                         <div className="text-xs text-slate-300">Attached: {attachedImage.name}</div>
                       )}
-                      {/* Debug Test Button */}
-                      <button
-                        onClick={testChatFunction}
-                        className="w-full px-4 py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition-colors text-sm border border-yellow-500/30"
-                      >
-                        🧪 Test Chat Function (Debug)
-                      </button>
+                      {/* Debug button removed for production */}
                     </div>
                   </div>
                 </div>
