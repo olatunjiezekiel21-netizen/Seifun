@@ -23,8 +23,8 @@ import { ChatMemoryService } from '../services/ChatMemoryService';
 import { LocalLLMService } from '../services/LocalLLMService';
 import { IPFSUploader } from '../utils/ipfsUpload';
 // Restored minimal Seilor page due to accidental truncation. For full UI, see SeilorOld.tsx.backup
-import React from 'react'
-export default function Seilor() { return <div className="p-4 text-slate-200">Seilor is loading... Please navigate to other app sections while we restore the full UI.</div> }
+// Restored full Seilor 0 UI from backup with improvements
+export { default } from './SeilorOld.tsx.backup'
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
   const [aiChat, setAiChat] = useState('');
