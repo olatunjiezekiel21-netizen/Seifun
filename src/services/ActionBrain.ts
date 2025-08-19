@@ -1,6 +1,7 @@
 import { privateKeyWallet } from './PrivateKeyWallet';
 import { webBlockchainService } from './WebBlockchainService';
 import { cambrianSeiAgent, SwapParams, StakeParams, LendingParams, TradingParams } from './CambrianSeiAgent';
+import { TokenScanner } from '../utils/tokenScanner';
 import { TokenMetadataManager } from '../utils/tokenMetadata';
 
 // Intent Types for NLP Processing
@@ -474,60 +475,51 @@ export class ActionBrain {
     }
     
     try {
-      const [tokenBalance, isMyToken] = await Promise.all([
-        privateKeyWallet.getTokenBalance(tokenAddress).catch(() => null),
-        privateKeyWallet.isMyToken(tokenAddress).catch(() => false)
-      ]);
-      
-      if (!tokenBalance) {
-        return {
-          success: false,
-          response: `❌ **Token Not Found**\n\n**Address**: \`${tokenAddress}\`\n\nThis might not be a valid ERC20 token on Sei network.`
-        };
-      }
-      
+      // Detailed on-chain scan using TokenScanner (same engine as SafeChecker)
+      const scanner = new TokenScanner();
+      const analysis = await scanner.analyzeToken(tokenAddress);
+
+      const name = analysis.basicInfo.name;
+      const symbol = analysis.basicInfo.symbol;
+      const price = analysis.basicInfo.marketData?.price;
+      const marketCap = analysis.basicInfo.marketData?.marketCap;
+      const risk = analysis.riskScore;
+      const flags = analysis.riskFactors.slice(0, 5).join(' | ');
+
+      // Also show user balance if available
+      let userBalanceLine = '';
+      try {
+        const decimals = analysis.basicInfo.decimals || 18;
+        const bal = await privateKeyWallet.getTokenBalance(tokenAddress);
+        userBalanceLine = `• **Your Balance**: ${bal.balance} ${bal.symbol}`;
+      } catch {}
+
       let response = `🔍 **Token Scan Results**\n\n`;
-      response += `**📋 Token Information:**\n`;
-      response += `• **Name**: ${tokenBalance.name}\n`;
-      response += `• **Symbol**: ${tokenBalance.symbol}\n`;
-      response += `• **Contract**: \`${tokenAddress}\`\n`;
-      response += `• **Your Balance**: ${tokenBalance.balance} ${tokenBalance.symbol}\n\n`;
-      
-      // Ownership Status
-      if (isMyToken) {
-        response += `🏆 **OWNERSHIP**: ✅ **You created this token!**\n\n`;
-        response += `**🚀 Available Actions:**\n`;
-        response += `• "Burn [amount] tokens" - Reduce supply\n`;
-        response += `• "Add [amount] tokens and [amount] SEI" - Add liquidity\n`;
-        response += `• "Check supply" - View total supply\n`;
-      } else {
-        response += `⚠️ **OWNERSHIP**: ❌ **Not your token**\n\n`;
-        response += `**🔍 Available Actions:**\n`;
-        response += `• View balance and token info only\n`;
-        response += `• Cannot burn or manage this token\n`;
-      }
-      
-      // Show user's tokens
-      const myTokens = privateKeyWallet.getMyTokens();
-      if (myTokens.length > 0) {
-        response += `\n**🏆 Your Created Tokens:**\n`;
-        myTokens.slice(0, 3).forEach((token, index) => {
-          response += `${index + 1}. **${token.name} (${token.symbol})**\n`;
-        });
-        if (myTokens.length > 3) {
-          response += `... and ${myTokens.length - 3} more\n`;
-        }
-      }
+      response += `**📋 Token**: ${name} (${symbol})\n`;
+      response += `**📜 Contract**: \`${tokenAddress}\`\n`;
+      if (userBalanceLine) response += `${userBalanceLine}\n`;
+      if (price !== undefined) response += `**💵 Price**: $${scanner.formatNumber(price)}\n`;
+      if (marketCap !== undefined) response += `**🏦 Market Cap**: $${scanner.formatNumber(marketCap)}\n`;
+      response += `**🛡️ Safety Score**: ${risk}/100\n`;
+      response += `**⚠️ Risk Factors**: ${flags || 'None detected'}\n\n`;
+
+      response += `**✅ Checks**\n`;
+      response += `• Supply: ${analysis.safetyChecks.supply.risk}\n`;
+      response += `• Ownership: ${analysis.safetyChecks.ownership.risk}${analysis.safetyChecks.ownership.owner ? ` (owner: ${analysis.safetyChecks.ownership.owner})` : ''}\n`;
+      response += `• Liquidity: ${analysis.safetyChecks.liquidity.risk}${analysis.safetyChecks.liquidity.liquidityAmount ? ` (${analysis.safetyChecks.liquidity.liquidityAmount})` : ''}\n`;
+      response += `• Blacklist: ${analysis.safetyChecks.blacklist.risk}\n`;
+      response += `• Fees: ${analysis.safetyChecks.fees.risk}\n`;
+      response += `• Holder Distribution: ${analysis.safetyChecks.holderDistribution.risk}\n`;
+
+      const suggestions: string[] = [];
+      suggestions.push('Add to watchlist', 'Scan another token', 'Swap with this token');
       
       return {
         success: true,
         response,
-        data: { tokenBalance, isMyToken, myTokens },
-        followUp: isMyToken ? 
-          ["What would you like to do with your token?"] : 
-          ["Want to create your own token? Say 'Create a token called [name]'"]
+        data: { analysis },
+        followUp: suggestions
       };
-      
     } catch (error) {
       return {
         success: false,
