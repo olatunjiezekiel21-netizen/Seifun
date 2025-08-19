@@ -114,7 +114,7 @@ If you have the OpenAI API key in your local `.env` file, the AI will give **rea
 1. **Netlify Dashboard** → **Environment Variables**
 2. **Add**:
    ```
-   VITE_OPENAI_API_KEY = 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
+   VITE_OPENAI_API_KEY = <your-openai-key-here>
    ```
 
 ### **🔄 Step 2: Force Fresh Deployment**
