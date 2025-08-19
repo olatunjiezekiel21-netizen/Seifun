@@ -312,17 +312,30 @@ export class CambrianSeiAgent {
     // Normalize params (symbol cap length ≤ 5, decimals default 18)
     const safeSymbol = (params.symbol || '').toUpperCase().slice(0, 5)
     const decimals = params.decimals ?? 18
-    const supply = BigInt(params.totalSupply)
+    // Interpret totalSupply in human units; convert to wei based on decimals
+    const supply = (() => {
+      try {
+        const base = BigInt(String(Math.floor(Number(params.totalSupply || '0'))))
+        const factor = 10n ** BigInt(decimals)
+        return base * factor
+      } catch {
+        return BigInt(0)
+      }
+    })()
 
     // Simulate to surface revert reasons before broadcasting
-    await this.publicClient.simulateContract({
-      address: FACTORY_ADDRESS as any,
-      abi: abi as any,
-      functionName: 'createToken',
-      args: [params.name, safeSymbol, decimals, supply],
-      value: feeWei,
-      account: this.walletAddress
-    })
+    try {
+      await this.publicClient.simulateContract({
+        address: FACTORY_ADDRESS as any,
+        abi: abi as any,
+        functionName: 'createToken',
+        args: [params.name, safeSymbol, decimals, supply],
+        value: feeWei,
+        account: this.walletAddress
+      })
+    } catch (e: any) {
+      throw new Error(`Simulation failed: ${e?.shortMessage || e?.message || String(e)}`)
+    }
 
     // Send real tx
     const txHash = await this.walletClient.writeContract({
