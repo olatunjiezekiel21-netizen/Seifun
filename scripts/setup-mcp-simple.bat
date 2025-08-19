@@ -18,9 +18,7 @@ echo   "mcpServers": {
 echo     "sei-mcp-server": {
 echo       "command": "npx",
 echo       "args": ["-y", "@sei-js/mcp-server"],
-echo       "env": {
-echo         "PRIVATE_KEY": "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684"
-echo       }
+echo       "env": {}
 echo     }
 echo   }
 echo }

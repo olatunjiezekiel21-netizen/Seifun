@@ -38,7 +38,7 @@ Create `~/.cursor/mcp.json` with this exact content:
       "command": "npx",
       "args": ["-y", "@sei-js/mcp-server"],
       "env": {
-        "PRIVATE_KEY": "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684"
+        "PRIVATE_KEY": "<your-private-key>"
       }
     }
   }
@@ -124,7 +124,7 @@ cat > ~/.cursor/mcp.json << 'EOF'
       "command": "npx",
       "args": ["-y", "@sei-js/mcp-server"],
       "env": {
-        "PRIVATE_KEY": "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684"
+        "PRIVATE_KEY": "<your-private-key>"
       }
     }
   }
@@ -148,7 +148,7 @@ mkdir "$env:USERPROFILE\.cursor" -Force
       "command": "npx",
       "args": ["-y", "@sei-js/mcp-server"],
       "env": {
-        "PRIVATE_KEY": "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684"
+        "PRIVATE_KEY": "<your-private-key>"
       }
     }
   }

@@ -40,7 +40,7 @@ export class DirectMCPService {
     
     1. Open a new terminal
     2. Run: npx @sei-js/mcp-server --http --port 3001
-    3. Set environment variable: PRIVATE_KEY=0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684
+    3. Set environment variable: PRIVATE_KEY=<your-private-key>
     
     The server will be available at http://localhost:3001
     `);

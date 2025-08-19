@@ -441,7 +441,7 @@ export class CambrianSeiAgent {
   }
 }
 
-// Export singleton instance
-const PRIVATE_KEY = '0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684'
-export const cambrianSeiAgent = new CambrianSeiAgent(PRIVATE_KEY)
+// Export singleton instance (load from env, never commit)
+const AGENT_PRIVATE_KEY = (import.meta as any).env?.VITE_DEV_WALLET_PRIVATE_KEY || ''
+export const cambrianSeiAgent = new CambrianSeiAgent(AGENT_PRIVATE_KEY)
 
