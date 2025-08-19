@@ -22,9 +22,7 @@ import { AIInterface } from '../components/AIInterface';
 import { ChatMemoryService } from '../services/ChatMemoryService';
 import { LocalLLMService } from '../services/LocalLLMService';
 import { IPFSUploader } from '../utils/ipfsUpload';
-// Restored minimal Seilor page due to accidental truncation. For full UI, see SeilorOld.tsx.backup
-// Restored full Seilor 0 UI from backup with improvements
-export { default } from './SeilorOld.tsx.backup'
+// Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
   const [aiChat, setAiChat] = useState('');
