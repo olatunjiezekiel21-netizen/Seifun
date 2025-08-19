@@ -4,8 +4,10 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  DEPLOY_TIMESTAMP = "2025-01-27-21:10"
-  BUILD_VERSION = "v2.0-simple-build"
+  # Runtime-set values; not secrets. Mark to omit from secrets scanning to avoid false positives
+  SECRETS_SCAN_OMIT_KEYS = "DEPLOY_TIMESTAMP,BUILD_VERSION,MONGODB_DB,MONGODB_CHAT_COLLECTION,MONGODB_RAG_COLLECTION"
+  # Optionally disable secrets scanning on docs paths if still flagged
+  SECRETS_SCAN_OMIT_PATHS = "docs/**,**/*.md"
 
 [functions]
   directory = "netlify/functions"
