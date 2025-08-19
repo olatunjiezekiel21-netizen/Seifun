@@ -67,7 +67,7 @@ const AppHeaderSafe = () => {
       <div className="app-container">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/app" className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-3">
             <div className="relative">
               <img 
                 src="/Seifu.png" 
@@ -86,14 +86,20 @@ const AppHeaderSafe = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
-              to="/app" 
-              className={`app-nav-link ${isActive('/app') ? 'active' : ''}`}
+              to="/" 
+              className={`app-nav-link ${isActive('/') ? 'active' : ''}`}
             >
               Home
             </Link>
             <Link 
-              to="/app/safechecker"
+              to="/app/seilist"
               className={`app-nav-link ${isActive('/app/seilist') ? 'active' : ''}`}
+            >
+              SeiList
+            </Link>
+            <Link 
+              to="/app/safechecker"
+              className={`app-nav-link ${isActive('/app/safechecker') ? 'active' : ''}`}
             >
               SafeChecker
             </Link>
@@ -214,13 +220,22 @@ const AppHeaderSafe = () => {
           <div className="md:hidden border-t app-border">
             <nav className="py-4 space-y-2">
               <Link 
-                to="/app" 
+                to="/" 
                 className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                  isActive('/') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Home
+              </Link>
+              <Link 
+                to="/app/seilist"
+                className={`block px-4 py-2 rounded-lg transition-colors ${
+                  isActive('/app/seilist') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                }`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                SeiList
               </Link>
               <Link 
                 to="/app/safechecker"

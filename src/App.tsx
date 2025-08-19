@@ -16,11 +16,12 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
+          {/* Show Landing at both / and /app for clarity */}
           <Route path="/app" element={<Landing />} />
           <Route path="/" element={
             <div className="min-h-screen app-bg-primary">
               <AppHeaderSafe />
-              <SeifunLaunch />
+              <Landing />
               <AppFooter />
             </div>
           } />
