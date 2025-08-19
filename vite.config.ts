@@ -24,7 +24,8 @@ export default defineConfig({
       'openai',
       'dotenv',
       // Some SDKs may ship mixed env code; exclude to avoid prebundle errors
-      'symphony-sdk'
+      'symphony-sdk',
+      'symphony-sdk/viem'
     ],
   },
   build: {
@@ -45,6 +46,8 @@ export default defineConfig({
         'mongodb',
         'openai',
         'dotenv',
+        'symphony-sdk',
+        'symphony-sdk/viem',
         'fs', 'path', 'net', 'tls', 'crypto', 'http', 'https', 'zlib', 'stream', 'url', 'util',
         'bufferutil', 'utf-8-validate', 'canvas'
       ],
