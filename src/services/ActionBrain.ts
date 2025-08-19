@@ -822,7 +822,7 @@ export class ActionBrain {
     const entities: Partial<ExtractedEntities> = {};
     
     // Extract token pairs for swapping
-    const usdcTestnet = (import.meta as any).env?.VITE_USDC_TESTNET || '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1'
+    const usdcTestnet = (import.meta as any).env?.VITE_USDC_TESTNET || '0x6592ce3bbe1ba27a0efcde650611e62cc1053d8e'
     if (/\bsei\b/.test(message) && /\busdc\b/.test(message)) {
       if (/sei\s*(for|to)\s*usdc/.test(message)) {
         entities.tokenIn = '0x0'; // Native SEI
@@ -939,16 +939,23 @@ export class ActionBrain {
   private async executeSymphonySwap(intent: IntentResult): Promise<ActionResponse> {
     try {
       const { amount, tokenIn, tokenOut, seiAmount, tokenAmount } = intent.entities as any;
+      // If tokens ambiguous, ask for clarification
+      if (!tokenIn || !tokenOut) {
+        return {
+          success: false,
+          response: `🔄 To swap, please specify both the input and output tokens. For example: "Swap 10 SEI to USDC"`
+        }
+      }
       const effectiveAmount = (amount ?? seiAmount ?? tokenAmount) as number | undefined;
       
-      if (!effectiveAmount || !tokenIn || !tokenOut) {
+      if (!effectiveAmount) {
         return {
           success: false,
           response: `❌ **Missing swap parameters**\n\nPlease specify: amount, input token, and output token.\n\n**Example**: "Swap 10 SEI for USDC"`
         };
       }
 
-      // 1) Quote first
+      // 1) Quote first (normalize native->WSEI inside agent)
       const quote = await cambrianSeiAgent.getSwapQuote({
         tokenIn: tokenIn as any,
         tokenOut: tokenOut as any,
@@ -995,7 +1002,7 @@ export class ActionBrain {
       }
 
       // Compute minOut using slippage
-      const out = Number(quote.outputAmount || 0);
+      const out = Number(quote?.outputAmount ?? 0);
       const minOut = (out * (1 - maxSlippageBps / 10_000)).toString();
 
       // 3) Execute swap (approval handled inside Symphony route)
