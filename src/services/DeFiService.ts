@@ -12,7 +12,7 @@ const SEI_TESTNET_CONFIG = {
 // Contract Addresses on Sei Testnet
 const CONTRACTS = {
   // USDC on Sei EVM testnet (override via env if provided)
-  USDC: (import.meta as any).env?.VITE_USDC_TESTNET || '0x6592ce3bbe1ba27a0efcde650611e62cc1053d8e',
+  USDC: (import.meta as any).env?.VITE_USDC_TESTNET || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED',
   // Astroport Router (placeholder until wired)
   ASTROPORT_ROUTER: '0x0000000000000000000000000000000000000000',
   // Dragonswap Router (placeholder) 

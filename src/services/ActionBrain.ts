@@ -822,7 +822,7 @@ export class ActionBrain {
     const entities: Partial<ExtractedEntities> = {};
     
     // Extract token pairs for swapping
-    const usdcTestnet = (import.meta as any).env?.VITE_USDC_TESTNET || '0x6592ce3bbe1ba27a0efcde650611e62cc1053d8e'
+    const usdcTestnet = (import.meta as any).env?.VITE_USDC_TESTNET || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
     if (/\bsei\b/.test(message) && /\busdc\b/.test(message)) {
       if (/sei\s*(for|to)\s*usdc/.test(message)) {
         entities.tokenIn = '0x0'; // Native SEI
