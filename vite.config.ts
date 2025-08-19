@@ -10,7 +10,9 @@ export default defineConfig({
       // Fix Netlify build: some plugins require('uniqBy')
       // Map it to lodash.uniqby implementation
       'uniqBy': 'lodash.uniqby',
-      'uniqby': 'lodash.uniqby'
+      'uniqby': 'lodash.uniqby',
+      // Alias node-sass to sass to avoid requiring deprecated binary
+      'node-sass': 'sass'
     }
   },
   optimizeDeps: {
