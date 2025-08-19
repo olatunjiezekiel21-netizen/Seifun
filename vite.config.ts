@@ -5,6 +5,10 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   base: '/', // Root path for Netlify deployment
+  define: {
+    // Prevent leaking OpenAI key into client bundle even if set in env
+    'import.meta.env.VITE_OPENAI_API_KEY': '""'
+  },
   resolve: {
     alias: {
       // Fix Netlify build: some plugins require('uniqBy')
