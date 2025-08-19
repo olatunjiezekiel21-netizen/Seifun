@@ -43,7 +43,7 @@ Netlify might be using **cached configuration** from previous builds.
 2. **Site Settings** → **Build & Deploy** → **Environment Variables**
 3. **Add environment variable**:
    ```
-   VITE_OPENAI_API_KEY = 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
+   VITE_OPENAI_API_KEY = <your-openai-key-here>
    ```
 4. **Go to Deploys tab**
 5. **Click "Clear cache and deploy site"**
@@ -97,7 +97,7 @@ Netlify might be using **cached configuration** from previous builds.
 
 ### **Step 1: Add API Key (CRITICAL)**
 ```
-VITE_OPENAI_API_KEY = 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
+VITE_OPENAI_API_KEY = <your-openai-key-here>
 ```
 
 ### **Step 2: Force Fresh Build**

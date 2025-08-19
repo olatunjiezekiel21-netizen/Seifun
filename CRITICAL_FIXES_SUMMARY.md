@@ -81,7 +81,7 @@ Creation Failed tokenImage is not defined
 2. **Site Settings** → **Environment Variables**
 3. **Add this critical variable**:
    ```
-   VITE_OPENAI_API_KEY = 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
+   VITE_OPENAI_API_KEY = <your-openai-key-here>
    ```
 4. **Go to Deploys** → **"Clear cache and deploy site"**
 

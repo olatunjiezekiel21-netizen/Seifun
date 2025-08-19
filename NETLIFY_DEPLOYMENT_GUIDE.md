@@ -20,14 +20,14 @@ Your Netlify app needs to be updated with our latest changes to get:
 
 ```bash
 # AI Configuration - REQUIRED for chat to work
-VITE_OPENAI_API_KEY=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
+VITE_OPENAI_API_KEY=<your-openai-key-here>
 
 # Token Factory Configuration
 VITE_FACTORY_ADDRESS_TESTNET=0x742d35Cc6634C0532925a3b8D7389B4Df8f8b3Dd
 VITE_FACTORY_ADDRESS_MAINNET=0x742d35Cc6634C0532925a3b8D7389B4Df8f8b3Dd
 
 # Private Key for Testing (SeiList)
-PRIVATE_KEY=0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684
+PRIVATE_KEY=<your-private-key-here>
 
 # Sei Network Configuration
 VITE_SEI_RPC_URL=https://evm-rpc.sei-apis.com
