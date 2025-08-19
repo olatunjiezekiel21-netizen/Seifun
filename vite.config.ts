@@ -16,7 +16,16 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    exclude: [
+      'lucide-react',
+      // Exclude server-only deps from pre-bundling
+      '@netlify/functions',
+      'mongodb',
+      'openai',
+      'dotenv',
+      // Some SDKs may ship mixed env code; exclude to avoid prebundle errors
+      'symphony-sdk'
+    ],
   },
   build: {
     outDir: 'dist',
@@ -30,6 +39,15 @@ export default defineConfig({
       }
     },
     rollupOptions: {
+      external: [
+        // Externalize server-only and node builtins to prevent client bundle errors
+        '@netlify/functions',
+        'mongodb',
+        'openai',
+        'dotenv',
+        'fs', 'path', 'net', 'tls', 'crypto', 'http', 'https', 'zlib', 'stream', 'url', 'util',
+        'bufferutil', 'utf-8-validate', 'canvas'
+      ],
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
