@@ -162,7 +162,7 @@ npm install @sei-js/mcp-server
       "command": "npx",
       "args": ["@sei-js/mcp-server"],
       "env": {
-        "SEI_PRIVATE_KEY": "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684",
+        "SEI_PRIVATE_KEY": "<your-private-key>",
         "SEI_RPC_URL": "https://evm-rpc.sei-apis.com"
       }
     }

@@ -46,7 +46,7 @@ Server Name: sei-mcp-server
 Command: npx
 Arguments: ["-y", "@sei-js/mcp-server"]
 Environment Variables:
-  - PRIVATE_KEY: 0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684
+  - PRIVATE_KEY: <your-private-key>
 ```
 
 ### **Step 3: Save and Restart**
@@ -66,7 +66,7 @@ If Cursor MCP integration doesn't work, use our direct HTTP method:
 cd /workspace
 
 # Start MCP server in HTTP mode
-PRIVATE_KEY=0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684 npx @sei-js/mcp-server --http --port 3001
+PRIVATE_KEY=<your-private-key> npx @sei-js/mcp-server --http --port 3001
 ```
 
 ### **Step 2: Verify Server**
@@ -90,7 +90,7 @@ The `DirectMCPService` will automatically connect to the HTTP server and provide
       "command": "npx",
       "args": ["-y", "@sei-js/mcp-server"],
       "env": {
-        "PRIVATE_KEY": "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684"
+        "PRIVATE_KEY": "<your-private-key>"
       }
     }
   }
@@ -214,7 +214,7 @@ npm install -g @sei-js/mcp-server
 npx @sei-js/mcp-server --help
 
 # Start in HTTP mode for testing
-PRIVATE_KEY=0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684 npx @sei-js/mcp-server --http
+PRIVATE_KEY=<your-private-key> npx @sei-js/mcp-server --http
 ```
 
 ### **Verify Private Key**
@@ -222,7 +222,7 @@ PRIVATE_KEY=0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684 n
 # Check wallet address from private key
 node -e "
 const { ethers } = require('ethers');
-const wallet = new ethers.Wallet('0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684');
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY);
 console.log('Wallet Address:', wallet.address);
 "
 ```

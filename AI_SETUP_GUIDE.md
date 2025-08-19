@@ -90,7 +90,7 @@ OPENAI_TEMPERATURE=0.1      # Creativity level (0-1)
 
 # Sei MCP Server (Phase 2 - Coming Soon)
 VITE_SEI_MCP_ENABLED=false
-SEI_PRIVATE_KEY=0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684
+SEI_PRIVATE_KEY=<your-private-key>
 SEI_RPC_URL=https://evm-rpc.sei-apis.com
 ```
 
