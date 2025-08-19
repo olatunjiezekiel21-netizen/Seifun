@@ -178,6 +178,28 @@ export class ChatBrain {
     }
   }
   
+  // Execute pending swap (quote-approved)
+  private async executePendingSwap(ps: { amount: string; tokenIn: string; tokenOut: string; minOut: string }): Promise<ChatResponse> {
+    try {
+      const txMsg = await cambrianSeiAgent.swapTokens({ tokenIn: ps.tokenIn as any, tokenOut: ps.tokenOut as any, amount: ps.amount, minOut: ps.minOut })
+      const txHashMatch = /0x[a-fA-F0-9]{64}/.exec(txMsg || '')
+      const txHash = txHashMatch ? txHashMatch[0] : undefined
+      return {
+        message: `✅ Swap executed. ${txHash ? `TX: ${txHash}` : txMsg}`,
+        success: true,
+        intent: IntentType.SYMPHONY_SWAP,
+        confidence: 0.95
+      }
+    } catch (error: any) {
+      return {
+        message: `❌ Swap failed: ${error.message || String(error)}`,
+        success: false,
+        intent: IntentType.SYMPHONY_SWAP,
+        confidence: 0.6
+      }
+    }
+  }
+
   // Check for confirmation responses to pending transfers or swaps
   private checkForConfirmation(message: string): ChatResponse | null {
     const normalizedMessage = message.toLowerCase().trim();
@@ -189,13 +211,8 @@ export class ChatBrain {
       if (yes) {
         const ps = this.context.pendingSwap;
         this.context.pendingSwap = undefined;
-        return {
-          message: `Proceeding to execute your swap of ${ps.amount} from ${ps.tokenIn} to ${ps.tokenOut}...`,
-          success: true,
-          intent: IntentType.SYMPHONY_SWAP,
-          confidence: 0.95,
-          data: { confirmSwap: true, swapParams: ps }
-        };
+        // Execute swap now using agent, return final status
+        return this.executePendingSwap(ps);
       }
       if (no) {
         this.context.pendingSwap = undefined;

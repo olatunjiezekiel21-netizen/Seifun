@@ -163,6 +163,7 @@ export class CambrianSeiAgent {
 
     // 2) Symphony route
     try {
+      // Use raw string; Symphony expects human units, internally handles decimals for WSEI pairs
       const route = await this.symphonySDK.getRoute(tokenIn, tokenOut, params.amount)
       const out = Number(route?.outputAmount ?? 0)
       const pi = Number(route?.priceImpact ?? 0)
@@ -221,7 +222,7 @@ export class CambrianSeiAgent {
 
     const inDecimals = tokenIn.toLowerCase() === (WSEI as string).toLowerCase() ? 18 : (await this.publicClient.readContract({ address: tokenIn, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number)
     const outDecimals = tokenOut.toLowerCase() === (WSEI as string).toLowerCase() ? 18 : (await this.publicClient.readContract({ address: tokenOut, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number)
-    const amountInWei = BigInt(Math.floor(parseFloat(params.amount) * 10 ** inDecimals))
+    const amountInWei = BigInt(Math.round(parseFloat(params.amount) * 10 ** inDecimals))
 
     // Compute expected out via router
     const amounts = await this.publicClient.readContract({ address: router as any, abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any, functionName: 'getAmountsOut', args: [amountInWei, path] }) as bigint[]
