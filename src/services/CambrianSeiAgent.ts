@@ -124,7 +124,7 @@ export class CambrianSeiAgent {
     return `✅ Swap completed on Sei Testnet! TX: ${swapReceipt.transactionHash}`
   }
 
-  // Token creation via factory
+  // Token creation via factory (reads exact creationFee, simulates before send)
   async createToken(params: { name: string; symbol: string; totalSupply: string; decimals?: number; valueSei?: string }): Promise<{ txHash: string }> {
     const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
     const FACTORY_ADDRESS = mode === 'mainnet'
@@ -134,27 +134,45 @@ export class CambrianSeiAgent {
     const bytecode = await this.publicClient.getBytecode({ address: FACTORY_ADDRESS as any }).catch(() => null)
     if (!bytecode || bytecode === '0x') throw new Error(`Token factory not deployed on ${mode}. Set VITE_FACTORY_ADDRESS_${mode.toUpperCase()}`)
 
-    const abi = [{
-      type: 'function', name: 'createToken', stateMutability: 'payable',
-      inputs: [
+    const abi = [
+      { type: 'function', name: 'creationFee', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint256' }] },
+      { type: 'function', name: 'createToken', stateMutability: 'payable', inputs: [
         { name: 'name', type: 'string' },
         { name: 'symbol', type: 'string' },
         { name: 'decimals', type: 'uint8' },
         { name: 'totalSupply', type: 'uint256' }
-      ], outputs: [{ name: '', type: 'address' }]
-    }] as const
-    const feeSei = params.valueSei ?? (mode === 'mainnet' ? '0.2' : '2')
-    // Verify balance is sufficient for fee + gas
+      ], outputs: [{ name: '', type: 'address' }] }
+    ] as const
+
+    // Read exact creation fee from factory (avoid mismatched value reverts)
+    const feeWei = await this.publicClient.readContract({ address: FACTORY_ADDRESS as any, abi: abi as any, functionName: 'creationFee' }) as bigint
+
+    // Verify balance is sufficient for fee
     const nativeBal = await this.publicClient.getBalance({ address: this.walletAddress })
-    const needWei = BigInt(Math.floor(parseFloat(feeSei) * 1e18))
-    if (nativeBal < needWei) throw new Error(`Insufficient SEI for creation fee. Need ~${feeSei} SEI`)
-    const valueWei = BigInt(Math.floor(parseFloat(feeSei) * 1e18))
+    if (nativeBal < feeWei) throw new Error(`Insufficient SEI for creation fee. Need ~${(Number(feeWei)/1e18).toFixed(3)} SEI`)
+
+    // Normalize params (symbol cap length ≤ 5, decimals default 18)
+    const safeSymbol = (params.symbol || '').toUpperCase().slice(0, 5)
+    const decimals = params.decimals ?? 18
+    const supply = BigInt(params.totalSupply)
+
+    // Simulate to surface revert reasons before broadcasting
+    await this.publicClient.simulateContract({
+      address: FACTORY_ADDRESS as any,
+      abi: abi as any,
+      functionName: 'createToken',
+      args: [params.name, safeSymbol, decimals, supply],
+      value: feeWei,
+      account: this.walletAddress
+    })
+
+    // Send real tx
     const txHash = await this.walletClient.writeContract({
       address: FACTORY_ADDRESS as any,
       abi: abi as any,
       functionName: 'createToken',
-      args: [params.name, params.symbol, params.decimals ?? 18, BigInt(params.totalSupply)],
-      value: valueWei
+      args: [params.name, safeSymbol, decimals, supply],
+      value: feeWei
     })
     return { txHash: txHash as string }
   }
