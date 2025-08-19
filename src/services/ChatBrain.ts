@@ -287,10 +287,11 @@ export class ChatBrain {
     // Update last action
     this.context.lastAction = intentResult.intent;
     
-    // Update pending transfer context if applicable
+    // Update pending transfer context if applicable (enable confirmation flow)
     if (intentResult.intent === IntentType.SEND_TOKENS && actionResponse.success) {
-      // This will be set when the transfer is actually executed
-      // For now, we'll handle it in the confirmation flow
+      if (actionResponse.data && actionResponse.data.pendingTransfer) {
+        this.context.pendingTransfer = actionResponse.data.pendingTransfer
+      }
     }
   }
   

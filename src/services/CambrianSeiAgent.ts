@@ -144,6 +144,10 @@ export class CambrianSeiAgent {
       ], outputs: [{ name: '', type: 'address' }]
     }] as const
     const feeSei = params.valueSei ?? (mode === 'mainnet' ? '0.2' : '2')
+    // Verify balance is sufficient for fee + gas
+    const nativeBal = await this.publicClient.getBalance({ address: this.walletAddress })
+    const needWei = BigInt(Math.floor(parseFloat(feeSei) * 1e18))
+    if (nativeBal < needWei) throw new Error(`Insufficient SEI for creation fee. Need ~${feeSei} SEI`)
     const valueWei = BigInt(Math.floor(parseFloat(feeSei) * 1e18))
     const txHash = await this.walletClient.writeContract({
       address: FACTORY_ADDRESS as any,

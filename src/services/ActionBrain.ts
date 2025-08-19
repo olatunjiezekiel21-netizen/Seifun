@@ -947,11 +947,11 @@ export class ActionBrain {
         };
       }
 
-      // 1) Quote first (normalize native->WSEI inside agent)
+      // 1) Quote first (normalize native->WSEI inside agent). Ensure amount is string
       const quote = await cambrianSeiAgent.getSwapQuote({
         tokenIn: tokenIn as any,
         tokenOut: tokenOut as any,
-        amount: String(effectiveAmount)
+        amount: `${effectiveAmount}`
       });
 
       // 2) Guardrails
@@ -998,11 +998,7 @@ export class ActionBrain {
       const minOut = (out * (1 - maxSlippageBps / 10_000)).toString();
 
       // 3) Execute swap (approval handled inside Symphony route)
-      const resultMsg = await cambrianSeiAgent.swapTokens({
-        tokenIn: tokenIn as any,
-        tokenOut: tokenOut as any,
-        amount: String(effectiveAmount)
-      });
+      const resultMsg = await cambrianSeiAgent.swapTokens({ tokenIn: tokenIn as any, tokenOut: tokenOut as any, amount: `${effectiveAmount}` });
 
       // Extract tx hash for logging if present in result message
       const match = /TX:\s*(0x[a-fA-F0-9]{64})/i.exec(resultMsg);
