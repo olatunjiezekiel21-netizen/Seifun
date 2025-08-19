@@ -997,8 +997,8 @@ export class ActionBrain {
       const out = Number(quote?.outputAmount ?? 0);
       const minOut = (out * (1 - maxSlippageBps / 10_000)).toString();
 
-      // 3) Execute swap (approval handled inside Symphony route)
-      const resultMsg = await cambrianSeiAgent.swapTokens({ tokenIn: tokenIn as any, tokenOut: tokenOut as any, amount: `${effectiveAmount}` });
+      // 3) Execute swap (approval handled inside Symphony route). If router fallback is used, minOut will be enforced.
+      const resultMsg = await cambrianSeiAgent.swapTokens({ tokenIn: tokenIn as any, tokenOut: tokenOut as any, amount: `${effectiveAmount}`, minOut });
 
       // Extract tx hash for logging if present in result message
       const match = /TX:\s*(0x[a-fA-F0-9]{64})/i.exec(resultMsg);

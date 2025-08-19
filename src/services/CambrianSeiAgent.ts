@@ -15,6 +15,7 @@ export interface SwapParams {
   tokenIn: Address
   tokenOut: Address
   amount: string
+  minOut?: string
 }
 
 export interface StakeParams {
@@ -41,6 +42,32 @@ export class CambrianSeiAgent {
   public walletClient: WalletClient
   private symphonySDK: Symphony
   private walletAddress: Address
+  private static readonly UNISWAPV2_ROUTER_ABI = [
+    { type: 'function', name: 'getAmountsOut', stateMutability: 'view', inputs: [
+      { name: 'amountIn', type: 'uint256' }, { name: 'path', type: 'address[]' }
+    ], outputs: [{ name: 'amounts', type: 'uint256[]' }] },
+    { type: 'function', name: 'swapExactTokensForTokens', stateMutability: 'nonpayable', inputs: [
+      { name: 'amountIn', type: 'uint256' },
+      { name: 'amountOutMin', type: 'uint256' },
+      { name: 'path', type: 'address[]' },
+      { name: 'to', type: 'address' },
+      { name: 'deadline', type: 'uint256' }
+    ], outputs: [{ name: 'amounts', type: 'uint256[]' }] },
+    { type: 'function', name: 'swapExactETHForTokens', stateMutability: 'payable', inputs: [
+      { name: 'amountOutMin', type: 'uint256' },
+      { name: 'path', type: 'address[]' },
+      { name: 'to', type: 'address' },
+      { name: 'deadline', type: 'uint256' }
+    ], outputs: [{ name: 'amounts', type: 'uint256[]' }] },
+    { type: 'function', name: 'swapExactTokensForETH', stateMutability: 'nonpayable', inputs: [
+      { name: 'amountIn', type: 'uint256' },
+      { name: 'amountOutMin', type: 'uint256' },
+      { name: 'path', type: 'address[]' },
+      { name: 'to', type: 'address' },
+      { name: 'deadline', type: 'uint256' }
+    ], outputs: [{ name: 'amounts', type: 'uint256[]' }] },
+    { type: 'function', name: 'WETH', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }] }
+  ] as const
 
   constructor(privateKey: string) {
     const account = privateKeyToAccount(privateKey as Address)
@@ -98,16 +125,60 @@ export class CambrianSeiAgent {
 
   // Symphony quote (wrap native SEI as needed)
   async getSwapQuote(params: SwapParams): Promise<{ inputAmount: string; outputAmount: number; priceImpact: number; route: any[] }> {
+    const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
     const WSEI = (import.meta as any).env?.VITE_WSEI_TESTNET || '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1'
     const tokenIn = params.tokenIn === ('0x0' as any) ? (WSEI as any) : params.tokenIn
     const tokenOut = params.tokenOut === ('0x0' as any) ? (WSEI as any) : params.tokenOut
-    const route = await this.symphonySDK.getRoute(tokenIn, tokenOut, params.amount)
-    const out = Number(route?.outputAmount ?? 0)
-    const pi = Number(route?.priceImpact ?? 0)
-    return { inputAmount: params.amount, outputAmount: isFinite(out) ? out : 0, priceImpact: isFinite(pi) ? pi : 0, route: route?.path ?? [] }
+
+    // 1) Try Vortex quote if configured (mainnet typically)
+    try {
+      const vortexApi = (import.meta as any).env?.VITE_VORTEX_QUOTE_API || (mode === 'mainnet' ? 'https://api.vortexprotocol.io/v1/quote' : '')
+      if (vortexApi) {
+        const url = `${vortexApi}?tokenIn=${tokenIn}&tokenOut=${tokenOut}&amount=${params.amount}`
+        const res = await fetch(url)
+        if (res.ok) {
+          const data = await res.json()
+          const out = Number(data?.amountOut ?? 0)
+          const pi = Number(data?.priceImpact ?? 0)
+          if (isFinite(out) && out > 0) {
+            return { inputAmount: params.amount, outputAmount: out, priceImpact: isFinite(pi) ? pi : 0, route: data?.route || [] }
+          }
+        }
+      }
+    } catch {}
+
+    // 2) Symphony route
+    try {
+      const route = await this.symphonySDK.getRoute(tokenIn, tokenOut, params.amount)
+      const out = Number(route?.outputAmount ?? 0)
+      const pi = Number(route?.priceImpact ?? 0)
+      if (isFinite(out) && out > 0) {
+        return { inputAmount: params.amount, outputAmount: out, priceImpact: isFinite(pi) ? pi : 0, route: route?.path ?? [] }
+      }
+    } catch {}
+
+    // 3) Direct router getAmountsOut fallback if configured
+    try {
+      const router = (import.meta as any).env?.VITE_ROUTER_ADDRESS || ''
+      if (router) {
+        const path = [tokenIn, tokenOut]
+        // amount in wei
+        const inDecimals = tokenIn.toLowerCase() === (WSEI as string).toLowerCase() ? 18 : (await this.publicClient.readContract({ address: tokenIn, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number)
+        const outDecimals = tokenOut.toLowerCase() === (WSEI as string).toLowerCase() ? 18 : (await this.publicClient.readContract({ address: tokenOut, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number)
+        const amountInWei = BigInt(Math.floor(parseFloat(params.amount) * 10 ** inDecimals))
+        const amounts = await this.publicClient.readContract({ address: router as any, abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any, functionName: 'getAmountsOut', args: [amountInWei, path] }) as bigint[]
+        const outWei = amounts?.[amounts.length - 1] || 0n
+        const out = Number(outWei) / 10 ** outDecimals
+        if (isFinite(out) && out > 0) {
+          return { inputAmount: params.amount, outputAmount: out, priceImpact: 0, route: path }
+        }
+      }
+    } catch {}
+
+    return { inputAmount: params.amount, outputAmount: 0, priceImpact: 0, route: [] }
   }
 
-  // Symphony swap flow
+  // Swap flow with Symphony first, then router fallback. Enforces minOut if router path used
   async swapTokens(params: SwapParams): Promise<string> {
     const WSEI = (import.meta as any).env?.VITE_WSEI_TESTNET || '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1'
     const isNativeIn = params.tokenIn === ('0x0' as any)
@@ -117,11 +188,73 @@ export class CambrianSeiAgent {
     const balance = await this.getBalance(isNativeIn ? undefined : tokenIn)
     if (Number(balance) < Number(params.amount)) throw new Error(`Insufficient balance. Have: ${balance}, Need: ${params.amount}`)
 
-    const route = await this.symphonySDK.getRoute(tokenIn, tokenOut, params.amount)
-    const approved = await route.checkApproval()
-    if (!approved) await route.giveApproval()
-    const { swapReceipt } = await route.swap()
-    return `✅ Swap completed on Sei Testnet! TX: ${swapReceipt.transactionHash}`
+    // Try Symphony route first
+    try {
+      const route = await this.symphonySDK.getRoute(tokenIn, tokenOut, params.amount)
+      const approved = await route.checkApproval()
+      if (!approved) await route.giveApproval()
+      const { swapReceipt } = await route.swap()
+      return `✅ Swap completed on Sei Testnet! TX: ${swapReceipt.transactionHash}`
+    } catch {}
+
+    // Router fallback if configured
+    const router = (import.meta as any).env?.VITE_ROUTER_ADDRESS || ''
+    if (!router) throw new Error('No available swap route (router not configured)')
+
+    const now = Math.floor(Date.now() / 1000)
+    const deadline = BigInt(now + 60 * 5)
+    const path = [tokenIn, tokenOut]
+
+    const inDecimals = tokenIn.toLowerCase() === (WSEI as string).toLowerCase() ? 18 : (await this.publicClient.readContract({ address: tokenIn, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number)
+    const outDecimals = tokenOut.toLowerCase() === (WSEI as string).toLowerCase() ? 18 : (await this.publicClient.readContract({ address: tokenOut, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number)
+    const amountInWei = BigInt(Math.floor(parseFloat(params.amount) * 10 ** inDecimals))
+
+    // Compute expected out via router
+    const amounts = await this.publicClient.readContract({ address: router as any, abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any, functionName: 'getAmountsOut', args: [amountInWei, path] }) as bigint[]
+    const outWei = amounts?.[amounts.length - 1] || 0n
+    let minOutWei = outWei
+    if (params.minOut) {
+      // If caller provided minOut in units, respect it, else default 1% slippage
+      const specified = BigInt(Math.floor(parseFloat(params.minOut) * 10 ** outDecimals))
+      minOutWei = specified
+    } else {
+      minOutWei = (outWei * 99n) / 100n
+    }
+
+    // Ensure approval if ERC-20 in
+    if (!isNativeIn) {
+      const allowance = await this.publicClient.readContract({ address: tokenIn, abi: [
+        { type: 'function', name: 'allowance', stateMutability: 'view', inputs: [{ name: 'owner', type: 'address' }, { name: 'spender', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] },
+        { type: 'function', name: 'approve', stateMutability: 'nonpayable', inputs: [{ name: 'spender', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ name: '', type: 'bool' }] }
+      ] as any, functionName: 'allowance', args: [this.walletAddress, router] }) as bigint
+      if (allowance < amountInWei) {
+        await this.walletClient.writeContract({ address: tokenIn, abi: [
+          { type: 'function', name: 'approve', stateMutability: 'nonpayable', inputs: [{ name: 'spender', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ name: '', type: 'bool' }] }
+        ] as any, functionName: 'approve', args: [router, amountInWei] })
+      }
+    }
+
+    let txHash: any
+    if (isNativeIn) {
+      // swapExactETHForTokens
+      txHash = await this.walletClient.writeContract({
+        address: router as any,
+        abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any,
+        functionName: 'swapExactETHForTokens',
+        args: [minOutWei, path, this.walletAddress, deadline],
+        value: amountInWei
+      })
+    } else {
+      // swapExactTokensForTokens
+      txHash = await this.walletClient.writeContract({
+        address: router as any,
+        abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any,
+        functionName: 'swapExactTokensForTokens',
+        args: [amountInWei, minOutWei, path, this.walletAddress, deadline]
+      })
+    }
+
+    return `✅ Swap completed! TX: ${txHash}`
   }
 
   // Token creation via factory (reads exact creationFee, simulates before send)
@@ -254,6 +387,20 @@ export class CambrianSeiAgent {
   async closePosition(positionId: string): Promise<string> { return `Closed position ${positionId} (placeholder)` }
   async getPositions(): Promise<any[]> { return [] }
   async getWalletInfo(): Promise<any> { return { address: this.walletAddress, seiBalance: await this.getBalance(), network: 'Sei Testnet' } }
+
+  // Simple transfer helper for native SEI and ERC-20
+  async transferToken(amount: string, to: Address, token?: Address): Promise<string> {
+    const isNative = !token || token === ('0x0' as any)
+    if (isNative) {
+      const valueWei = BigInt(Math.floor(parseFloat(amount) * 1e18))
+      const hash = await this.walletClient.sendTransaction({ to, value: valueWei })
+      return `✅ Native SEI transfer sent. TX: ${hash}`
+    }
+    const decimals = await this.publicClient.readContract({ address: token as Address, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number
+    const valueWei = BigInt(Math.floor(parseFloat(amount) * 10 ** decimals))
+    const hash = await this.walletClient.writeContract({ address: token as Address, abi: [{ type: 'function', name: 'transfer', stateMutability: 'nonpayable', inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ name: '', type: 'bool' }] }] as any, functionName: 'transfer', args: [to, valueWei] })
+    return `✅ ERC-20 transfer sent. TX: ${hash}`
+  }
 }
 
 // Export singleton instance

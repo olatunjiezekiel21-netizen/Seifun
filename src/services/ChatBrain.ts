@@ -25,6 +25,13 @@ interface ConversationContext {
     remainingBalance: string;
     timestamp: Date;
   };
+  // Swap confirmation context
+  pendingSwap?: {
+    amount: string;
+    tokenIn: string;
+    tokenOut: string;
+    minOut: string;
+  };
 }
 
 // Chat Message
@@ -171,10 +178,42 @@ export class ChatBrain {
     }
   }
   
-  // Check for confirmation responses to pending transfers
+  // Check for confirmation responses to pending transfers or swaps
   private checkForConfirmation(message: string): ChatResponse | null {
     const normalizedMessage = message.toLowerCase().trim();
     
+    // Pending swap
+    if (this.context.pendingSwap) {
+      const yes = /^(yes|y|confirm|proceed|go ahead|do it|ok|okay)\b/.test(normalizedMessage);
+      const no = /^(no|n|cancel|stop|abort|not now)\b/.test(normalizedMessage);
+      if (yes) {
+        const ps = this.context.pendingSwap;
+        this.context.pendingSwap = undefined;
+        return {
+          message: `Proceeding to execute your swap of ${ps.amount} from ${ps.tokenIn} to ${ps.tokenOut}...`,
+          success: true,
+          intent: IntentType.SYMPHONY_SWAP,
+          confidence: 0.95,
+          data: { confirmSwap: true, swapParams: ps }
+        };
+      }
+      if (no) {
+        this.context.pendingSwap = undefined;
+        return {
+          message: `✅ Cancelled. No swap executed.`,
+          success: true,
+          intent: IntentType.SYMPHONY_SWAP,
+          confidence: 0.9
+        };
+      }
+      return {
+        message: `⏳ Pending swap: ${this.context.pendingSwap.amount} → Min Out: ${this.context.pendingSwap.minOut}. Say "Yes" to proceed or "Cancel" to abort.`,
+        success: false,
+        intent: IntentType.SYMPHONY_SWAP,
+        confidence: 0.7
+      };
+    }
+
     // Check if there's a pending transfer
     if (!this.context.pendingTransfer) {
       return null;
@@ -292,6 +331,10 @@ export class ChatBrain {
       if (actionResponse.data && actionResponse.data.pendingTransfer) {
         this.context.pendingTransfer = actionResponse.data.pendingTransfer
       }
+    }
+    // Update pending swap context if ActionBrain returned quote & ask for confirm
+    if (intentResult.intent === IntentType.SYMPHONY_SWAP && actionResponse?.data?.pendingSwap) {
+      this.context.pendingSwap = actionResponse.data.pendingSwap;
     }
   }
   
