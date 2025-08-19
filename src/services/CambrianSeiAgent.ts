@@ -53,6 +53,20 @@ export class CambrianSeiAgent {
       { name: 'to', type: 'address' },
       { name: 'deadline', type: 'uint256' }
     ], outputs: [{ name: 'amounts', type: 'uint256[]' }] },
+    // DragonSwap naming (SEI) + ETH aliases for compatibility
+    { type: 'function', name: 'swapExactSEIForTokens', stateMutability: 'payable', inputs: [
+      { name: 'amountOutMin', type: 'uint256' },
+      { name: 'path', type: 'address[]' },
+      { name: 'to', type: 'address' },
+      { name: 'deadline', type: 'uint256' }
+    ], outputs: [{ name: 'amounts', type: 'uint256[]' }] },
+    { type: 'function', name: 'swapExactTokensForSEI', stateMutability: 'nonpayable', inputs: [
+      { name: 'amountIn', type: 'uint256' },
+      { name: 'amountOutMin', type: 'uint256' },
+      { name: 'path', type: 'address[]' },
+      { name: 'to', type: 'address' },
+      { name: 'deadline', type: 'uint256' }
+    ], outputs: [{ name: 'amounts', type: 'uint256[]' }] },
     { type: 'function', name: 'swapExactETHForTokens', stateMutability: 'payable', inputs: [
       { name: 'amountOutMin', type: 'uint256' },
       { name: 'path', type: 'address[]' },
@@ -198,7 +212,7 @@ export class CambrianSeiAgent {
     } catch {}
 
     // Router fallback if configured
-    const router = (import.meta as any).env?.VITE_ROUTER_ADDRESS || ''
+    const router = (import.meta as any).env?.VITE_ROUTER_ADDRESS || (mode === 'testnet' ? '0x527b42CA5e11370259EcaE68561C14dA415477C8' : '')
     if (!router) throw new Error('No available swap route (router not configured)')
 
     const now = Math.floor(Date.now() / 1000)
@@ -236,14 +250,24 @@ export class CambrianSeiAgent {
 
     let txHash: any
     if (isNativeIn) {
-      // swapExactETHForTokens
-      txHash = await this.walletClient.writeContract({
-        address: router as any,
-        abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any,
-        functionName: 'swapExactETHForTokens',
-        args: [minOutWei, path, this.walletAddress, deadline],
-        value: amountInWei
-      })
+      // Try DragonSwap's swapExactSEIForTokens, fallback to ETH-named
+      try {
+        txHash = await this.walletClient.writeContract({
+          address: router as any,
+          abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any,
+          functionName: 'swapExactSEIForTokens',
+          args: [minOutWei, path, this.walletAddress, deadline],
+          value: amountInWei
+        })
+      } catch {
+        txHash = await this.walletClient.writeContract({
+          address: router as any,
+          abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any,
+          functionName: 'swapExactETHForTokens',
+          args: [minOutWei, path, this.walletAddress, deadline],
+          value: amountInWei
+        })
+      }
     } else {
       // swapExactTokensForTokens
       txHash = await this.walletClient.writeContract({
