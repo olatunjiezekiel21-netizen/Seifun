@@ -370,16 +370,13 @@ export class ChatBrain {
     // Generate contextual response based on intent
     let message = actionResponse.response;
     
-    // Add contextual information
+    // Add contextual information (avoid claiming execution unless actually executed)
     switch (intentResult.intent) {
       case IntentType.TOKEN_SCAN:
         message += `\n\n🔍 This token has been analyzed for security and risk factors.`;
         break;
       case IntentType.BALANCE_CHECK:
         message += `\n\n💰 Your wallet balance is current and up-to-date.`;
-        break;
-      case IntentType.SYMPHONY_SWAP:
-        message += `\n\n🔄 The swap has been executed on Symphony DEX.`;
         break;
       case IntentType.STAKE_TOKENS:
         message += `\n\n🥩 Staking initiated on Silo Protocol.`;

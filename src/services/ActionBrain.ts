@@ -175,6 +175,9 @@ export class ActionBrain {
       return { success: false, response: `❌ Missing amount. Example: "Swap 10 SEI to USDC"` }
     }
     const quote = await cambrianSeiAgent.getSwapQuote({ tokenIn: tokenIn as any, tokenOut: tokenOut as any, amount: `${effectiveAmount}` })
+    if (!quote || Number(quote.outputAmount) <= 0) {
+      return { success: false, response: `❌ No liquidity or route found for this pair/amount. Try a smaller amount or a different pair.` }
+    }
     const priceImpact = Number(quote.priceImpact || 0)
     if (priceImpact > 5) {
       return { success: false, response: `🚫 High price impact (${priceImpact.toFixed(2)}%). Try a smaller amount or different pair.` }

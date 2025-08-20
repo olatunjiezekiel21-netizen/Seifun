@@ -303,7 +303,14 @@ export class CambrianSeiAgent {
     ] as const
 
     // Read exact creation fee from factory (avoid mismatched value reverts)
-    const feeWei = await this.publicClient.readContract({ address: FACTORY_ADDRESS as any, abi: abi as any, functionName: 'creationFee' }) as bigint
+    let feeWei: bigint
+    try {
+      feeWei = await this.publicClient.readContract({ address: FACTORY_ADDRESS as any, abi: abi as any, functionName: 'creationFee' }) as bigint
+    } catch {
+      // Fallback: default to 2 SEI on testnet or 0.2 SEI on mainnet if factory lacks creationFee()
+      const fallbackSei = mode === 'mainnet' ? 0.2 : 2
+      feeWei = BigInt(Math.floor(fallbackSei * 1e18))
+    }
 
     // Verify balance is sufficient for fee
     const nativeBal = await this.publicClient.getBalance({ address: this.walletAddress })
