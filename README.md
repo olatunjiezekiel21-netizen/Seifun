@@ -211,6 +211,8 @@ netlify.toml
   node_bundler = "esbuild"
 ```
 
+Note: If you need to force a redeploy, push any small docs change like this note and Netlify will trigger a new build.
+
 ### **Vercel**
 ```bash
 # Install Vercel CLI
