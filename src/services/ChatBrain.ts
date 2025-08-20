@@ -85,6 +85,11 @@ export class ChatBrain {
       // Step 1: Check for confirmation responses first
       const confirmationResult = this.checkForConfirmation(userMessage);
       if (confirmationResult) {
+        // If a confirm triggered execution, run it now
+        if (confirmationResult.data?.doExecuteNow && confirmationResult.data.swapParams) {
+          const exec = await this.executePendingSwap(confirmationResult.data.swapParams)
+          return exec
+        }
         return confirmationResult;
       }
       
@@ -211,8 +216,14 @@ export class ChatBrain {
       if (yes) {
         const ps = this.context.pendingSwap;
         this.context.pendingSwap = undefined;
-        // Execute swap now using agent, return final status
-        return this.executePendingSwap(ps);
+        // Inform user we are processing and then execute
+        return {
+          message: `⏳ Processing your swap...`,
+          success: true,
+          intent: IntentType.SYMPHONY_SWAP,
+          confidence: 0.9,
+          data: { doExecuteNow: true, swapParams: ps }
+        };
       }
       if (no) {
         this.context.pendingSwap = undefined;

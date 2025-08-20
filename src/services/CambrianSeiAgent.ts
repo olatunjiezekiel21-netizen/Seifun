@@ -302,15 +302,9 @@ export class CambrianSeiAgent {
       ], outputs: [{ name: '', type: 'address' }] }
     ] as const
 
-    // Read exact creation fee from factory (avoid mismatched value reverts)
-    let feeWei: bigint
-    try {
-      feeWei = await this.publicClient.readContract({ address: FACTORY_ADDRESS as any, abi: abi as any, functionName: 'creationFee' }) as bigint
-    } catch {
-      // Fallback: default to 2 SEI on testnet or 0.2 SEI on mainnet if factory lacks creationFee()
-      const fallbackSei = mode === 'mainnet' ? 0.2 : 2
-      feeWei = BigInt(Math.floor(fallbackSei * 1e18))
-    }
+    // Determine fee strategy (prefer 0 if allowed like SeiList)
+    // 1) Try simulate with zero fee
+    let feeWei: bigint = 0n
 
     // Verify balance is sufficient for fee
     const nativeBal = await this.publicClient.getBalance({ address: this.walletAddress })
@@ -341,7 +335,20 @@ export class CambrianSeiAgent {
         account: this.walletAddress
       })
     } catch (e: any) {
-      throw new Error(`Simulation failed: ${e?.shortMessage || e?.message || String(e)}`)
+      // If zero-fee simulation fails, try with default testnet fee of 2 SEI
+      try {
+        feeWei = BigInt(Math.floor((mode === 'mainnet' ? 0.2 : 2) * 1e18))
+        await this.publicClient.simulateContract({
+          address: FACTORY_ADDRESS as any,
+          abi: abi as any,
+          functionName: 'createToken',
+          args: [params.name, safeSymbol, decimals, supply],
+          value: feeWei,
+          account: this.walletAddress
+        })
+      } catch (e2: any) {
+        throw new Error(`Simulation failed: ${e2?.shortMessage || e2?.message || String(e2)}`)
+      }
     }
 
     // Send real tx
