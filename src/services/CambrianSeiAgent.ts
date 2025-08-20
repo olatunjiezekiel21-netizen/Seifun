@@ -140,7 +140,14 @@ export class CambrianSeiAgent {
   // Symphony quote (wrap native SEI as needed)
   async getSwapQuote(params: SwapParams): Promise<{ inputAmount: string; outputAmount: number; priceImpact: number; route: any[] }> {
     const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
-    const WSEI = (import.meta as any).env?.VITE_WSEI_TESTNET || '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1'
+    const routerAddr = (import.meta as any).env?.VITE_ROUTER_ADDRESS || (mode === 'mainnet' ? '' : '0x527b42CA5e11370259EcaE68561C14dA415477C8')
+    let WSEI = (import.meta as any).env?.VITE_WSEI_TESTNET || '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1'
+    try {
+      if (routerAddr) {
+        const weth = await this.publicClient.readContract({ address: routerAddr as any, abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any, functionName: 'WETH' }) as string
+        if (weth && weth !== '0x0000000000000000000000000000000000000000') WSEI = weth
+      }
+    } catch {}
     const tokenIn = params.tokenIn === ('0x0' as any) ? (WSEI as any) : params.tokenIn
     const tokenOut = params.tokenOut === ('0x0' as any) ? (WSEI as any) : params.tokenOut
 
@@ -163,7 +170,6 @@ export class CambrianSeiAgent {
 
     // 2) Symphony route
     try {
-      // Use raw string; Symphony expects human units, internally handles decimals for WSEI pairs
       const route = await this.symphonySDK.getRoute(tokenIn, tokenOut, params.amount)
       const out = Number(route?.outputAmount ?? 0)
       const pi = Number(route?.priceImpact ?? 0)
@@ -174,10 +180,9 @@ export class CambrianSeiAgent {
 
     // 3) Direct router getAmountsOut fallback if configured
     try {
-      const router = (import.meta as any).env?.VITE_ROUTER_ADDRESS || ''
+      const router = routerAddr || ''
       if (router) {
         const path = [tokenIn, tokenOut]
-        // amount in wei
         const inDecimals = tokenIn.toLowerCase() === (WSEI as string).toLowerCase() ? 18 : (await this.publicClient.readContract({ address: tokenIn, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number)
         const outDecimals = tokenOut.toLowerCase() === (WSEI as string).toLowerCase() ? 18 : (await this.publicClient.readContract({ address: tokenOut, abi: [{ type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint8' }] }] as any, functionName: 'decimals' }) as number)
         const amountInWei = BigInt(Math.floor(parseFloat(params.amount) * 10 ** inDecimals))
@@ -195,7 +200,15 @@ export class CambrianSeiAgent {
 
   // Swap flow with Symphony first, then router fallback. Enforces minOut if router path used
   async swapTokens(params: SwapParams): Promise<string> {
-    const WSEI = (import.meta as any).env?.VITE_WSEI_TESTNET || '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1'
+    const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
+    const routerAddr2 = (import.meta as any).env?.VITE_ROUTER_ADDRESS || (mode === 'mainnet' ? '' : '0x527b42CA5e11370259EcaE68561C14dA415477C8')
+    let WSEI = (import.meta as any).env?.VITE_WSEI_TESTNET || '0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1'
+    try {
+      if (routerAddr2) {
+        const weth = await this.publicClient.readContract({ address: routerAddr2 as any, abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any, functionName: 'WETH' }) as string
+        if (weth && weth !== '0x0000000000000000000000000000000000000000') WSEI = weth
+      }
+    } catch {}
     const isNativeIn = params.tokenIn === ('0x0' as any)
     const tokenIn = isNativeIn ? (WSEI as any) : params.tokenIn
     const tokenOut = params.tokenOut === ('0x0' as any) ? (WSEI as any) : params.tokenOut
@@ -213,7 +226,7 @@ export class CambrianSeiAgent {
     } catch {}
 
     // Router fallback if configured
-    const router = (import.meta as any).env?.VITE_ROUTER_ADDRESS || (mode === 'testnet' ? '0x527b42CA5e11370259EcaE68561C14dA415477C8' : '')
+    const router = routerAddr2 || ''
     if (!router) throw new Error('No available swap route (router not configured)')
 
     const now = Math.floor(Date.now() / 1000)
@@ -229,7 +242,6 @@ export class CambrianSeiAgent {
     const outWei = amounts?.[amounts.length - 1] || 0n
     let minOutWei = outWei
     if (params.minOut) {
-      // If caller provided minOut in units, respect it, else default 1% slippage
       const specified = BigInt(Math.floor(parseFloat(params.minOut) * 10 ** outDecimals))
       minOutWei = specified
     } else {
@@ -251,7 +263,6 @@ export class CambrianSeiAgent {
 
     let txHash: any
     if (isNativeIn) {
-      // Try DragonSwap's swapExactSEIForTokens, fallback to ETH-named
       try {
         txHash = await this.walletClient.writeContract({
           address: router as any,
@@ -270,7 +281,6 @@ export class CambrianSeiAgent {
         })
       }
     } else {
-      // swapExactTokensForTokens
       txHash = await this.walletClient.writeContract({
         address: router as any,
         abi: CambrianSeiAgent.UNISWAPV2_ROUTER_ABI as any,
@@ -403,8 +413,61 @@ export class CambrianSeiAgent {
     return `✅ Claimed all rewards. TX: ${hash2}`
   }
 
+  // Silo staking contract integration (env-configurable). Falls back to precompile if unset.
+  private async stakeViaSilo(params: StakeParams): Promise<string> {
+    const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
+    const address = ((import.meta as any).env?.VITE_SILO_STAKING_ADDRESS)
+      || (mode === 'mainnet' ? (import.meta as any).env?.VITE_SILO_STAKING_MAINNET : (import.meta as any).env?.VITE_SILO_STAKING_TESTNET)
+    if (!address) throw new Error('Silo staking contract not configured (set VITE_SILO_STAKING_ADDRESS)')
+
+    const stakeFn = (import.meta as any).env?.VITE_SILO_STAKING_STAKE_FUNC || 'stake'
+    const unstakeFn = (import.meta as any).env?.VITE_SILO_STAKING_UNSTAKE_FUNC || 'unstake'
+    const claimFn = (import.meta as any).env?.VITE_SILO_STAKING_CLAIM_FUNC || 'claim'
+
+    const amountWei = BigInt(Math.floor(parseFloat(params.amount || '0') * 1e18))
+
+    // Build minimal ABIs for common patterns
+    const abiPayableStake = [{ type: 'function', name: stakeFn, stateMutability: 'payable', inputs: [], outputs: [] }]
+    const abiAmountStake = [{ type: 'function', name: stakeFn, stateMutability: 'nonpayable', inputs: [{ name: 'amount', type: 'uint256' }], outputs: [] }]
+    const abiAmountUnstake = [{ type: 'function', name: unstakeFn, stateMutability: 'nonpayable', inputs: [{ name: 'amount', type: 'uint256' }], outputs: [] }]
+    const abiClaim = [{ type: 'function', name: claimFn, stateMutability: 'nonpayable', inputs: [], outputs: [] }]
+
+    const doStake = async (): Promise<string> => {
+      // Try nonpayable(amount), then payable() with value
+      try {
+        const h = await this.walletClient.writeContract({ address: address as any, abi: abiAmountStake as any, functionName: stakeFn as any, args: [amountWei] })
+        return `✅ Staked ${params.amount} SEI via Silo. TX: ${h}`
+      } catch {
+        const h = await this.walletClient.writeContract({ address: address as any, abi: abiPayableStake as any, functionName: stakeFn as any, args: [] as any, value: amountWei })
+        return `✅ Staked ${params.amount} SEI via Silo (payable). TX: ${h}`
+      }
+    }
+
+    const doUnstake = async (): Promise<string> => {
+      const h = await this.walletClient.writeContract({ address: address as any, abi: abiAmountUnstake as any, functionName: unstakeFn as any, args: [amountWei] })
+      return `📤 Unstake initiated for ${params.amount} SEI (Silo). TX: ${h}`
+    }
+
+    const doClaim = async (): Promise<string> => {
+      const h = await this.walletClient.writeContract({ address: address as any, abi: abiClaim as any, functionName: claimFn as any, args: [] as any })
+      return `🎁 Rewards claim sent (Silo). TX: ${h}`
+    }
+
+    const action = (params.action || 'delegate')
+    if (action === 'delegate') return await doStake()
+    if (action === 'undelegate') return await doUnstake()
+    if (action === 'claim') return await doClaim()
+    return 'Unsupported staking action for Silo'
+  }
+
   async stakeTokens(params: StakeParams): Promise<string> {
+    // Prefer Silo contract if configured and distinct from precompile
     const precompile = ((import.meta as any).env?.VITE_STAKING_PRECOMPILE || '0x0000000000000000000000000000000000001005') as Address
+    const siloAddr = ((import.meta as any).env?.VITE_SILO_STAKING_ADDRESS || (import.meta as any).env?.VITE_SILO_STAKING_TESTNET || (import.meta as any).env?.VITE_SILO_STAKING_MAINNET) as string | undefined
+    const useSilo = !!siloAddr && siloAddr.toLowerCase() !== (precompile as string).toLowerCase()
+    if (useSilo) {
+      return await this.stakeViaSilo(params)
+    }
     const code = await this.publicClient.getBytecode({ address: precompile }).catch(() => null)
     if (!code || code === '0x') throw new Error('Staking precompile not available on this network')
     const valueWei = BigInt(Math.floor(parseFloat(params.amount) * 1e18))
@@ -427,8 +490,13 @@ export class CambrianSeiAgent {
   }
 
   async unstakeTokens(params: StakeParams): Promise<string> {
-    // Placeholder until Silo integration is finalized
-    return `📤 Unstaking ${params.amount} SEI initiated (testnet placeholder)`
+    const precompile = ((import.meta as any).env?.VITE_STAKING_PRECOMPILE || '0x0000000000000000000000000000000000001005') as Address
+    const siloAddr = ((import.meta as any).env?.VITE_SILO_STAKING_ADDRESS || (import.meta as any).env?.VITE_SILO_STAKING_TESTNET || (import.meta as any).env?.VITE_SILO_STAKING_MAINNET) as string | undefined
+    const useSilo = !!siloAddr && siloAddr.toLowerCase() !== (precompile as string).toLowerCase()
+    if (useSilo) {
+      return await this.stakeViaSilo({ ...params, action: 'undelegate' })
+    }
+    return `📤 Unstaking ${params.amount} SEI initiated (precompile path not supported yet here)`
   }
 
   // Simple portfolio/trading placeholders to satisfy imports
@@ -458,4 +526,3 @@ export class CambrianSeiAgent {
 // Export singleton instance (load from env, never commit)
 const AGENT_PRIVATE_KEY = (import.meta as any).env?.VITE_DEV_WALLET_PRIVATE_KEY || ''
 export const cambrianSeiAgent = new CambrianSeiAgent(AGENT_PRIVATE_KEY)
-
