@@ -45,6 +45,7 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [
+        'lodash',
         'react/jsx-runtime',
         // Externalize server-only and node builtins to prevent client bundle errors
         '@netlify/functions',
