@@ -1,9 +1,26 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import replace from '@rollup/plugin-replace';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Workaround: some transitive deps ship PURE annotations Rollup chokes on
+    // Strip those comments in problematic packages during bundling
+    replace({
+      preventAssignment: true,
+      values: {
+        '/*#__PURE__*/': ''
+      },
+      delimiters: ['', ''],
+      include: [
+        /node_modules\/@reown\/appkit.*/,
+        /node_modules\/@walletconnect.*/,
+        /node_modules\/ox\/_esm\/.*/
+      ]
+    })
+  ],
   base: '/', // Root path for Netlify deployment
   define: {
     // Prevent leaking OpenAI key into client bundle even if set in env
@@ -36,13 +53,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false, // Disable sourcemaps for production
-    minify: 'terser', // Better minification
-    terserOptions: {
-      compress: {
-        drop_console: false, // Keep console.log statements
-        drop_debugger: false
-      }
-    },
+    // Use default esbuild minifier to avoid Rollup/terser annotation issues
     rollupOptions: {
       external: [
         'lodash',

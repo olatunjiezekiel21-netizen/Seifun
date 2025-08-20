@@ -19,11 +19,10 @@
     "compile": "npx hardhat compile"
   },
   "dependencies": {
-    "lodash.uniqby": "^4.7.0",
-    "@netlify/functions": "^2.8.0",
     "@cosmjs/stargate": "^0.34.0",
     "@langchain/core": "^0.3.68",
     "@langchain/openai": "^0.6.7",
+    "@netlify/functions": "^2.8.0",
     "@reown/appkit": "^1.7.18",
     "@reown/appkit-adapter-ethers": "^1.7.18",
     "@reown/appkit-adapter-wagmi": "^1.7.18",
@@ -38,6 +37,7 @@
     "dotenv": "^17.2.1",
     "ethers": "^6.15.0",
     "lightweight-charts": "^5.0.8",
+    "lodash.uniqby": "^4.7.0",
     "lucide-react": "^0.344.0",
     "mongodb": "^6.9.0",
     "openai": "^4.55.0",
@@ -53,6 +53,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@openzeppelin/contracts": "^5.4.0",
+    "@rollup/plugin-replace": "^6.0.2",
     "@rollup/rollup-linux-x64-gnu": "^4.46.2",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
