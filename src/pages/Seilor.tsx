@@ -116,7 +116,7 @@ const Seilor = () => {
       setChatMessages(prev => [...prev, aiResponse]);
       ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
       // After swap or transfer success, refresh balances
-      if (/^(✅\sSwap executed|✅\sNative SEI transfer|✅\sERC-20 transfer)/.test(response.message)) {
+      if (/^(✅\sSwap executed|✅\sNative SEI transfer|✅\sERC-20 transfer|✅\sFixed-rate swap executed)/.test(response.message)) {
         loadWalletBalance();
       }
     } catch (error: any) {
