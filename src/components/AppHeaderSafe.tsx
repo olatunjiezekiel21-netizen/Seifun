@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Wallet, LogOut, User, Settings, ChevronDown } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
+import { privateKeyWallet } from '../services/PrivateKeyWallet';
 
 const AppHeaderSafe = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -21,20 +22,23 @@ const AppHeaderSafe = () => {
     disconnectWallet
   } = useReownWallet();
 
-  // Format address for display
-  const walletAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
+  // Prefer private key wallet for testing when ReOWN not connected
+  const usingPK = !isConnected && privateKeyWallet.isConnected;
+  const effectiveAddress = usingPK ? privateKeyWallet.getAddress() : (address || '');
+  const walletAddress = effectiveAddress ? `${effectiveAddress.slice(0, 6)}...${effectiveAddress.slice(-4)}` : '';
 
   const handleConnectWallet = async () => {
     try {
+      if (usingPK) return; // already using test wallet
       await connectWallet();
     } catch (error) {
       console.error('Failed to connect wallet:', error);
-      // Error is already handled by the hook
     }
   };
 
   const handleDisconnectWallet = async () => {
     try {
+      if (usingPK) return; // do nothing for test wallet
       await disconnectWallet();
       setIsWalletDropdownOpen(false);
     } catch (error) {
@@ -55,8 +59,6 @@ const AppHeaderSafe = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -131,8 +133,7 @@ const AppHeaderSafe = () => {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            {/* Wallet Connection */}
-            {isConnected ? (
+            {(isConnected || usingPK) ? (
               <div className="relative" ref={walletDropdownRef}>
                 <button
                   onClick={() => setIsWalletDropdownOpen(!isWalletDropdownOpen)}
@@ -150,33 +151,22 @@ const AppHeaderSafe = () => {
                         <User className="w-4 h-4 app-text-muted" />
                         <div className="flex-1">
                           <div className="text-sm app-text-primary">{walletAddress}</div>
-                          <div className="text-xs app-text-muted">{walletType}</div>
+                          <div className="text-xs app-text-muted">{usingPK ? 'Private Key (Test)' : walletType}</div>
                         </div>
                       </div>
-                      
-                      {balance && (
-                        <div className="flex items-center space-x-2 p-2 rounded-lg">
-                          <Wallet className="w-4 h-4 app-text-muted" />
-                          <div className="flex-1">
-                            <div className="text-sm app-text-primary">{parseFloat(balance).toFixed(4)} SEI</div>
-                            <div className="text-xs app-text-muted">Balance</div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <button className="w-full flex items-center space-x-2 p-2 rounded-lg hover:app-bg-secondary transition-colors">
-                        <Settings className="w-4 h-4 app-text-muted" />
-                        <span className="text-sm app-text-primary">Settings</span>
-                      </button>
-                      
                       <div className="border-t app-border pt-2">
-                        <button 
-                          onClick={handleDisconnectWallet}
-                          className="w-full flex items-center space-x-2 p-2 rounded-lg hover:app-bg-secondary transition-colors"
-                        >
-                          <LogOut className="w-4 h-4 app-text-muted" />
-                          <span className="text-sm app-text-primary">Disconnect</span>
-                        </button>
+                        {!usingPK && (
+                          <button 
+                            onClick={handleDisconnectWallet}
+                            className="w-full flex items-center space-x-2 p-2 rounded-lg hover:app-bg-secondary transition-colors"
+                          >
+                            <LogOut className="w-4 h-4 app-text-muted" />
+                            <span className="text-sm app-text-primary">Disconnect</span>
+                          </button>
+                        )}
+                        {usingPK && (
+                          <div className="text-xs app-text-muted p-2">Using built-in test wallet for convenience.</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -192,7 +182,6 @@ const AppHeaderSafe = () => {
                   <Wallet className="w-4 h-4 mr-2" />
                   {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                 </button>
-                
                 {error && (
                   <div className="absolute right-0 mt-2 w-64 app-card p-3 z-50">
                     <p className="text-red-400 text-xs">{error}</p>
@@ -220,7 +209,7 @@ const AppHeaderSafe = () => {
           <div className="md:hidden border-t app-border">
             <nav className="py-4 space-y-2">
               <Link 
-                to="/" 
+                to="/"
                 className={`block px-4 py-2 rounded-lg transition-colors ${
                   isActive('/') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
                 }`}
@@ -228,60 +217,12 @@ const AppHeaderSafe = () => {
               >
                 Home
               </Link>
-              <Link 
-                to="/app/seilist"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/seilist') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                SeiList
-              </Link>
-              <Link 
-                to="/app/safechecker"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/safechecker') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                SafeChecker
-              </Link>
-              <Link 
-                to="/app/launch"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/launch') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Launch
-              </Link>
-              <Link 
-                to="/app/seilor"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/seilor') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Seilor 0
-              </Link>
-              <Link 
-                to="/app/docs"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/docs') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Docs
-              </Link>
-              <Link 
-                to="/app/devplus"
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/devplus') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dev++
-              </Link>
+              <Link to="/app/seilist" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/seilist') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>SeiList</Link>
+              <Link to="/app/safechecker" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/safechecker') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>SafeChecker</Link>
+              <Link to="/app/launch" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/launch') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>Launch</Link>
+              <Link to="/app/seilor" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/seilor') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>Seilor 0</Link>
+              <Link to="/app/docs" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/docs') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>Docs</Link>
+              <Link to="/app/devplus" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/devplus') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>Dev++</Link>
             </nav>
           </div>
         )}
