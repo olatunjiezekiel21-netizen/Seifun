@@ -236,6 +236,9 @@ export class CambrianSeiAgent {
           const tx = data?.txHash
           if (tx) return `✅ Fixed-rate swap executed. USDC sent. TX: ${tx}`
           return `✅ Fixed-rate swap executed. USDC sent.`
+        } else {
+          const errText = await res.text().catch(()=> 'Serverless swap error')
+          throw new Error(errText)
         }
       }
       const wantsSeiOut = (params.tokenOut as any) === ('0x0' as any) || tokenOut === ('0x0' as any)
@@ -247,6 +250,9 @@ export class CambrianSeiAgent {
           const tx = data?.txHash
           if (tx) return `✅ Fixed-rate swap executed. SEI sent. TX: ${tx}`
           return `✅ Fixed-rate swap executed. SEI sent.`
+        } else {
+          const errText = await res.text().catch(()=> 'Serverless swap error')
+          throw new Error(errText)
         }
       }
     } catch {}
