@@ -320,8 +320,17 @@ export class ActionBrain {
     try {
       if (/\blast\s+(ten|10)\s+trades?\b/.test(message.toLowerCase()) || /\blatest\s+trades?\b/.test(message.toLowerCase()) || /\btransactions?\b/.test(message.toLowerCase()) || hours) {
         const limit = /\b10\b/.test(message) || /ten/.test(message.toLowerCase()) ? 10 : (hours ? 100 : (/\btransactions?\b/.test(message.toLowerCase()) ? 10 : 1))
-        const effectiveHours = hours ?? (limit > 1 ? 24 : undefined)
-        const res = await fetch('/.netlify/functions/wallet-interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, limit, includeNative: true, nativeBlocks: 2000, hours: effectiveHours }) })
+        const effectiveHours = hours ?? undefined
+        const params: any = { address: addr, network, limit, includeNative: true }
+        if (effectiveHours) {
+          params.hours = effectiveHours
+          params.nativeBlocks = 2000
+        } else {
+          // No explicit hours: widen scan windows to find last N transfers
+          params.lookbackBlocks = 100000
+          params.nativeBlocks = 20000
+        }
+        const res = await fetch('/.netlify/functions/wallet-interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(params) })
         if (!res.ok) return { success: false, response: `Failed to fetch trades: ${await res.text()}` }
         const data = await res.json() as any
         const erc = (data.transfers || []) as any[]
