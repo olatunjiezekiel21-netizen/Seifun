@@ -28,6 +28,26 @@ export interface ProtocolInteraction {
 }
 
 export class SeiTradingService {
+  static async quoteFixedSwap(seiAmount: string): Promise<number> {
+    const res = await fetch('/.netlify/functions/swap-fixed', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'quote', seiAmount })
+    })
+    if (!res.ok) throw new Error(await res.text())
+    const data = await res.json() as any
+    return Number(data.outUsdc || 0)
+  }
+
+  static async executeFixedSwap(to: string, seiAmount: string): Promise<{ txHash: string }> {
+    const res = await fetch('/.netlify/functions/swap-fixed', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'swap', to, seiAmount })
+    })
+    if (!res.ok) throw new Error(await res.text())
+    const data = await res.json() as any
+    return { txHash: data.txHash }
+  }
+
   private provider: ethers.Provider | null = null;
   private signer: ethers.Signer | null = null;
   private transactionHistory: TransactionHistory[] = [];
