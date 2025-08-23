@@ -177,6 +177,27 @@ export class ActionBrain {
     const quote = await cambrianSeiAgent.getSwapQuote({ tokenIn: tokenIn as any, tokenOut: tokenOut as any, amount: `${effectiveAmount}` })
     const out = Number(quote?.outputAmount || 0)
     if (!quote || !isFinite(out) || out <= 0) {
+      // Fallback: fixed-rate serverless for SEI->USDC
+      try {
+        const usdc = (import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6'
+        const nativeIn = String(tokenIn).toLowerCase() === '0x0'
+        const isUsdcOut = String(tokenOut).toLowerCase() === usdc.toLowerCase()
+        if (nativeIn && isUsdcOut) {
+          const res = await fetch('/.netlify/functions/swap-fixed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'quote', seiAmount: `${effectiveAmount}` }) })
+          if (res.ok) {
+            const data = await res.json() as any
+            const outUsdc = Number(data?.outUsdc || 0)
+            if (outUsdc > 0) {
+              const minOut = (outUsdc * 0.99).toString()
+              return {
+                success: true,
+                response: `✅ Quote\n• In: ${effectiveAmount} SEI\n• Expected Out: ${outUsdc} USDC\n• Min Out (@1%): ${minOut}\n\nSay "Yes" to execute or "Cancel" to abort.`,
+                data: { pendingSwap: { amount: `${effectiveAmount}`, tokenIn, tokenOut, minOut } }
+              }
+            }
+          }
+        }
+      } catch {}
       return { success: false, response: `❌ No liquidity or route found for this pair/amount on current router. Try a smaller amount or different pair.` }
     }
     const priceImpact = Number(quote.priceImpact || 0)
@@ -261,6 +282,18 @@ export class ActionBrain {
     }
     if (!/^0x[a-fA-F0-9]{40}$/.test(recipient)) {
       return { success: false, response: `❌ Invalid recipient address: ${recipient}` }
+    }
+    const normalized = intent.rawMessage.toLowerCase()
+    const usdcAddr = (import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6'
+    const isUsdc = /\busdc\b/.test(normalized)
+    if (isUsdc) {
+      const currentUSDC = (await privateKeyWallet.getUSDCBalance()).balance
+      const remainingUSDC = (parseFloat(currentUSDC) - transferAmount).toFixed(2)
+      return {
+        success: true,
+        response: `💸 Transfer Confirmation Required (USDC)\n• Amount: ${transferAmount} USDC\n• Recipient: ${recipient}\n• Current: ${currentUSDC} USDC\n• After: ${remainingUSDC} USDC\n\nReply: "Yes" to confirm or "Cancel"`,
+        data: { pendingTransfer: { amount: transferAmount, recipient, currentBalance: currentUSDC, remainingBalance: remainingUSDC, token: usdcAddr } as any }
+      }
     }
     const currentBalance = (await privateKeyWallet.getSeiBalance()).sei
     const remainingBalance = (parseFloat(currentBalance) - transferAmount).toFixed(4)

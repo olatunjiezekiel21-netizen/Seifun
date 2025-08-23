@@ -24,6 +24,7 @@ interface ConversationContext {
     currentBalance: string;
     remainingBalance: string;
     timestamp: Date;
+    token?: string; // Added for USDC transfers
   };
   // Swap confirmation context
   pendingSwap?: {
@@ -299,20 +300,21 @@ export class ChatBrain {
       // Execute the transfer using CambrianSeiAgent
       const result = await cambrianSeiAgent.transferToken(
         transfer.amount.toString(),
-        transfer.recipient as any
+        transfer.recipient as any,
+        (transfer as any).token
       );
       
       // Clear pending transfer
       this.context.pendingTransfer = undefined;
       
       return {
-        message: `✅ Transfer successful!\n\n💰 Amount: ${transfer.amount} SEI\n📤 To: ${transfer.recipient}\n🔗 Transaction: ${result}\n\nYour remaining balance: ${transfer.remainingBalance} SEI`,
+        message: `✅ Transfer successful!\n\n💰 Amount: ${transfer.amount} ${ (transfer as any).token ? 'USDC' : 'SEI' }\n📤 To: ${transfer.recipient}\n🔗 Transaction: ${result}\n\nYour remaining balance: ${transfer.remainingBalance} ${ (transfer as any).token ? 'USDC' : 'SEI' }`,
         success: true,
         intent: IntentType.TRANSFER_CONFIRMATION,
         confidence: 0.95
       };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Transfer execution failed:', error);
       
       // Clear pending transfer on failure
