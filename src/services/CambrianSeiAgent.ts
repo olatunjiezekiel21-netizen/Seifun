@@ -230,12 +230,23 @@ export class CambrianSeiAgent {
       const usdc = ((import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6').toLowerCase()
       const wantsUsdcOut = (params.tokenOut as any).toLowerCase?.() === usdc || tokenOut.toLowerCase?.() === usdc
       if (wantsUsdcOut && isNativeIn) {
-        const res = await fetch('/.netlify/functions/swap-fixed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'swap', to: this.walletAddress, seiAmount: params.amount }) })
+        const res = await fetch('/.netlify/functions/swap-fixed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'swap', to: this.walletAddress, seiAmount: params.amount, direction: 'SEI_TO_USDC' }) })
         if (res.ok) {
           const data = await res.json() as any
           const tx = data?.txHash
           if (tx) return `✅ Fixed-rate swap executed. USDC sent. TX: ${tx}`
           return `✅ Fixed-rate swap executed. USDC sent.`
+        }
+      }
+      const wantsSeiOut = (params.tokenOut as any) === ('0x0' as any) || tokenOut === ('0x0' as any)
+      const isUsdcIn = (params.tokenIn as any).toLowerCase?.() === usdc || tokenIn.toLowerCase?.() === usdc
+      if (wantsSeiOut && isUsdcIn) {
+        const res = await fetch('/.netlify/functions/swap-fixed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'swap', to: this.walletAddress, usdcAmount: params.amount, direction: 'USDC_TO_SEI' }) })
+        if (res.ok) {
+          const data = await res.json() as any
+          const tx = data?.txHash
+          if (tx) return `✅ Fixed-rate swap executed. SEI sent. TX: ${tx}`
+          return `✅ Fixed-rate swap executed. SEI sent.`
         }
       }
     } catch {}

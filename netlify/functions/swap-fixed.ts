@@ -17,38 +17,54 @@ const ERC20 = [
 export const handler: Handler = async (event) => {
 	if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 	try {
-		const { action, to, seiAmount } = JSON.parse(event.body || '{}') as { action?: 'quote' | 'swap'; to?: string; seiAmount?: string }
+		const { action, to, seiAmount, usdcAmount, direction } = JSON.parse(event.body || '{}') as { action?: 'quote' | 'swap'; to?: string; seiAmount?: string; usdcAmount?: string; direction?: 'SEI_TO_USDC' | 'USDC_TO_SEI' }
 		if (!action) return { statusCode: 400, body: 'Missing action' }
 		if (!TREASURY) return { statusCode: 500, body: 'Server not configured: SWAP_TREASURY_ADDRESS missing' }
 
+		const provider = new ethers.JsonRpcProvider(EVM_RPC)
+
 		// Quote only
 		if (action === 'quote') {
-			const inSei = Number(seiAmount || '0')
-			if (!isFinite(inSei) || inSei <= 0) return { statusCode: 400, body: 'Invalid seiAmount' }
-			const outUsdc = inSei * RATE_USDC_PER_SEI
-			return { statusCode: 200, body: JSON.stringify({ outUsdc }) }
+			if (seiAmount) {
+				const inSei = Number(seiAmount)
+				if (!isFinite(inSei) || inSei <= 0) return { statusCode: 400, body: 'Invalid seiAmount' }
+				const outUsdc = inSei * RATE_USDC_PER_SEI
+				return { statusCode: 200, body: JSON.stringify({ outUsdc }) }
+			}
+			if (usdcAmount) {
+				const inUsdc = Number(usdcAmount)
+				if (!isFinite(inUsdc) || inUsdc <= 0) return { statusCode: 400, body: 'Invalid usdcAmount' }
+				const outSei = inUsdc / RATE_USDC_PER_SEI
+				return { statusCode: 200, body: JSON.stringify({ outSei }) }
+			}
+			return { statusCode: 400, body: 'Provide seiAmount or usdcAmount for quote' }
 		}
 
-		// Swap: verify inbound SEI to treasury and send USDC
+		// Swap execution
 		if (action === 'swap') {
 			if (!to || !/^0x[a-fA-F0-9]{40}$/.test(to)) return { statusCode: 400, body: 'Invalid recipient address' }
-			const inSei = Number(seiAmount || '0')
-			if (!isFinite(inSei) || inSei <= 0) return { statusCode: 400, body: 'Invalid seiAmount' }
 			if (!HOT_PRIVATE_KEY) return { statusCode: 500, body: 'Server not configured: SWAP_HOT_WALLET_KEY missing' }
-
-			const provider = new ethers.JsonRpcProvider(EVM_RPC)
 			const hot = new ethers.Wallet(HOT_PRIVATE_KEY, provider)
 
-			// Check hot wallet USDC balance
-			const usdc = new ethers.Contract(USDC, ERC20, provider)
-			const [dec, bal] = await Promise.all([ usdc.decimals(), usdc.balanceOf(hot.address) ])
-			const outUsdc = BigInt(Math.floor(inSei * RATE_USDC_PER_SEI * 10 ** Number(dec)))
-			if (bal < outUsdc) return { statusCode: 400, body: 'Insufficient USDC liquidity in hot wallet' }
+			if ((direction || 'SEI_TO_USDC') === 'SEI_TO_USDC') {
+				const inSei = Number(seiAmount || '0')
+				if (!isFinite(inSei) || inSei <= 0) return { statusCode: 400, body: 'Invalid seiAmount' }
+				const usdc = new ethers.Contract(USDC, ERC20, provider)
+				const [dec, bal] = await Promise.all([ usdc.decimals(), usdc.balanceOf(hot.address) ])
+				const outUsdc = BigInt(Math.floor(inSei * RATE_USDC_PER_SEI * 10 ** Number(dec)))
+				if (bal < outUsdc) return { statusCode: 400, body: 'Insufficient USDC liquidity in hot wallet' }
+				const tx = await new ethers.Contract(USDC, ERC20, hot).transfer(to, outUsdc)
+				return { statusCode: 200, body: JSON.stringify({ status: 'sent', txHash: tx.hash, outUsdc: String(outUsdc) }) }
+			}
 
-			// Best-effort: optionally verify inbound SEI tx to treasury via recent txs (skipped due to indexer limits)
-			// Proceed to transfer USDC to user
-			const tx = await new ethers.Contract(USDC, ERC20, hot).transfer(to, outUsdc)
-			return { statusCode: 200, body: JSON.stringify({ status: 'sent', txHash: tx.hash, outUsdc: String(outUsdc) }) }
+			// USDC -> SEI
+			const inUsdc = Number(usdcAmount || '0')
+			if (!isFinite(inUsdc) || inUsdc <= 0) return { statusCode: 400, body: 'Invalid usdcAmount' }
+			const outSeiWei = ethers.parseEther(String(inUsdc / RATE_USDC_PER_SEI))
+			const hotBalance = await provider.getBalance(hot.address)
+			if (hotBalance < outSeiWei) return { statusCode: 400, body: 'Insufficient SEI liquidity in hot wallet' }
+			const tx = await hot.sendTransaction({ to, value: outSeiWei })
+			return { statusCode: 200, body: JSON.stringify({ status: 'sent', txHash: tx.hash, outSei: String(outSeiWei) }) }
 		}
 
 		return { statusCode: 400, body: 'Unknown action' }
