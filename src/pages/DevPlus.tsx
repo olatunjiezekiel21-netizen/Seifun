@@ -64,6 +64,9 @@ const DevPlus = () => {
   const [liquidityAmount, setLiquidityAmount] = useState({ token: '', sei: '' });
   const [burnAmount, setBurnAmount] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [badActors, setBadActors] = useState<any[]>([]);
+  const [flagAddress, setFlagAddress] = useState('');
+  const [flagReason, setFlagReason] = useState('');
   
   const { isConnected, address, connectWallet } = useReownWallet();
 
@@ -91,6 +94,17 @@ const DevPlus = () => {
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const loadBadActors = async () => {
+    try {
+      const res = await fetch('/.netlify/functions/risk-guard?list=flags')
+      if (!res.ok) return;
+      const data = await res.json()
+      setBadActors(Array.isArray(data) ? data : [])
+    } catch {}
+  }
+
+  useEffect(()=>{ loadBadActors() }, [])
 
   const loadData = () => {
     try {
@@ -319,7 +333,8 @@ const DevPlus = () => {
     { id: 'dashboard', name: 'Dashboard', icon: BarChart3 },
     { id: 'token-watch', name: 'Token Watch', icon: Eye },
     { id: 'analytics', name: 'Analytics', icon: TrendingUp },
-    { id: 'tools', name: 'Developer Tools', icon: Settings }
+    { id: 'tools', name: 'Developer Tools', icon: Settings },
+    { id: 'bad-actors', name: 'Bad Actors', icon: AlertTriangle }
   ];
 
   const getStatusColor = (status: string) => {
@@ -574,6 +589,52 @@ const DevPlus = () => {
                   <p className="app-text-muted">No tokens being tracked</p>
                   <p className="app-text-muted text-sm mt-1">Create tokens through SeiList to start tracking</p>
                 </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Bad Actors */}
+        {activeTab === 'bad-actors' && (
+          <div>
+            <h3 className="app-heading-md app-text-primary mb-6">Bad Actors</h3>
+            <div className="app-bg-secondary rounded-lg border app-border p-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <input value={flagAddress} onChange={(e)=>setFlagAddress(e.target.value)} placeholder="0x address to flag" className="app-input md:col-span-2" />
+                <input value={flagReason} onChange={(e)=>setFlagReason(e.target.value)} placeholder="Reason (optional)" className="app-input" />
+                <button onClick={async()=>{ await fetch('/.netlify/functions/risk-guard',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'flag', address: flagAddress, reason: flagReason }) }); setFlagAddress(''); setFlagReason(''); loadBadActors(); }} className="app-btn app-btn-primary">Flag</button>
+              </div>
+            </div>
+            <div className="app-bg-secondary rounded-lg border app-border">
+              {badActors.length ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b border-gray-700">
+                      <tr>
+                        <th className="text-left p-4 app-text-primary font-medium">Address</th>
+                        <th className="text-left p-4 app-text-primary font-medium">Token</th>
+                        <th className="text-left p-4 app-text-primary font-medium">Reason</th>
+                        <th className="text-left p-4 app-text-primary font-medium">Updated</th>
+                        <th className="text-left p-4 app-text-primary font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {badActors.map((b:any,i:number)=> (
+                        <tr key={i}>
+                          <td className="p-4 app-text-primary font-mono text-sm">{b.address}</td>
+                          <td className="p-4 app-text-primary text-sm">{b.token || '-'}</td>
+                          <td className="p-4 app-text-primary text-sm">{b.reason || '-'}</td>
+                          <td className="p-4 app-text-muted text-sm">{b.updatedAt || ''}</td>
+                          <td className="p-4">
+                            <button onClick={async()=>{ await fetch('/.netlify/functions/risk-guard',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'unflag', address: b.address, token: b.token }) }); loadBadActors(); }} className="app-btn app-btn-secondary text-xs">Unflag</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-8 text-center app-text-muted">No flagged addresses</div>
               )}
             </div>
           </div>

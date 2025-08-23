@@ -114,7 +114,7 @@ export class ActionBrain {
     }
 
     // Token creation
-    if (/create\s+.*token/.test(normalized) || /make\s+.*token/.test(normalized)) {
+    if (/create\s+.*token/.test(normalized) || /make\s+.*token/.test(normalized) || /create\s+.*coin/.test(normalized) || /make\s+.*coin/.test(normalized)) {
       const name = this.extractTokenName(message)
       if (name) entities.tokenName = name
       return { intent: IntentType.TOKEN_CREATE, confidence: 0.9, entities, rawMessage: message }
