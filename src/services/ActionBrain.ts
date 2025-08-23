@@ -79,9 +79,9 @@ export class ActionBrain {
     const numMatch = normalized.match(/(\d+(?:\.\d+)?)/)
     if (numMatch) entities.amount = parseFloat(numMatch[1])
 
-    // Wallet watch intents
-    if (/\b(last\s+ten|10)\s+trades\b/.test(normalized) && addrMatch) {
-      return { intent: IntentType.PROTOCOL_DATA, confidence: 0.9, entities: { tokenAddress: addrMatch[0] } as any, rawMessage: message }
+    // Wallet watch intents (trades/holdings)
+    if ((/\blast(\s+\d+)?\s+trades?\b/.test(normalized) || /\blatest\s+trades?\b/.test(normalized)) && addrMatch) {
+      return { intent: IntentType.PROTOCOL_DATA, confidence: 0.95, entities: { tokenAddress: addrMatch[0] } as any, rawMessage: message }
     }
     if (/\b(usdc\s+balance|holdings|portfolio)\b/.test(normalized) && addrMatch) {
       return { intent: IntentType.WALLET_INFO, confidence: 0.9, entities: { tokenAddress: addrMatch[0] } as any, rawMessage: message }
@@ -96,8 +96,9 @@ export class ActionBrain {
       return { intent: IntentType.SEND_TOKENS, confidence: 0.9, entities, rawMessage: message }
     }
 
-    // Swap intent
-    if (/\bswap\b/.test(normalized) || /\bexchange\b/.test(normalized) || /\btrade\b/.test(normalized)) {
+    // Swap intent (guard against 'last trade' queries)
+    const mentionsTradeForSwap = /\b(swap|exchange|trade)\b/.test(normalized) && !/\blast\s+trades?|\blatest\s+trades?/.test(normalized)
+    if (mentionsTradeForSwap) {
       // Minimal token resolution for SEI/USDC
       const usdc = (import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6'
       if (/\bsei\b/.test(normalized) && /\busdc\b/.test(normalized)) {
@@ -313,10 +314,22 @@ export class ActionBrain {
     const wantsMainnet = /\bmainnet\b/.test(message.toLowerCase())
     const wantsTestnet = /\btestnet\b/.test(message.toLowerCase())
     if (!wantsMainnet && !wantsTestnet) {
-      return { success: true, response: 'Which network? Say "mainnet" or "testnet" and repeat your request.' }
+      return { success: true, response: '🔎 Which network? Say "mainnet" or "testnet" and repeat your request.' }
     }
     const network = wantsMainnet ? 'mainnet' : 'testnet'
     try {
+      if (/\blast\s+(ten|10)\s+trades?\b/.test(message.toLowerCase()) || /\blatest\s+trades?\b/.test(message.toLowerCase())) {
+        const limit = /\b10\b/.test(message) || /ten/.test(message.toLowerCase()) ? 10 : 1
+        const res = await fetch('/.netlify/functions/wallet-interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, limit, includeNative: true, nativeBlocks: 500 }) })
+        if (!res.ok) return { success: false, response: `Failed to fetch trades: ${await res.text()}` }
+        const data = await res.json() as any
+        const erc = (data.transfers || []) as any[]
+        const nat = (data.native || []) as any[]
+        const combined = [...erc.map((t:any)=>({ type:'erc20', ...t })), ...nat.map((n:any)=>({ type:'native', ...n }))].sort((a:any,b:any)=> (b.blockNumber||0)-(a.blockNumber||0)).slice(0, limit)
+        if (!combined.length) return { success: true, response: `No recent trades found for ${addr} on ${network}.` }
+        const lines = combined.map((t:any,i:number)=> t.type==='native' ? `${i+1}. Native ${Number(t.value).toFixed(4)} SEI ${t.from?.toLowerCase()===addr.toLowerCase()?'➡️':'⬅️'} ${t.to} [${t.txHash.slice(0,8)}...]` : `${i+1}. ERC20 ${t.amount} @ ${t.token} ${t.from?.toLowerCase()===addr.toLowerCase()?'➡️':'⬅️'} ${t.to} [${t.txHash.slice(0,8)}...]`)
+        return { success: true, response: `🧾 Recent ${limit} transfer(s) for ${addr} on ${network}\n${lines.join('\n')}`, data }
+      }
       const portfolio = await fetch('/.netlify/functions/wallet-portfolio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, includeSymbols: ['SEI','USDC'] }) }).then(r=>r.json())
       const native = portfolio?.native?.balance ?? 0
       const usdc = (portfolio?.tokens || []).find((t:any)=>String(t.symbol||'').toUpperCase()==='USDC')?.balance ?? 0
