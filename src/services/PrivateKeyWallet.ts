@@ -12,12 +12,20 @@ export class PrivateKeyWallet {
 
   constructor() {
     this.provider = new ethers.JsonRpcProvider('https://evm-rpc-testnet.sei-apis.com');
-    this.wallet = new ethers.Wallet(PRIVATE_KEY, this.provider);
+    // Resilient init: if no PRIVATE_KEY, create a random ephemeral wallet to avoid runtime crashes
+    if (PRIVATE_KEY && PRIVATE_KEY.length > 40) {
+      this.wallet = new ethers.Wallet(PRIVATE_KEY, this.provider);
+    } else {
+      this.wallet = ethers.Wallet.createRandom().connect(this.provider);
+    }
   }
 
   // Connectivity helpers
   get isConnected(): boolean { return !!PRIVATE_KEY && PRIVATE_KEY.length > 40 }
-  getSigner(): ethers.Wallet { return this.wallet }
+  getSigner(): ethers.Wallet {
+    if (!this.isConnected) throw new Error('Private key wallet not configured');
+    return this.wallet;
+  }
 
   // Get wallet address
   getAddress(): string {
@@ -161,6 +169,7 @@ export class PrivateKeyWallet {
 
   // Add liquidity (simplified for testing)
   async addLiquidity(tokenAddress: string, tokenAmount: string, seiAmount: string) {
+    if (!this.isConnected) throw new Error('Private key wallet not configured');
     try {
       // First approve token spending
       const tokenContract = new ethers.Contract(tokenAddress, [
@@ -189,7 +198,7 @@ export class PrivateKeyWallet {
         tokenAmount,
         seiAmount
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
         error: error.message
@@ -199,6 +208,7 @@ export class PrivateKeyWallet {
 
   // Burn tokens
   async burnTokens(tokenAddress: string, amount: string) {
+    if (!this.isConnected) throw new Error('Private key wallet not configured');
     try {
       const tokenContract = new ethers.Contract(tokenAddress, [
         'function burn(uint256 amount) returns (bool)',
@@ -221,7 +231,7 @@ export class PrivateKeyWallet {
         amountBurned: amount,
         newTotalSupply: parseFloat(formattedSupply).toFixed(0)
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
         error: error.message
@@ -231,6 +241,7 @@ export class PrivateKeyWallet {
 
   // Transfer tokens
   async transferTokens(tokenAddress: string, toAddress: string, amount: string) {
+    if (!this.isConnected) throw new Error('Private key wallet not configured');
     try {
       const tokenContract = new ethers.Contract(tokenAddress, [
         'function transfer(address to, uint256 amount) returns (bool)',
@@ -249,7 +260,7 @@ export class PrivateKeyWallet {
         amount,
         to: toAddress
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
         error: error.message
@@ -259,6 +270,7 @@ export class PrivateKeyWallet {
 
   // Send SEI
   async sendSei(toAddress: string, amount: string) {
+    if (!this.isConnected) throw new Error('Private key wallet not configured');
     try {
       const tx = await this.wallet.sendTransaction({
         to: toAddress,
@@ -273,7 +285,7 @@ export class PrivateKeyWallet {
         amount,
         to: toAddress
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
         error: error.message
@@ -283,6 +295,7 @@ export class PrivateKeyWallet {
 
   // Simple transfer helper used by ChatBrain
   async transferToken(amount: string, to: string, token?: string): Promise<string> {
+    if (!this.isConnected) throw new Error('Private key wallet not configured');
     const isNative = !token || token === '0x0'
     if (isNative) {
       const tx = await this.wallet.sendTransaction({ to, value: ethers.parseEther(amount) })
