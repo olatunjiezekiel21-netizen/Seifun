@@ -6,6 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Seifun - Launch Safe Meme Tokens on Sei</title>
     <meta name="description" content="Professional token launchpad and safety scanner for the Sei ecosystem. Create, verify, and trade tokens with confidence." />
+    <script>
+      // Minimal runtime error overlay to avoid blank screen
+      (function(){
+        if (location.hostname.includes('localhost')) return;
+        function showError(msg){
+          var el = document.createElement('div');
+          el.style.position='fixed'; el.style.zIndex='99999'; el.style.top='0'; el.style.left='0'; el.style.right='0';
+          el.style.background='rgba(153,27,27,0.95)'; el.style.color='#fff'; el.style.padding='8px 12px'; el.style.fontFamily='ui-sans-serif,system-ui,Segoe UI,Roboto,Ubuntu'; el.style.fontSize='12px'; el.style.whiteSpace='pre-wrap';
+          el.textContent = 'Runtime error: ' + msg;
+          document.body.appendChild(el);
+        }
+        window.addEventListener('error', function(e){ try{ showError(e.message || String(e.error||e)) }catch(_){} });
+        window.addEventListener('unhandledrejection', function(e){ try{ showError((e.reason && (e.reason.message||String(e.reason))) || 'Unhandled rejection') }catch(_){} });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
