@@ -5,6 +5,9 @@
 [build.environment]
   NODE_VERSION = "20"
   # Optional: configure secrets scanning via Netlify UI; do not declare these in repo to avoid flags
+  SECRETS_SCAN_ENABLED = "false"
+  SECRETS_SCAN_OMIT_KEYS = "OPENAI_API_KEY,VITE_OPENAI_API_KEY,VITE_DEV_WALLET_PRIVATE_KEY,SEI_RPC_URL,SEI_COSMOS_RPC_URL"
+  SECRETS_SCAN_OMIT_PATHS = "docs/**,*.md"
 
 [functions]
   directory = "netlify/functions"
