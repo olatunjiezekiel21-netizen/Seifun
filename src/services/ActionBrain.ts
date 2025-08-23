@@ -75,9 +75,13 @@ export class ActionBrain {
     const addrMatch = normalized.match(/0x[a-f0-9]{40}/i)
     if (addrMatch) entities.tokenAddress = addrMatch[0]
 
-    // Extract simple amount
-    const numMatch = normalized.match(/(\d+(?:\.\d+)?)/)
-    if (numMatch) entities.amount = parseFloat(numMatch[1])
+    // Wallet watch intents
+    if (/\b(last\s+ten|10)\s+trades\b/.test(normalized) && addrMatch) {
+      return { intent: IntentType.PROTOCOL_DATA, confidence: 0.9, entities: { tokenAddress: addrMatch[0] } as any, rawMessage: message }
+    }
+    if (/\b(usdc\s+balance|holdings|portfolio)\b/.test(normalized) && addrMatch) {
+      return { intent: IntentType.WALLET_INFO, confidence: 0.9, entities: { tokenAddress: addrMatch[0] } as any, rawMessage: message }
+    }
 
     // Send/Transfer tokens
     if (/\b(send|transfer)\b/.test(normalized) && /0x[a-f0-9]{40}/i.test(normalized)) {
@@ -124,7 +128,7 @@ export class ActionBrain {
     if (/(add|create|make).*\b(todo|task)\b/i.test(normalized)) {
       return { intent: IntentType.TODO_ADD, confidence: 0.9, entities, rawMessage: message }
     }
-    if (/(what are we doing today|today'?s todo|my tasks|list todos)/i.test(normalized)) {
+    if (/(what are we doing today|today'?s todo|my tasks|list todos|remind me|what do i want to do)/i.test(normalized)) {
       return { intent: IntentType.TODO_LIST, confidence: 0.9, entities, rawMessage: message }
     }
 
@@ -154,6 +158,10 @@ export class ActionBrain {
           return this.executeTodoAdd(intentResult)
         case IntentType.TODO_LIST:
           return this.executeTodoList(intentResult)
+        case IntentType.WALLET_INFO:
+          return await this.executeWalletWatch(intentResult.rawMessage)
+        case IntentType.PROTOCOL_DATA:
+          return await this.executeWalletWatch(intentResult.rawMessage)
         case IntentType.CONVERSATION:
           return this.executeConversation(intentResult)
         default:
@@ -292,6 +300,27 @@ export class ActionBrain {
     return { success: true, response, data: { balance: bal } }
   }
 
+  // Wallet watch (trades/holdings/USDC) via serverless endpoints
+  private async executeWalletWatch(message: string): Promise<ActionResponse> {
+    const addr = (message.match(/0x[a-f0-9]{40}/i)?.[0] || '')
+    if (!addr) return { success: false, response: 'Provide a wallet address (0x...)' }
+    // Ask for network if missing
+    const wantsMainnet = /\bmainnet\b/.test(message.toLowerCase())
+    const wantsTestnet = /\btestnet\b/.test(message.toLowerCase())
+    if (!wantsMainnet && !wantsTestnet) {
+      return { success: true, response: 'Which network? Say "mainnet" or "testnet" and repeat your request.' }
+    }
+    const network = wantsMainnet ? 'mainnet' : 'testnet'
+    try {
+      const portfolio = await fetch('/.netlify/functions/wallet-portfolio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, includeSymbols: ['SEI','USDC'] }) }).then(r=>r.json())
+      const native = portfolio?.native?.balance ?? 0
+      const usdc = (portfolio?.tokens || []).find((t:any)=>String(t.symbol||'').toUpperCase()==='USDC')?.balance ?? 0
+      return { success: true, response: `👛 Wallet ${addr}\n• Network: ${network}\n• SEI: ${native}\n• USDC: ${usdc}`, data: { portfolio } }
+    } catch (e:any) {
+      return { success: false, response: `Failed to fetch wallet info: ${e.message||e}` }
+    }
+  }
+
   // Transfer confirmation setup (ChatBrain will execute on Yes)
   private async executeSendTokens(intent: IntentResult): Promise<ActionResponse> {
     const { transferAmount, recipient } = intent.entities
@@ -324,9 +353,12 @@ export class ActionBrain {
 
   // TODOs minimal
   private executeTodoAdd(intent: IntentResult): ActionResponse {
-    const task = intent.rawMessage.replace(/add|create|make/gi, '').replace(/todo|task/gi, '').trim()
+    const task = intent.rawMessage.replace(/add|create|make|todo|task|remind me to/gi, '').replace(/\s+/g,' ').trim()
+    if (!task) {
+      return { success: true, response: '📝 What should I add to your TODOs? You can say: "Remind me to check liquidity at 5pm"' }
+    }
     const todos = JSON.parse(localStorage.getItem('seilor_todos') || '[]')
-    todos.unshift({ task, createdAt: new Date().toISOString() })
+    todos.unshift({ task, createdAt: new Date().toISOString(), completed: false })
     localStorage.setItem('seilor_todos', JSON.stringify(todos))
     return { success: true, response: `✅ Added to your todo: ${task}` }
   }
@@ -334,7 +366,7 @@ export class ActionBrain {
   private executeTodoList(_intent: IntentResult): ActionResponse {
     const todos = JSON.parse(localStorage.getItem('seilor_todos') || '[]')
     if (!todos.length) return { success: true, response: '📝 No todos yet.' }
-    const lines = todos.slice(0, 10).map((t: any, i: number) => `${i + 1}. ${t.task}`)
+    const lines = todos.slice(0, 10).map((t: any, i: number) => `${i + 1}. ${t.completed ? '✅ ' : ''}${t.task}`)
     return { success: true, response: `📝 Your Todos\n${lines.join('\n')}` }
   }
 

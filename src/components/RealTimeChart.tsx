@@ -80,35 +80,40 @@ const RealTimeChart: React.FC = () => {
   // Load price data for selected token
   useEffect(() => {
     if (!selectedToken) return;
-    
     setIsLoading(true);
-    
-    // Get chart data from unified service
+
+    let stop = false
     const loadChartData = async () => {
       try {
-        const chartData = unifiedTokenService.getChartData(selectedToken);
+        // Fetch OHLCV from serverless candles (1m granularity; UI timeframe can be applied client-side)
+        const res = await fetch(`/.netlify/functions/candles?token=${selectedToken}&tf=1m`)
+        if (!res.ok) throw new Error(await res.text())
+        const data = await res.json() as { series: Array<{ time:number; open:number; high:number; low:number; close:number; volume:number }> }
         const token = allTokens.find(t => t.address === selectedToken);
-        
+        if (stop) return
         if (token) {
           setTokenInfo(token);
-          
-          // Convert chart data to price points
-          const pricePoints: PricePoint[] = chartData.map(point => ({
-            timestamp: point.timestamp,
-            price: point.close,
-            volume: point.volume
-          }));
-          
+          const pricePoints: PricePoint[] = (data.series || []).map(p => ({ timestamp: p.time * 1000, price: p.close, volume: p.volume || 0 }))
           setPriceData(pricePoints);
+        } else {
+          setPriceData([])
         }
       } catch (error) {
         console.error('Failed to load chart data:', error);
+        // Fallback to any cached chart data if available
+        try {
+          const chartData = unifiedTokenService.getChartData(selectedToken);
+          const pricePoints: PricePoint[] = chartData.map(point => ({ timestamp: point.timestamp, price: point.close, volume: point.volume }))
+          setPriceData(pricePoints)
+        } catch {}
       } finally {
         setIsLoading(false);
       }
-    };
-    
+    }
+
     loadChartData();
+    const id = setInterval(loadChartData, 15000)
+    return () => { stop = true; clearInterval(id) }
   }, [selectedToken, allTokens]);
 
   // Render chart based on type

@@ -43,6 +43,7 @@ const Seilor = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [newTodo, setNewTodo] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [toolsCollapsed, setToolsCollapsed] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [todos, setTodos] = useState<Array<{
     id: string;
@@ -340,9 +341,18 @@ const Seilor = () => {
 
               {activePanel === 'ai-tools' && (
                 <div className="p-6">
-                  <h2 className="text-xl font-bold text-white mb-4">AI Tools</h2>
-                  <p className="text-slate-400 mb-6">Scan tokens, create new tokens, and manage swaps directly from the AI interface.</p>
-                  <AIInterface />
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-white">AI Tools</h2>
+                    <button onClick={() => setToolsCollapsed(!toolsCollapsed)} className="px-3 py-1 text-xs rounded-lg bg-slate-700/60 text-slate-200 border border-slate-600/60 lg:hidden">
+                      {toolsCollapsed ? 'Show' : 'Hide'}
+                    </button>
+                  </div>
+                  {!toolsCollapsed && (
+                    <div className="lg:hidden mb-4 text-slate-300 text-xs">Tools are collapsed for mobile convenience.</div>
+                  )}
+                  <div className={`${toolsCollapsed ? 'hidden lg:block' : ''}`}>
+                    <AIInterface />
+                  </div>
                 </div>
               )}
 
