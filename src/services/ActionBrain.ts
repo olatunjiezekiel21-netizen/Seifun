@@ -1,6 +1,7 @@
 import { cambrianSeiAgent, SwapParams } from './CambrianSeiAgent'
 import { privateKeyWallet } from './PrivateKeyWallet'
 import { TokenScanner } from '../utils/tokenScanner'
+import { unifiedTokenService } from './UnifiedTokenService'
 
 // Intent Types for NLP Processing
 export enum IntentType {
@@ -47,6 +48,8 @@ interface ExtractedEntities {
   tokenOut?: string
   recipient?: string
   transferAmount?: number
+  tokenInName?: string
+  tokenOutName?: string
 }
 
 // Intent Recognition Result
@@ -97,7 +100,7 @@ export class ActionBrain {
     }
 
     // Swap intent (guard against 'last trade' queries)
-    const mentionsTradeForSwap = /\b(swap|exchange|trade)\b/.test(normalized) && !/\blast\s+trades?|\blatest\s+trades?/.test(normalized)
+    const mentionsTradeForSwap = /\b(swap|exchange|trade|buy|sell)\b/.test(normalized) && !/\blast\s+trades?|\blatest\s+trades?/.test(normalized)
     if (mentionsTradeForSwap) {
       // Minimal token resolution for SEI/USDC
       const usdc = (import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6'
@@ -109,6 +112,17 @@ export class ActionBrain {
           entities.tokenIn = usdc
           entities.tokenOut = '0x0'
         }
+      }
+      // Name-based intents
+      const buyMatch = message.match(/\bbuy\s+([A-Za-z0-9_.$\-\s]{2,})/i)
+      const sellMatch = message.match(/\bsell\s+([A-Za-z0-9_.$\-\s]{2,})/i)
+      if (buyMatch) {
+        entities.tokenOutName = buyMatch[1].trim()
+        if (!entities.tokenIn) entities.tokenIn = '0x0' // default buy with SEI
+      }
+      if (sellMatch) {
+        entities.tokenInName = sellMatch[1].trim()
+        if (!entities.tokenOut || /back to\s+sei|to\s+sei/i.test(message)) entities.tokenOut = '0x0'
       }
       return { intent: IntentType.SYMPHONY_SWAP, confidence: 0.9, entities, rawMessage: message }
     }
@@ -180,13 +194,42 @@ export class ActionBrain {
 
   // Swap: quote → confirm (pendingSwap)
   private async executeSymphonySwap(intent: IntentResult): Promise<ActionResponse> {
-    const { amount, tokenIn, tokenOut, seiAmount, tokenAmount } = intent.entities as any
+    let { amount, tokenIn, tokenOut, seiAmount, tokenAmount, tokenInName, tokenOutName } = intent.entities as any
+    // Resolve token names to addresses from UnifiedTokenService
+    const resolveByName = async (name: string): Promise<{ ok: true, address: string } | { ok: false, choices: Array<{ name:string; symbol:string; address:string }> }> => {
+      const tokens = await unifiedTokenService.getAllTokens()
+      const matches = tokens.filter(t =>
+        t.name.toLowerCase().includes(name.toLowerCase()) ||
+        t.symbol.toLowerCase() === name.toLowerCase()
+      )
+      if (matches.length === 1) return { ok: true, address: matches[0].address }
+      if (matches.length === 0) return { ok: false, choices: [] }
+      return { ok: false, choices: matches.slice(0, 7).map(t => ({ name: t.name, symbol: t.symbol, address: t.address })) }
+    }
+    if (tokenOutName && (!tokenOut || !/^0x[a-fA-F0-9]{40}$/.test(tokenOut))) {
+      const r = await resolveByName(tokenOutName)
+      if ((r as any).ok) tokenOut = (r as any).address
+      else {
+        const choices = (r as any).choices as any[]
+        const list = choices.length ? choices.map(c => `${c.symbol} • ${c.name} • ${c.address.slice(0,6)}...${c.address.slice(-4)}`).join('\n') : 'None found.'
+        return { success: true, response: `🔎 I couldn't uniquely identify "${tokenOutName}".\n${choices.length ? 'Did you mean:\n'+list+'\n\nReply with the exact name or paste a contract address.' : 'No matches on Launch/SeiList. Please paste a contract address.'}` }
+      }
+    }
+    if (tokenInName && (!tokenIn || !/^0x[a-fA-F0-9]{40}$/.test(tokenIn))) {
+      const r = await resolveByName(tokenInName)
+      if ((r as any).ok) tokenIn = (r as any).address
+      else {
+        const choices = (r as any).choices as any[]
+        const list = choices.length ? choices.map(c => `${c.symbol} • ${c.name} • ${c.address.slice(0,6)}...${c.address.slice(-4)}`).join('\n') : 'None found.'
+        return { success: true, response: `🔎 I couldn't uniquely identify "${tokenInName}".\n${choices.length ? 'Did you mean:\n'+list+'\n\nReply with the exact name or paste a contract address.' : 'No matches on Launch/SeiList. Please paste a contract address.'}` }
+      }
+    }
     if (!tokenIn || !tokenOut) {
       return { success: false, response: `🔄 Please specify both input and output tokens. Example: "Swap 10 SEI to USDC"` }
     }
     const effectiveAmount = (amount ?? seiAmount ?? tokenAmount) as number | undefined
     if (!effectiveAmount || !isFinite(effectiveAmount) || effectiveAmount <= 0) {
-      return { success: false, response: `❌ Missing or invalid amount. Example: "Swap 10 SEI to USDC"` }
+      return { success: true, response: `💡 How much should I ${String(intent.rawMessage).toLowerCase().includes('sell') ? 'sell' : 'buy'}? For example: "Buy 50 ${tokenOutName ? tokenOutName : 'USDC'} with SEI" or "Sell 25 ${tokenInName ? tokenInName : ''} to SEI"` }
     }
     const quote = await cambrianSeiAgent.getSwapQuote({ tokenIn: tokenIn as any, tokenOut: tokenOut as any, amount: `${effectiveAmount}` })
     const out = Number(quote?.outputAmount || 0)
@@ -220,28 +263,22 @@ export class ActionBrain {
             const data2 = await res2.json() as any
             const outSei = Number(data2?.outSei || 0)
             if (outSei > 0) {
-              const minOut = (outSei * 0.99).toString()
+              const minOut2 = (outSei * 0.99).toString()
               return {
                 success: true,
-                response: `✅ Quote\n• In: ${effectiveAmount} USDC\n• Expected Out: ${outSei} SEI\n• Min Out (@1%): ${minOut}\n\nSay "Yes" to execute or "Cancel" to abort.`,
-                data: { pendingSwap: { amount: `${effectiveAmount}`, tokenIn, tokenOut, minOut } }
+                response: `✅ Quote\n• In: ${effectiveAmount} USDC\n• Expected Out: ${outSei} SEI\n• Min Out (@1%): ${minOut2}\n\nSay "Yes" to execute or "Cancel" to abort.`,
+                data: { pendingSwap: { amount: `${effectiveAmount}`, tokenIn, tokenOut, minOut: minOut2 } }
               }
             }
           }
         }
       } catch {}
-      return { success: false, response: `❌ No liquidity or route found for this pair/amount on current router. Try a smaller amount or different pair.` }
+      return { success: false, response: `❌ No liquidity or route found for this pair/amount on current router. Try a different amount or add liquidity first (Dev++).` }
     }
-    const priceImpact = Number(quote.priceImpact || 0)
-    if (isFinite(priceImpact) && priceImpact > 5) {
-      return { success: false, response: `🚫 High price impact (${priceImpact.toFixed(2)}%). Try a smaller amount or different pair.` }
-    }
-    const slippageBps = 100
-    const minOut = (out * (1 - slippageBps / 10_000)).toString()
-    const displayToken = (addr: string) => addr === '0x0' ? 'WSEI' : addr
+    const minOut = (out * 0.99).toFixed(6)
     return {
       success: true,
-      response: `✅ Quote\n• In: ${effectiveAmount} ${displayToken(tokenIn as any)}\n• Expected Out: ${out}\n• Impact: ${isFinite(priceImpact) ? priceImpact.toFixed(2) : '0.00'}%\n• Min Out (@1%): ${minOut}\n\nSay "Yes" to execute or "Cancel" to abort.`,
+      response: `✅ Quote • In: ${effectiveAmount} • Expected Out: ${out} • Min Out (@1%): ${minOut}\nSay "Yes" to execute or "Cancel" to abort.`,
       data: { pendingSwap: { amount: `${effectiveAmount}`, tokenIn, tokenOut, minOut } }
     }
   }
