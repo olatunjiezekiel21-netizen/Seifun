@@ -197,6 +197,24 @@ export class ActionBrain {
             }
           }
         }
+        // USDC -> SEI fallback
+        const nativeOut = String(tokenOut).toLowerCase() === '0x0'
+        const isUsdcIn = String(tokenIn).toLowerCase() === usdc.toLowerCase()
+        if (nativeOut && isUsdcIn) {
+          const res2 = await fetch('/.netlify/functions/swap-fixed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'quote', usdcAmount: `${effectiveAmount}` }) })
+          if (res2.ok) {
+            const data2 = await res2.json() as any
+            const outSei = Number(data2?.outSei || 0)
+            if (outSei > 0) {
+              const minOut = (outSei * 0.99).toString()
+              return {
+                success: true,
+                response: `✅ Quote\n• In: ${effectiveAmount} USDC\n• Expected Out: ${outSei} SEI\n• Min Out (@1%): ${minOut}\n\nSay "Yes" to execute or "Cancel" to abort.`,
+                data: { pendingSwap: { amount: `${effectiveAmount}`, tokenIn, tokenOut, minOut } }
+              }
+            }
+          }
+        }
       } catch {}
       return { success: false, response: `❌ No liquidity or route found for this pair/amount on current router. Try a smaller amount or different pair.` }
     }
