@@ -12,12 +12,20 @@ export const handler: Handler = async (event) => {
 		const rpc = process.env.SEI_RPC_URL || (network === 'testnet' ? EVM_TESTNET : EVM_MAINNET)
 		const provider = new ethers.JsonRpcProvider(rpc)
 		const latest = await provider.getBlockNumber()
-		const fromBlock = Math.max(0, latest - lookbackBlocks)
+		const maxLogsWindow = 50_000
+		const window = Math.max(1_000, Math.min(maxLogsWindow, lookbackBlocks))
+		const fromBlock = Math.max(0, latest - window)
 
 		const transferTopic = ethers.id('Transfer(address,address,uint256)')
 		const walletTopic = ethers.zeroPadValue(address, 32).toLowerCase()
-		const logsIn = await provider.getLogs({ fromBlock, toBlock: latest, topics: [transferTopic, null, walletTopic] }).catch(() => [])
-		const logsOut = await provider.getLogs({ fromBlock, toBlock: latest, topics: [transferTopic, walletTopic, null] }).catch(() => [])
+		let logsIn: any[] = []
+		let logsOut: any[] = []
+		try {
+			logsIn = await provider.getLogs({ fromBlock, toBlock: latest, topics: [transferTopic, null, walletTopic] })
+			logsOut = await provider.getLogs({ fromBlock, toBlock: latest, topics: [transferTopic, walletTopic, null] })
+		} catch (e:any) {
+			return { statusCode: 200, body: JSON.stringify({ transfers: [], native: [], note: `log query failed: ${e?.message||e}` }) }
+		}
 		const decode = (log: any) => ({ token: log.address, from: '0x' + log.topics[1].slice(26), to: '0x' + log.topics[2].slice(26), amount: ethers.getBigInt(log.data).toString(), txHash: log.transactionHash, blockNumber: log.blockNumber })
 		const erc20Transfers = [...logsIn, ...logsOut].map(decode).sort((a,b)=> b.blockNumber - a.blockNumber).slice(0, Math.max(1, Math.min(100, limit)))
 
