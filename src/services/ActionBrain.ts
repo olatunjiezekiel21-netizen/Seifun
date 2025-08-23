@@ -80,7 +80,7 @@ export class ActionBrain {
     if (numMatch) entities.amount = parseFloat(numMatch[1])
 
     // Wallet watch intents (trades/holdings)
-    if ((/\blast(\s+\d+)?\s+trades?\b/.test(normalized) || /\blatest\s+trades?\b/.test(normalized)) && addrMatch) {
+    if ((/\blast(\s+\d+)?\s+trades?\b/.test(normalized) || /\blatest\s+trades?\b/.test(normalized) || /\btransactions?\b/.test(normalized)) && addrMatch) {
       return { intent: IntentType.PROTOCOL_DATA, confidence: 0.95, entities: { tokenAddress: addrMatch[0] } as any, rawMessage: message }
     }
     if (/\b(usdc\s+balance|holdings|portfolio)\b/.test(normalized) && addrMatch) {
@@ -318,17 +318,18 @@ export class ActionBrain {
     const hoursMatch = message.toLowerCase().match(/last\s+(\d{1,3})\s*hours?/) 
     const hours = hoursMatch ? Math.min(168, Math.max(1, parseInt(hoursMatch[1]||'24'))) : undefined
     try {
-      if (/\blast\s+(ten|10)\s+trades?\b/.test(message.toLowerCase()) || /\blatest\s+trades?\b/.test(message.toLowerCase()) || hours) {
-        const limit = /\b10\b/.test(message) || /ten/.test(message.toLowerCase()) ? 10 : (hours ? 100 : 1)
-        const res = await fetch('/.netlify/functions/wallet-interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, limit, includeNative: true, nativeBlocks: 800, hours }) })
+      if (/\blast\s+(ten|10)\s+trades?\b/.test(message.toLowerCase()) || /\blatest\s+trades?\b/.test(message.toLowerCase()) || /\btransactions?\b/.test(message.toLowerCase()) || hours) {
+        const limit = /\b10\b/.test(message) || /ten/.test(message.toLowerCase()) ? 10 : (hours ? 100 : (/\btransactions?\b/.test(message.toLowerCase()) ? 10 : 1))
+        const effectiveHours = hours ?? (limit > 1 ? 24 : undefined)
+        const res = await fetch('/.netlify/functions/wallet-interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, limit, includeNative: true, nativeBlocks: 2000, hours: effectiveHours }) })
         if (!res.ok) return { success: false, response: `Failed to fetch trades: ${await res.text()}` }
         const data = await res.json() as any
         const erc = (data.transfers || []) as any[]
         const nat = (data.native || []) as any[]
         const combined = [...erc.map((t:any)=>({ type:'erc20', ...t })), ...nat.map((n:any)=>({ type:'native', ...n }))].sort((a:any,b:any)=> (b.blockNumber||0)-(a.blockNumber||0)).slice(0, limit)
-        if (!combined.length) return { success: true, response: `No recent trades found for ${addr} on ${network}${hours?` in last ${hours}h`:''}.` }
+        if (!combined.length) return { success: true, response: `No recent trades found for ${addr} on ${network}${effectiveHours?` in last ${effectiveHours}h`:''}.` }
         const lines = combined.map((t:any,i:number)=> t.type==='native' ? `${i+1}. Native ${Number(t.value).toFixed(4)} SEI ${t.from?.toLowerCase()===addr.toLowerCase()?'➡️':'⬅️'} ${t.to} [${t.txHash.slice(0,8)}...]` : `${i+1}. ERC20 ${t.amount} @ ${t.token} ${t.from?.toLowerCase()===addr.toLowerCase()?'➡️':'⬅️'} ${t.to} [${t.txHash.slice(0,8)}...]`)
-        return { success: true, response: `🧾 Recent ${combined.length} transfer(s) for ${addr} on ${network}${hours?` (last ${hours}h)`:''}\n${lines.join('\n')}`, data }
+        return { success: true, response: `🧾 Recent ${combined.length} transfer(s) for ${addr} on ${network}${effectiveHours?` (last ${effectiveHours}h)`:''}\n${lines.join('\n')}`, data }
       }
       const portfolio = await fetch('/.netlify/functions/wallet-portfolio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, includeSymbols: ['SEI','USDC'] }) }).then(r=>r.json())
       const native = portfolio?.native?.balance ?? 0
