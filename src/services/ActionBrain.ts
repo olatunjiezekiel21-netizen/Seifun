@@ -310,25 +310,25 @@ export class ActionBrain {
   private async executeWalletWatch(message: string): Promise<ActionResponse> {
     const addr = (message.match(/0x[a-f0-9]{40}/i)?.[0] || '')
     if (!addr) return { success: false, response: 'Provide a wallet address (0x...)' }
-    // Ask for network if missing
+    // Detect network or default to mainnet if omitted
     const wantsMainnet = /\bmainnet\b/.test(message.toLowerCase())
     const wantsTestnet = /\btestnet\b/.test(message.toLowerCase())
-    if (!wantsMainnet && !wantsTestnet) {
-      return { success: true, response: '🔎 Which network? Say "mainnet" or "testnet" and repeat your request.' }
-    }
-    const network = wantsMainnet ? 'mainnet' : 'testnet'
+    const network = wantsMainnet ? 'mainnet' : wantsTestnet ? 'testnet' : 'mainnet'
+    // Parse hours window like 'last 24 hours'
+    const hoursMatch = message.toLowerCase().match(/last\s+(\d{1,3})\s*hours?/) 
+    const hours = hoursMatch ? Math.min(168, Math.max(1, parseInt(hoursMatch[1]||'24'))) : undefined
     try {
-      if (/\blast\s+(ten|10)\s+trades?\b/.test(message.toLowerCase()) || /\blatest\s+trades?\b/.test(message.toLowerCase())) {
-        const limit = /\b10\b/.test(message) || /ten/.test(message.toLowerCase()) ? 10 : 1
-        const res = await fetch('/.netlify/functions/wallet-interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, limit, includeNative: true, nativeBlocks: 500 }) })
+      if (/\blast\s+(ten|10)\s+trades?\b/.test(message.toLowerCase()) || /\blatest\s+trades?\b/.test(message.toLowerCase()) || hours) {
+        const limit = /\b10\b/.test(message) || /ten/.test(message.toLowerCase()) ? 10 : (hours ? 100 : 1)
+        const res = await fetch('/.netlify/functions/wallet-interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, limit, includeNative: true, nativeBlocks: 800, hours }) })
         if (!res.ok) return { success: false, response: `Failed to fetch trades: ${await res.text()}` }
         const data = await res.json() as any
         const erc = (data.transfers || []) as any[]
         const nat = (data.native || []) as any[]
         const combined = [...erc.map((t:any)=>({ type:'erc20', ...t })), ...nat.map((n:any)=>({ type:'native', ...n }))].sort((a:any,b:any)=> (b.blockNumber||0)-(a.blockNumber||0)).slice(0, limit)
-        if (!combined.length) return { success: true, response: `No recent trades found for ${addr} on ${network}.` }
+        if (!combined.length) return { success: true, response: `No recent trades found for ${addr} on ${network}${hours?` in last ${hours}h`:''}.` }
         const lines = combined.map((t:any,i:number)=> t.type==='native' ? `${i+1}. Native ${Number(t.value).toFixed(4)} SEI ${t.from?.toLowerCase()===addr.toLowerCase()?'➡️':'⬅️'} ${t.to} [${t.txHash.slice(0,8)}...]` : `${i+1}. ERC20 ${t.amount} @ ${t.token} ${t.from?.toLowerCase()===addr.toLowerCase()?'➡️':'⬅️'} ${t.to} [${t.txHash.slice(0,8)}...]`)
-        return { success: true, response: `🧾 Recent ${limit} transfer(s) for ${addr} on ${network}\n${lines.join('\n')}`, data }
+        return { success: true, response: `🧾 Recent ${combined.length} transfer(s) for ${addr} on ${network}${hours?` (last ${hours}h)`:''}\n${lines.join('\n')}`, data }
       }
       const portfolio = await fetch('/.netlify/functions/wallet-portfolio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network, includeSymbols: ['SEI','USDC'] }) }).then(r=>r.json())
       const native = portfolio?.native?.balance ?? 0

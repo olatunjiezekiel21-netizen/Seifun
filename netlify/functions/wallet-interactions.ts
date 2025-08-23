@@ -7,13 +7,15 @@ const EVM_TESTNET = 'https://evm-rpc-testnet.sei-apis.com'
 export const handler: Handler = async (event) => {
 	if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 	try {
-		const { address, network = 'testnet', lookbackBlocks = 200_000, limit = 10, includeNative = true, nativeBlocks = 300 } = JSON.parse(event.body || '{}') as { address?: string; network?: 'mainnet' | 'testnet'; lookbackBlocks?: number; limit?: number; includeNative?: boolean; nativeBlocks?: number }
+		const { address, network = 'testnet', lookbackBlocks = 200_000, limit = 10, includeNative = true, nativeBlocks = 300, hours } = JSON.parse(event.body || '{}') as { address?: string; network?: 'mainnet' | 'testnet'; lookbackBlocks?: number; limit?: number; includeNative?: boolean; nativeBlocks?: number; hours?: number }
 		if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) return { statusCode: 400, body: 'Provide valid EVM address' }
 		const rpc = process.env.SEI_RPC_URL || (network === 'testnet' ? EVM_TESTNET : EVM_MAINNET)
 		const provider = new ethers.JsonRpcProvider(rpc)
 		const latest = await provider.getBlockNumber()
 		const maxLogsWindow = 50_000
-		const window = Math.max(1_000, Math.min(maxLogsWindow, lookbackBlocks))
+		const estBlocksPerHour = 3600 // approx; adjust if needed per network
+		const windowFromHours = hours && hours > 0 ? Math.min(maxLogsWindow, Math.max(1000, Math.floor(hours * estBlocksPerHour))) : undefined
+		const window = windowFromHours ?? Math.max(1_000, Math.min(maxLogsWindow, lookbackBlocks))
 		const fromBlock = Math.max(0, latest - window)
 
 		const transferTopic = ethers.id('Transfer(address,address,uint256)')
