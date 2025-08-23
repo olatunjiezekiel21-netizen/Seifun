@@ -39,6 +39,10 @@ interface TokenDetailsModalProps {
 const TokenDetailsModal: React.FC<TokenDetailsModalProps> = ({ isOpen, onClose, token }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'swap'>('overview');
   const [copied, setCopied] = useState<string | null>(null);
+  const [side, setSide] = useState<'buy' | 'sell'>('buy');
+  const [amount, setAmount] = useState<string>('');
+  const [quote, setQuote] = useState<string>('');
+  const [processing, setProcessing] = useState<boolean>(false);
 
   // Factory and dev wallet addresses
   const FACTORY_ADDRESS = '0xfDF1F5dA44B49a3FEf61B160A91B1241f761cf0C';
@@ -75,6 +79,46 @@ const TokenDetailsModal: React.FC<TokenDetailsModalProps> = ({ isOpen, onClose, 
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'swap', label: 'Swap', icon: ArrowUpDown }
   ];
+
+  const handleQuote = async () => {
+    if (!token) return;
+    try {
+      setProcessing(true);
+      const { seiAgentKit } = await import('../services/SeiAgentKit');
+      const tokenTicker = token.address; // pass address; kit resolves addresses
+      if (side === 'buy') {
+        const q = await seiAgentKit.quote(amount, 'USDC', tokenTicker);
+        setQuote(`${q.outputAmount.toFixed(6)} ${token.symbol}`);
+      } else {
+        const q = await seiAgentKit.quote(amount, tokenTicker, 'USDC');
+        setQuote(`${q.outputAmount.toFixed(6)} USDC`);
+      }
+    } catch (e: any) {
+      setQuote(`Quote failed: ${e.message || 'Error'}`);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleSwap = async () => {
+    if (!token) return;
+    try {
+      setProcessing(true);
+      const { seiAgentKit } = await import('../services/SeiAgentKit');
+      const tokenTicker = token.address;
+      let res: any;
+      if (side === 'buy') {
+        res = await seiAgentKit.swap(amount, 'USDC', tokenTicker);
+      } else {
+        res = await seiAgentKit.swap(amount, tokenTicker, 'USDC');
+      }
+      alert(typeof res === 'string' ? res : 'Swap executed');
+    } catch (e: any) {
+      alert(`Swap failed: ${e.message || 'Error'}`);
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -286,21 +330,36 @@ const TokenDetailsModal: React.FC<TokenDetailsModalProps> = ({ isOpen, onClose, 
 
           {activeTab === 'swap' && (
             <div className="space-y-6">
-              <div className="text-center py-12">
-                <ArrowUpDown className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Token Swap</h3>
-                <p className="text-gray-600 mb-6">
-                  Swap {token.symbol} with other tokens directly from the platform.
-                </p>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-yellow-700">
-                    <AlertTriangle className="w-5 h-5" />
-                    <span className="font-medium">Integration in Progress</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 app-bg-tertiary rounded-xl border app-border p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <button onClick={() => setSide('buy')} className={`px-3 py-1 rounded ${side==='buy'?'bg-green-600 text-white':'bg-gray-200 text-gray-800'}`}>Buy</button>
+                    <button onClick={() => setSide('sell')} className={`px-3 py-1 rounded ${side==='sell'?'bg-red-600 text-white':'bg-gray-200 text-gray-800'}`}>Sell</button>
                   </div>
-                  <p className="text-yellow-600 text-sm mt-1">
-                    DEX integration for seamless token swapping is being implemented.
-                  </p>
+                  <div className="flex items-center gap-2 mb-3">
+                    <input value={amount} onChange={(e)=>setAmount(e.target.value)} type="number" placeholder={side==='buy'?'Amount USDC':'Amount '+token.symbol} className="flex-1 border rounded px-3 py-2" />
+                    <button disabled={!amount || processing} onClick={handleQuote} className="px-3 py-2 bg-slate-800 text-white rounded">Quote</button>
+                    <button disabled={!amount || processing} onClick={handleSwap} className="px-3 py-2 bg-blue-600 text-white rounded">Swap</button>
+                  </div>
+                  <div className="text-sm text-gray-600 min-h-[24px]">{quote}</div>
+                  {processing && <div className="text-xs text-gray-500 mt-2">Processing...</div>}
                 </div>
+                <div className="app-bg-tertiary rounded-xl border app-border p-4">
+                  <div className="font-medium mb-2">Manage</div>
+                  <div className="space-y-2">
+                    <a href={`/app/dev-plus?token=${token.address}`} className="block text-blue-600 hover:underline text-sm">Add Liquidity on Dev++</a>
+                    <a href={`/app/dev-plus?token=${token.address}&action=burn`} className="block text-red-600 hover:underline text-sm">Burn Tokens on Dev++</a>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-yellow-700">
+                  <AlertTriangle className="w-5 h-5" />
+                  <span className="font-medium">Note</span>
+                </div>
+                <p className="text-yellow-600 text-sm mt-1">
+                  Swaps use available DEX liquidity. For tokens without a pool yet, add liquidity first in Dev++.
+                </p>
               </div>
             </div>
           )}

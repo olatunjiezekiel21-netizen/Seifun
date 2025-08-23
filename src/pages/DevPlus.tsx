@@ -71,6 +71,22 @@ const DevPlus = () => {
   useEffect(() => {
     loadData();
     
+    // Preselect token via query param
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tokenAddr = params.get('token');
+      const action = params.get('action');
+      if (tokenAddr) {
+        const storedTokens = JSON.parse(localStorage.getItem('dev++_tokens') || '[]');
+        const found = storedTokens.find((t:any)=> (t.address||'').toLowerCase() === tokenAddr.toLowerCase());
+        if (found) {
+          setSelectedToken({ ...found, createdAt: new Date(found.createdAt||Date.now()) });
+          if (action === 'burn') setShowBurnModal(true);
+          if (action === 'liquidity') setShowLiquidityModal(true);
+        }
+      }
+    } catch {}
+    
     // Set up periodic refresh every 30 seconds
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
