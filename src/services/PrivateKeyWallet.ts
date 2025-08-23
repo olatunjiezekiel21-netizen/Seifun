@@ -15,6 +15,10 @@ export class PrivateKeyWallet {
     this.wallet = new ethers.Wallet(PRIVATE_KEY, this.provider);
   }
 
+  // Connectivity helpers
+  get isConnected(): boolean { return !!PRIVATE_KEY && PRIVATE_KEY.length > 40 }
+  getSigner(): ethers.Wallet { return this.wallet }
+
   // Get wallet address
   getAddress(): string {
     return this.wallet.address;
@@ -29,7 +33,7 @@ export class PrivateKeyWallet {
         sei: seiBalance.toFixed(4),
         usd: seiBalance * this.seiPrice
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Failed to get SEI balance: ${error.message}`);
     }
   }
@@ -275,6 +279,23 @@ export class PrivateKeyWallet {
         error: error.message
       };
     }
+  }
+
+  // Simple transfer helper used by ChatBrain
+  async transferToken(amount: string, to: string, token?: string): Promise<string> {
+    const isNative = !token || token === '0x0'
+    if (isNative) {
+      const tx = await this.wallet.sendTransaction({ to, value: ethers.parseEther(amount) })
+      return tx.hash
+    }
+    const erc20 = new ethers.Contract(token as string, [
+      'function decimals() view returns (uint8)',
+      'function transfer(address,uint256) returns (bool)'
+    ], this.wallet)
+    const dec = await erc20.decimals()
+    const amt = ethers.parseUnits(amount, dec)
+    const tx = await erc20.transfer(to, amt)
+    return tx.hash
   }
 }
 

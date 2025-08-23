@@ -143,45 +143,41 @@ const Seilor = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Processing overlay */}
+      {isProcessingAction && (
+        <div className="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="px-6 py-5 rounded-2xl bg-slate-800/80 border border-slate-700/70 shadow-2xl text-slate-200 w-[90%] max-w-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-blue-400 animate-pulse" />
+              <div className="text-sm font-medium">Processing your on-chain action…</div>
+            </div>
+            <div className="mt-3 text-xs text-slate-400">Please approve in your wallet if prompted. This may take up to 30s.</div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-6">
-              <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors" title={sidebarCollapsed ? 'Show Menu' : 'Hide Menu'}>
-                {sidebarCollapsed ? <Menu className="w-6 h-6" /> : <X className="w-6 h-6" />}
-              </button>
+            <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                   <Bot className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">Seilor 0</h1>
-                  <p className="text-xs text-slate-400">Autonomous AI Trading Agent</p>
-                  <p className="text-xs text-blue-400">✅ v2.0</p>
+                  <h1 className="text-lg sm:text-2xl font-bold text-white">Seilor 0</h1>
+                  <p className="text-[10px] sm:text-xs text-slate-400">Autonomous AI Trading Agent</p>
                 </div>
               </div>
-              {activePanel === 'chat' && (
-                <div className="flex items-center space-x-2">
-                  <button onClick={startNewChat} className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30 transition-colors border border-blue-500/30" title="Start New Chat">
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="hidden sm:inline">New Chat</span>
-                  </button>
-                  <button onClick={clearChat} className="flex items-center space-x-2 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30 transition-colors border border-blue-500/30" title="Clear Chat">
-                    <Trash2 className="w-4 h-4" />
-                    <span className="hidden sm:inline">Clear</span>
-                  </button>
-                </div>
-              )}
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
               {walletBalance && (
-                <div className="text-right">
+                <div className="hidden sm:block text-right">
                   <div className="text-sm font-medium text-white">{walletBalance.sei} SEI | {walletBalance.usdc} USDC</div>
                   <div className="text-xs text-slate-400">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)} total</div>
                 </div>
               )}
-              <div className={`px-3 py-1 rounded-full text-xs font-medium ${isConnected ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-300'}`}>
+              <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${isConnected ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-300'}`}>
                 {isConnected ? 'Connected' : 'Disconnected'}
               </div>
             </div>

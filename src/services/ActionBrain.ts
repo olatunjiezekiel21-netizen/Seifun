@@ -171,22 +171,24 @@ export class ActionBrain {
       return { success: false, response: `🔄 Please specify both input and output tokens. Example: "Swap 10 SEI to USDC"` }
     }
     const effectiveAmount = (amount ?? seiAmount ?? tokenAmount) as number | undefined
-    if (!effectiveAmount) {
-      return { success: false, response: `❌ Missing amount. Example: "Swap 10 SEI to USDC"` }
+    if (!effectiveAmount || !isFinite(effectiveAmount) || effectiveAmount <= 0) {
+      return { success: false, response: `❌ Missing or invalid amount. Example: "Swap 10 SEI to USDC"` }
     }
     const quote = await cambrianSeiAgent.getSwapQuote({ tokenIn: tokenIn as any, tokenOut: tokenOut as any, amount: `${effectiveAmount}` })
-    if (!quote || Number(quote.outputAmount) <= 0) {
-      return { success: false, response: `❌ No liquidity or route found for this pair/amount. Try a smaller amount or a different pair.` }
+    const out = Number(quote?.outputAmount || 0)
+    if (!quote || !isFinite(out) || out <= 0) {
+      return { success: false, response: `❌ No liquidity or route found for this pair/amount on current router. Try a smaller amount or different pair.` }
     }
     const priceImpact = Number(quote.priceImpact || 0)
-    if (priceImpact > 5) {
+    if (isFinite(priceImpact) && priceImpact > 5) {
       return { success: false, response: `🚫 High price impact (${priceImpact.toFixed(2)}%). Try a smaller amount or different pair.` }
     }
     const slippageBps = 100
-    const minOut = (Number(quote.outputAmount || 0) * (1 - slippageBps / 10_000)).toString()
+    const minOut = (out * (1 - slippageBps / 10_000)).toString()
+    const displayToken = (addr: string) => addr === '0x0' ? 'WSEI' : addr
     return {
       success: true,
-      response: `✅ Quote\n• In: ${effectiveAmount}\n• Expected Out: ${quote.outputAmount}\n• Impact: ${priceImpact.toFixed(2)}%\n• Min Out (@1%): ${minOut}\n\nSay "Yes" to execute or "Cancel" to abort.`,
+      response: `✅ Quote\n• In: ${effectiveAmount} ${displayToken(tokenIn as any)}\n• Expected Out: ${out}\n• Impact: ${isFinite(priceImpact) ? priceImpact.toFixed(2) : '0.00'}%\n• Min Out (@1%): ${minOut}\n\nSay "Yes" to execute or "Cancel" to abort.`,
       data: { pendingSwap: { amount: `${effectiveAmount}`, tokenIn, tokenOut, minOut } }
     }
   }
