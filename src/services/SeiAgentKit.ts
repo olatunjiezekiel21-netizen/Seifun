@@ -7,7 +7,7 @@ export class SeiAgentKit {
 
   constructor() {
     this.mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
-    this.usdc = (import.meta as any).env?.VITE_USDC_TESTNET || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
+    this.usdc = (import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6'
   }
 
   resolveTicker(t: string): Address {

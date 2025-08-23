@@ -98,7 +98,7 @@ export class PrivateKeyWallet {
     try {
       // Common USDC addresses on Sei (you can add more)
       const USDC_ADDRESSES = [
-        (import.meta as any).env?.VITE_USDC_TESTNET || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
+        (import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6'
       ];
       
       for (const usdcAddress of USDC_ADDRESSES) {

@@ -90,7 +90,7 @@ export class ActionBrain {
     // Swap intent
     if (/\bswap\b/.test(normalized) || /\bexchange\b/.test(normalized) || /\btrade\b/.test(normalized)) {
       // Minimal token resolution for SEI/USDC
-      const usdc = (import.meta as any).env?.VITE_USDC_TESTNET || '0x4fCF1784B31630811181f670Aea7A7bEF803eaED'
+      const usdc = (import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6'
       if (/\bsei\b/.test(normalized) && /\busdc\b/.test(normalized)) {
         if (/sei\s*(for|to)\s*usdc/.test(normalized)) {
           entities.tokenIn = '0x0'
