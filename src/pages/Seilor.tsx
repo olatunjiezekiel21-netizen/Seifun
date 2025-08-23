@@ -120,6 +120,10 @@ const Seilor = () => {
       if (/^(✅\sSwap executed|✅\sNative SEI transfer|✅\sERC-20 transfer|✅\sFixed-rate swap executed)/.test(response.message)) {
         loadWalletBalance();
       }
+      // If token created, suggest monitoring in Dev++
+      if (/^✅\sToken Created/.test(response.message)) {
+        setChatMessages(prev => [...prev, { id: Date.now()+2, type: 'assistant' as const, message: '📈 Token created! Open Dev++ to monitor, add liquidity, and burn when needed: /app/devplus', timestamp: new Date() }])
+      }
     } catch (error: any) {
       setIsTyping(false);
       setIsProcessingAction(false);
