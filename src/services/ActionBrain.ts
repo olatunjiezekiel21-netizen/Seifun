@@ -75,6 +75,10 @@ export class ActionBrain {
     const addrMatch = normalized.match(/0x[a-f0-9]{40}/i)
     if (addrMatch) entities.tokenAddress = addrMatch[0]
 
+    // Extract simple amount
+    const numMatch = normalized.match(/(\d+(?:\.\d+)?)/)
+    if (numMatch) entities.amount = parseFloat(numMatch[1])
+
     // Wallet watch intents
     if (/\b(last\s+ten|10)\s+trades\b/.test(normalized) && addrMatch) {
       return { intent: IntentType.PROTOCOL_DATA, confidence: 0.9, entities: { tokenAddress: addrMatch[0] } as any, rawMessage: message }
@@ -84,10 +88,11 @@ export class ActionBrain {
     }
 
     // Send/Transfer tokens
-    if (/\b(send|transfer)\b/.test(normalized) && /0x[a-f0-9]{40}/i.test(normalized)) {
-      entities.transferAmount = entities.amount
+    if (/\b(send|transfer)\b/.test(normalized)) {
       const rec = normalized.match(/0x[a-f0-9]{40}/i)
       if (rec) entities.recipient = rec[0]
+      const amt = normalized.match(/(\d+(?:\.\d+)?)/)
+      if (amt) entities.transferAmount = parseFloat(amt[1])
       return { intent: IntentType.SEND_TOKENS, confidence: 0.9, entities, rawMessage: message }
     }
 
