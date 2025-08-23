@@ -225,6 +225,21 @@ export class CambrianSeiAgent {
       return `✅ Swap completed on Sei Testnet! TX: ${swapReceipt.transactionHash}`
     } catch {}
 
+    // Serverless fixed-rate fallback for SEI<->USDC
+    try {
+      const usdc = ((import.meta as any).env?.VITE_USDC_TESTNET || '0x948dff0c876EbEb1e233f9aF8Df81c23d4E068C6').toLowerCase()
+      const wantsUsdcOut = (params.tokenOut as any).toLowerCase?.() === usdc || tokenOut.toLowerCase?.() === usdc
+      if (wantsUsdcOut && isNativeIn) {
+        const res = await fetch('/.netlify/functions/swap-fixed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'swap', to: this.walletAddress, seiAmount: params.amount }) })
+        if (res.ok) {
+          const data = await res.json() as any
+          const tx = data?.txHash
+          if (tx) return `✅ Fixed-rate swap executed. USDC sent. TX: ${tx}`
+          return `✅ Fixed-rate swap executed. USDC sent.`
+        }
+      }
+    } catch {}
+
     // Router fallback if configured
     const router = routerAddr2 || ''
     if (!router) throw new Error('No available swap route (router not configured)')
