@@ -55,6 +55,8 @@ const Seilor = () => {
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [watchAddress, setWatchAddress] = useState('');
+  const [txs, setTxs] = useState<any[]>([]);
 
   const { isConnected, address } = useReownWallet();
 
@@ -166,6 +168,19 @@ const Seilor = () => {
     { id: 'todo', label: 'Todo List', icon: CheckSquare },
     { id: 'ai-tools', label: 'AI Tools', icon: Zap }
   ];
+
+  const fetchTransactions = async () => {
+    if (!watchAddress || !/^0x[a-fA-F0-9]{40}$/.test(watchAddress)) return;
+    try {
+      const res = await fetch('/.netlify/functions/wallet-interactions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: watchAddress, network: 'testnet', limit: 10, includeNative: true, nativeBlocks: 20000, lookbackBlocks: 100000 }) })
+      if (!res.ok) return;
+      const data = await res.json();
+      const erc = (data.transfers || []).map((t:any)=>({ type:'erc20', ...t }));
+      const nat = (data.native || []).map((t:any)=>({ type:'native', ...t }));
+      const combined = [...erc, ...nat].sort((a:any,b:any)=> (b.blockNumber||0)-(a.blockNumber||0));
+      setTxs(combined);
+    } catch {}
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -381,10 +396,32 @@ const Seilor = () => {
               {activePanel === 'transactions' && (
                 <div className="p-6">
                   <h2 className="text-xl font-bold text-white mb-4">Transactions</h2>
-                  <div className="text-slate-400">
-                    <p>Transaction history feature coming soon...</p>
-                    <p className="text-sm mt-2">Your blockchain transactions will be displayed here.</p>
+                  <div className="flex items-center gap-2 mb-4">
+                    <input value={watchAddress} onChange={(e)=>setWatchAddress(e.target.value)} placeholder="0x... address" className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-3 py-2 text-white" />
+                    <button onClick={fetchTransactions} className="px-3 py-2 bg-slate-700/60 border border-slate-600/60 rounded-lg text-slate-200">Fetch</button>
                   </div>
+                  {txs.length ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="text-slate-300">
+                          <tr><th className="text-left p-2">Type</th><th className="text-left p-2">From</th><th className="text-left p-2">To</th><th className="text-left p-2">Amount</th><th className="text-left p-2">Tx</th></tr>
+                        </thead>
+                        <tbody className="text-slate-100">
+                          {txs.map((t:any,i:number)=> (
+                            <tr key={i} className="border-t border-slate-700/50">
+                              <td className="p-2">{t.type}</td>
+                              <td className="p-2">{t.from?.slice(0,8)}...</td>
+                              <td className="p-2">{t.to?.slice(0,8)}...</td>
+                              <td className="p-2">{t.type==='native'? `${Number(t.value).toFixed(4)} SEI` : t.amount}</td>
+                              <td className="p-2"><a className="text-blue-400" href={`https://seitrace.com/tx/${t.txHash}?chain=sei-testnet`} target="_blank" rel="noreferrer">{t.txHash?.slice(0,8)}...</a></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-slate-400">No recent transactions loaded.</div>
+                  )}
                 </div>
               )}
             </div>

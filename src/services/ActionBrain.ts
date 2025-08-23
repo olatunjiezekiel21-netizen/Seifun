@@ -131,10 +131,10 @@ export class ActionBrain {
     }
 
     // TODOs
-    if (/(add|create|make).*\b(todo|task)\b/i.test(normalized)) {
+    if (/(add|create|make).*\b(todo|task)\b/i.test(normalized) || /\b(remind me( to| of)? )/i.test(normalized) || /\bcreate a reminder\b/i.test(normalized)) {
       return { intent: IntentType.TODO_ADD, confidence: 0.9, entities, rawMessage: message }
     }
-    if (/(what are we doing today|today'?s todo|my tasks|list todos|remind me|what do i want to do)/i.test(normalized)) {
+    if (/(what are we doing today|today'?s todo|my tasks|list todos|remind me|what do i want to do|show todos)/i.test(normalized)) {
       return { intent: IntentType.TODO_LIST, confidence: 0.9, entities, rawMessage: message }
     }
 
@@ -381,20 +381,37 @@ export class ActionBrain {
 
   // TODOs minimal
   private executeTodoAdd(intent: IntentResult): ActionResponse {
-    const task = intent.rawMessage.replace(/add|create|make|todo|task|remind me to/gi, '').replace(/\s+/g,' ').trim()
+    const raw = intent.rawMessage
+    const task = raw.replace(/add|create|make|todo|task|remind me( to| of)?|create a reminder/gi, '').replace(/\s+/g,' ').trim()
+    // Simple due date parsing e.g. 'at 5pm', 'tomorrow', 'in 2 hours'
+    let due: string | undefined
+    const timeMatch = raw.match(/at\s+([0-9]{1,2}(?::[0-9]{2})?\s*(am|pm)?)/i)
+    if (timeMatch) due = `at ${timeMatch[1]}`
+    if (/tomorrow/i.test(raw)) due = 'tomorrow'
+    const inHours = raw.match(/in\s+(\d{1,2})\s+hours?/i)
+    if (inHours) due = `in ${inHours[1]} hours`
     if (!task) {
       return { success: true, response: '📝 What should I add to your TODOs? You can say: "Remind me to check liquidity at 5pm"' }
     }
     const todos = JSON.parse(localStorage.getItem('seilor_todos') || '[]')
-    todos.unshift({ task, createdAt: new Date().toISOString(), completed: false })
+    todos.unshift({ task, createdAt: new Date().toISOString(), completed: false, due })
     localStorage.setItem('seilor_todos', JSON.stringify(todos))
-    return { success: true, response: `✅ Added to your todo: ${task}` }
+    return { success: true, response: `✅ Added to your todo: ${task}${due?` (${due})`:''}` }
   }
 
-  private executeTodoList(_intent: IntentResult): ActionResponse {
+  private executeTodoList(intent: IntentResult): ActionResponse {
     const todos = JSON.parse(localStorage.getItem('seilor_todos') || '[]')
+    const markDone = intent.rawMessage.match(/mark\s+(?:todo\s+)?(\d{1,2})\s+(done|complete)/i)
+    if (markDone) {
+      const idx = parseInt(markDone[1] || '0') - 1
+      if (todos[idx]) {
+        todos[idx].completed = true
+        localStorage.setItem('seilor_todos', JSON.stringify(todos))
+        return { success: true, response: `✅ Marked todo ${idx+1} as complete: ${todos[idx].task}` }
+      }
+    }
     if (!todos.length) return { success: true, response: '📝 No todos yet.' }
-    const lines = todos.slice(0, 10).map((t: any, i: number) => `${i + 1}. ${t.completed ? '✅ ' : ''}${t.task}`)
+    const lines = todos.slice(0, 10).map((t: any, i: number) => `${i + 1}. ${t.completed ? '✅ ' : ''}${t.task}${t.due?` — ${t.due}`:''}`)
     return { success: true, response: `📝 Your Todos\n${lines.join('\n')}` }
   }
 
