@@ -135,6 +135,11 @@ export class ChatBrain {
       
       // Intent Recognition through Action Brain
       const intentResult = await actionBrain.recognizeIntent(userMessage);
+
+      // Prompt for network on wallet watch
+      if ((/last\s+(ten|10)\s+trades|usdc\s+balance|holdings|portfolio/i.test(userMessage)) && !/mainnet|testnet/i.test(userMessage)) {
+        return { message: '🔎 Which network? Say "mainnet" or "testnet" with your request.', success: true, intent: IntentType.WALLET_INFO, confidence: 0.8 }
+      }
       
       // Context Enhancement
       const enhancedIntent = this.enhanceWithContext(intentResult);

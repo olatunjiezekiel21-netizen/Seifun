@@ -116,6 +116,14 @@ const Seilor = () => {
       const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: response.message, timestamp: new Date() };
       setChatMessages(prev => [...prev, aiResponse]);
       ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
+      // Manage processing overlay
+      if (/^⏳\s/i.test(response.message)) {
+        setIsProcessingAction(true);
+      } else if (/^✅\s|^❌\s/i.test(response.message)) {
+        setIsProcessingAction(false);
+      } else {
+        setIsProcessingAction(false);
+      }
       // After swap or transfer success, refresh balances
       if (/^(✅\sSwap executed|✅\sNative SEI transfer|✅\sERC-20 transfer|✅\sFixed-rate swap executed)/.test(response.message)) {
         loadWalletBalance();
