@@ -297,7 +297,7 @@ export class CambrianSeiAgent {
     const mode = (process as any).env?.NETWORK_MODE || (import.meta as any).env?.VITE_NETWORK_MODE || 'testnet'
     const FACTORY_ADDRESS = mode === 'mainnet'
       ? ((import.meta as any).env?.VITE_FACTORY_ADDRESS_MAINNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
-      : ((import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x50C0b92b3BC34D7FeD7Da0C48a2F16a636D95C9F')
+      : ((import.meta as any).env?.VITE_FACTORY_ADDRESS_TESTNET || '0x46287770F8329D51004560dC3BDED879A6565B9A')
 
     const bytecode = await this.publicClient.getBytecode({ address: FACTORY_ADDRESS as any }).catch(() => null)
     if (!bytecode || bytecode === '0x') throw new Error(`Token factory not deployed on ${mode}. Set VITE_FACTORY_ADDRESS_${mode.toUpperCase()}`)

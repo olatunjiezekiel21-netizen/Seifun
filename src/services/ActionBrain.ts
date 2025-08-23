@@ -197,11 +197,30 @@ export class ActionBrain {
   private async executeTokenCreate(intent: IntentResult): Promise<ActionResponse> {
     const name = intent.entities.tokenName || this.extractTokenName(intent.rawMessage)
     if (!name) return { success: false, response: `🚀 Token Creation\nUsage: "Create a token called MyToken"` }
+
+    // Conversational wizard via quick comma format support
+    const comma = intent.rawMessage.split(':')[1] || ''
+    const parts = comma.split(',').map(s => s.trim()).filter(Boolean)
+    // Defaults similar to Seilist
+    const defaults = {
+      totalSupply: '1000000',
+      website: '',
+      twitter: '',
+      lockUsd: '0'
+    }
+    if (parts.length >= 1 && /^\d/.test(parts[0])) defaults.totalSupply = String(Math.max(1, parseInt(parts[0] || '1000000')))
+    if (parts.length >= 2) defaults.lockUsd = parts[1]
+    if (parts.length >= 3) defaults.website = parts[2]
+    if (parts.length >= 4) defaults.twitter = parts[3]
+
     const symbol = name.substring(0, 5).toUpperCase()
-    const totalSupply = '1000000'
     try {
-      const { txHash } = await cambrianSeiAgent.createToken({ name, symbol, totalSupply })
-      return { success: true, response: `✅ Token Created\n• Name: ${name}\n• Symbol: ${symbol}\n• Supply: ${parseInt(totalSupply).toLocaleString()}\n• Tx: \`${txHash}\`` }
+      const { txHash } = await cambrianSeiAgent.createToken({ name, symbol, totalSupply: defaults.totalSupply })
+      const followUps: string[] = []
+      if (!defaults.website || !defaults.twitter) {
+        followUps.push('Provide: total supply, lock USD, website, twitter (comma-separated) to update metadata later.')
+      }
+      return { success: true, response: `✅ Token Created\n• Name: ${name}\n• Symbol: ${symbol}\n• Supply: ${parseInt(defaults.totalSupply).toLocaleString()}\n• Tx: \`${txHash}\``, followUp: followUps }
     } catch (e: any) {
       return { success: false, response: `❌ Creation Failed: ${e.message || String(e)}` }
     }

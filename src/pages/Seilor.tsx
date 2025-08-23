@@ -73,11 +73,24 @@ const Seilor = () => {
 
   const loadWalletBalance = async () => {
     try {
-      const [seiBalance, usdcBalance] = await Promise.all([
-        privateKeyWallet.getSeiBalance(),
-        privateKeyWallet.getUSDCBalance()
-      ]);
-      setWalletBalance({ sei: seiBalance.sei, usd: seiBalance.usd, usdc: usdcBalance.balance, usdcUsd: usdcBalance.usd });
+      if (privateKeyWallet.isConnected) {
+        const [seiBalance, usdcBalance] = await Promise.all([
+          privateKeyWallet.getSeiBalance(),
+          privateKeyWallet.getUSDCBalance()
+        ]);
+        setWalletBalance({ sei: seiBalance.sei, usd: seiBalance.usd, usdc: usdcBalance.balance, usdcUsd: usdcBalance.usd });
+        return
+      }
+      // Serverless fallback using connected address if available
+      const addr = address || ''
+      if (!addr) { setWalletBalance(null); return }
+      const res = await fetch('/.netlify/functions/wallet-portfolio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network: 'testnet', includeSymbols: ['SEI','USDC'] }) })
+      if (res.ok) {
+        const data = await res.json() as any
+        const sei = Number(data?.native?.balance || 0)
+        const usdc = Number((data?.tokens || []).find((t: any) => (t.symbol || '').toUpperCase() === 'USDC')?.balance || 0)
+        setWalletBalance({ sei: sei.toFixed(4), usd: sei * 0.834, usdc: usdc.toFixed(2), usdcUsd: usdc })
+      }
     } catch (error) { console.error('Failed to load wallet balance:', error); }
   };
 
@@ -274,12 +287,12 @@ const Seilor = () => {
                     )}
                     <div className="space-y-3">
                       <div className="flex space-x-3 items-center">
-                        <button onClick={() => fileInputRef.current?.click()} className="p-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70" title="Attach image">
+                        <button onClick={() => fileInputRef.current?.click()} className="hidden sm:inline-flex p-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70" title="Attach image">
                           <ImageIcon className="w-5 h-5" />
                         </button>
                         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0] || null; setAttachedImage(f || null); }} />
                         <input type="text" value={aiChat} onChange={(e) => setAiChat(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAiChat()} placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'" className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none" disabled={loading} />
-                        <button onClick={handleAiChat} disabled={loading || !aiChat.trim()} className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25">
+                        <button onClick={handleAiChat} disabled={loading || !aiChat.trim()} className="px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25">
                           <Send className="w-5 h-5" />
                         </button>
                       </div>
