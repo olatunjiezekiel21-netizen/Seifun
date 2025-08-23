@@ -61,10 +61,7 @@ export default defineConfig({
         'mongodb',
         'openai',
         'dotenv',
-        'symphony-sdk',
-        'symphony-sdk/viem',
-        'fs', 'path', 'net', 'tls', 'crypto', 'http', 'https', 'zlib', 'stream', 'url', 'util',
-        'bufferutil', 'utf-8-validate', 'canvas'
+        'fs', 'path', 'net', 'tls', 'crypto', 'http', 'https', 'zlib', 'stream', 'url', 'util'
       ],
       output: {
         manualChunks: {
