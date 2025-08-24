@@ -23,6 +23,7 @@ const SeifunLaunch = () => {
     const load = async () => {
       try {
         setIsLoading(true);
+        await unifiedTokenService.initialize();
         const all = await unifiedTokenService.getAllTokens();
         setTokens(all);
       } catch (e: any) {
@@ -32,6 +33,12 @@ const SeifunLaunch = () => {
       }
     };
     load();
+    const id = setInterval(async ()=> {
+      await unifiedTokenService.initialize();
+      const all = await unifiedTokenService.getAllTokens();
+      setTokens(all);
+    }, 30000);
+    return ()=> clearInterval(id)
   }, []);
 
   const filteredTokens = tokens.filter(token => {

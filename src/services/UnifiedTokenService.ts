@@ -83,6 +83,21 @@ export class UnifiedTokenService {
     try {
       // Load existing tokens
       this.loadTokensFromStorage();
+
+      // Pull latest from MongoDB serverless
+      try {
+        const res = await fetch('/.netlify/functions/tokens')
+        if (res.ok) {
+          const list = await res.json()
+          if (Array.isArray(list)) {
+            for (const t of list) {
+              const tok = { ...t, createdAt: new Date(t.createdAt || Date.now()) }
+              this.tokens.set(tok.address, tok)
+            }
+            this.saveTokensToStorage()
+          }
+        }
+      } catch {}
       
       // Migrate legacy tokens from other services
       await this.migrateLegacyTokens();

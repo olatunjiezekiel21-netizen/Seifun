@@ -153,7 +153,14 @@ export class ActionBrain {
     }
 
     // Conversation fallback
-    if (/(hello|hi|hey|help|what can you do)/i.test(normalized)) {
+    if (/(hello|hi|hey|help|what can you do|how are you|am not feeling|i am not feeling|i'm not feeling|good morning|good evening)/i.test(normalized)) {
+      try {
+        const res = await fetch('/.netlify/functions/chat-completions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) })
+        if (res.ok) {
+          const data = await res.json() as any
+          return { intent: IntentType.CONVERSATION, confidence: 0.95, entities, rawMessage: data?.text || message }
+        }
+      } catch {}
       return { intent: IntentType.CONVERSATION, confidence: 0.7, entities, rawMessage: message }
     }
 

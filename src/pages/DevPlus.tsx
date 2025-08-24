@@ -73,6 +73,8 @@ const DevPlus = () => {
   // Load real data from localStorage (would be from TokenService in production)
   useEffect(() => {
     loadData();
+    const id = setInterval(loadData, 30000);
+    return () => clearInterval(id);
     
     // Preselect token via query param
     try {
@@ -89,10 +91,6 @@ const DevPlus = () => {
         }
       }
     } catch {}
-    
-    // Set up periodic refresh every 30 seconds
-    const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const loadBadActors = async () => {

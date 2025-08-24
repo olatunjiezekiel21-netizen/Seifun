@@ -482,7 +482,25 @@ const CreateAndListForm: React.FC<CreateAndListFormProps> = ({ onBack }) => {
       
       setCreatedTokenAddress(tokenAddress);
       setTransactionHash(tx.hash);
-      
+
+      try {
+        await fetch('/.netlify/functions/tokens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address: tokenAddress,
+            name: formData.name,
+            symbol: formData.symbol,
+            totalSupply: formData.totalSupply,
+            decimals: 18,
+            creator: address,
+            tokenImage: formData.tokenImage || logoPreviewUrl || generateTokenImage(formData.symbol, formData.name),
+            createdAt: new Date().toISOString(),
+            verified: true,
+          })
+        })
+      } catch {}
+
       // Prepare token data for spotlight
       setCreatedTokenData({
         name: formData.name,
