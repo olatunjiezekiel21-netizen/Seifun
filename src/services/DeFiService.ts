@@ -32,6 +32,8 @@ const ERC20_ABI = [
 // Uniswap V2 Router ABI (compatible with most DEXes)
 const ROUTER_ABI = [
   'function addLiquidity(address tokenA, address tokenB, uint amountADesired, uint amountBDesired, uint amountAMin, uint amountBMin, address to, uint deadline) returns (uint amountA, uint amountB, uint liquidity)',
+  // SEI-native on some Sei routers
+  'function addLiquiditySEI(address token, uint amountTokenDesired, uint amountTokenMin, uint amountSEIMin, address to, uint deadline) payable returns (uint amountToken, uint amountSEI, uint liquidity)',
   'function addLiquidityETH(address token, uint amountTokenDesired, uint amountTokenMin, uint amountETHMin, address to, uint deadline) payable returns (uint amountToken, uint amountETH, uint liquidity)',
   'function removeLiquidity(address tokenA, address tokenB, uint liquidity, uint amountAMin, uint amountBMin, address to, uint deadline) returns (uint amountA, uint amountB)',
   'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] path, address to, uint deadline) returns (uint[] amounts)',
@@ -186,19 +188,32 @@ export class DeFiService {
       const routerContract = new ethers.Contract(router, ROUTER_ABI, this.signer);
       const slippage = Math.max(0, Math.min(100, params.slippageTolerance || 5));
       const amountTokenMin = tokenAmount - (tokenAmount * BigInt(Math.floor(slippage)) / BigInt(100));
-      const amountEthMin = seiAmount - (seiAmount * BigInt(Math.floor(slippage)) / BigInt(100));
+      const amountSeiMin = seiAmount - (seiAmount * BigInt(Math.floor(slippage)) / BigInt(100));
       const deadlineTs = BigInt(Math.floor(Date.now() / 1000) + (Math.max(1, params.deadline || 20) * 60));
 
-      // Add liquidity with native SEI leg
-      const tx = await routerContract.addLiquidityETH(
-        params.tokenAddress,
-        tokenAmount,
-        amountTokenMin,
-        amountEthMin,
-        userAddress,
-        deadlineTs,
-        { value: seiAmount }
-      );
+      // Prefer SEI-native method; fallback to ETH-named if needed
+      let tx;
+      try {
+        tx = await routerContract.addLiquiditySEI(
+          params.tokenAddress,
+          tokenAmount,
+          amountTokenMin,
+          amountSeiMin,
+          userAddress,
+          deadlineTs,
+          { value: seiAmount }
+        );
+      } catch {
+        tx = await routerContract.addLiquidityETH(
+          params.tokenAddress,
+          tokenAmount,
+          amountTokenMin,
+          amountSeiMin,
+          userAddress,
+          deadlineTs,
+          { value: seiAmount }
+        );
+      }
       const receipt = await tx.wait();
 
       return {
