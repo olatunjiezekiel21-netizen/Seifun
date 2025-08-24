@@ -460,7 +460,11 @@ export class ActionBrain {
   }
 
   // Conversation/Unknown
-  private executeConversation(_intent: IntentResult): ActionResponse {
+  private executeConversation(intent: IntentResult): ActionResponse {
+    const aiText = intent.rawMessage
+    if (aiText && typeof aiText === 'string' && aiText.length > 0 && !/scan tokens, create tokens, swap/i.test(aiText)) {
+      return { success: true, response: aiText }
+    }
     return { success: true, response: `👋 I can scan tokens, create tokens, swap, check balances, and transfer SEI. Tell me what you'd like to do.` }
   }
 
