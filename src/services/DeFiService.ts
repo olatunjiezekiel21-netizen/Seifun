@@ -168,32 +168,43 @@ export class DeFiService {
       const seiAmount = ethers.parseEther(params.seiAmount);
 
       // Check balances
-      const tokenBalance = await tokenContract.balanceOf(userAddress);
-      const seiBalance = await this.provider.getBalance(userAddress);
+      const [tokenBalance, seiBalance] = await Promise.all([
+        tokenContract.balanceOf(userAddress),
+        this.provider.getBalance(userAddress)
+      ]);
       if (tokenBalance < tokenAmount) return { success: false, error: 'Insufficient token balance' };
       if (seiBalance < seiAmount) return { success: false, error: 'Insufficient SEI balance' };
 
-      // Approve (placeholder)
-      const approveTx = await tokenContract.approve(userAddress, tokenAmount);
-      await approveTx.wait();
+      // Approve router to spend tokens
+      const router = (import.meta as any).env?.VITE_ROUTER_ADDRESS || '0x527b42CA5e11370259EcaE68561C14dA415477C8';
+      const currentAllowance: bigint = await tokenContract.allowance(userAddress, router);
+      if (currentAllowance < tokenAmount) {
+        const approveTx = await tokenContract.approve(router, tokenAmount);
+        await approveTx.wait();
+      }
 
-      // Local record to simulate pool
-      const liquidityData = {
-        tokenAddress: params.tokenAddress,
-        tokenAmount: params.tokenAmount,
-        seiAmount: params.seiAmount,
+      const routerContract = new ethers.Contract(router, ROUTER_ABI, this.signer);
+      const slippage = Math.max(0, Math.min(100, params.slippageTolerance || 5));
+      const amountTokenMin = tokenAmount - (tokenAmount * BigInt(Math.floor(slippage)) / BigInt(100));
+      const amountEthMin = seiAmount - (seiAmount * BigInt(Math.floor(slippage)) / BigInt(100));
+      const deadlineTs = BigInt(Math.floor(Date.now() / 1000) + (Math.max(1, params.deadline || 20) * 60));
+
+      // Add liquidity with native SEI leg
+      const tx = await routerContract.addLiquidityETH(
+        params.tokenAddress,
+        tokenAmount,
+        amountTokenMin,
+        amountEthMin,
         userAddress,
-        timestamp: Date.now(),
-        txHash: approveTx.hash
-      };
-      const existingLiquidity = JSON.parse(localStorage.getItem('liquidity_pools') || '[]');
-      existingLiquidity.push(liquidityData);
-      localStorage.setItem('liquidity_pools', JSON.stringify(existingLiquidity));
+        deadlineTs,
+        { value: seiAmount }
+      );
+      const receipt = await tx.wait();
 
       return {
         success: true,
-        txHash: approveTx.hash,
-        liquidityTokens: (Math.sqrt(parseFloat(params.tokenAmount) * parseFloat(params.seiAmount))).toString(),
+        txHash: tx.hash,
+        liquidityTokens: '',
         tokenAmount: params.tokenAmount,
         seiAmount: params.seiAmount
       };
