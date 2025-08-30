@@ -128,31 +128,52 @@ export class Z1LabsService {
 
   async initialize(): Promise<boolean> {
     try {
+      // Don't crash if no API key - just run in fallback mode
       if (!this.config.apiKey || !this.config.baseUrl) {
-        console.log('⚠️ Z1 Labs: Missing API configuration');
+        console.log('⚠️ Z1 Labs: Running in fallback mode (no API key)');
+        this.isAvailable = false;
         return false;
       }
 
-      // Test the connection
-      const response = await fetch(`${this.config.baseUrl}/health`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Test the connection with timeout and error handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-      if (response.ok) {
-        this.isAvailable = true;
-        this.lastHealthCheck = Date.now();
-        console.log('✅ Z1 Labs AI: Successfully connected');
-        return true;
-      } else {
-        console.log('⚠️ Z1 Labs: Health check failed');
+      try {
+        const response = await fetch(`${this.config.baseUrl}/health`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${this.config.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          this.isAvailable = true;
+          this.lastHealthCheck = Date.now();
+          console.log('✅ Z1 Labs AI: Successfully connected');
+          return true;
+        } else {
+          console.log('⚠️ Z1 Labs: Health check failed, using fallback mode');
+          this.isAvailable = false;
+          return false;
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.log('⚠️ Z1 Labs: Connection timeout, using fallback mode');
+        } else {
+          console.log('⚠️ Z1 Labs: Connection failed, using fallback mode');
+        }
+        this.isAvailable = false;
         return false;
       }
     } catch (error) {
-      console.log('⚠️ Z1 Labs: Connection failed, using fallback mode');
+      console.log('⚠️ Z1 Labs: Initialization error, using fallback mode');
+      this.isAvailable = false;
       return false;
     }
   }

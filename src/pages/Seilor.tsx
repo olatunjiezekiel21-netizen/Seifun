@@ -68,21 +68,35 @@ const Seilor = () => {
   useEffect(() => { scrollToBottom(); }, [chatMessages, isTyping]);
 
   useEffect(() => {
-    loadWalletBalance();
-    const savedTodos = localStorage.getItem('seilor_todos');
-    if (savedTodos) setTodos(JSON.parse(savedTodos));
-    
-    // Initialize Z1 Labs AI service
-    const initializeZ1Labs = async () => {
-      try {
-        await z1LabsService.initialize();
-        console.log('Z1 Labs AI service initialized:', z1LabsService.isAvailable());
-      } catch (error) {
-        console.warn('Z1 Labs initialization failed, using fallback:', error);
+    try {
+      loadWalletBalance();
+      const savedTodos = localStorage.getItem('seilor_todos');
+      if (savedTodos) {
+        try {
+          setTodos(JSON.parse(savedTodos));
+        } catch (parseError) {
+          console.warn('Failed to parse saved todos, using empty array');
+          setTodos([]);
+        }
       }
-    };
-    
-    initializeZ1Labs();
+      
+      // Initialize Z1 Labs AI service
+      const initializeZ1Labs = async () => {
+        try {
+          await z1LabsService.initialize();
+          console.log('Z1 Labs AI service initialized:', z1LabsService.isAvailable());
+        } catch (error) {
+          console.warn('Z1 Labs initialization failed, using fallback:', error);
+        }
+      };
+      
+      initializeZ1Labs();
+    } catch (error) {
+      console.error('Seilor initialization error:', error);
+      // Set safe defaults
+      setTodos([]);
+      setWalletBalance({ sei: '0.0000', usd: 0, usdc: '0.00', usdcUsd: 0 });
+    }
   }, []);
 
   useEffect(() => { localStorage.setItem('seilor_todos', JSON.stringify(todos)); }, [todos]);
@@ -100,12 +114,26 @@ const Seilor = () => {
       // Serverless fallback using connected address if available
       const addr = address || ''
       if (!addr) { setWalletBalance(null); return }
-      const res = await fetch('/.netlify/functions/wallet-portfolio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network: 'testnet', includeSymbols: ['SEI','USDC'] }) })
-      if (res.ok) {
-        const data = await res.json() as any
-        const sei = Number(data?.native?.balance || 0)
-        const usdc = Number((data?.tokens || []).find((t: any) => (t.symbol || '').toUpperCase() === 'USDC')?.balance || 0)
-        setWalletBalance({ sei: sei.toFixed(4), usd: sei * 0.834, usdc: usdc.toFixed(2), usdcUsd: usdc })
+      
+      try {
+        const res = await fetch('/.netlify/functions/wallet-portfolio', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ address: addr, network: 'testnet', includeSymbols: ['SEI','USDC'] }) 
+        })
+        
+        if (res.ok) {
+          const data = await res.json() as any
+          const sei = Number(data?.native?.balance || 0)
+          const usdc = Number((data?.tokens || []).find((t: any) => (t.symbol || '').toUpperCase() === 'USDC')?.balance || 0)
+          setWalletBalance({ sei: sei.toFixed(4), usd: sei * 0.834, usdc: usdc.toFixed(2), usdcUsd: usdc })
+        } else {
+          console.warn('Wallet portfolio fetch failed, setting default balance');
+          setWalletBalance({ sei: '0.0000', usd: 0, usdc: '0.00', usdcUsd: 0 })
+        }
+      } catch (fetchError) {
+        console.warn('Wallet portfolio fetch error, setting default balance:', fetchError);
+        setWalletBalance({ sei: '0.0000', usd: 0, usdc: '0.00', usdcUsd: 0 })
       }
     } catch (error) { console.error('Failed to load wallet balance:', error); }
   };
