@@ -212,26 +212,26 @@ const Seilor = () => {
       {/* Header */}
       <div className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-12">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <Bot className="w-6 h-6 text-white" />
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-500 rounded-lg flex items-center justify-center shadow-lg">
+                  <Bot className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg sm:text-2xl font-bold text-white">Seilor 0</h1>
-                  <p className="text-[10px] sm:text-xs text-slate-400">Autonomous AI Trading Agent</p>
+                  <h1 className="text-base sm:text-xl font-bold text-white">Seilor 0</h1>
+                  <p className="text-[9px] sm:text-xs text-slate-400">Autonomous AI Trading Agent</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-3 sm:space-x-4">
               {walletBalance && (
                 <div className="hidden sm:block text-right">
-                  <div className="text-sm font-medium text-white">{walletBalance.sei} SEI | {walletBalance.usdc} USDC</div>
+                  <div className="text-xs font-medium text-white">{walletBalance.sei} SEI | {walletBalance.usdc} USDC</div>
                   <div className="text-xs text-slate-400">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)} total</div>
                 </div>
               )}
-              <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${isConnected ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-300'}`}>
+              <div className={`px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-xs font-medium ${isConnected ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-300'}`}>
                 {isConnected ? 'Connected' : 'Disconnected'}
               </div>
               {/* AI Service Status Indicator */}
@@ -249,24 +249,24 @@ const Seilor = () => {
       </div>
 
       {/* Main */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className={`grid gap-6 ${sidebarCollapsed ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className={`grid gap-4 ${sidebarCollapsed ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
           {/* Sidebar */}
           <div className={`${sidebarCollapsed ? 'hidden' : 'block'} lg:col-span-1`}>
-            <div className="bg-slate-800/50 rounded-2xl p-4 backdrop-blur-sm border border-slate-700/50">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Navigation</h3>
+            <div className="bg-slate-800/50 rounded-2xl p-3 backdrop-blur-sm border border-slate-700/50">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold text-white">Navigation</h3>
                 <button onClick={() => setSidebarCollapsed(true)} className="hidden lg:block p-1 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors" title="Collapse Sidebar">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <nav className="space-y-2">
+              <nav className="space-y-1">
                 {panels.map(panel => {
                   const Icon = panel.icon as any
                   return (
-                    <button key={panel.id} onClick={() => setActivePanel(panel.id as any)} className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${activePanel === panel.id ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'}`}>
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{panel.label}</span>
+                    <button key={panel.id} onClick={() => setActivePanel(panel.id as any)} className={`w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-left transition-all duration-200 ${activePanel === panel.id ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'}`}>
+                      <Icon className="w-4 h-4" />
+                      <span className="font-medium text-sm">{panel.label}</span>
                     </button>
                   )
                 })}
@@ -278,27 +278,27 @@ const Seilor = () => {
           <div className={`${sidebarCollapsed ? 'col-span-1' : 'lg:col-span-3'}`}>
             <div className="bg-slate-800/50 rounded-2xl backdrop-blur-sm border border-slate-700/50 overflow-hidden">
               {activePanel === 'chat' && (
-                <div className={`${sidebarCollapsed ? 'h-[85vh]' : 'h-[75vh]'} flex flex-col`}>
+                <div className={`${sidebarCollapsed ? 'h-[70vh]' : 'h-[65vh]'} flex flex-col`}>
                   {/* Messages Container - Fixed height with proper scrolling */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
                     {chatMessages.length > 0 && chatMessages.map(msg => (
                       <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-3xl p-4 rounded-2xl ${msg.type === 'user' ? 'bg-red-500/20 text-white border border-red-500/30' : 'bg-slate-700/50 text-slate-100 border border-slate-600/50'}`}>
-                          <div className="whitespace-pre-wrap text-sm leading-relaxed">{msg.message}</div>
-                          <div className="text-xs text-slate-400 mt-2">{msg.timestamp.toLocaleTimeString()}</div>
+                        <div className={`max-w-2xl p-3 rounded-xl ${msg.type === 'user' ? 'bg-red-500/20 text-white border border-red-500/30' : 'bg-slate-700/50 text-slate-100 border border-slate-600/50'}`}>
+                          <div className="whitespace-pre-wrap text-xs leading-relaxed">{msg.message}</div>
+                          <div className="text-xs text-slate-400 mt-1">{msg.timestamp.toLocaleTimeString()}</div>
                         </div>
                       </div>
                     ))}
                     {isTyping && (
                       <div className="flex justify-start">
-                        <div className="bg-slate-700/50 text-slate-100 border border-slate-600/50 p-4 rounded-2xl">
+                        <div className="bg-slate-700/50 text-slate-100 border border-slate-600/50 p-3 rounded-xl">
                           <div className="flex items-center space-x-2">
                             <div className="flex space-x-1">
                               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
                               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
                               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                             </div>
-                            <span className="text-sm text-slate-300">Seilor is typing...</span>
+                            <span className="text-xs text-slate-300">Seilor is typing...</span>
                           </div>
                         </div>
                       </div>
@@ -312,34 +312,23 @@ const Seilor = () => {
                   </div>
 
                   {/* Chat Input - Always visible at bottom */}
-                  <div className="border-t border-slate-700/50 p-4 bg-slate-800/30">
+                  <div className="border-t border-slate-700/50 p-3 bg-slate-800/30">
+                    {/* Minimal Balance Display */}
                     {walletBalance && (
-                      <div className="mb-3 p-3 bg-slate-700/30 rounded-xl border border-slate-600/30">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs font-medium text-slate-300">💰 SEI Balance</div>
-                            <div className="text-sm font-medium text-white">{walletBalance.sei} SEI <span className="text-xs text-slate-400">(${walletBalance.usd.toFixed(2)})</span></div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs font-medium text-slate-300">💵 USDC Balance</div>
-                            <div className="text-sm font-medium text-white">{walletBalance.usdc} USDC <span className="text-xs text-slate-400">(${walletBalance.usdcUsd.toFixed(2)})</span></div>
-                          </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-slate-600/30">
-                            <div className="text-xs font-medium text-green-300">💎 Total Value</div>
-                            <div className="text-sm font-bold text-green-400">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)}</div>
-                          </div>
-                          <div className="pt-2 flex justify-end">
-                            <button onClick={loadWalletBalance} className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs bg-slate-700/50 border border-slate-600/60 text-slate-200 hover:bg-slate-700/70" title="Refresh balances">
-                              <RefreshCw className="w-3 h-3" /> Refresh
-                            </button>
-                          </div>
+                      <div className="mb-2 p-2 bg-slate-700/20 rounded-lg border border-slate-600/20">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-300">💰 {walletBalance.sei} SEI</span>
+                          <span className="text-slate-300">💵 {walletBalance.usdc} USDC</span>
+                          <span className="text-green-400 font-medium">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)}</span>
                         </div>
                       </div>
                     )}
-                    <div className="space-y-3">
-                      <div className="flex space-x-3 items-center">
-                        <button onClick={() => fileInputRef.current?.click()} className="hidden sm:inline-flex p-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70" title="Attach image">
-                          <ImageIcon className="w-5 h-5" />
+                    
+                    {/* Chat Input */}
+                    <div className="space-y-2">
+                      <div className="flex space-x-2 items-center">
+                        <button onClick={() => fileInputRef.current?.click()} className="p-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/70" title="Attach image">
+                          <ImageIcon className="w-4 h-4" />
                         </button>
                         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0] || null; setAttachedImage(f || null); }} />
                         <input 
@@ -347,21 +336,23 @@ const Seilor = () => {
                           value={aiChat} 
                           onChange={(e) => setAiChat(e.target.value)} 
                           onKeyPress={(e) => e.key === 'Enter' && handleAiChat()} 
-                          placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'" 
-                          className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none" 
+                          placeholder="💬 Ask me anything..." 
+                          className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 py-2 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none text-sm" 
                           disabled={loading} 
                         />
                         <button 
                           onClick={handleAiChat} 
                           disabled={loading || !aiChat.trim()} 
-                          className="px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25"
+                          className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25"
                         >
-                          <Send className="w-5 h-5" />
+                          <Send className="w-4 h-4" />
                         </button>
                       </div>
+                      
+                      {/* Attached Image */}
                       {attachedImage && (
                         <div className="text-xs text-slate-300 flex items-center gap-2">
-                          <span>📎 Attached: {attachedImage.name}</span>
+                          <span>📎 {attachedImage.name}</span>
                           <button 
                             onClick={() => setAttachedImage(null)} 
                             className="text-red-400 hover:text-red-300 text-xs"
@@ -371,8 +362,8 @@ const Seilor = () => {
                         </div>
                       )}
                       
-                      {/* Enhanced AI Quick Actions */}
-                      <div className="flex flex-wrap gap-2 pt-2">
+                      {/* Enhanced AI Quick Actions - Compact */}
+                      <div className="flex flex-wrap gap-1">
                         <button 
                           onClick={async () => {
                             const portfolioData = {
@@ -388,9 +379,9 @@ const Seilor = () => {
                             setChatMessages(prev => [...prev, aiResponse]);
                           }}
                           disabled={!walletBalance}
-                          className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                          className="px-2 py-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-md font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                         >
-                          🎯 Optimize Portfolio
+                          🎯 Portfolio
                         </button>
                         
                         <button 
@@ -399,9 +390,9 @@ const Seilor = () => {
                             const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: predictionMessage, timestamp: new Date() };
                             setChatMessages(prev => [...prev, aiResponse]);
                           }}
-                          className="px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
+                          className="px-2 py-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs rounded-md font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
                         >
-                          🔮 Market Prediction
+                          🔮 Predict
                         </button>
                         
                         <button 
@@ -416,7 +407,7 @@ const Seilor = () => {
                             const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: statusMessage, timestamp: new Date() };
                             setChatMessages(prev => [...prev, aiResponse]);
                           }}
-                          className="px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs rounded-lg font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                          className="px-2 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs rounded-md font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200"
                         >
                           🤖 AI Status
                         </button>
@@ -520,6 +511,38 @@ const Seilor = () => {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Minimal Footer */}
+      <div className="border-t border-slate-700/50 bg-slate-900/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
+            {/* Seifun Info */}
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-blue-500 rounded-lg flex items-center justify-center">
+                <Bot className="w-3 h-3 text-white" />
+              </div>
+              <div className="text-xs text-slate-300">
+                <span className="font-medium text-white">Seifun</span> - Advanced DeFi on Sei Network
+              </div>
+            </div>
+            
+            {/* Social Links */}
+            <div className="flex items-center space-x-4 text-xs text-slate-400">
+              <a href="https://twitter.com/SeifunDeFi" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                Twitter
+              </a>
+              <a href="https://discord.gg/seifun" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition-colors">
+                Discord
+              </a>
+              <a href="https://github.com/Seifun1/Seifun" target="_blank" rel="noopener noreferrer" className="hover:text-gray-300 transition-colors">
+                GitHub
+              </a>
+              <span className="text-slate-500">|</span>
+              <span className="text-slate-500">Powered by Z1 Labs AI</span>
             </div>
           </div>
         </div>
