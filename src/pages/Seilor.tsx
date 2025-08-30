@@ -12,8 +12,7 @@ import {
   Menu,
   X,
   Zap,
-  Image as ImageIcon,
-  AlertTriangle
+  Image as ImageIcon
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 import { chatBrain } from '../services/ChatBrain';
@@ -261,10 +260,8 @@ const Seilor = () => {
     } catch {}
   };
 
-  // Add error boundary wrapper
-  try {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Processing overlay */}
       {isProcessingAction && (
         <div className="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center">
@@ -635,60 +632,7 @@ const Seilor = () => {
         onToggle={() => setShowDebugConsole(!showDebugConsole)} 
       />
     </div>
-    );
-  } catch (error) {
-    console.error('❌ Seilor 0: Render error caught:', error);
-    
-    // Return a detailed error display instead of crashing
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 flex items-center justify-center p-4">
-        <div className="max-w-4xl w-full bg-red-800/80 backdrop-blur-sm border border-red-700/50 rounded-2xl shadow-2xl p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Seilor 0 Render Error</h1>
-              <p className="text-red-200">The page failed to render, but we can see the exact error!</p>
-            </div>
-          </div>
-          
-          <div className="bg-red-900/50 border border-red-700/50 rounded-lg p-4 mb-4">
-            <h3 className="text-lg font-semibold text-white mb-3">Error Details</h3>
-            <div className="text-red-100 font-mono text-sm">
-              <div className="mb-2">
-                <strong>Error:</strong> {error instanceof Error ? error.name : 'Unknown Error'}: {error instanceof Error ? error.message : String(error)}
-              </div>
-              
-              {error instanceof Error && error.stack && (
-                <div>
-                  <strong className="text-red-200">Stack Trace:</strong>
-                  <pre className="mt-2 bg-red-950/50 p-3 rounded text-xs text-red-100 overflow-x-auto whitespace-pre-wrap">
-                    {error.stack}
-                  </pre>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
-            >
-              Reload Page
-            </button>
-            <button
-              onClick={() => window.history.back()}
-              className="w-full sm:w-auto px-6 py-3 bg-red-700 hover:bg-red-800 text-white rounded-lg transition-colors font-medium"
-            >
-              Go Back
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  );
 };
 
 export default Seilor;

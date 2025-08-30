@@ -716,15 +716,15 @@ export class ChatBrain {
 
   // Check Z1 Labs availability
   public isZ1LabsAvailable(): boolean {
-    return z1LabsService.isAvailable();
+    return z1LabsService.isServiceAvailable();
   }
 
   // Get AI service status
   public getAIServiceStatus(): { z1Labs: boolean; localAI: boolean; enhanced: boolean } {
     return {
-      z1Labs: z1LabsService.isAvailable(),
+      z1Labs: z1LabsService.isServiceAvailable(),
       localAI: true,
-      enhanced: z1LabsService.isAvailable()
+      enhanced: z1LabsService.isServiceAvailable()
     };
   }
 
