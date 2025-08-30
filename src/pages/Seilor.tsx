@@ -23,6 +23,7 @@ import { ChatMemoryService } from '../services/ChatMemoryService';
 import { LocalLLMService } from '../services/LocalLLMService';
 import { IPFSUploader } from '../utils/ipfsUpload';
 import { z1LabsService } from '../services/Z1LabsService';
+import { DebugConsole } from '../components/DebugConsole';
 // Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
@@ -58,6 +59,7 @@ const Seilor = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [watchAddress, setWatchAddress] = useState('');
   const [txs, setTxs] = useState<any[]>([]);
+  const [showDebugConsole, setShowDebugConsole] = useState(false);
 
   const { isConnected, address } = useReownWallet();
 
@@ -68,31 +70,42 @@ const Seilor = () => {
   useEffect(() => { scrollToBottom(); }, [chatMessages, isTyping]);
 
   useEffect(() => {
+    console.log('🚀 Seilor 0: Starting initialization...');
+    
     try {
+      console.log('📱 Seilor 0: Loading wallet balance...');
       loadWalletBalance();
+      
+      console.log('📝 Seilor 0: Loading saved todos...');
       const savedTodos = localStorage.getItem('seilor_todos');
       if (savedTodos) {
         try {
           setTodos(JSON.parse(savedTodos));
+          console.log('✅ Seilor 0: Todos loaded successfully');
         } catch (parseError) {
-          console.warn('Failed to parse saved todos, using empty array');
+          console.warn('⚠️ Seilor 0: Failed to parse saved todos, using empty array', parseError);
           setTodos([]);
         }
+      } else {
+        console.log('ℹ️ Seilor 0: No saved todos found, starting fresh');
       }
       
       // Initialize Z1 Labs AI service
       const initializeZ1Labs = async () => {
+        console.log('🤖 Seilor 0: Initializing Z1 Labs AI service...');
         try {
-          await z1LabsService.initialize();
-          console.log('Z1 Labs AI service initialized:', z1LabsService.isAvailable());
+          const result = await z1LabsService.initialize();
+          console.log('✅ Seilor 0: Z1 Labs AI service initialized:', result);
+          console.log('🔍 Seilor 0: Z1 Labs available:', z1LabsService.isAvailable());
         } catch (error) {
-          console.warn('Z1 Labs initialization failed, using fallback:', error);
+          console.warn('⚠️ Seilor 0: Z1 Labs initialization failed, using fallback:', error);
         }
       };
       
       initializeZ1Labs();
+      console.log('✅ Seilor 0: Initialization completed successfully');
     } catch (error) {
-      console.error('Seilor initialization error:', error);
+      console.error('❌ Seilor 0: Initialization error:', error);
       // Set safe defaults
       setTodos([]);
       setWalletBalance({ sei: '0.0000', usd: 0, usdc: '0.00', usdcUsd: 0 });
@@ -102,40 +115,56 @@ const Seilor = () => {
   useEffect(() => { localStorage.setItem('seilor_todos', JSON.stringify(todos)); }, [todos]);
 
   const loadWalletBalance = async () => {
+    console.log('💰 Seilor 0: Loading wallet balance...');
+    
     try {
       if (privateKeyWallet.isConnected) {
+        console.log('🔑 Seilor 0: Using private key wallet...');
         const [seiBalance, usdcBalance] = await Promise.all([
           privateKeyWallet.getSeiBalance(),
           privateKeyWallet.getUSDCBalance()
         ]);
-        setWalletBalance({ sei: seiBalance.sei, usd: seiBalance.usd, usdc: usdcBalance.balance, usdcUsd: usdcBalance.usd });
-        return
+        const balance = { sei: seiBalance.sei, usd: seiBalance.usd, usdc: usdcBalance.balance, usdcUsd: usdcBalance.usd };
+        setWalletBalance(balance);
+        console.log('✅ Seilor 0: Private wallet balance loaded:', balance);
+        return;
       }
+      
       // Serverless fallback using connected address if available
-      const addr = address || ''
-      if (!addr) { setWalletBalance(null); return }
+      const addr = address || '';
+      if (!addr) { 
+        console.log('ℹ️ Seilor 0: No address available, setting balance to null');
+        setWalletBalance(null); 
+        return; 
+      }
+      
+      console.log('🌐 Seilor 0: Using serverless fallback for address:', addr);
       
       try {
         const res = await fetch('/.netlify/functions/wallet-portfolio', { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ address: addr, network: 'testnet', includeSymbols: ['SEI','USDC'] }) 
-        })
+        });
         
         if (res.ok) {
-          const data = await res.json() as any
-          const sei = Number(data?.native?.balance || 0)
-          const usdc = Number((data?.tokens || []).find((t: any) => (t.symbol || '').toUpperCase() === 'USDC')?.balance || 0)
-          setWalletBalance({ sei: sei.toFixed(4), usd: sei * 0.834, usdc: usdc.toFixed(2), usdcUsd: usdc })
+          const data = await res.json() as any;
+          const sei = Number(data?.native?.balance || 0);
+          const usdc = Number((data?.tokens || []).find((t: any) => (t.symbol || '').toUpperCase() === 'USDC')?.balance || 0);
+          const balance = { sei: sei.toFixed(4), usd: sei * 0.834, usdc: usdc.toFixed(2), usdcUsd: usdc };
+          setWalletBalance(balance);
+          console.log('✅ Seilor 0: Serverless balance loaded:', balance);
         } else {
-          console.warn('Wallet portfolio fetch failed, setting default balance');
-          setWalletBalance({ sei: '0.0000', usd: 0, usdc: '0.00', usdcUsd: 0 })
+          console.warn('⚠️ Seilor 0: Wallet portfolio fetch failed, setting default balance');
+          setWalletBalance({ sei: '0.0000', usd: 0, usdc: '0.00', usdcUsd: 0 });
         }
       } catch (fetchError) {
-        console.warn('Wallet portfolio fetch error, setting default balance:', fetchError);
-        setWalletBalance({ sei: '0.0000', usd: 0, usdc: '0.00', usdcUsd: 0 })
+        console.warn('⚠️ Seilor 0: Wallet portfolio fetch error, setting default balance:', fetchError);
+        setWalletBalance({ sei: '0.0000', usd: 0, usdc: '0.00', usdcUsd: 0 });
       }
-    } catch (error) { console.error('Failed to load wallet balance:', error); }
+    } catch (error) { 
+      console.error('❌ Seilor 0: Failed to load wallet balance:', error); 
+    }
   };
 
   const handleAiChat = async () => {
@@ -271,6 +300,19 @@ const Seilor = () => {
                   </span>
                 </div>
               </div>
+              
+              {/* Debug Console Toggle */}
+              <button
+                onClick={() => setShowDebugConsole(!showDebugConsole)}
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  showDebugConsole 
+                    ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
+                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 hover:text-white'
+                }`}
+                title="Toggle Debug Console"
+              >
+                🐛 Debug
+              </button>
             </div>
           </div>
         </div>
@@ -575,6 +617,12 @@ const Seilor = () => {
           </div>
         </div>
       </div>
+
+      {/* Debug Console */}
+      <DebugConsole 
+        isVisible={showDebugConsole} 
+        onToggle={() => setShowDebugConsole(!showDebugConsole)} 
+      />
     </div>
   );
 };
