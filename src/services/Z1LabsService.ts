@@ -13,130 +13,164 @@ export interface Z1LabsConfig {
   };
 }
 
+export interface EnhancedIntentAnalysis {
+  intent: string;
+  confidence: number;
+  entities: string[];
+  sentiment: 'bullish' | 'bearish' | 'neutral';
+  riskLevel: 'low' | 'medium' | 'high';
+  suggestedActions: string[];
+  marketContext: {
+    currentTrend: string;
+    volatility: number;
+    opportunityScore: number;
+  };
+}
+
 export interface PortfolioOptimizationRequest {
-  portfolio: {
-    assets: Array<{
-      symbol: string;
-      amount: number;
-      value: number;
-      risk: 'low' | 'medium' | 'high';
-    }>;
-    totalValue: number;
-    riskTolerance: 'low' | 'medium' | 'high';
-    timeHorizon: 'short' | 'medium' | 'long';
-  };
-  marketConditions: {
-    currentTrend: 'bullish' | 'bearish' | 'neutral';
-    volatility: 'low' | 'medium' | 'high';
-    sectorPerformance: Record<string, number>;
-  };
+  currentHoldings: {
+    token: string;
+    amount: number;
+    value: number;
+  }[];
+  riskTolerance: 'conservative' | 'moderate' | 'aggressive';
+  investmentGoals: string[];
+  timeHorizon: 'short' | 'medium' | 'long';
 }
 
 export interface PortfolioOptimizationResponse {
-  recommendations: Array<{
-    action: 'buy' | 'sell' | 'hold' | 'rebalance';
-    asset: string;
-    amount: number;
-    reason: string;
-    confidence: number;
+  optimizedAllocation: {
+    token: string;
+    recommendedPercentage: number;
     expectedReturn: number;
-    risk: 'low' | 'medium' | 'high';
-  }>;
-  expectedPortfolioValue: number;
-  riskScore: number;
+    riskScore: number;
+  }[];
+  totalExpectedReturn: number;
+  riskAdjustedReturn: number;
   diversificationScore: number;
-  nextReviewDate: string;
+  recommendations: string[];
 }
 
 export interface MarketPredictionRequest {
-  asset: string;
-  timeframe: '1d' | '1w' | '1m' | '3m' | '6m' | '1y';
-  includeFactors: boolean;
+  token: string;
+  timeframe: '1h' | '4h' | '1d' | '1w' | '1m';
+  includeSentiment?: boolean;
+  includeRisk?: boolean;
 }
 
 export interface MarketPredictionResponse {
-  asset: string;
+  token: string;
   timeframe: string;
   prediction: {
-    price: number;
-    confidence: number;
     direction: 'up' | 'down' | 'sideways';
-    percentageChange: number;
+    confidence: number;
+    expectedMove: number;
+    targetPrice: number;
   };
-  factors: Array<{
-    name: string;
-    impact: 'positive' | 'negative' | 'neutral';
-    weight: number;
-    description: string;
-  }>;
-  riskFactors: Array<{
-    name: string;
-    probability: number;
-    impact: 'low' | 'medium' | 'high';
-    description: string;
-  }>;
-  recommendations: Array<string>;
+  sentiment: {
+    overall: 'bullish' | 'bearish' | 'neutral';
+    score: number;
+    factors: string[];
+  };
+  risk: {
+    level: 'low' | 'medium' | 'high';
+    factors: string[];
+    volatility: number;
+  };
+  technicalIndicators: {
+    rsi: number;
+    macd: string;
+    support: number;
+    resistance: number;
+  };
 }
 
-export interface EnhancedIntentAnalysis {
-  primaryIntent: string;
-  confidence: number;
-  entities: Array<{
-    type: 'asset' | 'amount' | 'action' | 'timeframe' | 'risk';
-    value: string;
+export interface RiskAssessmentRequest {
+  token: string;
+  amount: number;
+  userRiskProfile: 'conservative' | 'moderate' | 'aggressive';
+}
+
+export interface RiskAssessmentResponse {
+  token: string;
+  riskScore: number; // 0-100
+  riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+  riskFactors: {
+    factor: string;
+    impact: 'low' | 'medium' | 'high';
+    description: string;
+  }[];
+  recommendations: string[];
+  maxRecommendedAmount: number;
+}
+
+export interface MarketSentimentRequest {
+  tokens: string[];
+  timeframe: '1h' | '4h' | '1d' | '1w';
+}
+
+export interface MarketSentimentResponse {
+  overallSentiment: 'bullish' | 'bearish' | 'neutral';
+  sentimentScore: number;
+  tokenSentiments: {
+    token: string;
+    sentiment: 'bullish' | 'bearish' | 'neutral';
+    score: number;
     confidence: number;
-  }>;
-  context: {
-    userProfile: 'beginner' | 'intermediate' | 'advanced';
-    riskTolerance: 'low' | 'medium' | 'high';
-    investmentGoals: string[];
-  };
-  suggestedActions: Array<{
-    action: string;
-    priority: 'high' | 'medium' | 'low';
-    reasoning: string;
-  }>;
+  }[];
+  marketMood: string;
+  trendingTopics: string[];
 }
 
 export class Z1LabsService {
   private config: Z1LabsConfig;
-  private isInitialized: boolean = false;
+  private isAvailable: boolean = false;
+  private lastHealthCheck: number = 0;
+  private healthCheckInterval: number = 5 * 60 * 1000; // 5 minutes
 
   constructor(config: Z1LabsConfig) {
     this.config = config;
   }
 
-  async initialize(): Promise<void> {
+  async initialize(): Promise<boolean> {
     try {
-      // Test connection to Z1 Labs
+      if (!this.config.apiKey || !this.config.baseUrl) {
+        console.log('⚠️ Z1 Labs: Missing API configuration');
+        return false;
+      }
+
+      // Test the connection
       const response = await fetch(`${this.config.baseUrl}/health`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`Z1 Labs connection failed: ${response.statusText}`);
+      if (response.ok) {
+        this.isAvailable = true;
+        this.lastHealthCheck = Date.now();
+        console.log('✅ Z1 Labs AI: Successfully connected');
+        return true;
+      } else {
+        console.log('⚠️ Z1 Labs: Health check failed');
+        return false;
       }
-
-      this.isInitialized = true;
-      console.log('✅ Z1 Labs AI service initialized successfully');
     } catch (error) {
-      console.error('❌ Failed to initialize Z1 Labs service:', error);
-      // Fallback to local AI capabilities
-      this.isInitialized = false;
+      console.log('⚠️ Z1 Labs: Connection failed, using fallback mode');
+      return false;
     }
   }
 
-  // Enhanced Natural Language Processing
-  async analyzeIntent(userMessage: string): Promise<EnhancedIntentAnalysis> {
-    if (!this.isInitialized) {
-      return this.fallbackIntentAnalysis(userMessage);
-    }
-
+  // Enhanced Intent Analysis with Z1 Labs AI
+  async analyzeIntent(userMessage: string, context?: any): Promise<EnhancedIntentAnalysis> {
     try {
-      const response = await fetch(`${this.config.baseUrl}/analyze-intent`, {
+      if (!this.isAvailable) {
+        return this.fallbackIntentAnalysis(userMessage);
+      }
+
+      const response = await fetch(`${this.config.baseUrl}/ai/analyze-intent`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.apiKey}`,
@@ -144,97 +178,147 @@ export class Z1LabsService {
         },
         body: JSON.stringify({
           message: userMessage,
-          model: this.config.models.nlp,
-          context: 'defi_trading'
+          context: context || {},
+          timestamp: new Date().toISOString()
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`Intent analysis failed: ${response.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data as EnhancedIntentAnalysis;
+      } else {
+        throw new Error(`Z1 Labs API error: ${response.status}`);
       }
-
-      return await response.json();
     } catch (error) {
-      console.warn('Z1 Labs intent analysis failed, using fallback:', error);
+      console.log('⚠️ Z1 Labs intent analysis failed, using fallback');
       return this.fallbackIntentAnalysis(userMessage);
     }
   }
 
-  // Portfolio Optimization with AI
+  // Advanced Portfolio Optimization
   async optimizePortfolio(request: PortfolioOptimizationRequest): Promise<PortfolioOptimizationResponse> {
-    if (!this.isInitialized) {
-      return this.fallbackPortfolioOptimization(request);
-    }
-
     try {
-      const response = await fetch(`${this.config.baseUrl}/optimize-portfolio`, {
+      if (!this.isAvailable) {
+        return this.fallbackPortfolioOptimization(request);
+      }
+
+      const response = await fetch(`${this.config.baseUrl}/ai/optimize-portfolio`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...request,
-          model: this.config.models.optimization
-        })
+        body: JSON.stringify(request)
       });
 
-      if (!response.ok) {
-        throw new Error(`Portfolio optimization failed: ${response.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data as PortfolioOptimizationResponse;
+      } else {
+        throw new Error(`Z1 Labs API error: ${response.status}`);
       }
-
-      return await response.json();
     } catch (error) {
-      console.warn('Z1 Labs portfolio optimization failed, using fallback:', error);
+      console.log('⚠️ Z1 Labs portfolio optimization failed, using fallback');
       return this.fallbackPortfolioOptimization(request);
     }
   }
 
-  // Market Prediction with AI
+  // Advanced Market Prediction
   async predictMarket(request: MarketPredictionRequest): Promise<MarketPredictionResponse> {
-    if (!this.isInitialized) {
-      return this.fallbackMarketPrediction(request);
-    }
-
     try {
-      const response = await fetch(`${this.config.baseUrl}/predict-market`, {
+      if (!this.isAvailable) {
+        return this.fallbackMarketPrediction(request);
+      }
+
+      const response = await fetch(`${this.config.baseUrl}/ai/predict-market`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.apiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...request,
-          model: this.config.models.prediction
-        })
+        body: JSON.stringify(request)
       });
 
-      if (!response.ok) {
-        throw new Error(`Market prediction failed: ${response.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data as MarketPredictionResponse;
+      } else {
+        throw new Error(`Z1 Labs API error: ${response.status}`);
       }
-
-      return await response.json();
     } catch (error) {
-      console.warn('Z1 Labs market prediction failed, using fallback:', error);
+      console.log('⚠️ Z1 Labs market prediction failed, using fallback');
       return this.fallbackMarketPrediction(request);
     }
   }
 
-  // Enhanced Response Generation
-  async generateEnhancedResponse(
-    userMessage: string,
-    context: {
-      userProfile: any;
-      portfolio: any;
-      marketConditions: any;
-    }
-  ): Promise<string> {
-    if (!this.isInitialized) {
-      return this.fallbackResponseGeneration(userMessage, context);
-    }
-
+  // Risk Assessment
+  async assessRisk(request: RiskAssessmentRequest): Promise<RiskAssessmentResponse> {
     try {
-      const response = await fetch(`${this.config.baseUrl}/generate-response`, {
+      if (!this.isAvailable) {
+        return this.fallbackRiskAssessment(request);
+      }
+
+      const response = await fetch(`${this.config.baseUrl}/ai/assess-risk`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(request)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data as RiskAssessmentResponse;
+      } else {
+        throw new Error(`Z1 Labs API error: ${response.status}`);
+      }
+    } catch (error) {
+      console.log('⚠️ Z1 Labs risk assessment failed, using fallback');
+      return this.fallbackRiskAssessment(request);
+    }
+  }
+
+  // Market Sentiment Analysis
+  async analyzeMarketSentiment(request: MarketSentimentRequest): Promise<MarketSentimentResponse> {
+    try {
+      if (!this.isAvailable) {
+        return this.fallbackMarketSentiment(request);
+      }
+
+      const response = await fetch(`${this.config.baseUrl}/ai/market-sentiment`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(request)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data as MarketSentimentResponse;
+      } else {
+        throw new Error(`Z1 Labs API error: ${response.status}`);
+      }
+    } catch (error) {
+      console.log('⚠️ Z1 Labs sentiment analysis failed, using fallback');
+      return this.fallbackMarketSentiment(request);
+    }
+  }
+
+  // Generate Enhanced AI Response
+  async generateEnhancedResponse(
+    userMessage: string, 
+    context: any, 
+    intent: string
+  ): Promise<string> {
+    try {
+      if (!this.isAvailable) {
+        return this.fallbackEnhancedResponse(userMessage, context, intent);
+      }
+
+      const response = await fetch(`${this.config.baseUrl}/ai/generate-response`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.config.apiKey}`,
@@ -242,112 +326,195 @@ export class Z1LabsService {
         },
         body: JSON.stringify({
           message: userMessage,
-          context,
-          model: this.config.models.nlp,
-          style: 'professional_defi_advisor'
+          context: context || {},
+          intent: intent,
+          timestamp: new Date().toISOString()
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`Response generation failed: ${response.statusText}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.response || data.message || 'I understand your request. Let me help you with that.';
+      } else {
+        throw new Error(`Z1 Labs API error: ${response.status}`);
       }
-
-      const result = await response.json();
-      return result.response;
     } catch (error) {
-      console.warn('Z1 Labs response generation failed, using fallback:', error);
-      return this.fallbackResponseGeneration(userMessage, context);
+      console.log('⚠️ Z1 Labs response generation failed, using fallback');
+      return this.fallbackEnhancedResponse(userMessage, context, intent);
     }
   }
 
-  // Fallback methods when Z1 Labs is not available
+  // Fallback Methods
   private fallbackIntentAnalysis(userMessage: string): EnhancedIntentAnalysis {
-    // Basic intent recognition as fallback
     const lowerMessage = userMessage.toLowerCase();
     
-    let primaryIntent = 'general_inquiry';
+    // Basic intent detection
+    let intent = 'conversation';
     let confidence = 0.7;
-    
-    if (lowerMessage.includes('swap') || lowerMessage.includes('trade')) {
-      primaryIntent = 'trading';
-      confidence = 0.85;
-    } else if (lowerMessage.includes('stake') || lowerMessage.includes('yield')) {
-      primaryIntent = 'staking';
+    let entities: string[] = [];
+    let sentiment: 'bullish' | 'bearish' | 'neutral' = 'neutral';
+    let riskLevel: 'low' | 'medium' | 'high' = 'low';
+
+    if (/portfolio|holdings|balance/i.test(lowerMessage)) {
+      intent = 'portfolio_analysis';
       confidence = 0.8;
-    } else if (lowerMessage.includes('portfolio') || lowerMessage.includes('balance')) {
-      primaryIntent = 'portfolio_inquiry';
+    } else if (/swap|trade|exchange/i.test(lowerMessage)) {
+      intent = 'trading';
       confidence = 0.9;
-    } else if (lowerMessage.includes('risk') || lowerMessage.includes('safe')) {
-      primaryIntent = 'risk_assessment';
-      confidence = 0.75;
+    } else if (/stake|yield|farm/i.test(lowerMessage)) {
+      intent = 'staking';
+      confidence = 0.85;
+    } else if (/market|price|trend/i.test(lowerMessage)) {
+      intent = 'market_analysis';
+      confidence = 0.8;
+    } else if (/scan|security|safe/i.test(lowerMessage)) {
+      intent = 'security_scan';
+      confidence = 0.9;
     }
 
     return {
-      primaryIntent,
+      intent,
       confidence,
-      entities: [],
-      context: {
-        userProfile: 'intermediate',
-        riskTolerance: 'medium',
-        investmentGoals: ['growth', 'stability']
-      },
-      suggestedActions: []
+      entities,
+      sentiment,
+      riskLevel,
+      suggestedActions: this.getSuggestedActions(intent),
+      marketContext: {
+        currentTrend: 'stable',
+        volatility: 0.3,
+        opportunityScore: 0.6
+      }
     };
   }
 
   private fallbackPortfolioOptimization(request: PortfolioOptimizationRequest): PortfolioOptimizationResponse {
-    // Basic portfolio optimization as fallback
+    // Simple fallback optimization logic
+    const totalValue = request.currentHoldings.reduce((sum, holding) => sum + holding.value, 0);
+    
     return {
+      optimizedAllocation: request.currentHoldings.map(holding => ({
+        token: holding.token,
+        recommendedPercentage: (holding.value / totalValue) * 100,
+        expectedReturn: 0.08, // 8% default
+        riskScore: 0.4
+      })),
+      totalExpectedReturn: 0.08,
+      riskAdjustedReturn: 0.06,
+      diversificationScore: 0.7,
       recommendations: [
-        {
-          action: 'rebalance',
-          asset: 'SEI',
-          amount: request.portfolio.assets.find(a => a.symbol === 'SEI')?.amount || 0,
-          reason: 'Maintain core position for stability',
-          confidence: 0.7,
-          expectedReturn: 0.15,
-          risk: 'medium'
-        }
-      ],
-      expectedPortfolioValue: request.portfolio.totalValue * 1.1,
-      riskScore: 65,
-      diversificationScore: 70,
-      nextReviewDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        'Consider diversifying across different asset classes',
+        'Monitor your portfolio regularly',
+        'Rebalance quarterly for optimal performance'
+      ]
     };
   }
 
   private fallbackMarketPrediction(request: MarketPredictionRequest): MarketPredictionResponse {
-    // Basic market prediction as fallback
     return {
-      asset: request.asset,
+      token: request.token,
       timeframe: request.timeframe,
       prediction: {
-        price: 0,
-        confidence: 0.6,
         direction: 'sideways',
-        percentageChange: 0
+        confidence: 0.6,
+        expectedMove: 0.05,
+        targetPrice: 0
       },
-      factors: [],
-      riskFactors: [],
-      recommendations: ['Monitor market conditions', 'Consider DCA strategy']
+      sentiment: {
+        overall: 'neutral',
+        score: 0.5,
+        factors: ['Market stability', 'Balanced volume']
+      },
+      risk: {
+        level: 'medium',
+        factors: ['Normal market volatility'],
+        volatility: 0.3
+      },
+      technicalIndicators: {
+        rsi: 50,
+        macd: 'neutral',
+        support: 0,
+        resistance: 0
+      }
     };
   }
 
-  private fallbackResponseGeneration(userMessage: string, context: any): string {
-    // Basic response generation as fallback
-    return `I understand you're asking about "${userMessage}". Let me help you with that. Currently using enhanced local AI capabilities while we optimize our advanced AI integration.`;
-  }
-
-  // Check if Z1 Labs is available
-  isAvailable(): boolean {
-    return this.isInitialized;
-  }
-
-  // Get service status
-  getStatus(): { available: boolean; lastError?: string } {
+  private fallbackRiskAssessment(request: RiskAssessmentRequest): RiskAssessmentResponse {
     return {
-      available: this.isInitialized
+      token: request.token,
+      riskScore: 45,
+      riskLevel: 'medium',
+      riskFactors: [
+        {
+          factor: 'Market volatility',
+          impact: 'medium',
+          description: 'Normal market conditions'
+        }
+      ],
+      recommendations: [
+        'Start with a small position',
+        'Set stop-loss orders',
+        'Monitor market conditions'
+      ],
+      maxRecommendedAmount: request.amount * 0.8
     };
+  }
+
+  private fallbackMarketSentiment(request: MarketSentimentRequest): MarketSentimentResponse {
+    return {
+      overallSentiment: 'neutral',
+      sentimentScore: 0.5,
+      tokenSentiments: request.tokens.map(token => ({
+        token,
+        sentiment: 'neutral',
+        score: 0.5,
+        confidence: 0.6
+      })),
+      marketMood: 'Balanced',
+      trendingTopics: ['DeFi growth', 'Market stability']
+    };
+  }
+
+  private fallbackEnhancedResponse(userMessage: string, context: any, intent: string): string {
+    // Enhanced fallback responses
+    const responses = {
+      portfolio_analysis: "I can help you analyze your portfolio! Let me check your current holdings and provide optimization recommendations.",
+      trading: "I'm ready to help you with trading! I can assist with swaps, provide best routes, and help optimize your trades.",
+      staking: "Great choice! Let me help you find the best staking opportunities and optimize your yield farming strategies.",
+      market_analysis: "I'll analyze the current market conditions and provide you with insights and predictions to help with your decisions.",
+      security_scan: "Security first! I can scan any token for potential risks, verify contracts, and ensure your investments are safe."
+    };
+
+    return responses[intent as keyof typeof responses] || 
+           "I understand your request. Let me help you with that using my available tools and knowledge.";
+  }
+
+  private getSuggestedActions(intent: string): string[] {
+    const actions = {
+      portfolio_analysis: ['Check current holdings', 'Optimize allocation', 'Risk assessment'],
+      trading: ['View best routes', 'Check liquidity', 'Set slippage'],
+      staking: ['Find best APY', 'Check lock periods', 'Calculate rewards'],
+      market_analysis: ['Get price predictions', 'Check trends', 'Analyze sentiment'],
+      security_scan: ['Scan token address', 'Check contract', 'Verify liquidity']
+    };
+
+    return actions[intent as keyof typeof actions] || ['Get started', 'Learn more', 'Explore features'];
+  }
+
+  // Utility methods
+  public getStatus(): { available: boolean; lastCheck: number; config: boolean } {
+    return {
+      available: this.isAvailable,
+      lastCheck: this.lastHealthCheck,
+      config: !!(this.config.apiKey && this.config.baseUrl)
+    };
+  }
+
+  public isServiceAvailable(): boolean {
+    // Check if we need to refresh health check
+    if (Date.now() - this.lastHealthCheck > this.healthCheckInterval) {
+      this.initialize(); // Async refresh
+    }
+    return this.isAvailable;
   }
 }
 
