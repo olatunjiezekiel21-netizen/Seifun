@@ -5,12 +5,6 @@
 export interface Z1LabsConfig {
   apiKey: string;
   baseUrl: string;
-  models: {
-    nlp: string;
-    prediction: string;
-    optimization: string;
-    sentiment: string;
-  };
 }
 
 export interface EnhancedIntentAnalysis {
@@ -521,13 +515,7 @@ export class Z1LabsService {
 // Default Z1 Labs configuration
 export const defaultZ1LabsConfig: Z1LabsConfig = {
   apiKey: process.env.VITE_Z1_LABS_API_KEY || '',
-  baseUrl: process.env.VITE_Z1_LABS_BASE_URL || 'https://api.z1labs.ai',
-  models: {
-    nlp: 'z1-defi-nlp-v2',
-    prediction: 'z1-market-prediction-v1',
-    optimization: 'z1-portfolio-optimizer-v1',
-    sentiment: 'z1-sentiment-analysis-v1'
-  }
+  baseUrl: process.env.VITE_Z1_LABS_BASE_URL || 'https://api.z1labs.ai'
 };
 
 // Create singleton instance
