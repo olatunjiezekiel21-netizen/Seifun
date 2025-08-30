@@ -104,7 +104,7 @@ const Seilor = () => {
         try {
           const result = await z1LabsService.initialize();
           console.log('✅ Seilor 0: Z1 Labs AI service initialized:', result);
-          console.log('🔍 Seilor 0: Z1 Labs available:', z1LabsService.isAvailable());
+          console.log('🔍 Seilor 0: Z1 Labs available:', z1LabsService.isServiceAvailable());
         } catch (error) {
           console.warn('⚠️ Seilor 0: Z1 Labs initialization failed, using fallback:', error);
         }

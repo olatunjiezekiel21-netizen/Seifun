@@ -518,7 +518,7 @@ export class Z1LabsService {
   // Utility methods
   public getStatus(): { available: boolean; lastCheck: number; config: boolean } {
     return {
-      available: this.isAvailable,
+      available: this.isServiceAvailable(),
       lastCheck: this.lastHealthCheck,
       config: !!(this.config.apiKey && this.config.baseUrl)
     };
