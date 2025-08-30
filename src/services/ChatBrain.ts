@@ -1,6 +1,7 @@
 import { actionBrain, IntentType } from './ActionBrain';
 import { cambrianSeiAgent } from './CambrianSeiAgent';
 import { langChainSeiAgent, LangChainResponse } from './LangChainSeiAgent';
+import { z1LabsService, EnhancedIntentAnalysis, PortfolioOptimizationRequest, MarketPredictionRequest } from './Z1LabsService';
 
 // Conversation Context
 interface ConversationContext {
@@ -8,8 +9,8 @@ interface ConversationContext {
   lastAction?: string;
   userPreferences?: {
     preferredTokens?: string[];
-    riskTolerance?: 'low' | 'medium' | 'high';
-    tradingStyle?: 'conservative' | 'moderate' | 'aggressive';
+    riskTolerance: 'low' | 'medium' | 'high';
+    tradingStyle: 'conservative' | 'moderate' | 'aggressive';
   };
   sessionData?: {
     startTime: Date;
@@ -32,6 +33,14 @@ interface ConversationContext {
     tokenIn: string;
     tokenOut: string;
     minOut: string;
+  };
+  // Enhanced AI context
+  aiContext?: {
+    userProfile: 'beginner' | 'intermediate' | 'advanced';
+    riskTolerance: 'low' | 'medium' | 'high';
+    investmentGoals: string[];
+    portfolioHistory: any[];
+    marketInsights: any[];
   };
 }
 
@@ -467,6 +476,200 @@ export class ChatBrain {
   // Get session statistics
   public getSessionStats(): any {
     return this.context.sessionData;
+  }
+
+  // Enhanced AI Methods with Z1 Labs Integration
+  
+  // Enhanced Intent Analysis with Z1 Labs
+  private async enhancedIntentAnalysis(userMessage: string): Promise<EnhancedIntentAnalysis> {
+    try {
+      const analysis = await z1LabsService.analyzeIntent(userMessage);
+      
+      // Update AI context with new insights
+      if (!this.context.aiContext) {
+        this.context.aiContext = {
+          userProfile: 'intermediate',
+          riskTolerance: 'medium',
+          investmentGoals: ['growth', 'stability'],
+          portfolioHistory: [],
+          marketInsights: []
+        };
+      }
+      
+      // Update context based on analysis
+      if (analysis.context) {
+        this.context.aiContext.userProfile = analysis.context.userProfile;
+        this.context.aiContext.riskTolerance = analysis.context.riskTolerance;
+        this.context.aiContext.investmentGoals = analysis.context.investmentGoals;
+      }
+      
+      return analysis;
+    } catch (error) {
+      console.warn('Enhanced intent analysis failed, using fallback:', error);
+      return z1LabsService.fallbackIntentAnalysis(userMessage);
+    }
+  }
+
+  // Portfolio Optimization with Z1 Labs
+  public async optimizeUserPortfolio(portfolioData: any): Promise<string> {
+    try {
+      const request: PortfolioOptimizationRequest = {
+        portfolio: {
+          assets: portfolioData.assets || [],
+          totalValue: portfolioData.totalValue || 0,
+          riskTolerance: this.context.aiContext?.riskTolerance || 'medium',
+          timeHorizon: 'medium'
+        },
+        marketConditions: {
+          currentTrend: 'neutral',
+          volatility: 'medium',
+          sectorPerformance: {}
+        }
+      };
+
+      const optimization = await z1LabsService.optimizePortfolio(request);
+      
+      // Format response
+      let message = `🎯 **Portfolio Optimization Results**\n\n`;
+      message += `📊 **Current Portfolio Value**: $${portfolioData.totalValue?.toFixed(2) || '0.00'}\n`;
+      message += `🔄 **Expected Value**: $${optimization.expectedPortfolioValue.toFixed(2)}\n`;
+      message += `⚠️ **Risk Score**: ${optimization.riskScore}/100\n`;
+      message += `🌐 **Diversification**: ${optimization.diversificationScore}/100\n\n`;
+      
+      message += `💡 **Recommendations**:\n`;
+      optimization.recommendations.forEach((rec, index) => {
+        message += `${index + 1}. **${rec.action.toUpperCase()}** ${rec.asset}: ${rec.amount} tokens\n`;
+        message += `   📝 ${rec.reason}\n`;
+        message += `   🎯 Confidence: ${(rec.confidence * 100).toFixed(0)}%\n`;
+        message += `   📈 Expected Return: ${(rec.expectedReturn * 100).toFixed(1)}%\n\n`;
+      });
+      
+      message += `📅 **Next Review**: ${new Date(optimization.nextReviewDate).toLocaleDateString()}\n`;
+      message += `⚡ **Powered by Z1 Labs AI**`;
+      
+      return message;
+    } catch (error) {
+      console.error('Portfolio optimization failed:', error);
+      return `❌ Portfolio optimization failed. Please try again later.`;
+    }
+  }
+
+  // Market Prediction with Z1 Labs
+  public async predictMarketMovement(asset: string, timeframe: '1d' | '1w' | '1m' | '3m' | '6m' | '1y' = '1w'): Promise<string> {
+    try {
+      const request: MarketPredictionRequest = {
+        asset,
+        timeframe,
+        includeFactors: true
+      };
+
+      const prediction = await z1LabsService.predictMarket(request);
+      
+      // Format response
+      let message = `🔮 **Market Prediction for ${asset.toUpperCase()}**\n\n`;
+      message += `⏰ **Timeframe**: ${timeframe}\n`;
+      message += `📈 **Direction**: ${prediction.prediction.direction.toUpperCase()}\n`;
+      message += `🎯 **Confidence**: ${(prediction.prediction.confidence * 100).toFixed(0)}%\n`;
+      message += `📊 **Expected Change**: ${prediction.prediction.percentageChange > 0 ? '+' : ''}${prediction.prediction.percentageChange.toFixed(2)}%\n\n`;
+      
+      if (prediction.factors.length > 0) {
+        message += `🔍 **Key Factors**:\n`;
+        prediction.factors.forEach((factor, index) => {
+          const emoji = factor.impact === 'positive' ? '✅' : factor.impact === 'negative' ? '❌' : '➖';
+          message += `${emoji} ${factor.name} (${(factor.weight * 100).toFixed(0)}%): ${factor.description}\n`;
+        });
+        message += `\n`;
+      }
+      
+      if (prediction.riskFactors.length > 0) {
+        message += `⚠️ **Risk Factors**:\n`;
+        prediction.riskFactors.forEach((risk, index) => {
+          message += `${index + 1}. ${risk.name} (${(risk.probability * 100).toFixed(0)}% probability)\n`;
+          message += `   Impact: ${risk.impact.toUpperCase()}\n`;
+          message += `   ${risk.description}\n\n`;
+        });
+      }
+      
+      if (prediction.recommendations.length > 0) {
+        message += `💡 **Recommendations**:\n`;
+        prediction.recommendations.forEach((rec, index) => {
+          message += `${index + 1}. ${rec}\n`;
+        });
+      }
+      
+      message += `\n⚡ **Powered by Z1 Labs AI**`;
+      
+      return message;
+    } catch (error) {
+      console.error('Market prediction failed:', error);
+      return `❌ Market prediction failed. Please try again later.`;
+    }
+  }
+
+  // Enhanced Response Generation with Z1 Labs
+  private async generateEnhancedResponse(userMessage: string, intentAnalysis: EnhancedIntentAnalysis): Promise<string> {
+    try {
+      const context = {
+        userProfile: this.context.aiContext,
+        portfolio: this.getCurrentPortfolioContext(),
+        marketConditions: this.getMarketContext()
+      };
+
+      const enhancedResponse = await z1LabsService.generateEnhancedResponse(userMessage, context);
+      return enhancedResponse;
+    } catch (error) {
+      console.warn('Enhanced response generation failed, using fallback:', error);
+      return this.generateFallbackResponse(userMessage, intentAnalysis);
+    }
+  }
+
+  // Get current portfolio context for AI
+  private getCurrentPortfolioContext(): any {
+    // This would integrate with actual portfolio data
+    return {
+      totalValue: 0,
+      assets: [],
+      lastUpdated: new Date()
+    };
+  }
+
+  // Get market context for AI
+  private getMarketContext(): any {
+    // This would integrate with real-time market data
+    return {
+      currentTrend: 'neutral',
+      volatility: 'medium',
+      timestamp: new Date()
+    };
+  }
+
+  // Generate fallback response when Z1 Labs is not available
+  private generateFallbackResponse(userMessage: string, intentAnalysis: EnhancedIntentAnalysis): string {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('portfolio') || lowerMessage.includes('optimize')) {
+      return `I can help you optimize your portfolio! Currently using enhanced local AI capabilities. To get the full AI-powered portfolio optimization, we're integrating with advanced AI models. For now, I can help you with basic portfolio analysis and DeFi strategies.`;
+    }
+    
+    if (lowerMessage.includes('predict') || lowerMessage.includes('forecast')) {
+      return `I can provide market insights and analysis! Currently using enhanced local AI capabilities. For advanced market predictions with AI models, we're integrating cutting-edge prediction systems. I can still help you with current market data and technical analysis.`;
+    }
+    
+    return `I understand you're asking about "${userMessage}". Let me help you with that using our enhanced local AI capabilities. We're also integrating advanced AI models for even better assistance.`;
+  }
+
+  // Check Z1 Labs availability
+  public isZ1LabsAvailable(): boolean {
+    return z1LabsService.isAvailable();
+  }
+
+  // Get AI service status
+  public getAIServiceStatus(): { z1Labs: boolean; localAI: boolean; enhanced: boolean } {
+    return {
+      z1Labs: z1LabsService.isAvailable(),
+      localAI: true,
+      enhanced: z1LabsService.isAvailable()
+    };
   }
 }
 

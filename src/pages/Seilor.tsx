@@ -22,6 +22,7 @@ import { AIInterface } from '../components/AIInterface';
 import { ChatMemoryService } from '../services/ChatMemoryService';
 import { LocalLLMService } from '../services/LocalLLMService';
 import { IPFSUploader } from '../utils/ipfsUpload';
+import { z1LabsService } from '../services/Z1LabsService';
 // Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
@@ -70,6 +71,18 @@ const Seilor = () => {
     loadWalletBalance();
     const savedTodos = localStorage.getItem('seilor_todos');
     if (savedTodos) setTodos(JSON.parse(savedTodos));
+    
+    // Initialize Z1 Labs AI service
+    const initializeZ1Labs = async () => {
+      try {
+        await z1LabsService.initialize();
+        console.log('Z1 Labs AI service initialized:', z1LabsService.isAvailable());
+      } catch (error) {
+        console.warn('Z1 Labs initialization failed, using fallback:', error);
+      }
+    };
+    
+    initializeZ1Labs();
   }, []);
 
   useEffect(() => { localStorage.setItem('seilor_todos', JSON.stringify(todos)); }, [todos]);
@@ -221,6 +234,15 @@ const Seilor = () => {
               <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${isConnected ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-300'}`}>
                 {isConnected ? 'Connected' : 'Disconnected'}
               </div>
+              {/* AI Service Status Indicator */}
+              <div className="hidden sm:flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
+                  <div className={`w-2 h-2 rounded-full ${chatBrain.isZ1LabsAvailable() ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`}></div>
+                  <span className="text-xs text-slate-300">
+                    {chatBrain.isZ1LabsAvailable() ? 'AI Enhanced' : 'Local AI'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -256,8 +278,9 @@ const Seilor = () => {
           <div className={`${sidebarCollapsed ? 'col-span-1' : 'lg:col-span-3'}`}>
             <div className="bg-slate-800/50 rounded-2xl backdrop-blur-sm border border-slate-700/50 overflow-hidden">
               {activePanel === 'chat' && (
-                <div className={`${sidebarCollapsed ? 'h-[80vh]' : 'h-[600px]'} flex flex-col`}>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className={`${sidebarCollapsed ? 'h-[85vh]' : 'h-[75vh]'} flex flex-col`}>
+                  {/* Messages Container - Fixed height with proper scrolling */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
                     {chatMessages.length > 0 && chatMessages.map(msg => (
                       <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-3xl p-4 rounded-2xl ${msg.type === 'user' ? 'bg-red-500/20 text-white border border-red-500/30' : 'bg-slate-700/50 text-slate-100 border border-slate-600/50'}`}>
@@ -288,8 +311,8 @@ const Seilor = () => {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Chat Input */}
-                  <div className="border-t border-slate-700/50 p-4">
+                  {/* Chat Input - Always visible at bottom */}
+                  <div className="border-t border-slate-700/50 p-4 bg-slate-800/30">
                     {walletBalance && (
                       <div className="mb-3 p-3 bg-slate-700/30 rounded-xl border border-slate-600/30">
                         <div className="space-y-2">
@@ -319,12 +342,85 @@ const Seilor = () => {
                           <ImageIcon className="w-5 h-5" />
                         </button>
                         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0] || null; setAttachedImage(f || null); }} />
-                        <input type="text" value={aiChat} onChange={(e) => setAiChat(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAiChat()} placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'" className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none" disabled={loading} />
-                        <button onClick={handleAiChat} disabled={loading || !aiChat.trim()} className="px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25">
+                        <input 
+                          type="text" 
+                          value={aiChat} 
+                          onChange={(e) => setAiChat(e.target.value)} 
+                          onKeyPress={(e) => e.key === 'Enter' && handleAiChat()} 
+                          placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'" 
+                          className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none" 
+                          disabled={loading} 
+                        />
+                        <button 
+                          onClick={handleAiChat} 
+                          disabled={loading || !aiChat.trim()} 
+                          className="px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25"
+                        >
                           <Send className="w-5 h-5" />
                         </button>
                       </div>
-                      {attachedImage && (<div className="text-xs text-slate-300">Attached: {attachedImage.name}</div>)}
+                      {attachedImage && (
+                        <div className="text-xs text-slate-300 flex items-center gap-2">
+                          <span>📎 Attached: {attachedImage.name}</span>
+                          <button 
+                            onClick={() => setAttachedImage(null)} 
+                            className="text-red-400 hover:text-red-300 text-xs"
+                          >
+                            ✕ Remove
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* Enhanced AI Quick Actions */}
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <button 
+                          onClick={async () => {
+                            const portfolioData = {
+                              assets: [
+                                { symbol: 'SEI', amount: parseFloat(walletBalance?.sei || '0'), value: parseFloat(walletBalance?.usd || '0'), risk: 'medium' },
+                                { symbol: 'USDC', amount: parseFloat(walletBalance?.usdc || '0'), value: parseFloat(walletBalance?.usdcUsd || '0'), risk: 'low' }
+                              ],
+                              totalValue: (walletBalance?.usd || 0) + (walletBalance?.usdcUsd || 0)
+                            };
+                            
+                            const optimizationMessage = await chatBrain.optimizeUserPortfolio(portfolioData);
+                            const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: optimizationMessage, timestamp: new Date() };
+                            setChatMessages(prev => [...prev, aiResponse]);
+                          }}
+                          disabled={!walletBalance}
+                          className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                        >
+                          🎯 Optimize Portfolio
+                        </button>
+                        
+                        <button 
+                          onClick={async () => {
+                            const predictionMessage = await chatBrain.predictMarketMovement('SEI', '1w');
+                            const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: predictionMessage, timestamp: new Date() };
+                            setChatMessages(prev => [...prev, aiResponse]);
+                          }}
+                          className="px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
+                        >
+                          🔮 Market Prediction
+                        </button>
+                        
+                        <button 
+                          onClick={async () => {
+                            const status = chatBrain.getAIServiceStatus();
+                            const statusMessage = `🤖 **AI Service Status**\n\n` +
+                              `🔵 **Z1 Labs AI**: ${status.z1Labs ? '✅ Available' : '❌ Not Available'}\n` +
+                              `🟡 **Local AI**: ${status.localAI ? '✅ Available' : '❌ Not Available'}\n` +
+                              `🟢 **Enhanced Mode**: ${status.enhanced ? '✅ Active' : '❌ Fallback Mode'}\n\n` +
+                              `${status.z1Labs ? '🚀 You have access to advanced AI features including portfolio optimization, market prediction, and enhanced natural language processing!' : '📚 Currently using enhanced local AI capabilities. Connect Z1 Labs API for advanced features!'}`;
+                            
+                            const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: statusMessage, timestamp: new Date() };
+                            setChatMessages(prev => [...prev, aiResponse]);
+                          }}
+                          className="px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs rounded-lg font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                        >
+                          🤖 AI Status
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
