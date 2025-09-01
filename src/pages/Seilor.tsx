@@ -14,7 +14,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
-import { chatBrain } from '../services/ChatBrain';
+import { enhancedChatBrain } from '../services/EnhancedChatBrain';
 import { actionBrain, IntentType } from '../services/ActionBrain';
 import { privateKeyWallet } from '../services/PrivateKeyWallet';
 import { ChatMemoryService } from '../services/ChatMemoryService';
@@ -60,7 +60,7 @@ const Seilor = () => {
   const [hybridTransactions, setHybridTransactions] = useState<HybridTransaction[]>([]);
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
-  const [hybridConnected, setHybridConnected] = useState(false);
+  const [testnetConnected, setTestnetConnected] = useState(false);
 
   const { isConnected, address } = useReownWallet();
 
@@ -99,7 +99,7 @@ const Seilor = () => {
     try {
       console.log('🚀 Initializing Hybrid Sei Service...');
       const connected = await hybridSeiService.initialize();
-      setHybridConnected(connected);
+      setTestnetConnected(connected);
       
       if (connected) {
         console.log('✅ Testnet service connected');
@@ -116,16 +116,16 @@ const Seilor = () => {
   const loadTestnetData = async () => {
     try {
       const [portfolio, transactions] = await Promise.all([
-        seiTestnetService.getTestnetPortfolio(),
-        seiTestnetService.getTransactionHistory()
+        hybridSeiService.getPortfolio(),
+        hybridSeiService.getTransactionHistory()
       ]);
       
-      setTestnetPortfolio(portfolio);
-      setTestnetTransactions(transactions);
+      setHybridPortfolio(portfolio);
+      setHybridTransactions(transactions);
       
-      console.log('📊 Testnet data loaded:', { portfolio, transactions: transactions.length });
+      console.log('📊 Hybrid data loaded:', { portfolio, transactions: transactions.length });
     } catch (error) {
-      console.error('❌ Failed to load testnet data:', error);
+      console.error('❌ Failed to load hybrid data:', error);
     }
   };
 
@@ -226,7 +226,7 @@ const Seilor = () => {
     if (/(^yes\b|\bswap\b|\bstake\b|create\s+token|add\s+liquidity|burn)/i.test(userMessage)) setIsProcessingAction(true)
     await new Promise(r => setTimeout(r, 200));
     try {
-      const response = await chatBrain.processMessage(userMessage);
+      const response = await enhancedChatBrain.processMessage(userMessage);
       if (/create\s+(a\s+)?token/i.test(userMessage) && attachedImage) {
         try { const url = await IPFSUploader.uploadLogo(attachedImage); localStorage.setItem('seilor_last_token_logo', url); } catch {}
       }
@@ -235,11 +235,22 @@ const Seilor = () => {
       const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: response.message, timestamp: new Date() };
       setChatMessages(prev => [...prev, aiResponse]);
       ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
-      // Manage processing overlay
-      if (/^⏳\s/i.test(response.message)) {
-        setIsProcessingAction(true);
-      } else if (/^✅\s|^❌\s/i.test(response.message)) {
+      
+      // Manage processing overlay based on action
+      if (response.action === 'success') {
         setIsProcessingAction(false);
+        // Add transaction to history if it's a real action
+        if (response.message.includes('Transaction Hash')) {
+          if (response.message.includes('Staking')) {
+            addUserTransaction('Staking', 'Stake Amount', 'success');
+          } else if (response.message.includes('Lending')) {
+            addUserTransaction('Lending', 'Lend Amount', 'success');
+          }
+        }
+      } else if (response.action === 'error') {
+        setIsProcessingAction(false);
+      } else if (response.action === 'confirmation_required') {
+        setIsProcessingAction(true);
       } else {
         setIsProcessingAction(false);
       }
