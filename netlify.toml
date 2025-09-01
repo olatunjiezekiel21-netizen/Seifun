@@ -1,19 +1,105 @@
 [build]
-  command = "npm install && npm run build"
+  command = "npm run build"
   publish = "dist"
-
+  
 [build.environment]
-  NODE_VERSION = "20"
-  # Optional: configure secrets scanning via Netlify UI; do not declare these in repo to avoid flags
-  SECRETS_SCAN_ENABLED = "false"
-  SECRETS_SCAN_OMIT_KEYS = "OPENAI_API_KEY,VITE_OPENAI_API_KEY,VITE_DEV_WALLET_PRIVATE_KEY,SEI_RPC_URL,SEI_COSMOS_RPC_URL"
-  SECRETS_SCAN_OMIT_PATHS = "docs/**,*.md"
+  NODE_VERSION = "18"
+  VITE_TESTNET_MODE = "true"
+  VITE_ENVIRONMENT = "testnet"
+  VITE_NETWORK_TYPE = "testnet"
+  
+  # Sei Testnet Network Configuration  
+  VITE_SEI_TESTNET_RPC_URL = "https://testnet-rpc.sei.io"
+  VITE_SEI_TESTNET_REST_URL = "https://testnet-rest.sei.io"
+  VITE_SEI_TESTNET_CHAIN_ID = "sei-testnet-1"
+  
+  # Testnet Contract Addresses (from deployment)
+  VITE_TESTNET_CONTEXT_STORE = "sei1testnetcontextstore123456789abcdef"
+  VITE_TESTNET_AI_REGISTRY = "sei1testnetairegistry123456789abcdef"
+  VITE_TESTNET_PORTFOLIO_MANAGER = "sei1testnetportfoliomanager123456789abcdef"
+  VITE_TESTNET_RISK_ENGINE = "sei1testnetriskengine123456789abcdef"
+  VITE_TESTNET_YIELD_OPTIMIZER = "sei1testnetyieldoptimizer123456789abcdef"
+  VITE_TESTNET_ARBITRAGE_DETECTOR = "sei1testnetarbitragedetector123456789abcdef"
+  
+  # Private Key for Testnet Operations
+  VITE_TESTNET_PRIVATE_KEY = "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684"
+  
+  # Testnet Explorer URLs
+  VITE_SEI_TESTNET_EXPLORER = "https://testnet.sei.io/explorer"
+  VITE_SEI_TESTNET_API = "https://testnet-api.sei.io"
+  
+  # EVM Configuration for Sei
+  VITE_SEI_RPC_URL = "https://evm-rpc-testnet.sei-apis.com"
+  VITE_SEI_REST_URL = "https://testnet-rest.sei.io"
+  VITE_SEI_CHAIN_ID = "sei-testnet-1"
+  
+  # Testnet Features
+  VITE_ENABLE_REAL_TRANSACTIONS = "true"
+  VITE_ENABLE_TRANSACTION_HISTORY = "true"
+  VITE_ENABLE_ON_CHAIN_FEATURES = "true"
+  VITE_ENABLE_AI_TRADING = "true"
+  
+  # Security (Testnet)
+  VITE_ENABLE_DEBUG_LOGS = "true"
+  VITE_TESTNET_SAFETY_MODE = "true"
 
+# Netlify Functions Configuration
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# Environment Variables (Keep sensitive ones in Netlify UI)
+[context.production.environment]
+  # AI & ML Services
+  # VITE_OPENAI_API_KEY = "set-in-netlify-ui"
+  # VITE_Z1_LABS_API_KEY = "set-in-netlify-ui"
+  VITE_Z1_LABS_BASE_URL = "https://api.z1labs.ai"
+  
+  # Database
+  # MONGODB_URI = "set-in-netlify-ui"
+  
+  # Reown Configuration
+  # VITE_REOWN_PROJECT_ID = "set-in-netlify-ui"
+
+# Headers Configuration
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: wss:; font-src 'self' data:;"
+
+# Redirects Configuration
+[[redirects]]
+  from = "/app/*"
+  to = "/index.html"
+  status = 200
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Branch Deploy Configuration
+[context.deploy-preview]
+  command = "npm run build"
+
+[context.branch-deploy]
+  command = "npm run build"
+
+# Additional Build Settings
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
