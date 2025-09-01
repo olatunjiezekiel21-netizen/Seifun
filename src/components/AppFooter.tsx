@@ -58,7 +58,7 @@ const AppFooter = () => {
         
         <div className="border-t app-border mt-8 pt-8 text-center">
           <p className="app-text-muted">
-            © 2024 Seifun. Built on the Sei blockchain.
+            © 2025 Seifun. Built on the Sei blockchain.
           </p>
         </div>
       </div>

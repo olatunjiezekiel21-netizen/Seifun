@@ -44,7 +44,6 @@ function App() {
             <div className="min-h-screen app-bg-primary">
               <AppHeaderSafe />
               <Seilor />
-              <AppFooter />
             </div>
           } />
           <Route path="/app/devplus" element={

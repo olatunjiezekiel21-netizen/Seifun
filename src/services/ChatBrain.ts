@@ -406,7 +406,9 @@ export class ChatBrain {
         "I'm here to help you with DeFi on Sei! What would you like to explore today?",
         "Great question! Let me assist you with that.",
         "I understand what you're asking. Here's what I can help you with:",
-        "Thanks for reaching out! I'm ready to help with your DeFi needs."
+        "Thanks for reaching out! I'm ready to help with your DeFi needs.",
+        "I'm Seilor 0, your AI assistant for DeFi on Sei! I can help you with staking, swapping, creating tokens, and more.",
+        "I'm here to help you navigate the world of DeFi on Sei! What would you like to learn about?"
       ],
       [IntentType.TOKEN_SCAN]: [
         "🔍 I've analyzed that token for you. Here's what I found:",
@@ -426,7 +428,8 @@ export class ChatBrain {
       [IntentType.STAKE_TOKENS]: [
         "🥩 I'll help you stake your tokens for yield:",
         "🥩 Setting up staking for you:",
-        "🥩 Let me configure your staking position:"
+        "🥩 Let me configure your staking position:",
+        "🥩 Great! Staking is a great way to earn passive income on Sei. I can help you stake your tokens with validators."
       ],
       [IntentType.LEND_TOKENS]: [
         "🏦 I'll help you lend your tokens:",

@@ -134,6 +134,13 @@ export class ActionBrain {
       return { intent: IntentType.TOKEN_CREATE, confidence: 0.9, entities, rawMessage: message }
     }
 
+    // Staking intents
+    if (/\b(stake|staking|staked|delegate|delegation|validator|validators)\b/.test(normalized)) {
+      const amount = normalized.match(/(\d+(?:\.\d+)?)/)
+      if (amount) entities.amount = parseFloat(amount[1])
+      return { intent: IntentType.STAKE_TOKENS, confidence: 0.9, entities, rawMessage: message }
+    }
+
     // Balance
     if (/balance|how\s+much\s+sei|wallet/.test(normalized)) {
       return { intent: IntentType.BALANCE_CHECK, confidence: 0.8, entities, rawMessage: message }
@@ -152,8 +159,8 @@ export class ActionBrain {
       return { intent: IntentType.TODO_LIST, confidence: 0.9, entities, rawMessage: message }
     }
 
-    // Conversation fallback
-    if (/(hello|hi|hey|help|what can you do|how are you|am not feeling|i am not feeling|i'm not feeling|good morning|good evening)/i.test(normalized)) {
+    // Conversation fallback - expanded to catch more general questions
+    if (/(hello|hi|hey|help|what can you do|how are you|am not feeling|i am not feeling|i'm not feeling|good morning|good evening|what is defi|what is sei|feeling|great|fine|not feeling|can you stake|what do you do|how can i|what about)/i.test(normalized)) {
       try {
         const res = await fetch('/.netlify/functions/chat-completions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) })
         if (res.ok) {

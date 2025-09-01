@@ -5,6 +5,7 @@ import {
   CreditCard, 
   RefreshCw,
   X,
+  Menu,
   Image as ImageIcon
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
@@ -35,6 +36,7 @@ const Seilor = () => {
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [hamburgerOpen, setHamburgerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number; usdc: string; usdcUsd: number } | null>(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
@@ -308,10 +310,40 @@ const Seilor = () => {
               <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${isConnected ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-300'}`}>
                 {isConnected ? 'Connected' : 'Disconnected'}
               </div>
+              <button 
+                onClick={() => setHamburgerOpen(!hamburgerOpen)} 
+                className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Hamburger Menu */}
+      {hamburgerOpen && (
+        <div className="lg:hidden fixed top-16 left-0 right-0 z-40 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50">
+          <div className="p-4 space-y-2">
+            {panels.map(panel => {
+              const Icon = panel.icon as any
+              return (
+                <button 
+                  key={panel.id} 
+                  onClick={() => {
+                    setActivePanel(panel.id as any);
+                    setHamburgerOpen(false);
+                  }} 
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${activePanel === panel.id ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'}`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{panel.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Main */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
