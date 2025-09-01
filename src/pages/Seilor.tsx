@@ -129,67 +129,7 @@ const Seilor = () => {
     }
   };
 
-  // Handle AI-triggered testnet actions
-  const handleAITestnetActions = async (userMessage: string, aiResponse: string) => {
-    if (!testnetConnected) return;
 
-    try {
-      let transaction: TestnetTransaction | null = null;
-
-      // Portfolio optimization
-      if (/optimize.*portfolio|portfolio.*optimization/i.test(userMessage)) {
-        console.log('🎯 Executing portfolio optimization on testnet...');
-        transaction = await seiTestnetService.optimizePortfolioOnChain([
-          { symbol: 'SEI', amount: '1000' },
-          { symbol: 'USDC', amount: '500' }
-        ]);
-      }
-      
-      // Risk assessment
-      else if (/risk.*assess|assess.*risk|safety.*check/i.test(userMessage)) {
-        console.log('🛡️ Executing risk assessment on testnet...');
-        transaction = await seiTestnetService.assessRiskOnChain('SEI', 1000);
-      }
-      
-      // Yield optimization
-      else if (/yield.*optimiz|best.*yield|yield.*strategy/i.test(userMessage)) {
-        console.log('📈 Executing yield optimization on testnet...');
-        transaction = await seiTestnetService.optimizeYieldOnChain('balanced');
-      }
-      
-      // Arbitrage detection
-      else if (/arbitrage|price.*difference|profit.*opportunity/i.test(userMessage)) {
-        console.log('⚡ Executing arbitrage detection on testnet...');
-        transaction = await seiTestnetService.detectArbitrageOnChain(['SEI/USDC', 'SEI/USDT']);
-      }
-
-      // Store AI context
-      if (transaction && aiResponse.includes('✅')) {
-        await seiTestnetService.storeAIContextOnChain({
-          userQuery: userMessage,
-          aiResponse: aiResponse,
-          transactionHash: transaction.hash,
-          timestamp: Date.now(),
-          success: true
-        });
-      }
-
-      if (transaction) {
-        console.log('🚀 Testnet transaction executed:', transaction);
-        
-        // Add transaction notification to chat
-        const txMessage = {
-          id: Date.now() + 10,
-          type: 'assistant' as const,
-          message: `🔗 Testnet transaction executed: ${transaction.hash.substring(0, 20)}... | Status: ${transaction.status} | Explorer: ${seiTestnetService.getTestnetExplorerUrl(transaction.hash)}`,
-          timestamp: new Date()
-        };
-        setChatMessages(prev => [...prev, txMessage]);
-      }
-    } catch (error) {
-      console.error('❌ Failed to execute testnet action:', error);
-    }
-  };
 
   const loadWalletBalance = async () => {
     try {
@@ -279,11 +219,8 @@ const Seilor = () => {
         setChatMessages(prev => [...prev, { id: Date.now()+2, type: 'assistant' as const, message: '📈 Token created! Open Dev++ to monitor, add liquidity, and burn when needed: /app/devplus', timestamp: new Date() }])
       }
 
-      // Handle AI-triggered testnet transactions
-      await handleAITestnetActions(userMessage, response.message);
-      
       // Refresh testnet data after successful operations
-      if (/^✅/.test(response.message)) {
+      if (response.action === 'success') {
         await loadTestnetData();
       }
     } catch (error: any) {

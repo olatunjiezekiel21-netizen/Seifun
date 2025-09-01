@@ -104,6 +104,13 @@ export class EnhancedChatBrain {
       return this.handleStakingRequest(amount, token);
     }
     
+    // General staking requests without amount
+    if (/^stake$/i.test(message) || /^staking$/i.test(message)) {
+      return {
+        message: `🥩 **Staking Information**\n\nI can help you stake your tokens to earn passive income!\n\n**Current Staking Options:**\n• **SEI Staking**: 12% APY\n• **USDC Staking**: 8% APY\n\n**To stake, please specify:**\n• **Amount** (e.g., "Stake 50 SEI")\n• **Token type** (SEI or USDC)\n\n**Example commands:**\n• "Stake 100 SEI"\n• "Stake 50 USDC"\n\nWhat amount would you like to stake?`
+      };
+    }
+    
     // Lending requests
     if (/lend\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i.test(message)) {
       const match = message.match(/lend\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i);
@@ -111,6 +118,13 @@ export class EnhancedChatBrain {
       const token = match![2].toUpperCase();
       
       return this.handleLendingRequest(amount, token);
+    }
+    
+    // General lending requests without amount
+    if (/^lend$/i.test(message) || /^lending$/i.test(message)) {
+      return {
+        message: `🏦 **Lending Information**\n\nI can help you lend your tokens to earn interest!\n\n**Current Lending Options:**\n• **SEI Lending**: 8% APY\n• **USDC Lending**: 6% APY\n\n**To lend, please specify:**\n• **Amount** (e.g., "Lend 100 USDC")\n• **Token type** (SEI or USDC)\n\n**Example commands:**\n• "Lend 200 SEI"\n• "Lend 100 USDC"\n\nWhat amount would you like to lend?`
+      };
     }
     
     // General greetings
