@@ -6,6 +6,11 @@ import {
   RefreshCw,
   X,
   Menu,
+  History,
+  BarChart3,
+  Settings,
+  Wallet,
+  TrendingUp,
   Image as ImageIcon
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
@@ -18,7 +23,7 @@ import { seiTestnetService, TestnetTransaction, TestnetPortfolio } from '../serv
 import { TransactionHistory } from '../components/TransactionHistory';
 // Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
-  const [activePanel, setActivePanel] = useState<'chat' | 'transactions'>('chat');
+  const [activePanel, setActivePanel] = useState<'chat' | 'transactions' | 'history' | 'portfolio' | 'wallet' | 'analytics' | 'settings'>('chat');
   const [aiChat, setAiChat] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{
     id: number;
@@ -37,6 +42,9 @@ const Seilor = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
+  const [chatHistory, setChatHistory] = useState<Array<{id: number; type: 'user' | 'assistant'; message: string; timestamp: Date}>>([]);
+  const [portfolioData, setPortfolioData] = useState<any>(null);
+  const [settings, setSettings] = useState({ theme: 'dark', notifications: true, autoRefresh: true });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number; usdc: string; usdcUsd: number } | null>(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
@@ -65,6 +73,23 @@ const Seilor = () => {
     // Initialize testnet service
     initializeTestnet();
   }, []);
+
+  // Load data when panels are accessed
+  useEffect(() => {
+    if (activePanel === 'history') {
+      loadChatHistory();
+    }
+    if (activePanel === 'portfolio') {
+      loadPortfolioData();
+    }
+  }, [activePanel]);
+
+  // Save chat history when messages change
+  useEffect(() => {
+    if (chatMessages.length > 1) {
+      saveChatHistory();
+    }
+  }, [chatMessages]);
 
   // Initialize Sei Testnet Service
   const initializeTestnet = async () => {
@@ -253,9 +278,51 @@ const Seilor = () => {
     setChatMessages([]);
   };
 
+  // Load chat history
+  const loadChatHistory = () => {
+    const savedHistory = localStorage.getItem('seilor_chat_history');
+    if (savedHistory) {
+      setChatHistory(JSON.parse(savedHistory));
+    }
+  };
+
+  // Save chat history
+  const saveChatHistory = () => {
+    localStorage.setItem('seilor_chat_history', JSON.stringify(chatMessages));
+  };
+
+  // Load portfolio data
+  const loadPortfolioData = async () => {
+    if (!address) return;
+    try {
+      const res = await fetch('/.netlify/functions/wallet-portfolio', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ address, network: 'testnet' }) 
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPortfolioData(data);
+      }
+    } catch (error) {
+      console.error('Failed to load portfolio:', error);
+    }
+  };
+
+  // Update settings
+  const updateSettings = (newSettings: any) => {
+    setSettings({ ...settings, ...newSettings });
+    localStorage.setItem('seilor_settings', JSON.stringify({ ...settings, ...newSettings }));
+  };
+
   const panels = [
     { id: 'chat', label: 'AI Chat', icon: Bot },
-    { id: 'transactions', label: 'Transactions', icon: CreditCard }
+    { id: 'transactions', label: 'Transactions', icon: CreditCard },
+    { id: 'history', label: 'Chat History', icon: History },
+    { id: 'portfolio', label: 'Portfolio', icon: BarChart3 },
+    { id: 'wallet', label: 'Wallet', icon: Wallet },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   const fetchTransactions = async () => {
@@ -496,6 +563,250 @@ const Seilor = () => {
                     ) : (
                       <div className="text-slate-400 p-4 text-center text-sm">No transactions found. Enter an address to search.</div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {activePanel === 'history' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Chat History</h2>
+                    <div className="flex gap-2">
+                      <button onClick={startNewChat} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                        New Chat
+                      </button>
+                      <button onClick={clearChat} className="px-3 py-1 bg-red-600 text-white rounded text-sm">
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                    {chatHistory.length > 0 ? (
+                      chatHistory.map(msg => (
+                        <div key={msg.id} className={`p-3 rounded-lg border ${msg.type === 'user' ? 'bg-red-500/10 border-red-500/30' : 'bg-slate-700/30 border-slate-600/50'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`text-sm font-medium ${msg.type === 'user' ? 'text-red-300' : 'text-blue-300'}`}>
+                              {msg.type === 'user' ? 'You' : 'Seilor 0'}
+                            </span>
+                            <span className="text-xs text-slate-400">{msg.timestamp.toLocaleString()}</span>
+                          </div>
+                          <div className="text-slate-100 text-sm whitespace-pre-wrap">{msg.message}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-slate-400 p-4 text-center">No chat history found.</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activePanel === 'portfolio' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Portfolio Overview</h2>
+                    <button onClick={loadPortfolioData} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                      Refresh
+                    </button>
+                  </div>
+                  
+                  {portfolioData ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                          <h3 className="text-slate-300 text-sm font-medium">Total Value</h3>
+                          <p className="text-white text-2xl font-bold">${portfolioData.totalValue?.toFixed(2) || '0.00'}</p>
+                        </div>
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                          <h3 className="text-slate-300 text-sm font-medium">Assets</h3>
+                          <p className="text-white text-2xl font-bold">{portfolioData.assets?.length || 0}</p>
+                        </div>
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                          <h3 className="text-slate-300 text-sm font-medium">24h Change</h3>
+                          <p className={`text-2xl font-bold ${portfolioData.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {portfolioData.change24h >= 0 ? '+' : ''}{portfolioData.change24h?.toFixed(2) || '0.00'}%
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {portfolioData.assets && portfolioData.assets.length > 0 && (
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                          <h3 className="text-white text-lg font-semibold mb-3">Your Assets</h3>
+                          <div className="space-y-2">
+                            {portfolioData.assets.map((asset: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-slate-600/30 rounded">
+                                <div>
+                                  <span className="text-white font-medium">{asset.symbol}</span>
+                                  <span className="text-slate-400 text-sm ml-2">{asset.balance}</span>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-white">${asset.value?.toFixed(2) || '0.00'}</div>
+                                  <div className={`text-xs ${asset.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {asset.change >= 0 ? '+' : ''}{asset.change?.toFixed(2) || '0.00'}%
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-slate-400 p-4 text-center">Connect your wallet to view portfolio.</div>
+                  )}
+                </div>
+              )}
+
+              {activePanel === 'wallet' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Wallet Management</h2>
+                    <button onClick={loadWalletBalance} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                      Refresh
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                      <h3 className="text-white text-lg font-semibold mb-3">Connection Status</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300">Wallet Status</span>
+                        <span className={`px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                          {isConnected ? 'Connected' : 'Disconnected'}
+                        </span>
+                      </div>
+                      {address && (
+                        <div className="mt-2">
+                          <span className="text-slate-300 text-sm">Address: </span>
+                          <span className="text-white text-sm font-mono">{address.slice(0, 8)}...{address.slice(-6)}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {walletBalance && (
+                      <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-white text-lg font-semibold mb-3">Balances</h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-slate-300">SEI</span>
+                            <span className="text-white">{walletBalance.sei} (${walletBalance.usd.toFixed(2)})</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-300">USDC</span>
+                            <span className="text-white">{walletBalance.usdc} (${walletBalance.usdcUsd.toFixed(2)})</span>
+                          </div>
+                          <div className="border-t border-slate-600/50 pt-2 flex justify-between">
+                            <span className="text-green-300 font-medium">Total</span>
+                            <span className="text-green-400 font-bold">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activePanel === 'analytics' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Trading Analytics</h2>
+                    <button onClick={() => setAiChat('analyze my trading performance')} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                      AI Analysis
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-slate-300 text-sm font-medium">Total Trades</h3>
+                        <p className="text-white text-2xl font-bold">{txs.length}</p>
+                        <p className="text-slate-400 text-sm">Last 30 days</p>
+                      </div>
+                      <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-slate-300 text-sm font-medium">Success Rate</h3>
+                        <p className="text-white text-2xl font-bold">85%</p>
+                        <p className="text-slate-400 text-sm">Profitable trades</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                      <h3 className="text-white text-lg font-semibold mb-3">Recent Activity</h3>
+                      <div className="space-y-2">
+                        {txs.slice(0, 5).map((tx: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between p-2 bg-slate-600/30 rounded">
+                            <div className="flex items-center gap-3">
+                              <span className={`px-2 py-1 rounded text-xs ${tx.type === 'native' ? 'bg-blue-500/20 text-blue-300' : 'bg-green-500/20 text-green-300'}`}>
+                                {tx.type}
+                              </span>
+                              <span className="text-white text-sm">{tx.type === 'native' ? `${Number(tx.value).toFixed(4)} SEI` : tx.amount}</span>
+                            </div>
+                            <span className="text-slate-400 text-xs">{new Date().toLocaleDateString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activePanel === 'settings' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Settings</h2>
+                    <button onClick={() => localStorage.clear()} className="px-3 py-1 bg-red-600 text-white rounded text-sm">
+                      Clear All Data
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                      <h3 className="text-white text-lg font-semibold mb-3">Preferences</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-300">Theme</span>
+                          <select 
+                            value={settings.theme} 
+                            onChange={(e) => updateSettings({ theme: e.target.value })}
+                            className="bg-slate-600/50 border border-slate-500/50 rounded px-3 py-1 text-white text-sm"
+                          >
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-300">Notifications</span>
+                          <input 
+                            type="checkbox" 
+                            checked={settings.notifications} 
+                            onChange={(e) => updateSettings({ notifications: e.target.checked })}
+                            className="w-4 h-4 text-blue-600 bg-slate-600/50 border-slate-500/50 rounded"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-300">Auto Refresh</span>
+                          <input 
+                            type="checkbox" 
+                            checked={settings.autoRefresh} 
+                            onChange={(e) => updateSettings({ autoRefresh: e.target.checked })}
+                            className="w-4 h-4 text-blue-600 bg-slate-600/50 border-slate-500/50 rounded"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                      <h3 className="text-white text-lg font-semibold mb-3">Data Management</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-300">Chat History</span>
+                          <span className="text-white">{chatHistory.length} messages</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-300">Saved Settings</span>
+                          <span className="text-white">{Object.keys(settings).length} preferences</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
