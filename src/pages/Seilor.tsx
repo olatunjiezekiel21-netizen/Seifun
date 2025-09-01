@@ -19,7 +19,7 @@ import { actionBrain, IntentType } from '../services/ActionBrain';
 import { privateKeyWallet } from '../services/PrivateKeyWallet';
 import { ChatMemoryService } from '../services/ChatMemoryService';
 import { IPFSUploader } from '../utils/ipfsUpload';
-import { realSeiTestnetService, RealTransaction, RealStake, RealLoan, RealPortfolio } from '../services/RealSeiTestnetService';
+import { hybridSeiService, HybridTransaction, HybridStake, HybridLoan, HybridPortfolio } from '../services/HybridSeiService';
 
 // Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
@@ -53,14 +53,14 @@ const Seilor = () => {
   const [watchAddress, setWatchAddress] = useState('');
   const [txs, setTxs] = useState<any[]>([]);
 
-  // Real on-chain state
-  const [realPortfolio, setRealPortfolio] = useState<RealPortfolio | null>(null);
-  const [realStakes, setRealStakes] = useState<RealStake[]>([]);
-  const [realLoans, setRealLoans] = useState<RealLoan[]>([]);
-  const [realTransactions, setRealTransactions] = useState<RealTransaction[]>([]);
+  // Hybrid on-chain state
+  const [hybridPortfolio, setHybridPortfolio] = useState<HybridPortfolio | null>(null);
+  const [hybridStakes, setHybridStakes] = useState<HybridStake[]>([]);
+  const [hybridLoans, setHybridLoans] = useState<HybridLoan[]>([]);
+  const [hybridTransactions, setHybridTransactions] = useState<HybridTransaction[]>([]);
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
-  const [realConnected, setRealConnected] = useState(false);
+  const [hybridConnected, setHybridConnected] = useState(false);
 
   const { isConnected, address } = useReownWallet();
 
@@ -73,8 +73,8 @@ const Seilor = () => {
   useEffect(() => {
     loadWalletBalance();
     
-    // Initialize real service
-    initializeRealService();
+    // Initialize hybrid service
+    initializeHybridService();
   }, []);
 
   // Load data when panels are accessed
@@ -94,12 +94,12 @@ const Seilor = () => {
     }
   }, [chatMessages]);
 
-  // Initialize Real Sei Testnet Service
-  const initializeRealService = async () => {
+  // Initialize Hybrid Sei Service
+  const initializeHybridService = async () => {
     try {
-      console.log('🚀 Initializing Real Sei Testnet Service...');
-      const connected = await realSeiTestnetService.initialize();
-      setRealConnected(connected);
+      console.log('🚀 Initializing Hybrid Sei Service...');
+      const connected = await hybridSeiService.initialize();
+      setHybridConnected(connected);
       
       if (connected) {
         console.log('✅ Testnet service connected');
