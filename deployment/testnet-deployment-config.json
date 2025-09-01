@@ -1,0 +1,23 @@
+{
+  "network": {
+    "name": "Sei Testnet",
+    "chainId": "sei-testnet-1",
+    "rpcUrl": "https://testnet-rpc.sei.io",
+    "restUrl": "https://testnet-rest.sei.io"
+  },
+  "deployment": {
+    "privateKey": "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684",
+    "timestamp": "2025-01-01T00:00:00Z",
+    "gasPrice": "0.025usei",
+    "gasAdjustment": "1.5",
+    "environment": "testnet"
+  },
+  "contracts": {
+    "ContextStore": "sei1testnetcontextstore123456789abcdef",
+    "AIRegistry": "sei1testnetairegistry123456789abcdef",
+    "PortfolioManager": "sei1testnetportfoliomanager123456789abcdef",
+    "RiskEngine": "sei1testnetriskengine123456789abcdef",
+    "YieldOptimizer": "sei1testnetyieldoptimizer123456789abcdef",
+    "ArbitrageDetector": "sei1testnetarbitragedetector123456789abcdef"
+  }
+}

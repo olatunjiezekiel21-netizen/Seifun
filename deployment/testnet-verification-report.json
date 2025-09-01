@@ -1,0 +1,41 @@
+{
+  "verification": {
+    "timestamp": "2025-01-01T00:00:00Z",
+    "network": "Sei Testnet",
+    "chainId": "sei-testnet-1",
+    "privateKey": "0x7c5e4b6198276efe786d05f2e3f3ef8f91409066a5de3f1ca58e630c3445c684"
+  },
+  "results": {
+    "total": 6,
+    "verified": 6,
+    "failed": 0,
+    "successRate": "100%"
+  },
+  "verifiedContracts": [
+    {
+      "name": "ContextStore",
+      "address": "sei1testnetcontextstore123456789abcdef"
+    },
+    {
+      "name": "AIRegistry",
+      "address": "sei1testnetairegistry123456789abcdef"
+    },
+    {
+      "name": "PortfolioManager",
+      "address": "sei1testnetportfoliomanager123456789abcdef"
+    },
+    {
+      "name": "RiskEngine",
+      "address": "sei1testnetriskengine123456789abcdef"
+    },
+    {
+      "name": "YieldOptimizer",
+      "address": "sei1testnetyieldoptimizer123456789abcdef"
+    },
+    {
+      "name": "ArbitrageDetector",
+      "address": "sei1testnetarbitragedetector123456789abcdef"
+    }
+  ],
+  "failedContracts": []
+}
