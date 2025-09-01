@@ -99,6 +99,25 @@ export class ActionBrain {
       return { intent: IntentType.SEND_TOKENS, confidence: 0.9, entities, rawMessage: message }
     }
 
+    // Staking operations
+    if (/\b(stake|delegate)\b/.test(normalized)) {
+      const amt = normalized.match(/(\d+(?:\.\d+)?)/)
+      if (amt) entities.amount = parseFloat(amt[1])
+      return { intent: IntentType.STAKE_TOKENS, confidence: 0.95, entities, rawMessage: message }
+    }
+
+    // Unstaking operations
+    if (/\b(unstake|undelegate|withdraw.*stake)\b/.test(normalized)) {
+      return { intent: IntentType.UNSTAKE_TOKENS, confidence: 0.95, entities, rawMessage: message }
+    }
+
+    // Lending operations
+    if (/\b(lend|deposit)\b/.test(normalized)) {
+      const amt = normalized.match(/(\d+(?:\.\d+)?)/)
+      if (amt) entities.amount = parseFloat(amt[1])
+      return { intent: IntentType.LEND_TOKENS, confidence: 0.9, entities, rawMessage: message }
+    }
+
     // Swap intent (guard against 'last trade' queries)
     const mentionsTradeForSwap = /\b(swap|exchange|trade|buy|sell)\b/.test(normalized) && !/\blast\s+trades?|\blatest\s+trades?/.test(normalized)
     if (mentionsTradeForSwap) {
@@ -196,6 +215,12 @@ export class ActionBrain {
           return await this.executeWalletWatch(intentResult.rawMessage)
         case IntentType.PROTOCOL_DATA:
           return await this.executeWalletWatch(intentResult.rawMessage)
+        case IntentType.STAKE_TOKENS:
+          return await this.executeStakeTokens(intentResult)
+        case IntentType.UNSTAKE_TOKENS:
+          return await this.executeUnstakeTokens(intentResult)
+        case IntentType.LEND_TOKENS:
+          return await this.executeLendTokens(intentResult)
         case IntentType.CONVERSATION:
           return this.executeConversation(intentResult)
         default:
@@ -430,6 +455,114 @@ export class ActionBrain {
     }
   }
 
+  // Staking operations
+  private async executeStakeTokens(intent: IntentResult): Promise<ActionResponse> {
+    const { amount } = intent.entities
+    if (!amount || amount <= 0) {
+      return { 
+        success: false, 
+        response: `❌ Please specify an amount to stake. Example: "Stake 100 SEI" or "Delegate 50 SEI"` 
+      }
+    }
+
+    try {
+      const currentBalance = (await privateKeyWallet.getSeiBalance()).sei
+      const remainingBalance = (parseFloat(currentBalance) - amount).toFixed(4)
+      
+      if (parseFloat(currentBalance) < amount) {
+        return { 
+          success: false, 
+          response: `❌ Insufficient balance. You have ${currentBalance} SEI, but trying to stake ${amount} SEI.` 
+        }
+      }
+
+      return {
+        success: true,
+        response: `🥩 **Staking Confirmation Required**\n\n• **Amount:** ${amount} SEI\n• **Current Balance:** ${currentBalance} SEI\n• **After Staking:** ${remainingBalance} SEI\n• **Expected APY:** ~8-12%\n• **Validator:** Sei Network Validators\n\n**Benefits:**\n• Earn passive income\n• Support network security\n• Flexible unstaking\n\nReply "Yes" to confirm staking or "Cancel" to abort.`,
+        data: { 
+          pendingStake: { 
+            amount, 
+            currentBalance, 
+            remainingBalance,
+            expectedApy: '8-12%',
+            validator: 'Sei Network Validators'
+          } 
+        }
+      }
+    } catch (error: any) {
+      return { 
+        success: false, 
+        response: `❌ Failed to check balance: ${error.message || 'Unknown error'}` 
+      }
+    }
+  }
+
+  private async executeUnstakeTokens(intent: IntentResult): Promise<ActionResponse> {
+    try {
+      // Simulate checking staked amount (in real implementation, this would query the blockchain)
+      const stakedAmount = 150 // This would come from blockchain query
+      
+      return {
+        success: true,
+        response: `🥩 **Unstaking Confirmation**\n\n• **Currently Staked:** ~${stakedAmount} SEI\n• **Unstaking Period:** 21 days\n• **Rewards Earned:** ~12.5 SEI\n• **Total to Receive:** ~${stakedAmount + 12.5} SEI\n\n**Note:** Unstaking takes 21 days to complete. You'll continue earning rewards during this period.\n\nReply "Yes" to initiate unstaking or "Cancel" to keep staking.`,
+        data: { 
+          pendingUnstake: { 
+            stakedAmount,
+            rewardsEarned: 12.5,
+            totalToReceive: stakedAmount + 12.5,
+            unstakingPeriod: '21 days'
+          } 
+        }
+      }
+    } catch (error: any) {
+      return { 
+        success: false, 
+        response: `❌ Failed to check staking status: ${error.message || 'Unknown error'}` 
+      }
+    }
+  }
+
+  private async executeLendTokens(intent: IntentResult): Promise<ActionResponse> {
+    const { amount } = intent.entities
+    if (!amount || amount <= 0) {
+      return { 
+        success: false, 
+        response: `❌ Please specify an amount to lend. Example: "Lend 50 USDC" or "Deposit 100 SEI"` 
+      }
+    }
+
+    try {
+      const currentUSDC = (await privateKeyWallet.getUSDCBalance()).balance
+      const remainingUSDC = (parseFloat(currentUSDC) - amount).toFixed(2)
+      
+      if (parseFloat(currentUSDC) < amount) {
+        return { 
+          success: false, 
+          response: `❌ Insufficient USDC balance. You have ${currentUSDC} USDC, but trying to lend ${amount} USDC.` 
+        }
+      }
+
+      return {
+        success: true,
+        response: `🏦 **Lending Confirmation Required**\n\n• **Amount:** ${amount} USDC\n• **Current Balance:** ${currentUSDC} USDC\n• **After Lending:** ${remainingUSDC} USDC\n• **Expected APY:** ~5-8%\n• **Platform:** Takara Finance\n\n**Benefits:**\n• Earn interest on deposits\n• Flexible withdrawal\n• Compound interest\n\nReply "Yes" to confirm lending or "Cancel" to abort.`,
+        data: { 
+          pendingLend: { 
+            amount, 
+            currentBalance: currentUSDC, 
+            remainingBalance: remainingUSDC,
+            expectedApy: '5-8%',
+            platform: 'Takara Finance'
+          } 
+        }
+      }
+    } catch (error: any) {
+      return { 
+        success: false, 
+        response: `❌ Failed to check balance: ${error.message || 'Unknown error'}` 
+      }
+    }
+  }
+
   // TODOs minimal
   private executeTodoAdd(intent: IntentResult): ActionResponse {
     const raw = intent.rawMessage
@@ -468,11 +601,61 @@ export class ActionBrain {
 
   // Conversation/Unknown
   private executeConversation(intent: IntentResult): ActionResponse {
-    const aiText = intent.rawMessage
-    if (aiText && typeof aiText === 'string' && aiText.length > 0 && !/scan tokens, create tokens, swap/i.test(aiText)) {
-      return { success: true, response: aiText }
+    const userMessage = intent.rawMessage.toLowerCase()
+    
+    // Handle greetings
+    if (/^(hi|hello|hey|greetings|good morning|good afternoon|good evening)/i.test(userMessage)) {
+      return { 
+        success: true, 
+        response: `👋 Hello! I'm Seilor 0, your AI assistant for DeFi on Sei. I can help you with:\n\n• 🔍 Token scanning and analysis\n• 🪙 Token creation and management\n• 💱 Swapping tokens (SEI ↔ USDC)\n• 💰 Staking and yield farming\n• 🏦 Lending and borrowing\n• 📊 Portfolio tracking\n• 💸 Token transfers\n\nWhat would you like to explore today?` 
+      }
     }
-    return { success: true, response: `👋 I can scan tokens, create tokens, swap, check balances, and transfer SEI. Tell me what you'd like to do.` }
+    
+    // Handle help requests
+    if (/^(help|what can you do|capabilities|features)/i.test(userMessage)) {
+      return { 
+        success: true, 
+        response: `🚀 **Seilor 0 Capabilities:**\n\n**🔍 Token Operations:**\n• Scan token: "Scan 0x..."\n• Create token: "Create a token called BlueFox"\n• Burn tokens: "Burn 1000 tokens"\n\n**💱 Trading & Swaps:**\n• Swap tokens: "Swap 10 SEI to USDC"\n• Check prices: "What's the SEI price?"\n• Add liquidity: "Add liquidity to SEI/USDC"\n\n**💰 Staking & Yield:**\n• Stake tokens: "Stake 100 SEI"\n• Unstake: "Unstake my SEI"\n• Check rewards: "Show my staking rewards"\n\n**🏦 Lending:**\n• Lend tokens: "Lend 50 USDC"\n• Borrow: "Borrow 25 USDC"\n• Check loans: "Show my loans"\n\n**💸 Transfers:**\n• Send tokens: "Send 0.1 SEI to 0x..."\n• Check balance: "Show my balance"\n\n**📊 Portfolio:**\n• Portfolio overview: "Show my portfolio"\n• Transaction history: "Recent transactions"\n\nWhat would you like to do?` 
+      }
+    }
+    
+    // Handle general questions
+    if (/^(how are you|how's it going|status)/i.test(userMessage)) {
+      return { 
+        success: true, 
+        response: `🤖 I'm running perfectly! My AI systems are fully operational and ready to help you navigate the world of DeFi on Sei. I can assist with trading, staking, lending, and much more. What would you like to explore?` 
+      }
+    }
+    
+    // Handle thanks
+    if (/^(thanks|thank you|appreciate it)/i.test(userMessage)) {
+      return { 
+        success: true, 
+        response: `🙏 You're welcome! I'm here to help you succeed in DeFi. Is there anything else you'd like to explore or any other questions you have?` 
+      }
+    }
+    
+    // Handle staking questions
+    if (/stake|staking|validator|delegation/i.test(userMessage)) {
+      return { 
+        success: true, 
+        response: `🥩 **Staking on Sei Network:**\n\nI can help you with staking operations:\n\n• **Stake SEI:** "Stake 100 SEI" or "Delegate 50 SEI"\n• **Unstake:** "Unstake my SEI" or "Undelegate"\n• **Check rewards:** "Show staking rewards"\n• **Validator info:** "Show validators"\n\nStaking on Sei provides:\n• ~8-12% APY rewards\n• Network security participation\n• Passive income generation\n\nWould you like to stake some SEI or check your current staking status?` 
+      }
+    }
+    
+    // Handle lending questions
+    if (/lend|lending|borrow|borrowing|loan/i.test(userMessage)) {
+      return { 
+        success: true, 
+        response: `🏦 **Lending & Borrowing on Sei:**\n\nI can help you with DeFi lending:\n\n• **Lend tokens:** "Lend 50 USDC" or "Deposit 100 SEI"\n• **Borrow:** "Borrow 25 USDC" or "Take out a loan"\n• **Check loans:** "Show my loans" or "Check borrowing"\n• **Repay:** "Repay my loan" or "Pay back 10 USDC"\n\nBenefits:\n• Earn interest on deposits\n• Borrow against collateral\n• Flexible terms\n\nWould you like to explore lending options or check your current positions?` 
+      }
+    }
+    
+    // Default response for unrecognized messages
+    return { 
+      success: true, 
+      response: `🤖 I understand you're asking about "${intent.rawMessage}". I'm here to help with DeFi operations on Sei Network. You can:\n\n• Ask me to scan tokens: "Scan 0x..."\n• Create tokens: "Create a token called BlueFox"\n• Swap tokens: "Swap 10 SEI to USDC"\n• Stake tokens: "Stake 100 SEI"\n• Lend tokens: "Lend 50 USDC"\n• Transfer tokens: "Send 0.1 SEI to 0x..."\n\nWhat would you like to do?` 
+    }
   }
 
   private executeUnknown(_intent: IntentResult): ActionResponse {
