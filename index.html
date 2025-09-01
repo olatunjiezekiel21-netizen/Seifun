@@ -7,6 +7,18 @@
     <title>Seifun - Launch Safe Meme Tokens on Sei</title>
     <meta name="description" content="Professional token launchpad and safety scanner for the Sei ecosystem. Create, verify, and trade tokens with confidence." />
     <script>
+      // Node.js polyfills for browser environment
+      if (typeof global === 'undefined') {
+        var global = globalThis;
+      }
+      if (typeof process === 'undefined') {
+        var process = { env: {}, browser: true };
+      }
+      if (typeof Buffer === 'undefined') {
+        // Buffer will be provided by the buffer polyfill
+      }
+    </script>
+    <script>
       // Minimal runtime error overlay to avoid blank screen
       (function(){
         if (location.hostname.includes('localhost')) return;

@@ -24,7 +24,10 @@ export default defineConfig({
   base: '/', // Root path for Netlify deployment
   define: {
     // Prevent leaking OpenAI key into client bundle even if set in env
-    'import.meta.env.VITE_OPENAI_API_KEY': '""'
+    'import.meta.env.VITE_OPENAI_API_KEY': '""',
+    // Define global variables for Node.js compatibility
+    global: 'globalThis',
+    'process.env': 'process.env'
   },
   resolve: {
     alias: {
@@ -33,7 +36,15 @@ export default defineConfig({
       'uniqBy': 'lodash.uniqby',
       'uniqby': 'lodash.uniqby',
       // Alias node-sass to sass to avoid requiring deprecated binary
-      'node-sass': 'sass'
+      'node-sass': 'sass',
+      // Node.js polyfills for browser environment
+      'fs': 'memfs',
+      'path': 'path-browserify',
+      'crypto': 'crypto-browserify',
+      'stream': 'stream-browserify',
+      'util': 'util',
+      'buffer': 'buffer',
+      'process': 'process/browser'
     }
   },
   optimizeDeps: {
@@ -61,7 +72,7 @@ export default defineConfig({
         'mongodb',
         'openai',
         'dotenv',
-        'fs', 'path', 'net', 'tls', 'crypto', 'http', 'https', 'zlib', 'stream', 'url', 'util'
+        'net', 'tls', 'http', 'https', 'zlib', 'url'
       ],
       output: {
         manualChunks: {
