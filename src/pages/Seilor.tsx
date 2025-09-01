@@ -22,6 +22,8 @@ import { AIInterface } from '../components/AIInterface';
 import { ChatMemoryService } from '../services/ChatMemoryService';
 import { LocalLLMService } from '../services/LocalLLMService';
 import { IPFSUploader } from '../utils/ipfsUpload';
+import { seiTestnetService, TestnetTransaction, TestnetPortfolio } from '../services/SeiTestnetService';
+import { TransactionHistory } from '../components/TransactionHistory';
 // Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
@@ -58,6 +60,12 @@ const Seilor = () => {
   const [watchAddress, setWatchAddress] = useState('');
   const [txs, setTxs] = useState<any[]>([]);
 
+  // Testnet state
+  const [testnetPortfolio, setTestnetPortfolio] = useState<TestnetPortfolio | null>(null);
+  const [testnetTransactions, setTestnetTransactions] = useState<TestnetTransaction[]>([]);
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+  const [testnetConnected, setTestnetConnected] = useState(false);
+
   const { isConnected, address } = useReownWallet();
 
   const scrollToBottom = () => {
@@ -70,9 +78,109 @@ const Seilor = () => {
     loadWalletBalance();
     const savedTodos = localStorage.getItem('seilor_todos');
     if (savedTodos) setTodos(JSON.parse(savedTodos));
+    
+    // Initialize testnet service
+    initializeTestnet();
   }, []);
 
   useEffect(() => { localStorage.setItem('seilor_todos', JSON.stringify(todos)); }, [todos]);
+
+  // Initialize Sei Testnet Service
+  const initializeTestnet = async () => {
+    try {
+      console.log('🚀 Initializing Sei Testnet Service...');
+      const connected = await seiTestnetService.initialize();
+      setTestnetConnected(connected);
+      
+      if (connected) {
+        console.log('✅ Testnet service connected');
+        // Load testnet portfolio and transactions
+        await loadTestnetData();
+      } else {
+        console.log('⚠️ Testnet service not connected');
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize testnet service:', error);
+    }
+  };
+
+  const loadTestnetData = async () => {
+    try {
+      const [portfolio, transactions] = await Promise.all([
+        seiTestnetService.getTestnetPortfolio(),
+        seiTestnetService.getTransactionHistory()
+      ]);
+      
+      setTestnetPortfolio(portfolio);
+      setTestnetTransactions(transactions);
+      
+      console.log('📊 Testnet data loaded:', { portfolio, transactions: transactions.length });
+    } catch (error) {
+      console.error('❌ Failed to load testnet data:', error);
+    }
+  };
+
+  // Handle AI-triggered testnet actions
+  const handleAITestnetActions = async (userMessage: string, aiResponse: string) => {
+    if (!testnetConnected) return;
+
+    try {
+      let transaction: TestnetTransaction | null = null;
+
+      // Portfolio optimization
+      if (/optimize.*portfolio|portfolio.*optimization/i.test(userMessage)) {
+        console.log('🎯 Executing portfolio optimization on testnet...');
+        transaction = await seiTestnetService.optimizePortfolioOnChain([
+          { symbol: 'SEI', amount: '1000' },
+          { symbol: 'USDC', amount: '500' }
+        ]);
+      }
+      
+      // Risk assessment
+      else if (/risk.*assess|assess.*risk|safety.*check/i.test(userMessage)) {
+        console.log('🛡️ Executing risk assessment on testnet...');
+        transaction = await seiTestnetService.assessRiskOnChain('SEI', 1000);
+      }
+      
+      // Yield optimization
+      else if (/yield.*optimiz|best.*yield|yield.*strategy/i.test(userMessage)) {
+        console.log('📈 Executing yield optimization on testnet...');
+        transaction = await seiTestnetService.optimizeYieldOnChain('balanced');
+      }
+      
+      // Arbitrage detection
+      else if (/arbitrage|price.*difference|profit.*opportunity/i.test(userMessage)) {
+        console.log('⚡ Executing arbitrage detection on testnet...');
+        transaction = await seiTestnetService.detectArbitrageOnChain(['SEI/USDC', 'SEI/USDT']);
+      }
+
+      // Store AI context
+      if (transaction && aiResponse.includes('✅')) {
+        await seiTestnetService.storeAIContextOnChain({
+          userQuery: userMessage,
+          aiResponse: aiResponse,
+          transactionHash: transaction.hash,
+          timestamp: Date.now(),
+          success: true
+        });
+      }
+
+      if (transaction) {
+        console.log('🚀 Testnet transaction executed:', transaction);
+        
+        // Add transaction notification to chat
+        const txMessage = {
+          id: Date.now() + 10,
+          type: 'assistant' as const,
+          message: `🔗 Testnet transaction executed: ${transaction.hash.substring(0, 20)}... | Status: ${transaction.status} | Explorer: ${seiTestnetService.getTestnetExplorerUrl(transaction.hash)}`,
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, txMessage]);
+      }
+    } catch (error) {
+      console.error('❌ Failed to execute testnet action:', error);
+    }
+  };
 
   const loadWalletBalance = async () => {
     try {
@@ -133,6 +241,14 @@ const Seilor = () => {
       // If token created, suggest monitoring in Dev++
       if (/^✅\sToken Created/.test(response.message)) {
         setChatMessages(prev => [...prev, { id: Date.now()+2, type: 'assistant' as const, message: '📈 Token created! Open Dev++ to monitor, add liquidity, and burn when needed: /app/devplus', timestamp: new Date() }])
+      }
+
+      // Handle AI-triggered testnet transactions
+      await handleAITestnetActions(userMessage, response.message);
+      
+      // Refresh testnet data after successful operations
+      if (/^✅/.test(response.message)) {
+        await loadTestnetData();
       }
     } catch (error: any) {
       setIsTyping(false);
@@ -395,39 +511,143 @@ const Seilor = () => {
 
               {activePanel === 'transactions' && (
                 <div className="p-6">
-                  <h2 className="text-xl font-bold text-white mb-4">Transactions</h2>
-                  <div className="flex items-center gap-2 mb-4">
-                    <input value={watchAddress} onChange={(e)=>setWatchAddress(e.target.value)} placeholder="0x... address" className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-3 py-2 text-white" />
-                    <button onClick={fetchTransactions} className="px-3 py-2 bg-slate-700/60 border border-slate-600/60 rounded-lg text-slate-200">Fetch</button>
-                  </div>
-                  {txs.length ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="text-slate-300">
-                          <tr><th className="text-left p-2">Type</th><th className="text-left p-2">From</th><th className="text-left p-2">To</th><th className="text-left p-2">Amount</th><th className="text-left p-2">Tx</th></tr>
-                        </thead>
-                        <tbody className="text-slate-100">
-                          {txs.map((t:any,i:number)=> (
-                            <tr key={i} className="border-t border-slate-700/50">
-                              <td className="p-2">{t.type}</td>
-                              <td className="p-2">{t.from?.slice(0,8)}...</td>
-                              <td className="p-2">{t.to?.slice(0,8)}...</td>
-                              <td className="p-2">{t.type==='native'? `${Number(t.value).toFixed(4)} SEI` : t.amount}</td>
-                              <td className="p-2"><a className="text-blue-400" href={`https://seitrace.com/tx/${t.txHash}?chain=sei-testnet`} target="_blank" rel="noreferrer">{t.txHash?.slice(0,8)}...</a></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-white">Transactions</h2>
+                    <div className="flex items-center gap-2">
+                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${testnetConnected ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                        {testnetConnected ? 'Testnet Connected' : 'Testnet Disconnected'}
+                      </div>
+                      <button
+                        onClick={() => setShowTransactionHistory(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                      >
+                        <History className="w-4 h-4" />
+                        Testnet History
+                      </button>
                     </div>
-                  ) : (
-                    <div className="text-slate-400">No recent transactions loaded.</div>
+                  </div>
+
+                  {/* Testnet Portfolio Summary */}
+                  {testnetPortfolio && (
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-slate-300 text-sm font-medium">Total Portfolio</h3>
+                        <p className="text-white text-2xl font-bold">${testnetPortfolio.totalValue.toFixed(2)}</p>
+                        <p className={`text-sm ${testnetPortfolio.performance.daily >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {testnetPortfolio.performance.daily >= 0 ? '+' : ''}{testnetPortfolio.performance.daily.toFixed(2)}% (24h)
+                        </p>
+                      </div>
+                      <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-slate-300 text-sm font-medium">Assets</h3>
+                        <p className="text-white text-2xl font-bold">{testnetPortfolio.assets.length}</p>
+                        <p className="text-slate-400 text-sm">Different tokens</p>
+                      </div>
+                      <div className="bg-slate-700/50 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-slate-300 text-sm font-medium">Transactions</h3>
+                        <p className="text-white text-2xl font-bold">{testnetTransactions.length}</p>
+                        <p className="text-slate-400 text-sm">AI operations</p>
+                      </div>
+                    </div>
                   )}
+
+                  {/* Quick Actions */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-white mb-3">Quick Testnet Actions</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <button
+                        onClick={() => setAiChat('optimize my portfolio')}
+                        className="p-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 text-sm font-medium"
+                      >
+                        🎯 Optimize Portfolio
+                      </button>
+                      <button
+                        onClick={() => setAiChat('assess my risk')}
+                        className="p-3 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 text-sm font-medium"
+                      >
+                        🛡️ Risk Assessment
+                      </button>
+                      <button
+                        onClick={() => setAiChat('find yield opportunities')}
+                        className="p-3 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-lg hover:from-green-700 hover:to-green-600 text-sm font-medium"
+                      >
+                        📈 Yield Strategy
+                      </button>
+                      <button
+                        onClick={() => setAiChat('detect arbitrage opportunities')}
+                        className="p-3 bg-gradient-to-r from-orange-600 to-orange-500 text-white rounded-lg hover:from-orange-700 hover:to-orange-600 text-sm font-medium"
+                      >
+                        ⚡ Find Arbitrage
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Legacy Transaction Fetcher */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-white mb-3">Legacy Transaction Lookup</h3>
+                    <div className="flex items-center gap-2 mb-4">
+                      <input 
+                        value={watchAddress} 
+                        onChange={(e)=>setWatchAddress(e.target.value)} 
+                        placeholder="0x... address" 
+                        className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-3 py-2 text-white" 
+                      />
+                      <button 
+                        onClick={fetchTransactions} 
+                        className="px-4 py-2 bg-slate-700/60 border border-slate-600/60 rounded-lg text-slate-200 hover:bg-slate-600/60"
+                      >
+                        Fetch
+                      </button>
+                    </div>
+                    {txs.length ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="text-slate-300">
+                            <tr>
+                              <th className="text-left p-2">Type</th>
+                              <th className="text-left p-2">From</th>
+                              <th className="text-left p-2">To</th>
+                              <th className="text-left p-2">Amount</th>
+                              <th className="text-left p-2">Tx</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-slate-100">
+                            {txs.map((t:any,i:number)=> (
+                              <tr key={i} className="border-t border-slate-700/50">
+                                <td className="p-2">{t.type}</td>
+                                <td className="p-2">{t.from?.slice(0,8)}...</td>
+                                <td className="p-2">{t.to?.slice(0,8)}...</td>
+                                <td className="p-2">{t.type==='native'? `${Number(t.value).toFixed(4)} SEI` : t.amount}</td>
+                                <td className="p-2">
+                                  <a 
+                                    className="text-blue-400 hover:text-blue-300" 
+                                    href={`https://seitrace.com/tx/${t.txHash}?chain=sei-testnet`} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                  >
+                                    {t.txHash?.slice(0,8)}...
+                                  </a>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-slate-400 p-4 text-center">No recent transactions loaded.</div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Transaction History Modal */}
+      <TransactionHistory 
+        isOpen={showTransactionHistory}
+        onClose={() => setShowTransactionHistory(false)}
+      />
     </div>
   );
 };
