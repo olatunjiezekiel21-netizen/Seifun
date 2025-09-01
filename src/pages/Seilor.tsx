@@ -98,18 +98,26 @@ const Seilor = () => {
   const initializeHybridService = async () => {
     try {
       console.log('🚀 Initializing Hybrid Sei Service...');
+      
+      // Debug: Check environment variables
+      console.log('🔍 Environment Variables Check:');
+      console.log('VITE_SEI_TESTNET_RPC_URL:', import.meta.env.VITE_SEI_TESTNET_RPC_URL ? '✅ Set' : '❌ Missing');
+      console.log('VITE_TESTNET_PRIVATE_KEY:', import.meta.env.VITE_TESTNET_PRIVATE_KEY ? '✅ Set' : '❌ Missing');
+      console.log('VITE_TESTNET_STAKING_CONTRACT:', import.meta.env.VITE_TESTNET_STAKING_CONTRACT ? '✅ Set' : '❌ Missing');
+      console.log('VITE_TESTNET_LENDING_POOL:', import.meta.env.VITE_TESTNET_LENDING_POOL ? '✅ Set' : '❌ Missing');
+      
       const connected = await hybridSeiService.initialize();
       setTestnetConnected(connected);
       
       if (connected) {
-        console.log('✅ Testnet service connected');
+        console.log('✅ Hybrid service connected');
         // Load testnet portfolio and transactions
         await loadTestnetData();
       } else {
-        console.log('⚠️ Testnet service not connected');
+        console.log('⚠️ Hybrid service not connected');
       }
     } catch (error) {
-      console.error('❌ Failed to initialize testnet service:', error);
+      console.error('❌ Failed to initialize hybrid service:', error);
     }
   };
 

@@ -68,25 +68,33 @@ export class HybridSeiService {
       const rpcUrl = import.meta.env.VITE_SEI_TESTNET_RPC_URL;
       const privateKey = import.meta.env.VITE_TESTNET_PRIVATE_KEY;
       
+      console.log('🔍 Checking environment variables...');
+      console.log('RPC URL:', rpcUrl ? '✅ Set' : '❌ Missing');
+      console.log('Private Key:', privateKey ? '✅ Set' : '❌ Missing');
+      
       if (rpcUrl && privateKey) {
+        console.log('🚀 Attempting to connect to real Sei network...');
         this.provider = new ethers.JsonRpcProvider(rpcUrl);
         this.signer = new ethers.Wallet(privateKey, this.provider);
         
         // Try to connect
-        await this.provider.getNetwork();
+        const network = await this.provider.getNetwork();
+        console.log('🌐 Connected to network:', network.name, 'Chain ID:', network.chainId);
         this.isRealMode = true;
         console.log('✅ Connected to real Sei network');
         
         // Initialize contracts if addresses are available
         await this.initializeContracts();
       } else {
-        console.log('⚠️ Running in hybrid mode - will use local storage');
+        console.log('⚠️ Missing environment variables - running in hybrid mode');
         this.isRealMode = false;
       }
       
       this.isInitialized = true;
+      console.log('🎯 Service initialization complete. Real mode:', this.isRealMode);
     } catch (error) {
-      console.log('⚠️ Failed to connect to real network, using hybrid mode');
+      console.error('❌ Failed to connect to real network:', error);
+      console.log('⚠️ Falling back to hybrid mode');
       this.isRealMode = false;
       this.isInitialized = true;
     }
@@ -98,18 +106,72 @@ export class HybridSeiService {
     const lendingAddress = import.meta.env.VITE_TESTNET_LENDING_POOL;
     const portfolioAddress = import.meta.env.VITE_TESTNET_PORTFOLIO_MANAGER;
 
-    if (contextStoreAddress && this.signer) {
-      // Initialize contracts with ABIs
-      const CONTEXT_STORE_ABI = [
-        "function storeContext(string,string,string,bool) external returns (uint256)",
-        "event ContextStored(uint256 indexed contextId, address indexed user, string transactionHash)"
-      ];
-      
-      this.contracts.contextStore = new ethers.Contract(
-        contextStoreAddress, 
-        CONTEXT_STORE_ABI, 
-        this.signer
-      );
+    if (this.signer) {
+      // Initialize ContextStore contract
+      if (contextStoreAddress) {
+        const CONTEXT_STORE_ABI = [
+          "function storeContext(string,string,string,bool) external returns (uint256)",
+          "event ContextStored(uint256 indexed contextId, address indexed user, string transactionHash)"
+        ];
+        
+        this.contracts.contextStore = new ethers.Contract(
+          contextStoreAddress, 
+          CONTEXT_STORE_ABI, 
+          this.signer
+        );
+        console.log('✅ ContextStore contract initialized:', contextStoreAddress);
+      }
+
+      // Initialize StakingContract
+      if (stakingAddress) {
+        const STAKING_ABI = [
+          "function stake() external payable",
+          "function unstake(uint256 stakeId) external",
+          "function getUserStakes(address user) external view returns (uint256[])",
+          "function getStake(uint256 stakeId) external view returns (uint256,uint256,uint256,bool,uint256)"
+        ];
+        
+        this.contracts.stakingContract = new ethers.Contract(
+          stakingAddress,
+          STAKING_ABI,
+          this.signer
+        );
+        console.log('✅ StakingContract initialized:', stakingAddress);
+      }
+
+      // Initialize LendingPool
+      if (lendingAddress) {
+        const LENDING_ABI = [
+          "function borrow(uint256 amount) external",
+          "function repay(uint256 loanId) external payable",
+          "function getUserLoans(address user) external view returns (uint256[])",
+          "function getLoan(uint256 loanId) external view returns (uint256,uint256,uint256,uint256,bool,bool)"
+        ];
+        
+        this.contracts.lendingPool = new ethers.Contract(
+          lendingAddress,
+          LENDING_ABI,
+          this.signer
+        );
+        console.log('✅ LendingPool initialized:', lendingAddress);
+      }
+
+      // Initialize PortfolioManager
+      if (portfolioAddress) {
+        const PORTFOLIO_ABI = [
+          "function updatePortfolio(string memory portfolioData) external",
+          "function getPortfolio(address user) external view returns (string memory)"
+        ];
+        
+        this.contracts.portfolioManager = new ethers.Contract(
+          portfolioAddress,
+          PORTFOLIO_ABI,
+          this.signer
+        );
+        console.log('✅ PortfolioManager initialized:', portfolioAddress);
+      }
+
+      console.log('🚀 All contracts initialized successfully!');
     }
   }
 
