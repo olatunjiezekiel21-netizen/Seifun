@@ -20,7 +20,7 @@ import { privateKeyWallet } from '../services/PrivateKeyWallet';
 import { ChatMemoryService } from '../services/ChatMemoryService';
 import { IPFSUploader } from '../utils/ipfsUpload';
 import { seiTestnetService, TestnetTransaction, TestnetPortfolio } from '../services/SeiTestnetService';
-import { TransactionHistory } from '../components/TransactionHistory';
+
 // Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
   const [activePanel, setActivePanel] = useState<'chat' | 'transactions' | 'history' | 'portfolio' | 'wallet' | 'analytics' | 'settings'>('chat');
@@ -56,7 +56,8 @@ const Seilor = () => {
   // Testnet state
   const [testnetPortfolio, setTestnetPortfolio] = useState<TestnetPortfolio | null>(null);
   const [testnetTransactions, setTestnetTransactions] = useState<TestnetTransaction[]>([]);
-  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+  const [showFullHistory, setShowFullHistory] = useState(false);
+  const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [testnetConnected, setTestnetConnected] = useState(false);
 
   const { isConnected, address } = useReownWallet();
@@ -240,9 +241,25 @@ const Seilor = () => {
       } else {
         setIsProcessingAction(false);
       }
-      // After swap or transfer success, refresh balances
+      // After swap or transfer success, refresh balances and add transaction
       if (/^(✅\sSwap executed|✅\sNative SEI transfer|✅\sERC-20 transfer|✅\sFixed-rate swap executed)/.test(response.message)) {
         loadWalletBalance();
+        // Add transaction to history
+        const actionType = response.message.includes('Swap') ? 'Swap' : 
+                          response.message.includes('transfer') ? 'Transfer' : 'Transaction';
+        const amount = response.message.match(/(\d+\.?\d*)\s*(SEI|USDC|tokens?)/i)?.[0] || 'Unknown amount';
+        addUserTransaction(actionType, amount, 'success');
+      }
+      
+      // Add transaction for other successful actions
+      if (/^✅\sToken Created/.test(response.message)) {
+        addUserTransaction('Token Creation', 'New Token', 'success');
+      }
+      if (/^✅\sStaking/.test(response.message)) {
+        addUserTransaction('Staking', 'Stake Amount', 'success');
+      }
+      if (/^✅\sLending/.test(response.message)) {
+        addUserTransaction('Lending', 'Lend Amount', 'success');
       }
       // If token created, suggest monitoring in Dev++
       if (/^✅\sToken Created/.test(response.message)) {
@@ -313,6 +330,34 @@ const Seilor = () => {
   const updateSettings = (newSettings: any) => {
     setSettings({ ...settings, ...newSettings });
     localStorage.setItem('seilor_settings', JSON.stringify({ ...settings, ...newSettings }));
+  };
+
+  // Add transaction to user history
+  const addUserTransaction = (type: string, amount: string, status: 'pending' | 'success' | 'failed' = 'pending') => {
+    const newTransaction = {
+      id: Date.now(),
+      type,
+      amount,
+      status,
+      timestamp: new Date(),
+      hash: `0x${Math.random().toString(16).substr(2, 8)}...`,
+      from: address || 'Unknown',
+      to: 'Sei Network'
+    };
+    setUserTransactions(prev => [newTransaction, ...prev]);
+    
+    // Update status after a delay to simulate blockchain confirmation
+    if (status === 'pending') {
+      setTimeout(() => {
+        setUserTransactions(prev => 
+          prev.map(tx => 
+            tx.id === newTransaction.id 
+              ? { ...tx, status: 'success' as const }
+              : tx
+          )
+        );
+      }, 3000);
+    }
   };
 
   const panels = [
@@ -413,8 +458,8 @@ const Seilor = () => {
       )}
 
       {/* Main */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex gap-4 justify-center">
           {/* Sidebar */}
           <div className="hidden lg:block w-64 flex-shrink-0">
             <div className="bg-slate-800/50 rounded-2xl p-4 backdrop-blur-sm border border-slate-700/50">
@@ -439,7 +484,7 @@ const Seilor = () => {
           </div>
 
           {/* Main Panel */}
-          <div className="flex-1">
+          <div className="flex-1 max-w-4xl">
             <div className="bg-slate-800/50 rounded-2xl backdrop-blur-sm border border-slate-700/50 overflow-hidden">
               {activePanel === 'chat' && (
                 <div className="h-[75vh] flex flex-col">
@@ -512,14 +557,61 @@ const Seilor = () => {
               {activePanel === 'transactions' && (
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-white">Transaction Explorer</h2>
-                    <button onClick={() => setShowTransactionHistory(true)} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
-                      Full History
-                    </button>
+                    <h2 className="text-lg font-bold text-white">Transaction History</h2>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setShowFullHistory(!showFullHistory)} 
+                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+                      >
+                        {showFullHistory ? 'Recent Only' : 'Full History'}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setWatchAddress('');
+                          setTxs([]);
+                        }} 
+                        className="px-3 py-1 bg-slate-600 text-white rounded text-sm"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Simple Transaction Lookup */}
-                  <div className="mb-4">
+                  {/* Your Recent Transactions */}
+                  <div className="mb-6">
+                    <h3 className="text-md font-semibold text-white mb-3">Your Recent Transactions</h3>
+                    {userTransactions.length > 0 ? (
+                      <div className="space-y-2">
+                        {userTransactions.slice(0, showFullHistory ? userTransactions.length : 5).map((tx) => (
+                          <div key={tx.id} className="p-3 bg-slate-700/30 rounded border border-slate-600/30">
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-3">
+                                <span className={`px-2 py-1 rounded text-xs ${
+                                  tx.status === 'success' ? 'bg-green-500/20 text-green-300' : 
+                                  tx.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' : 
+                                  'bg-red-500/20 text-red-300'
+                                }`}>
+                                  {tx.status}
+                                </span>
+                                <span className="text-slate-300 font-medium">{tx.type}</span>
+                                <span className="text-slate-400">{tx.amount}</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-slate-400 text-xs">{tx.timestamp.toLocaleTimeString()}</div>
+                                <div className="text-blue-400 hover:text-blue-300 text-xs">{tx.hash}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-slate-400 p-4 text-center text-sm">No recent transactions. Perform actions to see them here.</div>
+                    )}
+                  </div>
+
+                  {/* Transaction Lookup */}
+                  <div className="border-t border-slate-600/50 pt-4">
+                    <h3 className="text-md font-semibold text-white mb-3">Search Address Transactions</h3>
                     <div className="flex items-center gap-2 mb-3">
                       <input 
                         value={watchAddress} 
@@ -535,9 +627,10 @@ const Seilor = () => {
                       </button>
                     </div>
                     
-                    {txs.length > 0 ? (
+                    {txs.length > 0 && (
                       <div className="space-y-2">
-                        {txs.slice(0, 10).map((t:any,i:number)=> (
+                        <h4 className="text-sm font-medium text-slate-300">Search Results:</h4>
+                        {txs.slice(0, showFullHistory ? txs.length : 5).map((t:any,i:number)=> (
                           <div key={i} className="p-3 bg-slate-700/30 rounded border border-slate-600/30">
                             <div className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-3">
@@ -560,8 +653,6 @@ const Seilor = () => {
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <div className="text-slate-400 p-4 text-center text-sm">No transactions found. Enter an address to search.</div>
                     )}
                   </div>
                 </div>
@@ -815,11 +906,7 @@ const Seilor = () => {
         </div>
       </div>
 
-      {/* Transaction History Modal */}
-      <TransactionHistory 
-        isOpen={showTransactionHistory}
-        onClose={() => setShowTransactionHistory(false)}
-      />
+
     </div>
   );
 };
