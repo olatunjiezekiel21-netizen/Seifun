@@ -19,7 +19,7 @@ import { actionBrain, IntentType } from '../services/ActionBrain';
 import { privateKeyWallet } from '../services/PrivateKeyWallet';
 import { ChatMemoryService } from '../services/ChatMemoryService';
 import { IPFSUploader } from '../utils/ipfsUpload';
-import { seiTestnetService, TestnetTransaction, TestnetPortfolio } from '../services/SeiTestnetService';
+import { realSeiTestnetService, RealTransaction, RealStake, RealLoan, RealPortfolio } from '../services/RealSeiTestnetService';
 
 // Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
@@ -53,12 +53,14 @@ const Seilor = () => {
   const [watchAddress, setWatchAddress] = useState('');
   const [txs, setTxs] = useState<any[]>([]);
 
-  // Testnet state
-  const [testnetPortfolio, setTestnetPortfolio] = useState<TestnetPortfolio | null>(null);
-  const [testnetTransactions, setTestnetTransactions] = useState<TestnetTransaction[]>([]);
+  // Real on-chain state
+  const [realPortfolio, setRealPortfolio] = useState<RealPortfolio | null>(null);
+  const [realStakes, setRealStakes] = useState<RealStake[]>([]);
+  const [realLoans, setRealLoans] = useState<RealLoan[]>([]);
+  const [realTransactions, setRealTransactions] = useState<RealTransaction[]>([]);
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
-  const [testnetConnected, setTestnetConnected] = useState(false);
+  const [realConnected, setRealConnected] = useState(false);
 
   const { isConnected, address } = useReownWallet();
 
@@ -71,8 +73,8 @@ const Seilor = () => {
   useEffect(() => {
     loadWalletBalance();
     
-    // Initialize testnet service
-    initializeTestnet();
+    // Initialize real service
+    initializeRealService();
   }, []);
 
   // Load data when panels are accessed
@@ -92,12 +94,12 @@ const Seilor = () => {
     }
   }, [chatMessages]);
 
-  // Initialize Sei Testnet Service
-  const initializeTestnet = async () => {
+  // Initialize Real Sei Testnet Service
+  const initializeRealService = async () => {
     try {
-      console.log('🚀 Initializing Sei Testnet Service...');
-      const connected = await seiTestnetService.initialize();
-      setTestnetConnected(connected);
+      console.log('🚀 Initializing Real Sei Testnet Service...');
+      const connected = await realSeiTestnetService.initialize();
+      setRealConnected(connected);
       
       if (connected) {
         console.log('✅ Testnet service connected');
@@ -453,6 +455,20 @@ const Seilor = () => {
                 </button>
               )
             })}
+            
+            {/* Cancel Button */}
+            <div className="pt-2 border-t border-slate-700/50">
+              <button 
+                onClick={() => {
+                  setHamburgerOpen(false);
+                  setActivePanel('chat');
+                }} 
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/20 hover:text-red-200 transition-all duration-200 border border-red-500/30"
+              >
+                <X className="w-5 h-5" />
+                <span className="font-medium">Exit to AI Chat</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
