@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AppHeaderSafe from './components/AppHeaderSafe';
 import AppFooter from './components/AppFooter';
 import SeifunLaunch from './pages/SeifunLaunch';
+import LaunchPage from './pages/LaunchPage';
 import SeiList from './pages/SeiList';
 import SafeChecker from './pages/SafeChecker';
 import Seilor from './pages/Seilor';
@@ -23,6 +24,13 @@ function App() {
             <div className="min-h-screen app-bg-primary">
               <AppHeaderSafe />
               <SeifunLaunch />
+              <AppFooter />
+            </div>
+          } />
+          <Route path="/app/trading" element={
+            <div className="min-h-screen app-bg-primary">
+              <AppHeaderSafe />
+              <LaunchPage />
               <AppFooter />
             </div>
           } />
