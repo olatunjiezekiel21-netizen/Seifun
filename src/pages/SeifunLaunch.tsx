@@ -91,7 +91,7 @@ const SeifunLaunch = () => {
           </p>
           {/* Hidden portfolio info - only for debugging */}
           {portfolio && (
-            <div className="mt-4 text-xs text-gray-500">
+            <div className="mt-4 text-xs app-text-muted">
               Real Portfolio Loaded: {portfolio.seiBalance} SEI, {portfolio.usdcBalance} USDC 
               (Total: ${portfolio.totalValue.toFixed(2)})
             </div>
@@ -156,7 +156,7 @@ const SeifunLaunch = () => {
         {!isLoading && !error && (
           <div className="app-token-grid">
             {filteredTokens.map((token) => (
-              <div key={token.address} className="app-token-card">
+              <div key={token.address} className="app-token-card bg-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <img
@@ -229,7 +229,15 @@ const SeifunLaunch = () => {
         {/* Empty State */}
         {!isLoading && !error && filteredTokens.length === 0 && (
           <div className="text-center py-12">
-            <div className="app-text-secondary mb-4">No tokens found matching your criteria.</div>
+            <div className="app-text-secondary mb-4">
+              {searchTerm ? 'No tokens found matching your search criteria.' : 
+               selectedCategory === 'all' ? 'No tokens available yet.' :
+               selectedCategory === 'trending' ? 'No trending tokens yet.' :
+               selectedCategory === 'new' ? 'No new launches yet.' :
+               selectedCategory === 'top' ? 'No top performers yet.' :
+               selectedCategory === 'community' ? 'No community tokens yet.' :
+               'No tokens found matching your criteria.'}
+            </div>
             <button 
               onClick={() => {
                 setSearchTerm('');
