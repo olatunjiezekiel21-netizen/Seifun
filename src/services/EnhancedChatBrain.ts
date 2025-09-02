@@ -1,6 +1,6 @@
 import { hybridSeiService } from './HybridSeiService';
 
-// 🚀 ENHANCED CHAT BRAIN - REAL ACTION EXECUTION WITH CONFIRMATION FLOW
+// 🚀 NATURAL AI CHAT BRAIN - NO PLACEHOLDERS, JUST NATURAL CONVERSATION
 
 export interface ChatContext {
   pendingAction: {
@@ -42,22 +42,30 @@ export class EnhancedChatBrain {
     }
   }
 
-  public async processMessage(userMessage: string): Promise<{ message: string; action?: string }> {
-    const message = userMessage.toLowerCase().trim();
-    
-    // Check for confirmation responses
-    if (this.context.pendingAction) {
-      return this.handleConfirmation(message);
-    }
+  public async processMessage(message: string): Promise<{ message: string; action?: string }> {
+    try {
+      const userInput = message.toLowerCase().trim();
+      
+      // Check for confirmation responses first
+      if (this.context.pendingAction) {
+        return this.handleConfirmation(userInput);
+      }
 
-    // Handle new requests
-    return this.handleNewRequest(message);
+      // Handle new requests with natural responses
+      return this.handleNewRequest(userInput, message);
+    } catch (error) {
+      console.error('Error processing message:', error);
+      return {
+        message: "I'm having a bit of trouble understanding that right now. Could you try rephrasing your question? I'm here to help with staking, lending, and other DeFi activities!",
+        action: 'error'
+      };
+    }
   }
 
-  private async handleConfirmation(message: string): Promise<{ message: string; action?: string }> {
+  private async handleConfirmation(userInput: string): Promise<{ message: string; action?: string }> {
     const action = this.context.pendingAction!;
     
-    if (message.includes('yes') || message.includes('confirm') || message.includes('ok')) {
+    if (userInput.includes('yes') || userInput.includes('confirm') || userInput.includes('ok') || userInput.includes('sure')) {
       try {
         // Execute the pending action
         const result = await this.executeAction(action);
@@ -69,88 +77,109 @@ export class EnhancedChatBrain {
         await this.loadUserBalance();
         
         return {
-          message: `✅ **${action.type.toUpperCase()} EXECUTED SUCCESSFULLY!**\n\n${this.formatSuccessMessage(action, result)}`,
+          message: this.formatSuccessMessage(action, result),
           action: 'success'
         };
       } catch (error: any) {
         this.context.pendingAction = null;
         return {
-          message: `❌ **${action.type.toUpperCase()} FAILED!**\n\nError: ${error.message}\n\nPlease try again or contact support.`,
+          message: `Something went wrong with your ${action.type} request. ${error.message || 'Please try again in a moment.'} I'm here if you need help with anything else!`,
           action: 'error'
         };
       }
-    } else if (message.includes('no') || message.includes('cancel') || message.includes('abort')) {
+    } else if (userInput.includes('no') || userInput.includes('cancel') || userInput.includes('abort') || userInput.includes('never mind')) {
       this.context.pendingAction = null;
       return {
-        message: `🚫 **${action.type.toUpperCase()} CANCELLED**\n\nNo action was taken. Your funds are safe.\n\nWhat would you like to do instead?`,
+        message: `No problem! I've cancelled that ${action.type} request. What else can I help you with today?`,
         action: 'cancelled'
       };
     } else {
       // Ask for clear confirmation
       return {
-        message: `🤔 **Please confirm clearly:**\n\nDo you want to proceed with ${action.type}?\n\nReply **"Yes"** to confirm or **"Cancel"** to abort.`,
+        message: `Just to be clear - do you want to proceed with ${action.type.replace('_', ' ')}? Say "yes" to confirm or "no" to cancel.`,
         action: 'confirmation_required'
       };
     }
   }
 
-  private async handleNewRequest(message: string): Promise<{ message: string; action?: string }> {
-    // Staking requests
-    if (/stake\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i.test(message)) {
-      const match = message.match(/stake\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i);
+  private async handleNewRequest(userInput: string, originalMessage: string): Promise<{ message: string; action?: string }> {
+    // Excited/Positive responses
+    if (/^(excited|happy|great|awesome|amazing|wonderful|fantastic|love|perfect|am\s+so\s+excited)/i.test(userInput)) {
+      return {
+        message: `That's wonderful to hear! I love working with enthusiastic users. Since you're feeling great, maybe this is a perfect time to explore some DeFi opportunities? I can help you stake SEI to earn passive income, or we could look at lending options. What interests you most?`
+      };
+    }
+
+    // Specific staking requests with amounts
+    if (/stake\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i.test(userInput)) {
+      const match = userInput.match(/stake\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i);
       const amount = match![1];
       const token = match![2].toUpperCase();
       
       return this.handleStakingRequest(amount, token);
     }
-    
-    // General staking requests without amount
-    if (/^stake$/i.test(message) || /^staking$/i.test(message)) {
+
+    // General staking interest (natural responses)
+    if (/want.*stake|i.*stake|stake.*sei/i.test(userInput) && !/^\s*(stake|staking)\s*$/i.test(userInput)) {
       return {
-        message: `🥩 **Staking Information**\n\nI can help you stake your tokens to earn passive income!\n\n**Current Staking Options:**\n• **SEI Staking**: 12% APY\n• **USDC Staking**: 8% APY\n\n**To stake, please specify:**\n• **Amount** (e.g., "Stake 50 SEI")\n• **Token type** (SEI or USDC)\n\n**Example commands:**\n• "Stake 100 SEI"\n• "Stake 50 USDC"\n\nWhat amount would you like to stake?`
+        message: `Great choice! Staking is one of my favorite ways to earn passive income. With our current rates, you can earn around 12% APY on SEI. How much were you thinking of staking? For example, "stake 50 SEI" would be a good start!`
       };
     }
-    
-    // Lending requests
-    if (/lend\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i.test(message)) {
-      const match = message.match(/lend\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i);
+
+    // General staking query
+    if (/^(stake|staking)$/i.test(userInput)) {
+      return {
+        message: `Staking is a fantastic way to earn passive income! Right now you can earn 12% APY on SEI and 8% APY on USDC. It's pretty straightforward - you lock up your tokens for a period and earn rewards. How much would you like to stake?`
+      };
+    }
+
+    // Specific lending requests with amounts
+    if (/lend\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i.test(userInput)) {
+      const match = userInput.match(/lend\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i);
       const amount = match![1];
       const token = match![2].toUpperCase();
       
       return this.handleLendingRequest(amount, token);
     }
-    
-    // General lending requests without amount
-    if (/^lend$/i.test(message) || /^lending$/i.test(message)) {
+
+    // General lending interest
+    if (/lend|lending|loan/i.test(userInput)) {
       return {
-        message: `🏦 **Lending Information**\n\nI can help you lend your tokens to earn interest!\n\n**Current Lending Options:**\n• **SEI Lending**: 8% APY\n• **USDC Lending**: 6% APY\n\n**To lend, please specify:**\n• **Amount** (e.g., "Lend 100 USDC")\n• **Token type** (SEI or USDC)\n\n**Example commands:**\n• "Lend 200 SEI"\n• "Lend 100 USDC"\n\nWhat amount would you like to lend?`
+        message: `Lending is another great way to earn yield! You can lend out your SEI or USDC and earn around 8% APY. The best part is it's usually more flexible than staking. What amount were you considering lending?`
       };
     }
     
+    // Greetings with specific responses
+    if (/^(hi|hello|hey|greetings|good\s+(morning|afternoon|evening)).*seilor/i.test(userInput)) {
+      return {
+        message: `Hello there! Great to meet you. I'm Seilor 0, and I'm here to help you navigate DeFi on Sei Network. Whether you want to stake tokens, earn yield through lending, or explore other opportunities, I've got you covered. What brings you here today?`
+      };
+    }
+
     // General greetings
-    if (/^(hi|hello|hey|greetings|good\s+(morning|afternoon|evening))/i.test(message)) {
+    if (/^(hi|hello|hey|greetings|good\s+(morning|afternoon|evening))/i.test(userInput)) {
       return {
-        message: `👋 **Hello! I'm Seilor 0, your AI DeFi assistant!**\n\nI can help you with:\n\n🥩 **Staking** - Earn 12% APY\n🏦 **Lending** - Earn 8% APY\n💱 **Swapping** - SEI ↔ USDC\n📊 **Portfolio** - Track your assets\n\nWhat would you like to do today?`
+        message: `Hello! I'm excited to help you with DeFi on Sei Network. I specialize in helping users stake tokens, earn yield, and manage their crypto portfolios. What would you like to explore today?`
       };
     }
-    
+
     // Help requests
-    if (/^(help|what\s+can\s+you\s+do|how\s+does\s+this\s+work)/i.test(message)) {
+    if (/^(help|what\s+can\s+you\s+do|how\s+does\s+this\s+work)/i.test(userInput)) {
       return {
-        message: `🤖 **I'm your DeFi AI assistant! Here's what I can do:**\n\n**💰 EARN YIELD:**\n• Stake SEI/USDC for 12% APY\n• Lend tokens for 8% APY\n\n**💱 TRADE:**\n• Swap between SEI and USDC\n• Create custom tokens\n\n**📊 MANAGE:**\n• Track your portfolio\n• Monitor transactions\n• Get market insights\n\n**Try:** "Stake 50 SEI" or "Lend 100 USDC"`
+        message: `I'd love to help! I specialize in DeFi operations on Sei Network. Here's what I can do for you:\n\n• **Staking**: Help you stake SEI or USDC for up to 12% APY\n• **Lending**: Set up lending positions for steady yield\n• **Swapping**: Exchange between different tokens\n• **Portfolio Management**: Track and optimize your holdings\n\nJust tell me what you're interested in, and I'll walk you through it step by step!`
       };
     }
-    
-    // Feeling good responses
-    if (/^(feeling|feel)\s+(good|great|awesome|amazing|wonderful)/i.test(message)) {
+
+    // How are you responses
+    if (/how\s+are\s+you/i.test(userInput)) {
       return {
-        message: `😊 **That's fantastic! I'm glad you're feeling great!**\n\nSince you're in such a good mood, why not make your money work harder? 💪\n\n**Quick wins you can try:**\n• Stake some SEI for 12% APY\n• Lend USDC for 8% APY\n• Check your portfolio performance\n\nWhat sounds good to you?`
+        message: `I'm doing great, thank you for asking! I'm always excited to help people discover new DeFi opportunities. The markets have been interesting lately, and there are some good yield opportunities available. How are you doing? Are you looking to explore any particular DeFi strategies today?`
       };
     }
-    
-    // Default response
+
+    // Default contextual response
     return {
-      message: `🤔 **I understand you're asking about "${userMessage}"**\n\nI'm here to help with DeFi operations on Sei Network. You can:\n\n• **Stake tokens**: "Stake 50 SEI"\n• **Lend tokens**: "Lend 100 USDC"\n• **Get help**: "Help"\n• **Check portfolio**: "Show my portfolio"\n\nWhat would you like to do?`
+      message: `I understand you're asking about "${originalMessage}". While I'd love to chat about anything, I'm really specialized in helping with DeFi operations like staking, lending, and managing your crypto portfolio. Is there something specific you'd like to do with your tokens today?`
     };
   }
 
@@ -161,7 +190,7 @@ export class EnhancedChatBrain {
     
     if (numAmount > numBalance) {
       return {
-        message: `❌ **Insufficient Balance!**\n\nYou have: **${balance} ${token}**\nTrying to stake: **${amount} ${token}**\n\nPlease reduce the amount or add more ${token} to your wallet.`
+        message: `I see you want to stake ${amount} ${token}, but you currently have ${balance} ${token} available. You might want to reduce the amount or add more ${token} to your wallet first. What would you prefer to do?`
       };
     }
     
@@ -174,7 +203,8 @@ export class EnhancedChatBrain {
     };
     
     return {
-      message: `🥩 **STAKING CONFIRMATION REQUIRED**\n\n**Details:**\n• **Amount:** ${amount} ${token}\n• **Current Balance:** ${balance} ${token}\n• **After Staking:** ${(numBalance - numAmount).toFixed(4)} ${token}\n• **Expected APY:** 12%\n• **Lock Period:** 21 days\n\n**Benefits:**\n• Earn passive income\n• Support network security\n• Flexible unstaking\n\n**Reply "Yes" to confirm staking or "Cancel" to abort.**`
+      message: `Perfect! You want to stake ${amount} ${token}. Here's what this means:\n\n• You'll earn 12% APY on your staked tokens\n• Your tokens will be locked for 21 days\n• After staking, you'll have ${(numBalance - numAmount).toFixed(4)} ${token} remaining\n\nThis looks like a solid move for passive income. Should I go ahead and set this up for you?`,
+      action: 'confirmation_required'
     };
   }
 
@@ -185,7 +215,7 @@ export class EnhancedChatBrain {
     
     if (numAmount > numBalance) {
       return {
-        message: `❌ **Insufficient Balance!**\n\nYou have: **${balance} ${token}**\nTrying to lend: **${amount} ${token}**\n\nPlease reduce the amount or add more ${token} to your wallet.`
+        message: `You want to lend ${amount} ${token}, but I see you have ${balance} ${token} available. Would you like to lend a smaller amount, or would you prefer to add more ${token} first?`
       };
     }
     
@@ -198,7 +228,8 @@ export class EnhancedChatBrain {
     };
     
     return {
-      message: `🏦 **LENDING CONFIRMATION REQUIRED**\n\n**Details:**\n• **Amount:** ${amount} ${token}\n• **Current Balance:** ${balance} ${token}\n• **After Lending:** ${(numBalance - numAmount).toFixed(4)} ${token}\n• **Expected APY:** 8%\n• **Lock Period:** 30 days\n\n**Benefits:**\n• Earn interest on deposits\n• Flexible withdrawal\n• Compound interest\n\n**Reply "Yes" to confirm lending or "Cancel" to abort.**`
+      message: `Excellent choice! Lending ${amount} ${token} will earn you around 8% APY. Here's the breakdown:\n\n• Flexible lending terms (30 days)\n• Earn interest on your deposit\n• After lending, you'll have ${(numBalance - numAmount).toFixed(4)} ${token} left\n\nThis is a great way to put your ${token} to work. Ready to proceed?`,
+      action: 'confirmation_required'
     };
   }
 
@@ -211,20 +242,20 @@ export class EnhancedChatBrain {
         return await hybridSeiService.borrowSEI(action.amount);
       
       default:
-        throw new Error(`Unknown action type: ${action.type}`);
+        throw new Error(`I don't know how to handle ${action.type} yet`);
     }
   }
 
   private formatSuccessMessage(action: any, result: any): string {
     switch (action.type) {
       case 'stake':
-        return `**Staking Successful!** 🎉\n\n• **Amount Staked:** ${action.amount} ${action.token}\n• **Transaction Hash:** ${result.hash.substring(0, 20)}...\n• **Expected APY:** 12%\n• **Lock Period:** 21 days\n\nYour tokens are now earning passive income! 🚀`;
+        return `🎉 Your staking is all set up! I've successfully staked ${action.amount} ${action.token} for you. You're now earning 12% APY, and your transaction hash is ${result.hash.substring(0, 20)}... You can track this on the blockchain explorer. Your tokens will start earning rewards immediately!`;
       
       case 'lend':
-        return `**Lending Successful!** 🎉\n\n• **Amount Lent:** ${action.amount} ${action.token}\n• **Transaction Hash:** ${result.hash.substring(0, 20)}...\n• **Expected APY:** 8%\n• **Lock Period:** 30 days\n\nYour tokens are now earning interest! 💰`;
+        return `🎉 Perfect! Your lending position is active. I've set up the lending of ${action.amount} ${action.token} earning 8% APY. Transaction hash: ${result.hash.substring(0, 20)}... You'll start earning interest right away, and you can withdraw flexibly when needed.`;
       
       default:
-        return `**Action completed successfully!** ✅\n\nTransaction Hash: ${result.hash.substring(0, 20)}...`;
+        return `✅ Great! Your ${action.type} has been completed successfully. Transaction hash: ${result.hash.substring(0, 20)}...`;
     }
   }
 
