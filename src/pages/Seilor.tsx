@@ -171,7 +171,6 @@ const Seilor = () => {
     setChatMessages(prev => [...prev, userChatMessage]);
     ChatMemoryService.append({ type: 'user', message: userMessage }).catch(() => {});
     setIsTyping(true);
-    if (/(^yes\b|\bswap\b|\bstake\b|create\s+token|add\s+liquidity|burn)/i.test(userMessage)) setIsProcessingAction(true)
     await new Promise(r => setTimeout(r, 200));
     try {
       const response = await enhancedChatBrain.processMessage(userMessage);
@@ -179,26 +178,29 @@ const Seilor = () => {
         try { const url = await IPFSUploader.uploadLogo(attachedImage); localStorage.setItem('seilor_last_token_logo', url); } catch {}
       }
       setIsTyping(false);
-      setIsProcessingAction(false);
       const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: response.message, timestamp: new Date() };
       setChatMessages(prev => [...prev, aiResponse]);
       ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
       
       // Manage processing overlay based on action
       if (response.action === 'success') {
-        setIsProcessingAction(false);
+        setIsProcessingAction(true);
         // Add transaction to history if it's a real action
         if (response.message.includes('Transaction Hash')) {
           if (response.message.includes('Staking')) {
             addUserTransaction('Staking', 'Stake Amount', 'success');
           } else if (response.message.includes('Lending')) {
             addUserTransaction('Lending', 'Lend Amount', 'success');
+          } else if (response.message.includes('Swap completed')) {
+            addUserTransaction('Swap', 'Swap Amount', 'success');
           }
         }
+        // Hide processing after a delay
+        setTimeout(() => setIsProcessingAction(false), 2000);
       } else if (response.action === 'error') {
         setIsProcessingAction(false);
       } else if (response.action === 'confirmation_required') {
-        setIsProcessingAction(true);
+        setIsProcessingAction(false);
       } else {
         setIsProcessingAction(false);
       }

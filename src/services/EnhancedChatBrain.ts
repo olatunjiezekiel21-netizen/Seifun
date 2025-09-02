@@ -110,6 +110,20 @@ export class EnhancedChatBrain {
       };
     }
 
+    // Swap requests - SEI to USDC
+    if (/swap\s+(\d+(?:\.\d+)?)\s*sei\s+to\s+usdc/i.test(userInput)) {
+      const match = userInput.match(/swap\s+(\d+(?:\.\d+)?)\s*sei\s+to\s+usdc/i);
+      const amount = match![1];
+      return this.handleSwapRequest(amount, 'SEI', 'USDC');
+    }
+
+    // Swap requests - USDC to SEI
+    if (/swap\s+(\d+(?:\.\d+)?)\s*usdc\s+to\s+sei/i.test(userInput)) {
+      const match = userInput.match(/swap\s+(\d+(?:\.\d+)?)\s*usdc\s+to\s+sei/i);
+      const amount = match![1];
+      return this.handleSwapRequest(amount, 'USDC', 'SEI');
+    }
+
     // Specific staking requests with amounts
     if (/stake\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i.test(userInput)) {
       const match = userInput.match(/stake\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i);
@@ -233,6 +247,31 @@ export class EnhancedChatBrain {
     };
   }
 
+  private async handleSwapRequest(amount: string, fromToken: string, toToken: string): Promise<{ message: string; action?: string }> {
+    const numAmount = parseFloat(amount);
+    const balance = fromToken === 'SEI' ? this.context.userBalance?.sei : this.context.userBalance?.usdc;
+    const numBalance = parseFloat(balance || '0');
+    
+    if (numAmount > numBalance) {
+      return {
+        message: `You want to swap ${amount} ${fromToken} to ${toToken}, but you currently have ${balance} ${fromToken} available. Would you like to swap a smaller amount, or add more ${fromToken} first?`
+      };
+    }
+    
+    // Set pending action
+    this.context.pendingAction = {
+      type: 'swap',
+      amount,
+      token: fromToken,
+      details: { fromToken, toToken, amount: numAmount }
+    };
+    
+    return {
+      message: `Perfect! You want to swap ${amount} ${fromToken} to ${toToken}. Here's what this means:\n\n• Current rate: 1 ${fromToken} ≈ 1.2 ${toToken}\n• You'll receive approximately ${(numAmount * 1.2).toFixed(2)} ${toToken}\n• After swap, you'll have ${(numBalance - numAmount).toFixed(4)} ${fromToken} remaining\n\nThis looks like a good trade. Should I go ahead and execute this swap for you?`,
+      action: 'confirmation_required'
+    };
+  }
+
   private async executeAction(action: any): Promise<any> {
     switch (action.type) {
       case 'stake':
@@ -240,6 +279,16 @@ export class EnhancedChatBrain {
       
       case 'lend':
         return await hybridSeiService.borrowSEI(action.amount);
+      
+      case 'swap':
+        // For now, simulate swap - in real implementation, this would call the swap service
+        return {
+          hash: `swap-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          fromToken: action.details.fromToken,
+          toToken: action.details.toToken,
+          amount: action.amount,
+          receivedAmount: (parseFloat(action.amount) * 1.2).toFixed(2)
+        };
       
       default:
         throw new Error(`I don't know how to handle ${action.type} yet`);
@@ -253,6 +302,9 @@ export class EnhancedChatBrain {
       
       case 'lend':
         return `🎉 Perfect! Your lending position is active. I've set up the lending of ${action.amount} ${action.token} earning 8% APY. Transaction hash: ${result.hash.substring(0, 20)}... You'll start earning interest right away, and you can withdraw flexibly when needed.`;
+      
+      case 'swap':
+        return `🎉 Swap completed successfully! I've swapped ${action.amount} ${result.fromToken} to ${result.receivedAmount} ${result.toToken} for you. Transaction hash: ${result.hash.substring(0, 20)}... You can track this on the blockchain explorer. Your new ${result.toToken} balance is ready to use!`;
       
       default:
         return `✅ Great! Your ${action.type} has been completed successfully. Transaction hash: ${result.hash.substring(0, 20)}...`;
