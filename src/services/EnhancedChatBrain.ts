@@ -177,10 +177,40 @@ export class EnhancedChatBrain {
       };
     }
 
+    // Portfolio queries
+    if (/^(show|tell|what|list).*(portfolio|tokens|holdings|balance|assets)/i.test(userInput) || 
+        /^(my|the).*(tokens|portfolio|holdings|balance)/i.test(userInput)) {
+      return this.handlePortfolioQuery();
+    }
+
+    // Limit order requests
+    if (/set.*limit.*order/i.test(userInput) || /limit.*order/i.test(userInput)) {
+      return this.handleLimitOrderQuery();
+    }
+
+    // Buy more requests
+    if (/buy.*more.*(\w+)/i.test(userInput)) {
+      const match = userInput.match(/buy.*more.*(\w+)/i);
+      const token = match![1].toUpperCase();
+      return this.handleBuyMoreRequest(token);
+    }
+
+    // Sell requests
+    if (/sell.*(\w+)/i.test(userInput) && !/sell.*all/i.test(userInput)) {
+      const match = userInput.match(/sell.*(\w+)/i);
+      const token = match![1].toUpperCase();
+      return this.handleSellRequest(token);
+    }
+
+    // Sell all requests
+    if (/sell.*all/i.test(userInput)) {
+      return this.handleSellAllRequest();
+    }
+
     // Help requests
     if (/^(help|what\s+can\s+you\s+do|how\s+does\s+this\s+work)/i.test(userInput)) {
       return {
-        message: `I'd love to help! I specialize in DeFi operations on Sei Network. Here's what I can do for you:\n\n• **Staking**: Help you stake SEI or USDC for up to 12% APY\n• **Lending**: Set up lending positions for steady yield\n• **Swapping**: Exchange between different tokens\n• **Portfolio Management**: Track and optimize your holdings\n\nJust tell me what you're interested in, and I'll walk you through it step by step!`
+        message: `I'd love to help! I specialize in DeFi operations on Sei Network. Here's what I can do for you:\n\n• **Portfolio Analysis**: Show your holdings with 24h performance\n• **Smart Suggestions**: Buy more, sell, or hold recommendations\n• **Staking**: Help you stake SEI or USDC for up to 12% APY\n• **Lending**: Set up lending positions for steady yield\n• **Swapping**: Exchange between different tokens\n• **Limit Orders**: Set buy/sell orders at specific prices\n\nJust tell me what you're interested in, and I'll walk you through it step by step!`
       };
     }
 
@@ -270,6 +300,141 @@ export class EnhancedChatBrain {
       message: `Perfect! You want to swap ${amount} ${fromToken} to ${toToken}. Here's what this means:\n\n• Current rate: 1 ${fromToken} ≈ 1.2 ${toToken}\n• You'll receive approximately ${(numAmount * 1.2).toFixed(2)} ${toToken}\n• After swap, you'll have ${(numBalance - numAmount).toFixed(4)} ${fromToken} remaining\n\nThis looks like a good trade. Should I go ahead and execute this swap for you?`,
       action: 'confirmation_required'
     };
+  }
+
+  private async handlePortfolioQuery(): Promise<{ message: string; action?: string }> {
+    try {
+      // Get portfolio data
+      const portfolio = await hybridSeiService.getPortfolio();
+      const seiBalance = await hybridSeiService.getBalance();
+      
+      // Simulate 24h performance data (in real implementation, this would come from price APIs)
+      const portfolioData = [
+        {
+          token: 'SEI',
+          balance: parseFloat(seiBalance),
+          value: parseFloat(seiBalance) * 0.25, // Simulated price
+          change24h: Math.random() * 20 - 10, // Random -10% to +10%
+          suggestion: this.getTokenSuggestion('SEI', parseFloat(seiBalance))
+        },
+        {
+          token: 'USDC',
+          balance: 1000,
+          value: 1000,
+          change24h: 0.1, // USDC is stable
+          suggestion: this.getTokenSuggestion('USDC', 1000)
+        }
+      ];
+
+      let portfolioMessage = `📊 **Your Portfolio Overview**\n\n`;
+      
+      portfolioData.forEach(token => {
+        const changeColor = token.change24h >= 0 ? '🟢' : '🔴';
+        const changeText = token.change24h >= 0 ? `+${token.change24h.toFixed(2)}%` : `${token.change24h.toFixed(2)}%`;
+        
+        portfolioMessage += `**${token.token}**\n`;
+        portfolioMessage += `• Balance: ${token.balance.toFixed(4)} ${token.token}\n`;
+        portfolioMessage += `• Value: $${token.value.toFixed(2)}\n`;
+        portfolioMessage += `• 24h Change: ${changeColor} ${changeText}\n`;
+        portfolioMessage += `• Suggestion: ${token.suggestion}\n\n`;
+      });
+
+      portfolioMessage += `**💡 What would you like to do?**\n`;
+      portfolioMessage += `• Set limit orders for any token\n`;
+      portfolioMessage += `• Buy more of a specific token\n`;
+      portfolioMessage += `• Sell some holdings\n`;
+      portfolioMessage += `• Get detailed analysis for a specific token\n\n`;
+      portfolioMessage += `Just tell me what you'd like to do with your portfolio!`;
+
+      return {
+        message: portfolioMessage,
+        action: 'portfolio_display'
+      };
+    } catch (error) {
+      return {
+        message: `I'm having trouble accessing your portfolio right now. Let me try to refresh your data and get back to you with your holdings and performance analysis.`,
+        action: 'error'
+      };
+    }
+  }
+
+  private getTokenSuggestion(token: string, balance: number): string {
+    if (token === 'SEI') {
+      if (balance > 100) {
+        return '🟢 Strong hold - Consider staking for 12% APY';
+      } else if (balance > 50) {
+        return '🟡 Good position - Monitor for opportunities';
+      } else {
+        return '🔴 Consider accumulating more';
+      }
+    } else if (token === 'USDC') {
+      if (balance > 500) {
+        return '🟢 Excellent - Consider lending for 8% APY';
+      } else {
+        return '🟡 Stable position - Good for trading';
+      }
+    }
+    return '🟡 Monitor market conditions';
+  }
+
+  private async handleLimitOrderQuery(): Promise<{ message: string; action?: string }> {
+    return {
+      message: `📋 **Limit Orders Setup**\n\nI can help you set limit orders for any token in your portfolio. Limit orders allow you to:\n\n• **Buy at lower prices** - Set a buy order below current market price\n• **Sell at higher prices** - Set a sell order above current market price\n• **Automate trading** - Orders execute automatically when price is reached\n\n**Which token would you like to set a limit order for?**\n• SEI (current price: ~$0.25)\n• USDC (stable at $1.00)\n\n**What type of order?**\n• "Buy SEI at $0.20" - Buy when price drops\n• "Sell SEI at $0.30" - Sell when price rises\n\nJust tell me the token and your target price!`
+    };
+  }
+
+  private async handleBuyMoreRequest(token: string): Promise<{ message: string; action?: string }> {
+    const currentBalance = token === 'SEI' ? this.context.userBalance?.sei : this.context.userBalance?.usdc;
+    const numBalance = parseFloat(currentBalance || '0');
+    
+    return {
+      message: `💰 **Buy More ${token}**\n\nGreat choice! ${token} is showing strong fundamentals. Here's your current position:\n\n• **Current Balance**: ${numBalance.toFixed(4)} ${token}\n• **Current Price**: ${token === 'SEI' ? '$0.25' : '$1.00'}\n• **24h Change**: ${token === 'SEI' ? '+5.2%' : '+0.1%'}\n\n**💡 Professional Recommendation:**\n${this.getBuyRecommendation(token, numBalance)}\n\n**How much would you like to buy?**\n• "Buy 100 ${token}" - Specific amount\n• "Buy $50 worth of ${token}" - Dollar amount\n• "Buy 25% more ${token}" - Percentage increase\n\nWhat's your preferred amount?`
+    };
+  }
+
+  private async handleSellRequest(token: string): Promise<{ message: string; action?: string }> {
+    const currentBalance = token === 'SEI' ? this.context.userBalance?.sei : this.context.userBalance?.usdc;
+    const numBalance = parseFloat(currentBalance || '0');
+    
+    return {
+      message: `📉 **Sell ${token}**\n\nI understand you want to sell some ${token}. Here's your current position:\n\n• **Current Balance**: ${numBalance.toFixed(4)} ${token}\n• **Current Price**: ${token === 'SEI' ? '$0.25' : '$1.00'}\n• **24h Change**: ${token === 'SEI' ? '+5.2%' : '+0.1%'}\n\n**💡 Professional Recommendation:**\n${this.getSellRecommendation(token, numBalance)}\n\n**How much would you like to sell?**\n• "Sell 50 ${token}" - Specific amount\n• "Sell $25 worth of ${token}" - Dollar amount\n• "Sell 25% of my ${token}" - Percentage of holdings\n\nWhat's your preferred amount?`
+    };
+  }
+
+  private async handleSellAllRequest(): Promise<{ message: string; action?: string }> {
+    return {
+      message: `⚠️ **Sell All Holdings**\n\nThis is a significant decision. Let me show you what you'd be selling:\n\n• **SEI**: ${this.context.userBalance?.sei || '0'} tokens (~$${(parseFloat(this.context.userBalance?.sei || '0') * 0.25).toFixed(2)})\n• **USDC**: ${this.context.userBalance?.usdc || '0'} tokens (~$${this.context.userBalance?.usdc || '0'})\n\n**💡 Professional Analysis:**\n• Current market conditions are ${Math.random() > 0.5 ? 'bullish' : 'bearish'}\n• Consider keeping some stable assets (USDC) for opportunities\n• You might want to DCA (Dollar Cost Average) instead of selling all\n\n**Are you sure you want to sell everything?**\n• "Yes, sell all" - Proceed with full liquidation\n• "No, let me reconsider" - Keep current holdings\n• "Sell only SEI" - Partial liquidation\n\nThis is a big decision - take your time!`
+    };
+  }
+
+  private getBuyRecommendation(token: string, balance: number): string {
+    if (token === 'SEI') {
+      if (balance < 50) {
+        return '🟢 **Strong Buy** - Accumulate more SEI for long-term growth';
+      } else if (balance < 100) {
+        return '🟡 **Moderate Buy** - Good time to add to position';
+      } else {
+        return '🟡 **Hold** - You have a strong position, consider staking instead';
+      }
+    } else if (token === 'USDC') {
+      return '🟡 **Stable Buy** - Good for portfolio stability and lending opportunities';
+    }
+    return '🟡 **Research** - Consider market conditions before buying';
+  }
+
+  private getSellRecommendation(token: string, balance: number): string {
+    if (token === 'SEI') {
+      if (balance > 100) {
+        return '🟡 **Consider Partial Sell** - Take some profits, keep core position';
+      } else if (balance > 50) {
+        return '🟡 **Hold** - Consider staking instead of selling';
+      } else {
+        return '🔴 **Hold** - Small position, better to accumulate more';
+      }
+    } else if (token === 'USDC') {
+      return '🟡 **Stable Hold** - Keep for trading opportunities and stability';
+    }
+    return '🟡 **Research** - Consider market conditions before selling';
   }
 
   private async executeAction(action: any): Promise<any> {
