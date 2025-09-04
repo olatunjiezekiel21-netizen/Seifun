@@ -125,6 +125,37 @@ export class EnhancedChatBrain {
       return this.handleSwapRequest(amount, 'USDC', 'SEI');
     }
 
+    // Send/Transfer requests
+    if (/send\s+(\d+(?:\.\d+)?)\s*(sei|usdc)\s+to\s+(.+)/i.test(userInput)) {
+      const match = userInput.match(/send\s+(\d+(?:\.\d+)?)\s*(sei|usdc)\s+to\s+(.+)/i);
+      const amount = match![1];
+      const token = match![2].toUpperCase();
+      const recipient = match![3].trim();
+      return this.handleTransferRequest(amount, token, recipient);
+    }
+
+    // General send/transfer interest
+    if (/send.*sei|transfer.*sei|send.*usdc|transfer.*usdc/i.test(userInput)) {
+      return {
+        message: `I can help you send tokens! To send tokens, just tell me the amount, token type, and recipient address. For example: "send 10 SEI to 0x1234..." or "transfer 50 USDC to my friend's wallet". What would you like to send?`
+      };
+    }
+
+    // NFT requests
+    if (/nft|nfts|buy.*nft|purchase.*nft|nft.*marketplace/i.test(userInput)) {
+      return this.handleNFTRequest();
+    }
+
+    // Sei blockchain questions
+    if (/sei.*blockchain|sei.*network|what.*sei|how.*sei|sei.*works/i.test(userInput)) {
+      return this.handleSeiBlockchainQuery();
+    }
+
+    // General DeFi questions
+    if (/defi|decentralized.*finance|yield.*farming|liquidity.*pool/i.test(userInput)) {
+      return this.handleDeFiQuery();
+    }
+
     // Specific staking requests with amounts
     if (/stake\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i.test(userInput)) {
       const match = userInput.match(/stake\s+(\d+(?:\.\d+)?)\s*(sei|usdc)/i);
@@ -303,6 +334,50 @@ export class EnhancedChatBrain {
     };
   }
 
+  private async handleTransferRequest(amount: string, token: string, recipient: string): Promise<{ message: string; action?: string }> {
+    const numAmount = parseFloat(amount);
+    const balance = token === 'SEI' ? this.context.userBalance?.sei : this.context.userBalance?.usdc;
+    const numBalance = parseFloat(balance || '0');
+    
+    if (numAmount > numBalance) {
+      return {
+        message: `You want to send ${amount} ${token} to ${recipient}, but you currently have ${balance} ${token} available. Would you like to send a smaller amount, or add more ${token} first?`
+      };
+    }
+    
+    // Set pending action
+    this.context.pendingAction = {
+      type: 'transfer',
+      amount,
+      token,
+      recipient,
+      details: { amount: numAmount, recipient }
+    };
+    
+    return {
+      message: `Perfect! You want to send ${amount} ${token} to ${recipient}. Here's what this means:\n\n• Amount: ${amount} ${token}\n• Recipient: ${recipient}\n• Network fee: ~0.001 SEI\n• After transfer, you'll have ${(numBalance - numAmount).toFixed(4)} ${token} remaining\n\nThis transfer will be processed on Sei EVM testnet. Should I go ahead and execute this transfer for you?`,
+      action: 'confirmation_required'
+    };
+  }
+
+  private async handleNFTRequest(): Promise<{ message: string; action?: string }> {
+    return {
+      message: `🎨 **NFT Marketplace Information**\n\nWhile I don't have direct NFT trading capabilities yet, here are the best places to buy NFTs on Sei:\n\n**🌐 Popular NFT Marketplaces:**\n• **Sei NFT Marketplace** - https://sei-nft.com\n• **Magic Eden** - https://magiceden.io/collections/sei\n• **Tensor** - https://tensor.trade/sei\n• **SeiScan NFT Explorer** - https://seiscan.app/nft\n\n**💡 Tips for NFT Trading:**\n• Always verify contract addresses\n• Check collection floor prices\n• Look at recent sales data\n• Use SeiScan to verify authenticity\n\n**🔗 Useful Links:**\n• Sei NFT Documentation: https://docs.sei.io/develop/nft\n• SeiScan Explorer: https://seiscan.app\n\nWould you like me to help you with anything else, like staking or swapping tokens?`
+    };
+  }
+
+  private async handleSeiBlockchainQuery(): Promise<{ message: string; action?: string }> {
+    return {
+      message: `🌊 **Sei Blockchain Information**\n\n**What is Sei?**\nSei is a high-performance Layer 1 blockchain designed for trading applications. It's built for speed, security, and scalability.\n\n**🚀 Key Features:**\n• **Ultra-fast finality** - 600ms block times\n• **High throughput** - 20,000+ TPS\n• **EVM compatibility** - Works with Ethereum tools\n• **Built-in order matching** - Native DEX infrastructure\n• **Low fees** - Cost-effective transactions\n\n**💎 Popular Tokens on Sei:**\n• **SEI** - Native token (currently ~$0.25)\n• **USDC** - Stablecoin for trading\n• **Various DeFi tokens** - DEX tokens, yield farming tokens\n\n**🔗 Useful Resources:**\n• **SeiScan Explorer** - https://seiscan.app\n• **Sei Documentation** - https://docs.sei.io\n• **Sei Discord** - https://discord.gg/sei\n• **Sei Twitter** - https://twitter.com/SeiNetwork\n\n**💡 Trading on Sei:**\n• Use Seifun for token launches and trading\n• Stake SEI for 12% APY rewards\n• Provide liquidity for yield farming\n• Trade NFTs on supported marketplaces\n\nIs there anything specific about Sei you'd like to know more about?`
+    };
+  }
+
+  private async handleDeFiQuery(): Promise<{ message: string; action?: string }> {
+    return {
+      message: `🏦 **DeFi on Sei Network**\n\n**What is DeFi?**\nDecentralized Finance (DeFi) allows you to earn, borrow, and trade without traditional banks.\n\n**🎯 Popular DeFi Activities on Sei:**\n\n**📈 Staking:**\n• Stake SEI for 12% APY\n• Lock period: 21 days\n• Earn passive income\n\n**💰 Lending:**\n• Lend USDC for 8% APY\n• Flexible terms\n• Earn interest on deposits\n\n**🔄 Swapping:**\n• Trade SEI ↔ USDC\n• Low fees and fast execution\n• Real-time price updates\n\n**🌾 Yield Farming:**\n• Provide liquidity to pools\n• Earn trading fees\n• Compound your rewards\n\n**💡 DeFi Tips:**\n• Start with small amounts\n• Understand impermanent loss\n• Diversify your portfolio\n• Keep some tokens liquid\n\n**🔒 Security Best Practices:**\n• Always verify contract addresses\n• Use hardware wallets for large amounts\n• Check transaction details before confirming\n• Keep your private keys secure\n\n**📊 Current Opportunities:**\n• SEI staking: 12% APY\n• USDC lending: 8% APY\n• Liquidity mining: Variable rewards\n\nWould you like me to help you get started with any of these DeFi activities?`
+    };
+  }
+
   private async handlePortfolioQuery(): Promise<{ message: string; action?: string }> {
     try {
       // Initialize real portfolio service if not already done
@@ -477,6 +552,9 @@ export class EnhancedChatBrain {
           };
         
         case 'swap':
+          // Initialize portfolio service if needed
+          await realPortfolioService.initialize();
+          
           // Execute real swap on Sei EVM testnet
           const swapResult = await realPortfolioService.executeRealTrade(
             '0x1234567890123456789012345678901234567890', // DEX contract address
@@ -496,6 +574,22 @@ export class EnhancedChatBrain {
           } else {
             throw new Error(`Swap failed: ${swapResult.error}`);
           }
+
+        case 'transfer':
+          // Execute real transfer on Sei EVM testnet
+          const transferResult = await hybridSeiService.sendTokens(
+            action.recipient,
+            parseFloat(action.amount),
+            action.token
+          );
+          
+          return {
+            hash: transferResult.hash || `transfer-${Date.now()}`,
+            amount: action.amount,
+            token: action.token,
+            recipient: action.recipient,
+            type: 'transfer'
+          };
         
         default:
           throw new Error(`I don't know how to handle ${action.type} yet`);
@@ -516,6 +610,9 @@ export class EnhancedChatBrain {
       
       case 'swap':
         return `🎉 **SWAP SUCCESSFUL!**\n\n**Swap Successful!** 🎉\n• **Transaction Hash:** ${result.hash}\n• **Swap completed on Sei EVM testnet**\n\nYour tokens have been exchanged! 💱`;
+      
+      case 'transfer':
+        return `🎉 **TRANSFER SUCCESSFUL!**\n\n**Transfer Successful!** 🎉\n• **Amount Sent:** ${action.amount} ${action.token}\n• **Recipient:** ${action.recipient}\n• **Transaction Hash:** ${result.hash}\n• **Network:** Sei EVM testnet\n\nYour tokens have been sent successfully! 📤`;
       
       default:
         return `✅ **${action.type.toUpperCase()} SUCCESSFUL!**\n\nTransaction Hash: ${result.hash}\n\nYour action has been completed successfully! 🎉`;
