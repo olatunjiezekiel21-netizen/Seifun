@@ -71,12 +71,8 @@ export class ProfessionalAIAgent {
       name: 'Market Analysis',
       description: 'Real-time market data and analysis',
       handler: async (query: string, context: AIContext) => {
-        // Simulate real market data - in production, connect to APIs
-        const seiPrice = (Math.random() * 0.5 + 0.3).toFixed(4);
-        const change24h = (Math.random() * 20 - 10).toFixed(2);
-        const volume = (Math.random() * 100 + 50).toFixed(1);
-        
-        return `📊 **SEI Market Data**\n\n💰 **Price**: $${seiPrice}\n📈 **24h Change**: ${change24h}%\n📊 **Volume**: $${volume}M\n\n*Note: This is simulated data. In production, we'd connect to real market APIs like CoinGecko or CoinMarketCap.*\n\nWhat specific market analysis would you like me to perform?`;
+        // Real market data integration not yet implemented
+        return `📊 **SEI Market Data**\n\n💰 **Price**: Real-time data unavailable\n📈 **24h Change**: Real-time data unavailable\n📊 **Volume**: Real-time data unavailable\n\n*Note: Real market data integration is not yet implemented. Please use the SafeChecker for token analysis or connect to external market data sources.*\n\nWhat specific market analysis would you like me to perform?`;
       }
     });
 

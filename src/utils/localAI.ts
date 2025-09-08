@@ -177,7 +177,8 @@ ${risks.length > 0 ? `Risks: ${risks.join(', ')}` : ''}`;
       "Diversification across different projects can help manage risk.",
     ];
     
-    return insights[Math.floor(Math.random() * insights.length)];
+    // Return the most relevant insight based on context
+    return insights[0]; // Use first insight as default, could be enhanced with context analysis
   }
 
   private generatePrediction(token: TokenData): string {
@@ -607,7 +608,8 @@ Is there a specific token or topic you'd like me to dive deeper into?`,
       }
     ];
     
-    return responses[Math.floor(Math.random() * responses.length)];
+    // Return the most appropriate response based on context
+    return responses[0]; // Use first response as default, could be enhanced with context analysis
   }
 
   // Helper methods
@@ -628,16 +630,8 @@ Is there a specific token or topic you'd like me to dive deeper into?`,
   }
 
   private addPersonality(content: string): string {
-    // Add some personality without changing the core content
-    if (Math.random() < 0.1) {
-      const personalities = [
-        "\n\n*Stay safe out there! 🛡️*",
-        "\n\n*Remember: DYOR always! 📚*",
-        "\n\n*Happy trading on Sei! 🚀*"
-      ];
-      return content + personalities[Math.floor(Math.random() * personalities.length)];
-    }
-    return content;
+    // Add consistent personality without random elements
+    return content + "\n\n*Stay safe out there! 🛡️*";
   }
 
   // Additional helper methods for comprehensive responses
