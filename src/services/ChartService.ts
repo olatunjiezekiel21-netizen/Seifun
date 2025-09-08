@@ -1,5 +1,8 @@
-// Chart Service - Integrates with free charting APIs
+// Chart Service - Integrates with real market data APIs
 // This service provides real-time price data and chart information
+
+import { realMarketDataService, RealMarketData } from './RealMarketDataService';
+import { technicalAnalysisService, PriceData } from './TechnicalAnalysisService';
 
 export interface TokenPrice {
   symbol: string;
@@ -89,8 +92,7 @@ export class ChartService {
     } catch (error) {
       console.error(`Failed to get price for ${symbol}:`, error);
       
-      // Fallback to mock data for development
-      return this.getMockTokenPrice(symbol);
+      throw new Error(`Price data unavailable for ${symbol}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -131,8 +133,7 @@ export class ChartService {
     } catch (error) {
       console.error(`Failed to get chart data for ${symbol}:`, error);
       
-      // Fallback to mock data for development
-      return this.getMockChartData(symbol, timeframe);
+      throw new Error(`Chart data unavailable for ${symbol}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -252,59 +253,9 @@ export class ChartService {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 
-  // Mock data for development/testing
-  private getMockTokenPrice(symbol: string): TokenPrice {
-    const basePrice = symbol === 'SEI' ? 0.834 : 1.00;
-    const randomChange = (Math.random() - 0.5) * 0.1; // ±5% random change
-    
-    return {
-      symbol: symbol.toUpperCase(),
-      price: basePrice * (1 + randomChange),
-      priceChange24h: randomChange * basePrice,
-      priceChangePercent24h: randomChange * 100,
-      volume24h: Math.random() * 10000000 + 1000000,
-      marketCap: basePrice * (Math.random() * 1000000000 + 1000000000),
-      lastUpdated: new Date()
-    };
-  }
+  // Real data only - no mock data
 
-  private getMockChartData(symbol: string, timeframe: string): ChartDataPoint[] {
-    const data: ChartDataPoint[] = [];
-    const now = Date.now();
-    const basePrice = symbol === 'SEI' ? 0.834 : 1.00;
-    
-    let interval: number;
-    switch (timeframe) {
-      case '1H': interval = 5 * 60 * 1000; break;
-      case '4H': interval = 15 * 60 * 1000; break;
-      case '1D': interval = 60 * 60 * 1000; break;
-      case '1W': interval = 4 * 60 * 60 * 1000; break;
-      case '1M': interval = 24 * 60 * 60 * 1000; break;
-      default: interval = 60 * 60 * 1000;
-    }
-    
-    let currentPrice = basePrice;
-    for (let i = 0; i < 100; i++) {
-      const timestamp = now - (100 - i) * interval;
-      const randomChange = (Math.random() - 0.5) * 0.02; // ±1% random change
-      currentPrice = Math.max(0.1, currentPrice * (1 + randomChange));
-      
-      const high = currentPrice * (1 + Math.random() * 0.01);
-      const low = currentPrice * (1 - Math.random() * 0.01);
-      const open = currentPrice * (1 + (Math.random() - 0.5) * 0.005);
-      
-      data.push({
-        timestamp,
-        open,
-        high,
-        low,
-        close: currentPrice,
-        volume: Math.random() * 1000000 + 100000
-      });
-    }
-    
-    return data;
-  }
+  // Mock data methods removed - using real data only
 
   // Clear cache (useful for testing)
   clearCache(): void {

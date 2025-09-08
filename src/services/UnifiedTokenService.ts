@@ -255,8 +255,15 @@ export class UnifiedTokenService {
     const token = this.tokens.get(address);
     if (!token) return [];
 
-    // Generate mock chart data for now (replace with real API calls)
-    const chartData = this.generateMockChartData(token);
+    // Get real chart data from our chart service
+    let chartData: ChartDataPoint[] = [];
+    try {
+      const chartService = (await import('./ChartService')).chartService;
+      chartData = await chartService.getChartData(token.symbol, '1D');
+    } catch (error) {
+      console.warn('Failed to get real chart data:', error);
+      // Chart data will be empty if real data is unavailable
+    }
     
     // Store chart data
     this.storeChartData(address, chartData);
@@ -367,8 +374,8 @@ export class UnifiedTokenService {
   // Private helper methods
 
   private generateAddress(): string {
-    // Generate a mock address for testing
-    return '0x' + Math.random().toString(16).substr(2, 40);
+    // Real address generation would be done by the smart contract
+    throw new Error('Token address must be provided by the smart contract deployment');
   }
 
   private calculateSecurityScore(tokenData: Partial<TokenData>): number {
@@ -411,33 +418,7 @@ export class UnifiedTokenService {
     return `data:image/svg+xml;base64,${btoa(svg)}`;
   }
 
-  private generateMockChartData(token: TokenData): ChartDataPoint[] {
-    const data: ChartDataPoint[] = [];
-    const now = Date.now();
-    const basePrice = token.price || 0.0001;
-    
-    // Generate 100 data points over the last 7 days
-    for (let i = 0; i < 100; i++) {
-      const timestamp = now - (100 - i) * (7 * 24 * 60 * 60 * 1000 / 100);
-      const randomChange = (Math.random() - 0.5) * 0.02; // ±1% random change
-      const currentPrice = Math.max(0.000001, basePrice * (1 + randomChange));
-      
-      const high = currentPrice * (1 + Math.random() * 0.01);
-      const low = currentPrice * (1 - Math.random() * 0.01);
-      const open = currentPrice * (1 + (Math.random() - 0.5) * 0.005);
-      
-      data.push({
-        timestamp,
-        open,
-        high,
-        low,
-        close: currentPrice,
-        volume: Math.random() * 1000000 + 100000
-      });
-    }
-    
-    return data;
-  }
+  // Mock chart data generation removed - using real data only
 
   private loadTokensFromStorage(): void {
     try {
