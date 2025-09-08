@@ -175,22 +175,8 @@ export class MCPService {
         throw new Error('Transfer amount must be between 0 and 10 SEI');
       }
       
-      // For now, simulate transaction
-      // TODO: Replace with actual MCP call
-      const mockResult: TransactionResult = {
-        hash: '0x' + Math.random().toString(16).substring(2, 66),
-        status: 'pending',
-        timestamp: Date.now()
-      };
-      
-      // Simulate confirmation after 3 seconds
-      setTimeout(() => {
-        mockResult.status = 'confirmed';
-        mockResult.blockNumber = Math.floor(Math.random() * 1000000) + 5000000;
-        mockResult.gasUsed = '21000';
-      }, 3000);
-      
-      return mockResult;
+      // MCP Server integration not yet implemented
+      throw new Error('MCP Server integration not yet implemented. Please use wallet connection for transactions.');
     } catch (error) {
       console.error('❌ MCP: Failed to transfer SEI:', error);
       throw error;
@@ -204,15 +190,8 @@ export class MCPService {
       
       console.log('🔄 MCP: Transferring token:', { tokenAddress, to, amount });
       
-      // For now, simulate token transfer
-      // TODO: Replace with actual MCP call
-      const mockResult: TransactionResult = {
-        hash: '0x' + Math.random().toString(16).substring(2, 66),
-        status: 'pending',
-        timestamp: Date.now()
-      };
-      
-      return mockResult;
+      // MCP Server integration not yet implemented
+      throw new Error('MCP Server integration not yet implemented. Please use wallet connection for token transfers.');
     } catch (error) {
       console.error('❌ MCP: Failed to transfer token:', error);
       throw new Error('Failed to transfer token');
@@ -229,21 +208,8 @@ export class MCPService {
       
       console.log('🔍 MCP: Getting transaction:', hash);
       
-      // For now, simulate transaction data
-      // TODO: Replace with actual MCP call
-      const mockTransaction: Transaction = {
-        hash,
-        from: '0x966CBf1baa5C08e4458f08A4CF1ECbb6Ae50894e',
-        to: '0x742d35Cc6634C0532925a3b8D4C1C4e3153DC',
-        value: '1000000000000000000', // 1 SEI
-        blockNumber: 5234567,
-        timestamp: Date.now() - 3600000, // 1 hour ago
-        status: 'success',
-        gasUsed: '21000',
-        type: 'transfer'
-      };
-      
-      return mockTransaction;
+      // MCP Server integration not yet implemented
+      throw new Error('MCP Server integration not yet implemented. Please use block explorer for transaction details.');
     } catch (error) {
       console.error('❌ MCP: Failed to get transaction:', error);
       throw new Error('Failed to retrieve transaction');
@@ -257,20 +223,8 @@ export class MCPService {
       
       console.log('🧱 MCP: Getting block:', number);
       
-      // For now, simulate block data
-      // TODO: Replace with actual MCP call
-      const mockBlock: Block = {
-        number,
-        hash: '0x' + Math.random().toString(16).substring(2, 66),
-        timestamp: Date.now() - (Math.random() * 3600000),
-        transactions: [
-          '0x' + Math.random().toString(16).substring(2, 66),
-          '0x' + Math.random().toString(16).substring(2, 66)
-        ],
-        gasUsed: '500000'
-      };
-      
-      return mockBlock;
+      // MCP Server integration not yet implemented
+      throw new Error('MCP Server integration not yet implemented. Please use block explorer for block details.');
     } catch (error) {
       console.error('❌ MCP: Failed to get block:', error);
       throw new Error('Failed to retrieve block');
@@ -339,25 +293,8 @@ export class MCPService {
       
       console.log('📈 MCP: Getting transaction history:', { address: targetAddress, limit });
       
-      // For now, simulate transaction history
-      // TODO: Replace with actual MCP calls
-      const mockHistory: Transaction[] = [];
-      
-      for (let i = 0; i < Math.min(limit, 5); i++) {
-        mockHistory.push({
-          hash: '0x' + Math.random().toString(16).substring(2, 66),
-          from: i % 2 === 0 ? targetAddress : '0x742d35Cc6634C0532925a3b8D4C1C4e3153DC',
-          to: i % 2 === 0 ? '0x742d35Cc6634C0532925a3b8D4C1C4e3153DC' : targetAddress,
-          value: (Math.random() * 10).toFixed(18),
-          blockNumber: 5234567 - i,
-          timestamp: Date.now() - (i * 3600000),
-          status: 'success',
-          gasUsed: '21000',
-          type: i % 3 === 0 ? 'token' : 'transfer'
-        });
-      }
-      
-      return mockHistory.sort((a, b) => b.timestamp - a.timestamp);
+      // MCP Server integration not yet implemented
+      throw new Error('MCP Server integration not yet implemented. Please use block explorer for transaction history.');
     } catch (error) {
       console.error('❌ MCP: Failed to get transaction history:', error);
       throw new Error('Failed to retrieve transaction history');

@@ -126,27 +126,8 @@ export class SeiTradingService {
     }
 
     try {
-      // In production, this would interact with DEX contracts
-      // For now, we'll simulate the transaction
-      const simulatedTx = {
-        hash: '0x' + Math.random().toString(16).substr(2, 64),
-        type: 'swap' as const,
-        status: 'pending' as const,
-        timestamp: new Date(),
-        amount: params.amountIn,
-        tokenSymbol: 'SEI', // Would be determined from token address
-        gasUsed: '21000',
-        gasPrice: '0.000000001'
-      };
-
-      this.addTransaction(simulatedTx);
-      
-      // Simulate confirmation after 3 seconds
-      setTimeout(() => {
-        this.updateTransactionStatus(simulatedTx.hash, 'confirmed');
-      }, 3000);
-
-      return simulatedTx.hash;
+      // Real DEX integration not yet implemented
+      throw new Error('DEX integration not yet implemented. Please use wallet connection for swaps.');
     } catch (error) {
       console.error('Swap execution failed:', error);
       throw error;
@@ -159,24 +140,10 @@ export class SeiTradingService {
       throw new Error('Wallet not connected');
     }
 
-    const simulatedTx = {
-      hash: '0x' + Math.random().toString(16).substr(2, 64),
-      type: 'add_liquidity' as const,
-      status: 'pending' as const,
-      timestamp: new Date(),
-      amount: amountA,
-      tokenSymbol: 'LP',
-      gasUsed: '45000',
-      gasPrice: '0.000000001'
-    };
+    // Real liquidity addition not yet implemented
+    throw new Error('Liquidity addition not yet implemented. Please use wallet connection for DeFi operations.');
 
-    this.addTransaction(simulatedTx);
-    
-    setTimeout(() => {
-      this.updateTransactionStatus(simulatedTx.hash, 'confirmed');
-    }, 5000);
-
-    return simulatedTx.hash;
+    // Method implementation removed - using error throw above
   }
 
   // Stake tokens
@@ -185,25 +152,10 @@ export class SeiTradingService {
       throw new Error('Wallet not connected');
     }
 
-    const simulatedTx = {
-      hash: '0x' + Math.random().toString(16).substr(2, 64),
-      type: 'stake' as const,
-      status: 'pending' as const,
-      timestamp: new Date(),
-      amount: amount,
-      tokenSymbol: 'SEI',
-      gasUsed: '35000',
-      gasPrice: '0.000000001'
-    };
+    // Real staking not yet implemented
+    throw new Error('Staking not yet implemented. Please use wallet connection for staking operations.');
 
-    this.addTransaction(simulatedTx);
-    this.updateProtocolInteraction(protocol, 'stake', amount);
-    
-    setTimeout(() => {
-      this.updateTransactionStatus(simulatedTx.hash, 'confirmed');
-    }, 4000);
-
-    return simulatedTx.hash;
+    // Method implementation removed - using error throw above
   }
 
   // Get current gas price
