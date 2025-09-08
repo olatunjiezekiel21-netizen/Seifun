@@ -75,16 +75,16 @@ export class AIChatDataService {
         const tokenInfo = await this.seiRegistry.getTokenInfo(token.address);
         if (tokenInfo) {
           this.watchedTokens.push({
-            id: `watch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: `watch_${Date.now()}_${this.generateId()}`,
             tokenAddress: token.address,
             tokenName: tokenInfo.name,
             tokenSymbol: tokenInfo.symbol,
             watchType: 'price',
             threshold: '$0.001',
             status: 'active',
-            alerts: Math.floor(Math.random() * 5),
-            createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-            lastAlert: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000) : undefined
+            alerts: 0, // Real alerts would be tracked from actual events
+            createdAt: new Date(),
+            lastAlert: undefined
           });
         }
       } catch (error) {
@@ -120,12 +120,12 @@ export class AIChatDataService {
         name: `Suspicious Actor #${index + 1}`,
         riskLevel: actor.riskLevel,
         flags: actor.flags,
-        firstSeen: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        lastActivity: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
+        firstSeen: new Date(),
+        lastActivity: new Date(),
         tokensAffected: actor.tokensAffected,
         totalDamage: actor.totalDamage,
         verificationStatus: 'confirmed',
-        reportCount: Math.floor(Math.random() * 10) + 1
+        reportCount: 1 // Real report count would be tracked from actual reports
       });
     }
   }
@@ -155,7 +155,7 @@ export class AIChatDataService {
     ];
 
     for (const [index, airdrop] of airdropData.entries()) {
-      const createdAt = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+      const createdAt = new Date();
       this.airdrops.push({
         id: `airdrop_${index + 1}`,
         tokenAddress: airdrop.tokenAddress,
@@ -198,7 +198,7 @@ export class AIChatDataService {
   async addTokenWatch(watch: Omit<TokenWatch, 'id' | 'createdAt'>): Promise<TokenWatch> {
     const newWatch: TokenWatch = {
       ...watch,
-      id: `watch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `watch_${Date.now()}_${this.generateId()}`,
       createdAt: new Date()
     };
     this.watchedTokens.push(newWatch);
@@ -219,7 +219,7 @@ export class AIChatDataService {
 
     // Create new bad actor report
     const newBadActor: BadActor = {
-      id: `bad_actor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `bad_actor_${Date.now()}_${this.generateId()}`,
       address,
       name: `Reported Actor`,
       riskLevel: flags.some(f => f.toLowerCase().includes('rug') || f.toLowerCase().includes('scam')) ? 'critical' : 'medium',
@@ -239,7 +239,7 @@ export class AIChatDataService {
   async createAirdrop(airdrop: Omit<Airdrop, 'id' | 'createdAt'>): Promise<Airdrop> {
     const newAirdrop: Airdrop = {
       ...airdrop,
-      id: `airdrop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `airdrop_${Date.now()}_${this.generateId()}`,
       createdAt: new Date()
     };
     this.airdrops.push(newAirdrop);
@@ -292,5 +292,9 @@ export class AIChatDataService {
       this.loadKnownBadActors(),
       this.loadKnownAirdrops()
     ]);
+  }
+
+  private generateId(): string {
+    return Math.random().toString(36).substr(2, 9);
   }
 }
