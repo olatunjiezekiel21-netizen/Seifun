@@ -24,45 +24,7 @@ function App() {
           <Route path="/app" element={<Landing />} />
           <Route path="/" element={<Landing />} />
           
-          {/* Launch Features - Coming Soon in Production */}
-          <Route path="/app/launch" element={
-            features.seifunLaunch ? (
-              <div className="min-h-screen app-bg-primary">
-                <AppHeaderSafe />
-                <SeifunLaunch />
-                <AppFooter />
-              </div>
-            ) : (
-              <div className="min-h-screen app-bg-primary">
-                <AppHeaderSafe />
-                <ComingSoon 
-                  feature="Seifun Launch" 
-                  description="Token launch platform with AI-powered analysis and automated deployment"
-                  estimatedLaunch="Q2 2024"
-                />
-                <AppFooter />
-              </div>
-            )
-          } />
-          <Route path="/app/seilist" element={
-            features.seilist ? (
-              <div className="min-h-screen app-bg-primary">
-                <AppHeaderSafe />
-                <SeiList />
-                <AppFooter />
-              </div>
-            ) : (
-              <div className="min-h-screen app-bg-primary">
-                <AppHeaderSafe />
-                <ComingSoon 
-                  feature="SeiList" 
-                  description="Comprehensive token directory with advanced filtering and discovery"
-                  estimatedLaunch="Q2 2024"
-                />
-                <AppFooter />
-              </div>
-            )
-          } />
+          {/* Launch and SeiList temporarily hidden from routing; files retained for later enablement */}
           
           {/* Core Features - Always Available */}
           <Route path="/app/safechecker" element={

@@ -50,8 +50,8 @@ const Landing = () => {
               <Link to="/app/seilor" className="landing-nav-link">AI Agent</Link>
             </div>
 
-            <Link to="/app/launch" className="landing-btn landing-btn-primary">
-              Launch App
+            <Link to="/app/seilor" className="landing-btn landing-btn-primary">
+              Open Seilor 0
             </Link>
           </div>
         </div>
@@ -81,9 +81,9 @@ const Landing = () => {
               Seifun combines real-time blockchain awareness with RAG knowledge and secure execution. Chat naturally with Seilor 0, analyze tokens, and automate DeFi workflows—fast, safe, and intuitive.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/app/launch" className="launch-app-btn">
+              <Link to="/app/seilor" className="launch-app-btn">
                 <Rocket className="w-5 h-5 mr-2" />
-                Launch App
+                Open Seilor 0
               </Link>
               <Link to="#showcase" className="landing-btn landing-btn-secondary">
                 <Play className="w-5 h-5 mr-2" />
@@ -263,19 +263,11 @@ const Landing = () => {
             <p className="landing-text-lg mb-8 max-w-2xl mx-auto">
               Launch the app to chat with Seilor 0, run SafeChecker scans, and compose on-chain actions instantly.
             </p>
-            {features.seifunLaunch ? (
-              <Link to="/app/launch" className="launch-app-btn">
-                <Rocket className="w-5 h-5 mr-2" />
-                Launch App Now
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-            ) : (
-              <Link to="/app/launch" className="launch-app-btn opacity-75">
-                <Clock className="w-5 h-5 mr-2" />
-                Coming Soon
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-            )}
+            <Link to="/app/seilor" className="launch-app-btn">
+              <Rocket className="w-5 h-5 mr-2" />
+              Open Seilor 0
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Link>
           </div>
         </div>
       </section>
