@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { SeiTokenRegistry, SeiTokenInfo } from './seiTokenRegistry';
 import { nativeSeiTokenScanner, NativeSeiTokenScanResult } from './nativeSeiTokenScanner';
+import { nativeTokenAnalyzerService, NativeTokenAnalysisResult } from '../services/NativeTokenAnalyzerService';
 
 // ERC20 ABI for basic token functions
 const ERC20_ABI = [
@@ -145,10 +146,43 @@ export class TokenScanner {
   }
 
   /**
-   * Analyze native SEI token using the native scanner
+   * Analyze native SEI token using the enhanced analyzer service
    */
   private async analyzeNativeSeiToken(denom: string): Promise<TokenAnalysis> {
     try {
+      // Try the enhanced analyzer service first
+      const enhancedResult = await nativeTokenAnalyzerService.analyzeTokenWithContract(denom);
+      
+      // Convert enhanced result to TokenAnalysis format
+      return {
+        address: denom,
+        name: enhancedResult.name,
+        symbol: enhancedResult.symbol,
+        decimals: enhancedResult.decimals,
+        totalSupply: enhancedResult.totalSupply,
+        isVerified: enhancedResult.isVerified,
+        isHoneypot: enhancedResult.riskLevel === 'high' && enhancedResult.warnings.some(w => w.includes('scam')),
+        liquidityLocked: false, // Native tokens don't have liquidity locks
+        ownershipRenounced: enhancedResult.isNative, // Native tokens have no owner
+        holderCount: 0, // Would need to query separately
+        safetyScore: this.calculateEnhancedNativeSafetyScore(enhancedResult),
+        riskLevel: enhancedResult.riskLevel,
+        warnings: enhancedResult.warnings,
+        marketData: {
+          price: 0, // Would need to fetch from price APIs
+          marketCap: 0,
+          volume24h: 0,
+          priceChange24h: 0
+        },
+        logoUrl: enhancedResult.image || `/tokens/${enhancedResult.symbol.toLowerCase()}.png`,
+        lastScanned: new Date().toISOString(),
+        scanCount: 1,
+        riskFactors: enhancedResult.warnings
+      };
+    } catch (error) {
+      console.warn('Enhanced analyzer failed, falling back to basic scanner:', error);
+      
+      // Fallback to basic native scanner
       const nativeResult = await nativeSeiTokenScanner.scanToken(denom);
       
       // Convert native SEI result to TokenAnalysis format
@@ -177,14 +211,51 @@ export class TokenScanner {
         scanCount: 1,
         riskFactors: nativeResult.warnings
       };
-    } catch (error) {
-      console.error('Failed to analyze native SEI token:', error);
-      throw new Error(`Native SEI token analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Calculate safety score for native SEI tokens
+   * Calculate enhanced safety score for native SEI tokens
+   */
+  private calculateEnhancedNativeSafetyScore(result: NativeTokenAnalysisResult): number {
+    let score = 50; // Base score
+
+    // Native tokens are generally safer
+    if (result.isNative) {
+      score += 30;
+    }
+
+    // Verified tokens get bonus
+    if (result.isVerified) {
+      score += 20;
+    }
+
+    // Risk level adjustments
+    switch (result.riskLevel) {
+      case 'low':
+        score += 10;
+        break;
+      case 'medium':
+        score -= 10;
+        break;
+      case 'high':
+        score -= 30;
+        break;
+    }
+
+    // Warning penalties
+    score -= result.warnings.length * 5;
+
+    // Bonus for having metadata
+    if (result.description || result.website || result.twitter) {
+      score += 5;
+    }
+
+    return Math.max(0, Math.min(100, score));
+  }
+
+  /**
+   * Calculate safety score for native SEI tokens (fallback method)
    */
   private calculateNativeSafetyScore(result: NativeSeiTokenScanResult): number {
     let score = 50; // Base score

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Wallet, LogOut, User, Settings } from 'lucide-react';
+import { Menu, X, Wallet, LogOut, User, Settings, ChevronDown } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
 
 const AppHeader = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
   const location = useLocation();
   
   // Use ReOWN wallet functionality
@@ -68,34 +69,16 @@ const AppHeader = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
-              to="/app" 
-              className={`app-nav-link ${isActive('/app') ? 'active' : ''}`}
+              to="/app/safechecker" 
+              className={`app-nav-link ${isActive('/app/safechecker') ? 'active' : ''}`}
             >
               SafeChecker
-            </Link>
-                        <Link 
-              to="/app/seilist"
-              className={`app-nav-link ${isActive('/app/seilist') ? 'active' : ''}`}
-            >
-              SeiList
-            </Link>
-            <Link 
-              to="/app/seifun-launch" 
-              className={`app-nav-link ${isActive('/app/seifun-launch') ? 'active' : ''}`}
-            >
-              Seifun.launch
             </Link>
             <Link 
               to="/app/seilor" 
               className={`app-nav-link ${isActive('/app/seilor') ? 'active' : ''}`}
             >
               Seilor 0
-            </Link>
-            <Link 
-              to="/app/dev-plus" 
-              className={`app-nav-link ${isActive('/app/dev-plus') ? 'active' : ''}`}
-            >
-              Dev Plus
             </Link>
             <Link 
               to="/app/docs" 
@@ -182,31 +165,13 @@ const AppHeader = () => {
           <div className="md:hidden border-t app-border">
             <nav className="py-4 space-y-2">
               <Link 
-                to="/app" 
+                to="/app/safechecker" 
                 className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
+                  isActive('/app/safechecker') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 SafeChecker
-              </Link>
-              <Link 
-                to="/app/seilist" 
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/seilist') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                SeiList
-              </Link>
-              <Link 
-                to="/app/seifun-launch" 
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/seifun-launch') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Seifun.launch
               </Link>
               <Link 
                 to="/app/seilor" 
@@ -216,15 +181,6 @@ const AppHeader = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Seilor 0
-              </Link>
-              <Link 
-                to="/app/dev-plus" 
-                className={`block px-4 py-2 rounded-lg transition-colors ${
-                  isActive('/app/dev-plus') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dev Plus
               </Link>
               <Link 
                 to="/app/docs" 

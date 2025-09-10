@@ -49,6 +49,7 @@ const SafeChecker = () => {
 
     const progressSteps = [
       'Validating token address...',
+      'Detecting token type (EVM/Native)...',
       'Connecting to Sei network...',
       'Fetching token information...',
       'Loading market data and logo...',
@@ -245,15 +246,26 @@ const SafeChecker = () => {
         {/* Scanner Input */}
         <div className="app-card p-8 mb-8">
           <h2 className="app-heading-md mb-6">Token Scanner</h2>
+          <p className="app-text-muted mb-6">
+            Scan both EVM-based tokens and native SEI blockchain tokens for comprehensive security analysis.
+          </p>
           <div className="flex gap-4">
             <div className="flex-1">
               <input
                 type="text"
-                placeholder="Enter token contract address (0x...)..."
+                placeholder="Enter token address (0x... for EVM, usei/ibc/sei1 for native)..."
                 value={tokenAddress}
                 onChange={(e) => setTokenAddress(e.target.value)}
                 className="app-input"
               />
+              <div className="mt-2 text-xs app-text-muted">
+                <div className="flex items-center space-x-4">
+                  <span>• EVM tokens: 0x...</span>
+                  <span>• Native SEI: usei</span>
+                  <span>• IBC tokens: ibc/...</span>
+                  <span>• CW20 tokens: sei1...</span>
+                </div>
+              </div>
             </div>
             <button
               onClick={scanToken}
@@ -300,6 +312,52 @@ const SafeChecker = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Example Tokens */}
+        <div className="app-card p-6 mb-8">
+          <h3 className="app-heading-sm mb-4">Example Tokens to Scan</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 app-bg-tertiary rounded-lg">
+              <h4 className="app-text-primary font-medium mb-2">Native SEI Tokens</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="app-text-muted">Native SEI:</span>
+                  <button
+                    onClick={() => setTokenAddress('usei')}
+                    className="text-blue-500 hover:text-blue-600 font-mono text-xs"
+                  >
+                    usei
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="app-text-muted">IBC Token:</span>
+                  <span className="app-text-muted text-xs">ibc/...</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="app-text-muted">CW20 Token:</span>
+                  <span className="app-text-muted text-xs">sei1...</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 app-bg-tertiary rounded-lg">
+              <h4 className="app-text-primary font-medium mb-2">EVM Tokens</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="app-text-muted">ERC20 Token:</span>
+                  <span className="app-text-muted text-xs">0x...</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="app-text-muted">Factory Contract:</span>
+                  <span className="app-text-muted text-xs">0x...</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="app-text-muted">NFT Contract:</span>
+                  <span className="app-text-muted text-xs">0x...</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Scan Results */}
@@ -376,19 +434,39 @@ const SafeChecker = () => {
                 <h3 className="app-heading-md mb-4">Token Information</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
-                    <span className="app-text-muted font-medium">Contract Address</span>
+                    <span className="app-text-muted font-medium">
+                      {scanResult.address.startsWith('0x') ? 'Contract Address' : 'Token Denom'}
+                    </span>
                     <div className="flex items-center space-x-2">
-                      <span className="app-text-primary font-mono text-sm">{scanResult.address.slice(0, 10)}...{scanResult.address.slice(-8)}</span>
-                      <button
-                        onClick={() => window.open(`https://seitrace.com/address/${scanResult.address}`, '_blank')}
-                        className="text-blue-500 hover:text-blue-600 p-1 rounded hover:bg-blue-50"
-                        title="View on Explorer"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
+                      <span className="app-text-primary font-mono text-sm">
+                        {scanResult.address.length > 20 
+                          ? `${scanResult.address.slice(0, 10)}...${scanResult.address.slice(-8)}`
+                          : scanResult.address
+                        }
+                      </span>
+                      {scanResult.address.startsWith('0x') && (
+                        <button
+                          onClick={() => window.open(`https://seitrace.com/address/${scanResult.address}`, '_blank')}
+                          className="text-blue-500 hover:text-blue-600 p-1 rounded hover:bg-blue-50"
+                          title="View on Explorer"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                   
+                  <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
+                    <span className="app-text-muted font-medium">Token Type</span>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      scanResult.address.startsWith('0x') 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {scanResult.address.startsWith('0x') ? 'EVM Token' : 'Native SEI Token'}
+                    </span>
+                  </div>
+
                   <div className="flex justify-between items-center p-4 app-bg-tertiary rounded-lg border border-gray-100">
                     <span className="app-text-muted font-medium">Decimals</span>
                     <span className="app-text-primary font-medium">{scanResult.decimals || 18}</span>
