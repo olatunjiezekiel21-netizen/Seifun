@@ -16,6 +16,7 @@ import {
   Clock
 } from 'lucide-react';
 import { getFeatureFlags, isFeatureEnabled } from '../config/featureFlags';
+import LandingPreviewVideo from '../components/LandingPreviewVideo';
 
 const Landing = () => {
   const features = getFeatureFlags();
@@ -198,9 +199,9 @@ const Landing = () => {
                 <h3 className="landing-heading-md">Seilor 0 — Conversational Agent</h3>
                 <span className="text-xs landing-text-muted">Realtime + RAG</span>
               </div>
-              <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-6">
-                <div className="h-64 w-full rounded-lg bg-slate-800/70 border border-slate-700/50 flex items-center justify-center text-slate-400">
-                  AI Chat UI Preview
+              <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-0 overflow-hidden">
+                <div className="h-64 w-full">
+                  <LandingPreviewVideo src="/media/seilor-preview.webm" poster="/media/seilor-poster.jpg" className="h-full w-full" />
                 </div>
               </div>
               <div className="mt-4 flex gap-3">
@@ -214,9 +215,9 @@ const Landing = () => {
                 <h3 className="landing-heading-md">SafeChecker — Token Security</h3>
                 <span className="text-xs landing-text-muted">Audits + Warnings</span>
               </div>
-              <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-6">
-                <div className="h-64 w-full rounded-lg bg-slate-800/70 border border-slate-700/50 flex items-center justify-center text-slate-400">
-                  Security Scanner Preview
+              <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-0 overflow-hidden">
+                <div className="h-64 w-full">
+                  <LandingPreviewVideo src="/media/safechecker-preview.webm" poster="/media/safechecker-poster.jpg" className="h-full w-full" />
                 </div>
               </div>
               <div className="mt-4 flex gap-3">
