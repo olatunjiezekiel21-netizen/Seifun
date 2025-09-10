@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { SeiTokenRegistry, SeiTokenInfo } from './seiTokenRegistry';
+import { nativeSeiTokenScanner, NativeSeiTokenScanResult } from './nativeSeiTokenScanner';
 
 // ERC20 ABI for basic token functions
 const ERC20_ABI = [
@@ -122,6 +123,104 @@ export class TokenScanner {
   constructor() {
     this.provider = new ethers.JsonRpcProvider(this.SEI_RPC_URL);
     this.seiRegistry = new SeiTokenRegistry(false); // Use mainnet for token scanning
+  }
+
+  /**
+   * Detect if a token is native SEI or EVM-based
+   */
+  private isNativeSeiToken(address: string): boolean {
+    // Native SEI tokens have specific patterns:
+    // - Native SEI: 'usei'
+    // - IBC tokens: start with 'ibc/'
+    // - CW20 tokens: start with 'sei1' (CosmWasm addresses)
+    // - Other native tokens: various patterns
+    
+    return (
+      address === 'usei' ||
+      address.startsWith('ibc/') ||
+      address.startsWith('sei1') ||
+      address.startsWith('factory/') ||
+      address.includes('/') // Most native tokens have '/' in their denom
+    );
+  }
+
+  /**
+   * Analyze native SEI token using the native scanner
+   */
+  private async analyzeNativeSeiToken(denom: string): Promise<TokenAnalysis> {
+    try {
+      const nativeResult = await nativeSeiTokenScanner.scanToken(denom);
+      
+      // Convert native SEI result to TokenAnalysis format
+      return {
+        address: denom,
+        name: nativeResult.tokenInfo.name,
+        symbol: nativeResult.tokenInfo.symbol,
+        decimals: nativeResult.tokenInfo.decimals,
+        totalSupply: nativeResult.tokenInfo.totalSupply,
+        isVerified: nativeResult.isVerified,
+        isHoneypot: nativeResult.isScam,
+        liquidityLocked: false, // Native tokens don't have liquidity locks
+        ownershipRenounced: nativeResult.tokenInfo.isNative, // Native tokens have no owner
+        holderCount: 0, // Would need to query separately
+        safetyScore: this.calculateNativeSafetyScore(nativeResult),
+        riskLevel: nativeResult.riskLevel,
+        warnings: nativeResult.warnings,
+        marketData: {
+          price: 0, // Would need to fetch from price APIs
+          marketCap: 0,
+          volume24h: 0,
+          priceChange24h: 0
+        },
+        logoUrl: `/tokens/${nativeResult.tokenInfo.symbol.toLowerCase()}.png`,
+        lastScanned: new Date().toISOString(),
+        scanCount: 1,
+        riskFactors: nativeResult.warnings
+      };
+    } catch (error) {
+      console.error('Failed to analyze native SEI token:', error);
+      throw new Error(`Native SEI token analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Calculate safety score for native SEI tokens
+   */
+  private calculateNativeSafetyScore(result: NativeSeiTokenScanResult): number {
+    let score = 50; // Base score
+
+    // Native tokens are generally safer
+    if (result.tokenInfo.isNative) {
+      score += 30;
+    }
+
+    // Verified tokens get bonus
+    if (result.isVerified) {
+      score += 20;
+    }
+
+    // Scam tokens get penalty
+    if (result.isScam) {
+      score = 0;
+    }
+
+    // Risk level adjustments
+    switch (result.riskLevel) {
+      case 'low':
+        score += 10;
+        break;
+      case 'medium':
+        score -= 10;
+        break;
+      case 'high':
+        score -= 30;
+        break;
+    }
+
+    // Warning penalties
+    score -= result.warnings.length * 5;
+
+    return Math.max(0, Math.min(100, score));
   }
 
   // Validate if address is a valid Ethereum/Sei address
@@ -775,6 +874,12 @@ export class TokenScanner {
     async analyzeToken(address: string): Promise<TokenAnalysis> {
     try {
       console.log(`🔍 Starting enhanced analysis for: ${address}`);
+      
+      // Check if this is a native SEI token
+      if (this.isNativeSeiToken(address)) {
+        console.log(`🌊 Detected native SEI token: ${address}`);
+        return await this.analyzeNativeSeiToken(address);
+      }
       
       // Get basic token information with enhanced validation
       const basicInfo = await this.getTokenBasicInfo(address);

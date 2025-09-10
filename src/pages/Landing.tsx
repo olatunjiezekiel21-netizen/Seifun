@@ -12,10 +12,14 @@ import {
   CheckCircle,
   Play,
   Code,
-  Gift
+  Gift,
+  Clock
 } from 'lucide-react';
+import { getFeatureFlags, isFeatureEnabled } from '../config/featureFlags';
 
 const Landing = () => {
+  const features = getFeatureFlags();
+  
   return (
     <div className="min-h-screen landing-bg-primary">
       {/* Navigation */}
@@ -45,9 +49,16 @@ const Landing = () => {
               <Link to="/app/seilor" className="landing-nav-link">AI Agent</Link>
             </div>
 
-            <Link to="/app/launch" className="landing-btn landing-btn-primary">
-              Launch App
-            </Link>
+            {features.seifunLaunch ? (
+              <Link to="/app/launch" className="landing-btn landing-btn-primary">
+                Launch App
+              </Link>
+            ) : (
+              <Link to="/app/launch" className="landing-btn landing-btn-primary opacity-75">
+                <Clock className="w-4 h-4 mr-2" />
+                Coming Soon
+              </Link>
+            )}
           </div>
         </div>
       </nav>
@@ -76,10 +87,17 @@ const Landing = () => {
               Seifun combines real-time blockchain awareness with RAG knowledge and secure execution. Chat naturally with Seilor 0, analyze tokens, and automate DeFi workflows—fast, safe, and intuitive.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link to="/app/launch" className="launch-app-btn">
-                <Rocket className="w-5 h-5 mr-2" />
-                Launch App
-              </Link>
+              {features.seifunLaunch ? (
+                <Link to="/app/launch" className="launch-app-btn">
+                  <Rocket className="w-5 h-5 mr-2" />
+                  Launch App
+                </Link>
+              ) : (
+                <Link to="/app/launch" className="launch-app-btn opacity-75">
+                  <Clock className="w-5 h-5 mr-2" />
+                  Coming Soon
+                </Link>
+              )}
               <Link to="#showcase" className="landing-btn landing-btn-secondary">
                 <Play className="w-5 h-5 mr-2" />
                 See it in action
@@ -188,7 +206,7 @@ const Landing = () => {
       {/* Product Showcase */}
       <section id="showcase" className="landing-section">
         <div className="landing-container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
             <div className="landing-card p-6 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="landing-heading-md">Seilor 0 — Conversational Agent</h3>
@@ -218,6 +236,36 @@ const Landing = () => {
               <div className="mt-4 flex gap-3">
                 <Link to="/app/safechecker" className="landing-btn landing-btn-primary">Launch SafeChecker</Link>
                 <Link to="/app/docs" className="landing-btn landing-btn-secondary">Learn more</Link>
+              </div>
+            </div>
+
+            <div className="landing-card p-6 flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="landing-heading-md">SeiList — Token Directory</h3>
+                <span className="text-xs landing-text-muted">
+                  {features.seilist ? "Live" : "Coming Soon"}
+                </span>
+              </div>
+              <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-6">
+                <div className="h-64 w-full rounded-lg bg-slate-800/70 border border-slate-700/50 flex items-center justify-center text-slate-400">
+                  {features.seilist ? "Token Directory Preview" : "Coming Soon"}
+                </div>
+              </div>
+              <div className="mt-4 flex gap-3">
+                {features.seilist ? (
+                  <>
+                    <Link to="/app/seilist" className="landing-btn landing-btn-primary">Launch SeiList</Link>
+                    <Link to="/app/docs" className="landing-btn landing-btn-secondary">Learn more</Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/app/seilist" className="landing-btn landing-btn-primary opacity-75">
+                      <Clock className="w-4 h-4 mr-2" />
+                      Coming Soon
+                    </Link>
+                    <Link to="/app/docs" className="landing-btn landing-btn-secondary">Learn more</Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -256,11 +304,19 @@ const Landing = () => {
             <p className="landing-text-lg mb-8 max-w-2xl mx-auto">
               Launch the app to chat with Seilor 0, run SafeChecker scans, and compose on-chain actions instantly.
             </p>
-            <Link to="/app/launch" className="launch-app-btn">
-              <Rocket className="w-5 h-5 mr-2" />
-              Launch App Now
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
+            {features.seifunLaunch ? (
+              <Link to="/app/launch" className="launch-app-btn">
+                <Rocket className="w-5 h-5 mr-2" />
+                Launch App Now
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+            ) : (
+              <Link to="/app/launch" className="launch-app-btn opacity-75">
+                <Clock className="w-5 h-5 mr-2" />
+                Coming Soon
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -285,7 +341,9 @@ const Landing = () => {
                 <li><Link to="/app/safechecker" className="landing-text-secondary hover:landing-text-primary">SafeChecker</Link></li>
                 <li><Link to="/app/seilor" className="landing-text-secondary hover:landing-text-primary">Seilor 0</Link></li>
                 <li><Link to="/app/docs" className="landing-text-secondary hover:landing-text-primary">Docs</Link></li>
-                <li><Link to="/app/devplus" className="landing-text-secondary hover:landing-text-primary">Dev Plus</Link></li>
+                {features.devPlus && (
+                  <li><Link to="/app/devplus" className="landing-text-secondary hover:landing-text-primary">Dev Plus</Link></li>
+                )}
               </ul>
             </div>
             
