@@ -44,7 +44,11 @@ function App() {
               </div>
             )
           } />
+<<<<<<< HEAD
           
+=======
+
+>>>>>>> origin/development/ai-enhancements
           <Route path="/app/seilist" element={
             features.seilist ? (
               <div className="min-h-screen app-bg-primary">
@@ -78,7 +82,6 @@ function App() {
             <div className="min-h-screen app-bg-primary">
               <AppHeaderSafe />
               <Seilor />
-              <AppFooter />
             </div>
           } />
           

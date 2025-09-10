@@ -376,36 +376,19 @@ export class ChatBrain {
   // Generate conversational response
   private generateConversationalResponse(intentResult: any, actionResponse: any): ChatResponse {
     if (!actionResponse.success) {
+      // Enhanced error responses with natural language
+      const errorMessage = this.generateNaturalErrorResponse(actionResponse.response, intentResult.intent);
       return {
-        message: `❌ I couldn't complete that action: ${actionResponse.response}\n\nPlease try again or ask for help.`,
+        message: errorMessage,
         success: false,
         intent: intentResult.intent,
         confidence: intentResult.confidence,
-        suggestions: ['Try again', 'Ask for help', 'Check your input']
+        suggestions: this.generateSuggestions(intentResult.intent)
       };
     }
     
-    // Generate contextual response based on intent
-    let message = actionResponse.response;
-    
-    // Add contextual information (avoid claiming execution unless actually executed)
-    switch (intentResult.intent) {
-      case IntentType.TOKEN_SCAN:
-        message += `\n\n🔍 This token has been analyzed for security and risk factors.`;
-        break;
-      case IntentType.BALANCE_CHECK:
-        message += `\n\n💰 Your wallet balance is current and up-to-date.`;
-        break;
-      case IntentType.STAKE_TOKENS:
-        message += `\n\n🥩 Staking initiated on Silo Protocol.`;
-        break;
-      case IntentType.LEND_TOKENS:
-        message += `\n\n🏦 Lending initiated on Takara Finance.`;
-        break;
-      case IntentType.OPEN_POSITION:
-        message += `\n\n📈 Position opened on Citrex Protocol.`;
-        break;
-    }
+    // Generate natural language response based on intent
+    const message = this.generateNaturalResponse(intentResult.intent, actionResponse.response, intentResult.confidence);
     
     return {
       message,
@@ -414,6 +397,97 @@ export class ChatBrain {
       confidence: intentResult.confidence,
       suggestions: this.generateSuggestions(intentResult.intent)
     };
+  }
+
+  // Generate natural language responses
+  private generateNaturalResponse(intent: IntentType, actionResponse: string, confidence: number): string {
+    const responses = {
+      [IntentType.CONVERSATION]: [
+        "I'm here to help you with DeFi on Sei! What would you like to explore today?",
+        "Great question! Let me assist you with that.",
+        "I understand what you're asking. Here's what I can help you with:",
+        "Thanks for reaching out! I'm ready to help with your DeFi needs.",
+        "I'm Seilor 0, your AI assistant for DeFi on Sei! I can help you with staking, swapping, creating tokens, and more.",
+        "I'm here to help you navigate the world of DeFi on Sei! What would you like to learn about?"
+      ],
+      [IntentType.TOKEN_SCAN]: [
+        "🔍 I've analyzed that token for you. Here's what I found:",
+        "🔍 Let me scan that token and provide you with a security assessment:",
+        "🔍 Running a comprehensive security scan on that token..."
+      ],
+      [IntentType.BALANCE_CHECK]: [
+        "💰 Let me check your wallet balance for you:",
+        "💰 Here's your current wallet status:",
+        "💰 Checking your portfolio balance..."
+      ],
+      [IntentType.SYMPHONY_SWAP]: [
+        "🔄 I'll help you with that swap. Here are the details:",
+        "🔄 Processing your swap request:",
+        "🔄 Let me set up that token exchange for you:"
+      ],
+      [IntentType.STAKE_TOKENS]: [
+        "🥩 I'll help you stake your tokens for yield:",
+        "🥩 Setting up staking for you:",
+        "🥩 Let me configure your staking position:",
+        "🥩 Great! Staking is a great way to earn passive income on Sei. I can help you stake your tokens with validators."
+      ],
+      [IntentType.LEND_TOKENS]: [
+        "🏦 I'll help you lend your tokens:",
+        "🏦 Setting up lending for you:",
+        "🏦 Let me configure your lending position:"
+      ],
+      [IntentType.OPEN_POSITION]: [
+        "📈 I'll help you open a trading position:",
+        "📈 Setting up your position:",
+        "📈 Let me configure your trading position:"
+      ],
+      [IntentType.WALLET_INFO]: [
+        "👛 Here's your wallet information:",
+        "👛 Let me check your wallet details:",
+        "👛 Here's what I found about your wallet:"
+      ]
+    };
+
+    const intentResponses = responses[intent] || responses[IntentType.CONVERSATION];
+    const baseResponse = intentResponses[Math.floor(Math.random() * intentResponses.length)];
+    
+    return `${baseResponse}\n\n${actionResponse}`;
+  }
+
+  // Generate natural error responses
+  private generateNaturalErrorResponse(errorMessage: string, intent: IntentType): string {
+    const errorResponses = {
+      [IntentType.SYMPHONY_SWAP]: [
+        "I'd be happy to help you swap tokens! However, I need a bit more information to make sure I get it right for you.",
+        "I want to make sure I execute your swap correctly. Could you provide more details?",
+        "Let me help you with that swap, but I need some additional information first."
+      ],
+      [IntentType.STAKE_TOKENS]: [
+        "I'd love to help you stake your tokens! To get started, I need to know which tokens you'd like to stake.",
+        "Staking is a great way to earn yield! Let me know which tokens you want to stake and I'll help you set it up.",
+        "I'm ready to help you stake, but I need a bit more information to proceed."
+      ],
+      [IntentType.LEND_TOKENS]: [
+        "Lending can be a great way to earn passive income! I just need a few more details to help you get started.",
+        "I'd be happy to help you lend your tokens! Could you provide more specific information?",
+        "Let me help you set up lending, but I need some additional details first."
+      ],
+      [IntentType.OPEN_POSITION]: [
+        "I'd love to help you open a trading position! To get started, I need to know which asset you want to trade.",
+        "Trading can be exciting! Let me know what you'd like to trade and I'll help you set up your position.",
+        "I'm ready to help you trade, but I need a bit more information to proceed safely."
+      ]
+    };
+
+    const intentErrorResponses = errorResponses[intent] || [
+      "I'd be happy to help you with that! However, I need a bit more information to assist you properly.",
+      "I want to make sure I help you correctly. Could you provide more specific details?",
+      "Let me help you with that, but I need some additional information first."
+    ];
+
+    const baseErrorResponse = intentErrorResponses[Math.floor(Math.random() * intentErrorResponses.length)];
+    
+    return `${baseErrorResponse}\n\n${errorMessage}`;
   }
   
   // Generate contextual suggestions

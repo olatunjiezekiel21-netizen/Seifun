@@ -19,9 +19,12 @@
     "compile": "npx hardhat compile"
   },
   "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.34.0",
+    "@cosmjs/proto-signing": "^0.34.0",
     "@cosmjs/stargate": "^0.34.0",
     "@langchain/core": "^0.3.68",
     "@langchain/openai": "^0.6.7",
+    "@modelcontextprotocol/sdk": "^1.17.4",
     "@netlify/functions": "^2.8.0",
     "@reown/appkit": "^1.7.18",
     "@reown/appkit-adapter-ethers": "^1.7.18",
@@ -64,11 +67,18 @@
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
     "postcss": "^8.4.35",
-     "sass": "^1.79.4",
+    "sass": "^1.79.4",
     "tailwindcss": "^3.4.1",
     "terser": "^5.43.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2"
+    "vite": "^5.4.2",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "memfs": "^3.4.13",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.5"
   }
 }

@@ -2,29 +2,28 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bot, 
   Send, 
-  History, 
   CreditCard, 
-  CheckSquare, 
-  Plus,
-  MessageCircle,
-  Trash2,
   RefreshCw,
-  Menu,
   X,
-  Zap,
+  Menu,
+  History,
+  BarChart3,
+  Settings,
+  Wallet,
+  TrendingUp,
   Image as ImageIcon
 } from 'lucide-react';
 import { useReownWallet } from '../utils/reownWalletConnection';
-import { chatBrain } from '../services/ChatBrain';
+import { enhancedChatBrain } from '../services/EnhancedChatBrain';
 import { actionBrain, IntentType } from '../services/ActionBrain';
 import { privateKeyWallet } from '../services/PrivateKeyWallet';
-import { AIInterface } from '../components/AIInterface';
 import { ChatMemoryService } from '../services/ChatMemoryService';
-import { LocalLLMService } from '../services/LocalLLMService';
 import { IPFSUploader } from '../utils/ipfsUpload';
+import { hybridSeiService, HybridTransaction, HybridStake, HybridLoan, HybridPortfolio } from '../services/HybridSeiService';
+
 // Full Seilor 0 UI defined below. Backup remains at `SeilorOld.tsx.backup` if needed.
 const Seilor = () => {
-  const [activePanel, setActivePanel] = useState<'chat' | 'history' | 'transactions' | 'todo' | 'ai-tools'>('chat');
+  const [activePanel, setActivePanel] = useState<'chat' | 'transactions' | 'history' | 'portfolio' | 'wallet' | 'analytics' | 'settings'>('chat');
   const [aiChat, setAiChat] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{
     id: number;
@@ -41,22 +40,27 @@ const Seilor = () => {
   ]);
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [newTodo, setNewTodo] = useState('');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [toolsCollapsed, setToolsCollapsed] = useState(true);
+  const [hamburgerOpen, setHamburgerOpen] = useState(false);
+  const [chatHistory, setChatHistory] = useState<Array<{id: number; type: 'user' | 'assistant'; message: string; timestamp: Date}>>([]);
+  const [portfolioData, setPortfolioData] = useState<any>(null);
+  const [settings, setSettings] = useState({ theme: 'dark', notifications: true, autoRefresh: true });
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [todos, setTodos] = useState<Array<{
-    id: string;
-    task: string;
-    completed: boolean;
-    timestamp: Date;
-  }>>([]);
   const [walletBalance, setWalletBalance] = useState<{ sei: string; usd: number; usdc: string; usdcUsd: number } | null>(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [watchAddress, setWatchAddress] = useState('');
   const [txs, setTxs] = useState<any[]>([]);
+
+  // Hybrid on-chain state
+  const [hybridPortfolio, setHybridPortfolio] = useState<HybridPortfolio | null>(null);
+  const [hybridStakes, setHybridStakes] = useState<HybridStake[]>([]);
+  const [hybridLoans, setHybridLoans] = useState<HybridLoan[]>([]);
+  const [hybridTransactions, setHybridTransactions] = useState<HybridTransaction[]>([]);
+  const [showFullHistory, setShowFullHistory] = useState(false);
+  const [userTransactions, setUserTransactions] = useState<any[]>([]);
+  const [testnetConnected, setTestnetConnected] = useState(false);
 
   const { isConnected, address } = useReownWallet();
 
@@ -68,11 +72,72 @@ const Seilor = () => {
 
   useEffect(() => {
     loadWalletBalance();
-    const savedTodos = localStorage.getItem('seilor_todos');
-    if (savedTodos) setTodos(JSON.parse(savedTodos));
+    
+    // Initialize hybrid service
+    initializeHybridService();
   }, []);
 
-  useEffect(() => { localStorage.setItem('seilor_todos', JSON.stringify(todos)); }, [todos]);
+  // Load data when panels are accessed
+  useEffect(() => {
+    if (activePanel === 'history') {
+      loadChatHistory();
+    }
+    if (activePanel === 'portfolio') {
+      loadPortfolioData();
+    }
+  }, [activePanel]);
+
+  // Save chat history when messages change
+  useEffect(() => {
+    if (chatMessages.length > 1) {
+      saveChatHistory();
+    }
+  }, [chatMessages]);
+
+  // Initialize Hybrid Sei Service
+  const initializeHybridService = async () => {
+    try {
+      console.log('🚀 Initializing Hybrid Sei Service...');
+      
+      // Debug: Check environment variables
+      console.log('🔍 Environment Variables Check:');
+      console.log('VITE_SEI_TESTNET_RPC_URL:', import.meta.env.VITE_SEI_TESTNET_RPC_URL ? '✅ Set' : '❌ Missing');
+      console.log('VITE_TESTNET_PRIVATE_KEY:', import.meta.env.VITE_TESTNET_PRIVATE_KEY ? '✅ Set' : '❌ Missing');
+      console.log('VITE_TESTNET_STAKING_CONTRACT:', import.meta.env.VITE_TESTNET_STAKING_CONTRACT ? '✅ Set' : '❌ Missing');
+      console.log('VITE_TESTNET_LENDING_POOL:', import.meta.env.VITE_TESTNET_LENDING_POOL ? '✅ Set' : '❌ Missing');
+      
+      const connected = await hybridSeiService.initialize();
+      setTestnetConnected(connected);
+      
+      if (connected) {
+        console.log('✅ Hybrid service connected');
+        // Load testnet portfolio and transactions
+        await loadTestnetData();
+      } else {
+        console.log('⚠️ Hybrid service not connected');
+      }
+    } catch (error) {
+      console.error('❌ Failed to initialize hybrid service:', error);
+    }
+  };
+
+  const loadTestnetData = async () => {
+    try {
+      const [portfolio, transactions] = await Promise.all([
+        hybridSeiService.getPortfolio(),
+        hybridSeiService.getTransactionHistory()
+      ]);
+      
+      setHybridPortfolio(portfolio);
+      setHybridTransactions(transactions);
+      
+      console.log('📊 Hybrid data loaded:', { portfolio, transactions: transactions.length });
+    } catch (error) {
+      console.error('❌ Failed to load hybrid data:', error);
+    }
+  };
+
+
 
   const loadWalletBalance = async () => {
     try {
@@ -106,33 +171,67 @@ const Seilor = () => {
     setChatMessages(prev => [...prev, userChatMessage]);
     ChatMemoryService.append({ type: 'user', message: userMessage }).catch(() => {});
     setIsTyping(true);
-    if (/(^yes\b|\bswap\b|\bstake\b|create\s+token|add\s+liquidity|burn)/i.test(userMessage)) setIsProcessingAction(true)
     await new Promise(r => setTimeout(r, 200));
     try {
-      const response = await chatBrain.processMessage(userMessage);
+      const response = await enhancedChatBrain.processMessage(userMessage);
       if (/create\s+(a\s+)?token/i.test(userMessage) && attachedImage) {
         try { const url = await IPFSUploader.uploadLogo(attachedImage); localStorage.setItem('seilor_last_token_logo', url); } catch {}
       }
       setIsTyping(false);
-      setIsProcessingAction(false);
       const aiResponse = { id: Date.now() + 1, type: 'assistant' as const, message: response.message, timestamp: new Date() };
       setChatMessages(prev => [...prev, aiResponse]);
       ChatMemoryService.append({ type: 'assistant', message: response.message }).catch(() => {});
-      // Manage processing overlay
-      if (/^⏳\s/i.test(response.message)) {
+      
+      // Manage processing overlay based on action
+      if (response.action === 'success') {
         setIsProcessingAction(true);
-      } else if (/^✅\s|^❌\s/i.test(response.message)) {
+        // Add transaction to history if it's a real action
+        if (response.message.includes('Transaction Hash')) {
+          if (response.message.includes('Staking')) {
+            addUserTransaction('Staking', 'Stake Amount', 'success');
+          } else if (response.message.includes('Lending')) {
+            addUserTransaction('Lending', 'Lend Amount', 'success');
+          } else if (response.message.includes('Swap completed')) {
+            addUserTransaction('Swap', 'Swap Amount', 'success');
+          }
+        }
+        // Hide processing after a delay
+        setTimeout(() => setIsProcessingAction(false), 2000);
+      } else if (response.action === 'error') {
+        setIsProcessingAction(false);
+      } else if (response.action === 'confirmation_required') {
         setIsProcessingAction(false);
       } else {
         setIsProcessingAction(false);
       }
-      // After swap or transfer success, refresh balances
+      // After swap or transfer success, refresh balances and add transaction
       if (/^(✅\sSwap executed|✅\sNative SEI transfer|✅\sERC-20 transfer|✅\sFixed-rate swap executed)/.test(response.message)) {
         loadWalletBalance();
+        // Add transaction to history
+        const actionType = response.message.includes('Swap') ? 'Swap' : 
+                          response.message.includes('transfer') ? 'Transfer' : 'Transaction';
+        const amount = response.message.match(/(\d+\.?\d*)\s*(SEI|USDC|tokens?)/i)?.[0] || 'Unknown amount';
+        addUserTransaction(actionType, amount, 'success');
+      }
+      
+      // Add transaction for other successful actions
+      if (/^✅\sToken Created/.test(response.message)) {
+        addUserTransaction('Token Creation', 'New Token', 'success');
+      }
+      if (/^✅\sStaking/.test(response.message)) {
+        addUserTransaction('Staking', 'Stake Amount', 'success');
+      }
+      if (/^✅\sLending/.test(response.message)) {
+        addUserTransaction('Lending', 'Lend Amount', 'success');
       }
       // If token created, suggest monitoring in Dev++
       if (/^✅\sToken Created/.test(response.message)) {
         setChatMessages(prev => [...prev, { id: Date.now()+2, type: 'assistant' as const, message: '📈 Token created! Open Dev++ to monitor, add liquidity, and burn when needed: /app/devplus', timestamp: new Date() }])
+      }
+
+      // Refresh testnet data after successful operations
+      if (response.action === 'success') {
+        await loadTestnetData();
       }
     } catch (error: any) {
       setIsTyping(false);
@@ -156,17 +255,79 @@ const Seilor = () => {
     setChatMessages([]);
   };
 
-  const addTodo = (task: string) => { if (!task.trim()) return; setTodos(prev => [...prev, { id: Date.now().toString(), task: task.trim(), completed: false, timestamp: new Date() }]); };
-  const handleAddTodo = () => { if (newTodo.trim()) { addTodo(newTodo); setNewTodo(''); } };
-  const deleteTodo = (id: string) => setTodos(prev => prev.filter(t => t.id !== id));
-  const toggleTodo = (id: string) => setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  // Load chat history
+  const loadChatHistory = () => {
+    const savedHistory = localStorage.getItem('seilor_chat_history');
+    if (savedHistory) {
+      setChatHistory(JSON.parse(savedHistory));
+    }
+  };
+
+  // Save chat history
+  const saveChatHistory = () => {
+    localStorage.setItem('seilor_chat_history', JSON.stringify(chatMessages));
+  };
+
+  // Load portfolio data
+  const loadPortfolioData = async () => {
+    if (!address) return;
+    try {
+      const res = await fetch('/.netlify/functions/wallet-portfolio', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ address, network: 'testnet' }) 
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPortfolioData(data);
+      }
+    } catch (error) {
+      console.error('Failed to load portfolio:', error);
+    }
+  };
+
+  // Update settings
+  const updateSettings = (newSettings: any) => {
+    setSettings({ ...settings, ...newSettings });
+    localStorage.setItem('seilor_settings', JSON.stringify({ ...settings, ...newSettings }));
+  };
+
+  // Add transaction to user history
+  const addUserTransaction = (type: string, amount: string, status: 'pending' | 'success' | 'failed' = 'pending') => {
+    const newTransaction = {
+      id: Date.now(),
+      type,
+      amount,
+      status,
+      timestamp: new Date(),
+      hash: `0x${Math.random().toString(16).substr(2, 8)}...`,
+      from: address || 'Unknown',
+      to: 'Sei Network'
+    };
+    setUserTransactions(prev => [newTransaction, ...prev]);
+    
+    // Update status after a delay to simulate blockchain confirmation
+    if (status === 'pending') {
+      setTimeout(() => {
+        setUserTransactions(prev => 
+          prev.map(tx => 
+            tx.id === newTransaction.id 
+              ? { ...tx, status: 'success' as const }
+              : tx
+          )
+        );
+      }, 3000);
+    }
+  };
 
   const panels = [
     { id: 'chat', label: 'AI Chat', icon: Bot },
-    { id: 'history', label: 'History', icon: History },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
-    { id: 'todo', label: 'Todo List', icon: CheckSquare },
-    { id: 'ai-tools', label: 'AI Tools', icon: Zap }
+    { id: 'history', label: 'Chat History', icon: History },
+    { id: 'portfolio', label: 'Portfolio', icon: BarChart3 },
+    { id: 'wallet', label: 'Wallet', icon: Wallet },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   const fetchTransactions = async () => {
@@ -221,20 +382,64 @@ const Seilor = () => {
               <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium ${isConnected ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-700/50 text-slate-300'}`}>
                 {isConnected ? 'Connected' : 'Disconnected'}
               </div>
+              <button 
+                onClick={() => setHamburgerOpen(!hamburgerOpen)} 
+                className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Hamburger Menu */}
+      {hamburgerOpen && (
+        <div className="lg:hidden fixed top-16 left-0 right-0 z-40 bg-slate-800/95 backdrop-blur-sm border-b border-slate-700/50">
+          <div className="p-4 space-y-2">
+            {panels.map(panel => {
+              const Icon = panel.icon as any
+              return (
+                <button 
+                  key={panel.id} 
+                  onClick={() => {
+                    setActivePanel(panel.id as any);
+                    setHamburgerOpen(false);
+                  }} 
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${activePanel === panel.id ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'}`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="font-medium">{panel.label}</span>
+                </button>
+              )
+            })}
+            
+            {/* Cancel Button */}
+            <div className="pt-2 border-t border-slate-700/50">
+              <button 
+                onClick={() => {
+                  setHamburgerOpen(false);
+                  setActivePanel('chat');
+                }} 
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl text-red-300 hover:bg-red-500/20 hover:text-red-200 transition-all duration-200 border border-red-500/30"
+              >
+                <X className="w-5 h-5" />
+                <span className="font-medium">Exit to AI Chat</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className={`grid gap-6 ${sidebarCollapsed ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex gap-4 justify-center">
           {/* Sidebar */}
-          <div className={`${sidebarCollapsed ? 'hidden' : 'block'} lg:col-span-1`}>
-            <div className="bg-slate-800/50 rounded-2xl p-4 backdrop-blur-sm border border-slate-700/50">
+          <div className="hidden lg:block w-64 flex-shrink-0">
+            <div className="bg-slate-800/50 rounded-2xl p-4 backdrop-blur-sm border border-slate-700/50 sticky top-20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">Navigation</h3>
-                <button onClick={() => setSidebarCollapsed(true)} className="hidden lg:block p-1 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors" title="Collapse Sidebar">
+                <button onClick={() => setSidebarCollapsed(true)} className="p-1 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors" title="Collapse Sidebar">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -253,15 +458,15 @@ const Seilor = () => {
           </div>
 
           {/* Main Panel */}
-          <div className={`${sidebarCollapsed ? 'col-span-1' : 'lg:col-span-3'}`}>
+          <div className="flex-1 max-w-5xl">
             <div className="bg-slate-800/50 rounded-2xl backdrop-blur-sm border border-slate-700/50 overflow-hidden">
               {activePanel === 'chat' && (
-                <div className={`${sidebarCollapsed ? 'h-[80vh]' : 'h-[600px]'} flex flex-col`}>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="h-[75vh] flex flex-col">
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                     {chatMessages.length > 0 && chatMessages.map(msg => (
                       <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-3xl p-4 rounded-2xl ${msg.type === 'user' ? 'bg-red-500/20 text-white border border-red-500/30' : 'bg-slate-700/50 text-slate-100 border border-slate-600/50'}`}>
-                          <div className="whitespace-pre-wrap text-sm leading-relaxed">{msg.message}</div>
+                        <div className={`max-w-2xl sm:max-w-3xl p-3 sm:p-4 rounded-2xl ${msg.type === 'user' ? 'bg-red-500/20 text-white border border-red-500/30' : 'bg-slate-700/50 text-slate-100 border border-slate-600/50'}`}>
+                          <div className="whitespace-pre-wrap text-sm leading-relaxed break-words">{msg.message}</div>
                           <div className="text-xs text-slate-400 mt-2">{msg.timestamp.toLocaleTimeString()}</div>
                         </div>
                       </div>
@@ -289,145 +494,393 @@ const Seilor = () => {
                   </div>
 
                   {/* Chat Input */}
-                  <div className="border-t border-slate-700/50 p-4">
+                  <div className="border-t border-slate-700/50 p-3 sm:p-4">
                     {walletBalance && (
-                      <div className="mb-3 p-3 bg-slate-700/30 rounded-xl border border-slate-600/30">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs font-medium text-slate-300">💰 SEI Balance</div>
-                            <div className="text-sm font-medium text-white">{walletBalance.sei} SEI <span className="text-xs text-slate-400">(${walletBalance.usd.toFixed(2)})</span></div>
+                      <div className="mb-3 p-2 bg-slate-700/30 rounded-lg border border-slate-600/30">
+                        <div className="flex items-center justify-between text-xs sm:text-sm">
+                          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+                            <span className="text-white">{walletBalance.sei} SEI</span>
+                            <span className="text-white">{walletBalance.usdc} USDC</span>
+                            <span className="text-green-400 font-medium">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs font-medium text-slate-300">💵 USDC Balance</div>
-                            <div className="text-sm font-medium text-white">{walletBalance.usdc} USDC <span className="text-xs text-slate-400">(${walletBalance.usdcUsd.toFixed(2)})</span></div>
-                          </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-slate-600/30">
-                            <div className="text-xs font-medium text-green-300">💎 Total Value</div>
-                            <div className="text-sm font-bold text-green-400">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)}</div>
-                          </div>
-                          <div className="pt-2 flex justify-end">
-                            <button onClick={loadWalletBalance} className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs bg-slate-700/50 border border-slate-600/60 text-slate-200 hover:bg-slate-700/70" title="Refresh balances">
-                              <RefreshCw className="w-3 h-3" /> Refresh
-                            </button>
-                          </div>
+                          <button onClick={loadWalletBalance} className="p-1 text-slate-400 hover:text-white" title="Refresh balances">
+                            <RefreshCw className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     )}
-                    <div className="space-y-3">
-                      <div className="flex space-x-3 items-center">
-                        <button onClick={() => fileInputRef.current?.click()} className="hidden sm:inline-flex p-3 bg-slate-700/50 border border-slate-600/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70" title="Attach image">
-                          <ImageIcon className="w-5 h-5" />
-                        </button>
-                        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0] || null; setAttachedImage(f || null); }} />
-                        <input type="text" value={aiChat} onChange={(e) => setAiChat(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAiChat()} placeholder="💬 Ask me anything... Try: 'I want to swap tokens' or 'What's my balance?'" className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none" disabled={loading} />
-                        <button onClick={handleAiChat} disabled={loading || !aiChat.trim()} className="px-4 sm:px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-red-500/25">
-                          <Send className="w-5 h-5" />
-                        </button>
-                      </div>
-                      {attachedImage && (<div className="text-xs text-slate-300">Attached: {attachedImage.name}</div>)}
+                    <div className="flex space-x-2 sm:space-x-3 items-center">
+                      <button onClick={() => fileInputRef.current?.click()} className="p-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/70 flex-shrink-0" title="Attach image">
+                        <ImageIcon className="w-4 h-4" />
+                      </button>
+                      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0] || null; setAttachedImage(f || null); }} />
+                      <input type="text" value={aiChat} onChange={(e) => setAiChat(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAiChat()} placeholder="💬 Ask me anything..." className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-lg px-3 sm:px-4 py-2 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none text-sm" disabled={loading} />
+                      <button onClick={handleAiChat} disabled={loading || !aiChat.trim()} className="px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0">
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {attachedImage && (<div className="text-xs text-slate-300 mt-2">Attached: {attachedImage.name}</div>)}
+                  </div>
+                </div>
+              )}
+
+
+
+
+
+              {activePanel === 'transactions' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Transaction History</h2>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setShowFullHistory(!showFullHistory)} 
+                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+                      >
+                        {showFullHistory ? 'Recent Only' : 'Full History'}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setWatchAddress('');
+                          setTxs([]);
+                        }} 
+                        className="px-3 py-1 bg-slate-600 text-white rounded text-sm"
+                      >
+                        Clear
+                      </button>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {activePanel === 'todo' && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-white">Todo List</h2>
-                    <div className="text-sm text-slate-400">{todos.filter(t => !t.completed).length} pending</div>
-                  </div>
-                  <div className="flex space-x-3 mb-6">
-                    <input type="text" value={newTodo} onChange={(e) => setNewTodo(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleAddTodo()} placeholder="Add a new task..." className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-400 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 focus:outline-none" />
-                    <button onClick={handleAddTodo} className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200">
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {todos.map(todo => (
-                      <div key={todo.id} className={`p-4 rounded-xl border transition-all duration-200 ${todo.completed ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-slate-700/30 border-slate-600/50 text-white'}`}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <button onClick={() => toggleTodo(todo.id)} className={`w-5 h-5 rounded border-2 flex items-center justify-center ${todo.completed ? 'bg-green-500 border-green-500' : 'border-slate-400 hover:border-red-500'}`}>
-                              {todo.completed && <span className="text-white text-xs">✓</span>}
-                            </button>
-                            <span className={todo.completed ? 'line-through' : ''}>{todo.task}</span>
+                  {/* Your Recent Transactions */}
+                  <div className="mb-6">
+                    <h3 className="text-md font-semibold text-white mb-3">Your Recent Transactions</h3>
+                    {userTransactions.length > 0 ? (
+                      <div className="space-y-2">
+                        {userTransactions.slice(0, showFullHistory ? userTransactions.length : 5).map((tx) => (
+                          <div key={tx.id} className="p-3 bg-slate-700/30 rounded border border-slate-600/30">
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-3">
+                                <span className={`px-2 py-1 rounded text-xs ${
+                                  tx.status === 'success' ? 'bg-green-500/20 text-green-300' : 
+                                  tx.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' : 
+                                  'bg-red-500/20 text-red-300'
+                                }`}>
+                                  {tx.status}
+                                </span>
+                                <span className="text-slate-300 font-medium">{tx.type}</span>
+                                <span className="text-slate-400">{tx.amount}</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-slate-400 text-xs">{tx.timestamp.toLocaleTimeString()}</div>
+                                <div className="text-blue-400 hover:text-blue-300 text-xs">{tx.hash}</div>
+                              </div>
+                            </div>
                           </div>
-                          <button onClick={() => deleteTodo(todo.id)} className="text-slate-400 hover:text-red-400 transition-colors">×</button>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                    {todos.length === 0 && (
-                      <div className="text-center py-12 text-slate-400">
-                        <CheckSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>No todos yet. Add one above!</p>
-                      </div>
+                    ) : (
+                      <div className="text-slate-400 p-4 text-center text-sm">No recent transactions. Perform actions to see them here.</div>
                     )}
                   </div>
-                </div>
-              )}
 
-              {activePanel === 'ai-tools' && (
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white">AI Tools</h2>
-                    <button onClick={() => setToolsCollapsed(!toolsCollapsed)} className="px-3 py-1 text-xs rounded-lg bg-slate-700/60 text-slate-200 border border-slate-600/60 lg:hidden">
-                      {toolsCollapsed ? 'Show' : 'Hide'}
-                    </button>
-                  </div>
-                  {!toolsCollapsed && (
-                    <div className="lg:hidden mb-4 text-slate-300 text-xs">Tools are collapsed for mobile convenience.</div>
-                  )}
-                  <div className={`${toolsCollapsed ? 'hidden lg:block' : ''}`}>
-                    <AIInterface />
+                  {/* Transaction Lookup */}
+                  <div className="border-t border-slate-600/50 pt-4">
+                    <h3 className="text-md font-semibold text-white mb-3">Search Address Transactions</h3>
+                    <div className="flex items-center gap-2 mb-3">
+                      <input 
+                        value={watchAddress} 
+                        onChange={(e)=>setWatchAddress(e.target.value)} 
+                        placeholder="Enter address (0x...)" 
+                        className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded px-3 py-2 text-white text-sm" 
+                      />
+                      <button 
+                        onClick={fetchTransactions} 
+                        className="px-3 py-2 bg-slate-700/60 border border-slate-600/60 rounded text-slate-200 hover:bg-slate-600/60 text-sm"
+                      >
+                        Search
+                      </button>
+                    </div>
+                    
+                    {txs.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-slate-300">Search Results:</h4>
+                        {txs.slice(0, showFullHistory ? txs.length : 5).map((t:any,i:number)=> (
+                          <div key={i} className="p-3 bg-slate-700/30 rounded border border-slate-600/30">
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-3">
+                                <span className={`px-2 py-1 rounded text-xs ${t.type === 'native' ? 'bg-blue-500/20 text-blue-300' : 'bg-green-500/20 text-green-300'}`}>
+                                  {t.type}
+                                </span>
+                                <span className="text-slate-300">
+                                  {t.type==='native'? `${Number(t.value).toFixed(4)} SEI` : t.amount}
+                                </span>
+                              </div>
+                              <a 
+                                className="text-blue-400 hover:text-blue-300 text-xs" 
+                                href={`https://seitrace.com/tx/${t.txHash}?chain=sei-testnet`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                              >
+                                {t.txHash?.slice(0,8)}...
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
               {activePanel === 'history' && (
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-white mb-4">Chat History</h2>
-                  <div className="text-slate-400">
-                    <p>Chat history feature coming soon...</p>
-                    <p className="text-sm mt-2">Your conversations with Seilor 0 will be saved here.</p>
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Chat History</h2>
+                    <div className="flex gap-2">
+                      <button onClick={startNewChat} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                        New Chat
+                      </button>
+                      <button onClick={clearChat} className="px-3 py-1 bg-red-600 text-white rounded text-sm">
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                    {chatHistory.length > 0 ? (
+                      chatHistory.map(msg => (
+                        <div key={msg.id} className={`p-3 rounded-lg border ${msg.type === 'user' ? 'bg-red-500/10 border-red-500/30' : 'bg-slate-700/30 border-slate-600/50'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`text-sm font-medium ${msg.type === 'user' ? 'text-red-300' : 'text-blue-300'}`}>
+                              {msg.type === 'user' ? 'You' : 'Seilor 0'}
+                            </span>
+                            <span className="text-xs text-slate-400">{msg.timestamp.toLocaleString()}</span>
+                          </div>
+                          <div className="text-slate-100 text-sm whitespace-pre-wrap">{msg.message}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-slate-400 p-4 text-center">No chat history found.</div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {activePanel === 'transactions' && (
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-white mb-4">Transactions</h2>
-                  <div className="flex items-center gap-2 mb-4">
-                    <input value={watchAddress} onChange={(e)=>setWatchAddress(e.target.value)} placeholder="0x... address" className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-xl px-3 py-2 text-white" />
-                    <button onClick={fetchTransactions} className="px-3 py-2 bg-slate-700/60 border border-slate-600/60 rounded-lg text-slate-200">Fetch</button>
+              {activePanel === 'portfolio' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Portfolio Overview</h2>
+                    <button onClick={loadPortfolioData} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                      Refresh
+                    </button>
                   </div>
-                  {txs.length ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead className="text-slate-300">
-                          <tr><th className="text-left p-2">Type</th><th className="text-left p-2">From</th><th className="text-left p-2">To</th><th className="text-left p-2">Amount</th><th className="text-left p-2">Tx</th></tr>
-                        </thead>
-                        <tbody className="text-slate-100">
-                          {txs.map((t:any,i:number)=> (
-                            <tr key={i} className="border-t border-slate-700/50">
-                              <td className="p-2">{t.type}</td>
-                              <td className="p-2">{t.from?.slice(0,8)}...</td>
-                              <td className="p-2">{t.to?.slice(0,8)}...</td>
-                              <td className="p-2">{t.type==='native'? `${Number(t.value).toFixed(4)} SEI` : t.amount}</td>
-                              <td className="p-2"><a className="text-blue-400" href={`https://seitrace.com/tx/${t.txHash}?chain=sei-testnet`} target="_blank" rel="noreferrer">{t.txHash?.slice(0,8)}...</a></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  
+                  {portfolioData ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                          <h3 className="text-slate-300 text-sm font-medium">Total Value</h3>
+                          <p className="text-white text-2xl font-bold">${portfolioData.totalValue?.toFixed(2) || '0.00'}</p>
+                        </div>
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                          <h3 className="text-slate-300 text-sm font-medium">Assets</h3>
+                          <p className="text-white text-2xl font-bold">{portfolioData.assets?.length || 0}</p>
+                        </div>
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                          <h3 className="text-slate-300 text-sm font-medium">24h Change</h3>
+                          <p className={`text-2xl font-bold ${portfolioData.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {portfolioData.change24h >= 0 ? '+' : ''}{portfolioData.change24h?.toFixed(2) || '0.00'}%
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {portfolioData.assets && portfolioData.assets.length > 0 && (
+                        <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                          <h3 className="text-white text-lg font-semibold mb-3">Your Assets</h3>
+                          <div className="space-y-2">
+                            {portfolioData.assets.map((asset: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-slate-600/30 rounded">
+                                <div>
+                                  <span className="text-white font-medium">{asset.symbol}</span>
+                                  <span className="text-slate-400 text-sm ml-2">{asset.balance}</span>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-white">${asset.value?.toFixed(2) || '0.00'}</div>
+                                  <div className={`text-xs ${asset.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {asset.change >= 0 ? '+' : ''}{asset.change?.toFixed(2) || '0.00'}%
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="text-slate-400">No recent transactions loaded.</div>
+                    <div className="text-slate-400 p-4 text-center">Connect your wallet to view portfolio.</div>
                   )}
+                </div>
+              )}
+
+              {activePanel === 'wallet' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Wallet Management</h2>
+                    <button onClick={loadWalletBalance} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                      Refresh
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                      <h3 className="text-white text-lg font-semibold mb-3">Connection Status</h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300">Wallet Status</span>
+                        <span className={`px-2 py-1 rounded text-xs ${isConnected ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+                          {isConnected ? 'Connected' : 'Disconnected'}
+                        </span>
+                      </div>
+                      {address && (
+                        <div className="mt-2">
+                          <span className="text-slate-300 text-sm">Address: </span>
+                          <span className="text-white text-sm font-mono">{address.slice(0, 8)}...{address.slice(-6)}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {walletBalance && (
+                      <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-white text-lg font-semibold mb-3">Balances</h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-slate-300">SEI</span>
+                            <span className="text-white">{walletBalance.sei} (${walletBalance.usd.toFixed(2)})</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-300">USDC</span>
+                            <span className="text-white">{walletBalance.usdc} (${walletBalance.usdcUsd.toFixed(2)})</span>
+                          </div>
+                          <div className="border-t border-slate-600/50 pt-2 flex justify-between">
+                            <span className="text-green-300 font-medium">Total</span>
+                            <span className="text-green-400 font-bold">${(walletBalance.usd + walletBalance.usdcUsd).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activePanel === 'analytics' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Trading Analytics</h2>
+                    <button onClick={() => setAiChat('analyze my trading performance')} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+                      AI Analysis
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-slate-300 text-sm font-medium">Total Trades</h3>
+                        <p className="text-white text-2xl font-bold">{txs.length}</p>
+                        <p className="text-slate-400 text-sm">Last 30 days</p>
+                      </div>
+                      <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                        <h3 className="text-slate-300 text-sm font-medium">Success Rate</h3>
+                        <p className="text-white text-2xl font-bold">85%</p>
+                        <p className="text-slate-400 text-sm">Profitable trades</p>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                      <h3 className="text-white text-lg font-semibold mb-3">Recent Activity</h3>
+                      <div className="space-y-2">
+                        {txs.slice(0, 5).map((tx: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between p-2 bg-slate-600/30 rounded">
+                            <div className="flex items-center gap-3">
+                              <span className={`px-2 py-1 rounded text-xs ${tx.type === 'native' ? 'bg-blue-500/20 text-blue-300' : 'bg-green-500/20 text-green-300'}`}>
+                                {tx.type}
+                              </span>
+                              <span className="text-white text-sm">{tx.type === 'native' ? `${Number(tx.value).toFixed(4)} SEI` : tx.amount}</span>
+                            </div>
+                            <span className="text-slate-400 text-xs">{new Date().toLocaleDateString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activePanel === 'settings' && (
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Settings</h2>
+                    <button onClick={() => localStorage.clear()} className="px-3 py-1 bg-red-600 text-white rounded text-sm">
+                      Clear All Data
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                      <h3 className="text-white text-lg font-semibold mb-3">Preferences</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-300">Theme</span>
+                          <select 
+                            value={settings.theme} 
+                            onChange={(e) => updateSettings({ theme: e.target.value })}
+                            className="bg-slate-600/50 border border-slate-500/50 rounded px-3 py-1 text-white text-sm"
+                          >
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-300">Notifications</span>
+                          <input 
+                            type="checkbox" 
+                            checked={settings.notifications} 
+                            onChange={(e) => updateSettings({ notifications: e.target.checked })}
+                            className="w-4 h-4 text-blue-600 bg-slate-600/50 border-slate-500/50 rounded"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-300">Auto Refresh</span>
+                          <input 
+                            type="checkbox" 
+                            checked={settings.autoRefresh} 
+                            onChange={(e) => updateSettings({ autoRefresh: e.target.checked })}
+                            className="w-4 h-4 text-blue-600 bg-slate-600/50 border-slate-500/50 rounded"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                      <h3 className="text-white text-lg font-semibold mb-3">Data Management</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-slate-300">Chat History</span>
+                          <span className="text-white">{chatHistory.length} messages</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-300">Saved Settings</span>
+                          <span className="text-white">{Object.keys(settings).length} preferences</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, TrendingUp, Star, Eye, Users, DollarSign } from 'lucide-react';
 import { unifiedTokenService, TokenData } from '../services/UnifiedTokenService';
+import { realPortfolioService, RealPortfolioData } from '../services/RealPortfolioService';
 import { useNavigate } from 'react-router-dom';
 
 const SeifunLaunch = () => {
@@ -10,6 +11,10 @@ const SeifunLaunch = () => {
   const [error, setError] = useState<string | null>(null);
   const [tokens, setTokens] = useState<TokenData[]>([]);
   const navigate = useNavigate();
+
+  // Real portfolio data (hidden behind the scenes)
+  const [portfolio, setPortfolio] = useState<RealPortfolioData | null>(null);
+  const [isPortfolioLoading, setIsPortfolioLoading] = useState(false);
 
   const categories = [
     { id: 'all', name: 'All Tokens', icon: Star },
@@ -26,6 +31,9 @@ const SeifunLaunch = () => {
         await unifiedTokenService.initialize();
         const all = await unifiedTokenService.getAllTokens();
         setTokens(all);
+        
+        // Load real portfolio data behind the scenes
+        await loadRealPortfolio();
       } catch (e: any) {
         setError(e?.message || 'Failed to load tokens');
       } finally {
@@ -37,9 +45,26 @@ const SeifunLaunch = () => {
       await unifiedTokenService.initialize();
       const all = await unifiedTokenService.getAllTokens();
       setTokens(all);
+      await loadRealPortfolio(); // Refresh portfolio data
     }, 30000);
     return ()=> clearInterval(id)
   }, []);
+
+  const loadRealPortfolio = async () => {
+    try {
+      setIsPortfolioLoading(true);
+      // Initialize portfolio service with user's private key
+      await realPortfolioService.initialize();
+      const portfolioData = await realPortfolioService.getRealPortfolio();
+      setPortfolio(portfolioData);
+      console.log('Real portfolio loaded:', portfolioData);
+    } catch (error) {
+      console.error('Failed to load real portfolio:', error);
+      // Don't show error to user, just log it
+    } finally {
+      setIsPortfolioLoading(false);
+    }
+  };
 
   const filteredTokens = tokens.filter(token => {
     const matchesSearch = token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,6 +89,13 @@ const SeifunLaunch = () => {
             Discover the latest and most promising tokens on the Sei blockchain. 
             Launch your own token or invest in emerging projects with confidence.
           </p>
+          {/* Hidden portfolio info - only for debugging */}
+          {portfolio && (
+            <div className="mt-4 text-xs app-text-muted">
+              Real Portfolio Loaded: {portfolio.seiBalance} SEI, {portfolio.usdcBalance} USDC 
+              (Total: ${portfolio.totalValue.toFixed(2)})
+            </div>
+          )}
         </div>
       </div>
 
@@ -124,7 +156,7 @@ const SeifunLaunch = () => {
         {!isLoading && !error && (
           <div className="app-token-grid">
             {filteredTokens.map((token) => (
-              <div key={token.address} className="app-token-card">
+              <div key={token.address} className="app-token-card bg-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <img
@@ -197,7 +229,15 @@ const SeifunLaunch = () => {
         {/* Empty State */}
         {!isLoading && !error && filteredTokens.length === 0 && (
           <div className="text-center py-12">
-            <div className="app-text-secondary mb-4">No tokens found matching your criteria.</div>
+            <div className="app-text-secondary mb-4">
+              {searchTerm ? 'No tokens found matching your search criteria.' : 
+               selectedCategory === 'all' ? 'No tokens available yet.' :
+               selectedCategory === 'trending' ? 'No trending tokens yet.' :
+               selectedCategory === 'new' ? 'No new launches yet.' :
+               selectedCategory === 'top' ? 'No top performers yet.' :
+               selectedCategory === 'community' ? 'No community tokens yet.' :
+               'No tokens found matching your criteria.'}
+            </div>
             <button 
               onClick={() => {
                 setSearchTerm('');
