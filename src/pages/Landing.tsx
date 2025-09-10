@@ -49,16 +49,9 @@ const Landing = () => {
               <Link to="/app/seilor" className="landing-nav-link">AI Agent</Link>
             </div>
 
-            {features.seifunLaunch ? (
-              <Link to="/app/launch" className="landing-btn landing-btn-primary">
-                Launch App
-              </Link>
-            ) : (
-              <Link to="/app/launch" className="landing-btn landing-btn-primary opacity-75">
-                <Clock className="w-4 h-4 mr-2" />
-                Coming Soon
-              </Link>
-            )}
+            <Link to="/app/launch" className="landing-btn landing-btn-primary">
+              Launch App
+            </Link>
           </div>
         </div>
       </nav>
@@ -87,17 +80,10 @@ const Landing = () => {
               Seifun combines real-time blockchain awareness with RAG knowledge and secure execution. Chat naturally with Seilor 0, analyze tokens, and automate DeFi workflows—fast, safe, and intuitive.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {features.seifunLaunch ? (
-                <Link to="/app/launch" className="launch-app-btn">
-                  <Rocket className="w-5 h-5 mr-2" />
-                  Launch App
-                </Link>
-              ) : (
-                <Link to="/app/launch" className="launch-app-btn opacity-75">
-                  <Clock className="w-5 h-5 mr-2" />
-                  Coming Soon
-                </Link>
-              )}
+              <Link to="/app/launch" className="launch-app-btn">
+                <Rocket className="w-5 h-5 mr-2" />
+                Launch App
+              </Link>
               <Link to="#showcase" className="landing-btn landing-btn-secondary">
                 <Play className="w-5 h-5 mr-2" />
                 See it in action
@@ -239,35 +225,7 @@ const Landing = () => {
               </div>
             </div>
 
-            <div className="landing-card p-6 flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="landing-heading-md">SeiList — Token Directory</h3>
-                <span className="text-xs landing-text-muted">
-                  {features.seilist ? "Live" : "Coming Soon"}
-                </span>
-              </div>
-              <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-6">
-                <div className="h-64 w-full rounded-lg bg-slate-800/70 border border-slate-700/50 flex items-center justify-center text-slate-400">
-                  {features.seilist ? "Token Directory Preview" : "Coming Soon"}
-                </div>
-              </div>
-              <div className="mt-4 flex gap-3">
-                {features.seilist ? (
-                  <>
-                    <Link to="/app/seilist" className="landing-btn landing-btn-primary">Launch SeiList</Link>
-                    <Link to="/app/docs" className="landing-btn landing-btn-secondary">Learn more</Link>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/app/seilist" className="landing-btn landing-btn-primary opacity-75">
-                      <Clock className="w-4 h-4 mr-2" />
-                      Coming Soon
-                    </Link>
-                    <Link to="/app/docs" className="landing-btn landing-btn-secondary">Learn more</Link>
-                  </>
-                )}
-              </div>
-            </div>
+            {/* Removed SeiList token directory card per request */}
           </div>
         </div>
       </section>
