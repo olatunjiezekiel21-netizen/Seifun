@@ -1,6 +1,7 @@
 import { actionBrain, IntentType } from './ActionBrain';
 import { cambrianSeiAgent } from './CambrianSeiAgent';
 import { langChainSeiAgent, LangChainResponse } from './LangChainSeiAgent';
+import { chatGPTService } from './ChatGPTService';
 
 // Conversation Context
 interface ConversationContext {
@@ -125,8 +126,37 @@ export class ChatBrain {
               suggestions: this.generateSuggestions(userMessage)
             };
           }
+          // Fall through to ChatGPT if LangChain didn't handle successfully
         } catch (langChainError: any) {
           console.log('⚠️ LangChain agent failed, falling back to ActionBrain:', langChainError?.message || langChainError);
+        }
+
+        // ChatGPT fallback for rich conversational answers when no action required
+        try {
+          const system: any = { role: 'system', content: 'You are Seilor 0, an expert DeFi assistant on Sei. Be concise, actionable, and safe. If a request implies on-chain action, suggest the next step but do not fabricate transactions. Prefer Sei-specific context.' };
+          const user: any = { role: 'user', content: userMessage };
+          const gptMessage = await chatGPTService.reply([system, user]);
+          const assistantMessage: ChatMessage = {
+            id: Date.now() + 1,
+            type: 'assistant',
+            message: gptMessage,
+            timestamp: new Date(),
+            intent: IntentType.CONVERSATION,
+            confidence: 0.9,
+            actionSuccess: true
+          };
+          this.conversationHistory.push(assistantMessage);
+          this.context.sessionData!.successfulActions++;
+
+          return {
+            message: gptMessage,
+            success: true,
+            intent: IntentType.CONVERSATION,
+            confidence: 0.9,
+            suggestions: this.generateSuggestions(userMessage)
+          };
+        } catch (gptErr: any) {
+          console.log('⚠️ ChatGPT fallback failed, continue to ActionBrain:', gptErr?.message || gptErr);
         }
       }
       
