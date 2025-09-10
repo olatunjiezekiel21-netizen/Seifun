@@ -201,7 +201,7 @@ const Landing = () => {
               </div>
               <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-0 overflow-hidden">
                 <div className="h-64 w-full">
-                  <LandingPreviewVideo src="/media/seilor-preview.webm" poster="/media/seilor-poster.jpg" className="h-full w-full" />
+                  <LandingPreviewVideo src="/media/seilor-preview.webm" className="h-full w-full" />
                 </div>
               </div>
               <div className="mt-4 flex gap-3">
@@ -217,7 +217,7 @@ const Landing = () => {
               </div>
               <div className="flex-1 rounded-xl border landing-border bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-0 overflow-hidden">
                 <div className="h-64 w-full">
-                  <LandingPreviewVideo src="/media/safechecker-preview.webm" poster="/media/safechecker-poster.jpg" className="h-full w-full" />
+                  <LandingPreviewVideo src="/media/safechecker-preview.webm" className="h-full w-full" />
                 </div>
               </div>
               <div className="mt-4 flex gap-3">

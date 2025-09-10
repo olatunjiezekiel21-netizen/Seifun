@@ -2,11 +2,10 @@ import React from 'react';
 
 interface LandingPreviewVideoProps {
   src: string;
-  poster?: string;
   className?: string;
 }
 
-const LandingPreviewVideo: React.FC<LandingPreviewVideoProps> = ({ src, poster, className }) => {
+const LandingPreviewVideo: React.FC<LandingPreviewVideoProps> = ({ src, className }) => {
   return (
     <div className={className || ''}>
       <video
@@ -15,7 +14,6 @@ const LandingPreviewVideo: React.FC<LandingPreviewVideoProps> = ({ src, poster, 
         muted
         loop
         playsInline
-        poster={poster}
       >
         <source src={src} type="video/webm" />
         {/* Optional MP4 fallback if provided later through the same path but different extension */}
