@@ -479,6 +479,10 @@ func (env *EVMEnvironment) CreatePool(tokenA, tokenB *big.Int, amountA, amountB 
 	// Create liquidity pool
 }
 
+func (env *EVMEnvironment) GetUSDC() *big.Int {
+	return big.NewInt(0x2222222222222222222222222222222222222222)
+}
+
 // Similar implementations for other environments...
 type SeiNativeEnvironment struct {
 	t *testing.T
