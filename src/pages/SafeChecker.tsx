@@ -23,6 +23,7 @@ const SafeChecker = () => {
   const [recentScans, setRecentScans] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [scanProgress, setScanProgress] = useState<string[]>([]);
+  const [seiUsd, setSeiUsd] = useState<number | null>(null);
   
   // Wallet connection for enhanced features
   const {
@@ -38,6 +39,23 @@ const SafeChecker = () => {
   // Initialize scanner and registry
   const tokenScanner = new TokenScanner();
   const seiRegistry = new SeiTokenRegistry(false); // Use mainnet
+
+  // Fetch SEI/USD price for SEI conversion display
+  useEffect(() => {
+    const fetchSeiUsd = async () => {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=sei-network&vs_currencies=usd');
+        if (res.ok) {
+          const data = await res.json();
+          const p = Number(data?.['sei-network']?.usd || 0);
+          if (p > 0) setSeiUsd(p);
+        }
+      } catch {}
+    };
+    fetchSeiUsd();
+    const id = setInterval(fetchSeiUsd, 15000);
+    return () => clearInterval(id);
+  }, []);
 
   const scanToken = async () => {
     if (!tokenAddress.trim()) return;
@@ -407,6 +425,9 @@ const SafeChecker = () => {
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-800">${scanResult.details.price}</div>
                     <div className="text-sm text-gray-600">Price</div>
+                    {seiUsd && (
+                      <div className="text-xs text-blue-700 mt-1">≈ {(Number(scanResult.details.price) / seiUsd).toFixed(6)} SEI</div>
+                    )}
                   </div>
                 )}
                 {scanResult.details?.marketCap && (
