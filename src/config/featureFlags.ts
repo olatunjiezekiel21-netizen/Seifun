@@ -54,12 +54,12 @@ export const developmentFlags: FeatureFlags = {
   docs: true,
   
   // Launch features - Available in dev
-  seifunLaunch: true,
-  seilist: true,
+  seifunLaunch: false,
+  seilist: false,
   
   // Development features - Available in dev
-  devPlus: true,
-  charts: true,
+  devPlus: false,
+  charts: false,
   
   // Advanced features - Available in dev
   nativeSeiScanning: true,
