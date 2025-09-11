@@ -97,7 +97,7 @@ export class ChatBrain {
       
       // Step 2: Try LangChain AI Agent First (Enhanced Intelligence)
       // But if the message seems actionable (swap/stake/create), skip straight to ActionBrain
-      const lcShouldRun = !/\b(swap|exchange|trade|stake|unstake|redelegate|delegate|claim|create\s+token|add\s+liquidity|burn|send|transfer)\b/i.test(userMessage)
+      const lcShouldRun = !/\b(swap|exchange|trade|stake|unstake|redelegate|delegate|claim|create\s+token|add\s+liquidity|burn|send|transfer|balance|holdings|portfolio)\b/i.test(userMessage)
       if (lcShouldRun) {
         try {
           console.log('🚀 Trying LangChain AI Agent...');
@@ -133,7 +133,7 @@ export class ChatBrain {
 
         // ChatGPT fallback for rich conversational answers when no action required
         try {
-          const system: any = { role: 'system', content: 'You are Seilor 0, an expert DeFi assistant on Sei. Be concise, actionable, and safe. If a request implies on-chain action, suggest the next step but do not fabricate transactions. Prefer Sei-specific context.' };
+          const system: any = { role: 'system', content: 'You are Seilor 0, an expert DeFi assistant on Sei. Be concise, actionable, and safe. You have access to wallet tools via functions. If user asks for balance and a wallet is connected, answer using tools; otherwise ask them to connect. Prefer Sei-specific context.' };
           const user: any = { role: 'user', content: userMessage };
           const gptMessage = await chatGPTService.reply([system, user]);
           const assistantMessage: ChatMessage = {
@@ -160,7 +160,26 @@ export class ChatBrain {
         }
       }
       
-      // Step 3: Fallback to ActionBrain System
+      // Step 3: Handle simple wallet queries directly when possible
+      const isBalanceQuery = /\b(usdc|sei)?\s*balance\b|\bportfolio\b|\bholdings\b/i.test(userMessage);
+      if (isBalanceQuery) {
+        try {
+          const addr = (typeof window !== 'undefined' && window.localStorage?.getItem('seifun_wallet_address')) || undefined;
+          if (!addr) {
+            return { message: '🔗 Connect your wallet so I can read balances.', success: true, intent: IntentType.WALLET_INFO, confidence: 0.9 };
+          }
+          const res = await fetch('/.netlify/functions/wallet-portfolio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr, network: 'testnet', includeSymbols: ['SEI','USDC'] }) });
+          if (res.ok) {
+            const data = await res.json();
+            const sei = Number(data?.native?.balance || 0);
+            const usdc = Number((data?.tokens || []).find((t: any) => (t.symbol || '').toUpperCase() === 'USDC')?.balance || 0);
+            const msg = `👛 Wallet balances\n• SEI: ${sei.toFixed(4)}\n• USDC: ${usdc.toFixed(2)}`;
+            return { message: msg, success: true, intent: IntentType.WALLET_INFO, confidence: 0.95 };
+          }
+        } catch {}
+      }
+
+      // Step 4: Fallback to ActionBrain System
       console.log('🔄 Using ActionBrain fallback system...');
       
       // Intent Recognition through Action Brain

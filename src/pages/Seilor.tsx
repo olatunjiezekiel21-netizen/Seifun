@@ -77,6 +77,15 @@ const Seilor = () => {
     initializeHybridService();
   }, []);
 
+  // Persist connected wallet address for cross-service usage (ChatBrain, etc.)
+  useEffect(() => {
+    try {
+      if (isConnected && address) {
+        localStorage.setItem('seifun_wallet_address', address);
+      }
+    } catch {}
+  }, [isConnected, address]);
+
   // Load data when panels are accessed
   useEffect(() => {
     if (activePanel === 'history') {
