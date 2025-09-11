@@ -425,9 +425,18 @@ const SafeChecker = () => {
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-800">${scanResult.details.price}</div>
                     <div className="text-sm text-gray-600">Price</div>
-                    {seiUsd && (
-                      <div className="text-xs text-blue-700 mt-1">≈ {(Number(scanResult.details.price) / seiUsd).toFixed(6)} SEI</div>
-                    )}
+                    {(() => {
+                      try {
+                        if (!seiUsd) return null;
+                        const raw = String(scanResult.details.price);
+                        const priceNum = parseFloat(raw.replace(/[^0-9.]/g, ''));
+                        if (!isFinite(priceNum) || priceNum <= 0) return null;
+                        const val = priceNum / seiUsd;
+                        return <div className="text-xs text-blue-700 mt-1">≈ {val.toFixed(6)} SEI</div>;
+                      } catch {
+                        return null;
+                      }
+                    })()}
                   </div>
                 )}
                 {scanResult.details?.marketCap && (
