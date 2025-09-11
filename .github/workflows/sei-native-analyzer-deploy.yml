@@ -1,0 +1,68 @@
+name: Sei Native Analyzer Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      chain_id:
+        description: "Sei chain id"
+        required: false
+        default: "pacific-1"
+      rpc:
+        description: "Sei RPC"
+        required: false
+        default: "https://sei-rpc.polkachu.com"
+      rest:
+        description: "Sei REST"
+        required: false
+        default: "https://sei-api.polkachu.com"
+  push:
+    paths:
+      - 'contracts/native/token-analyzer/**'
+      - 'scripts/deploy_token_analyzer.mjs'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci || npm i
+
+      - name: Build optimized WASM
+        uses: CosmWasm/rust-optimizer@v1
+        with:
+          workspace: contracts/native/token-analyzer
+
+      - name: Verify artifact
+        run: ls -lah contracts/native/token-analyzer/artifacts
+
+      - name: Deploy with CosmJS
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          SEI_NATIVE_CHAIN_ID: ${{ github.event.inputs.chain_id || 'pacific-1' }}
+          SEI_NATIVE_RPC: ${{ github.event.inputs.rpc || 'https://sei-rpc.polkachu.com' }}
+          SEI_NATIVE_REST: ${{ github.event.inputs.rest || 'https://sei-api.polkachu.com' }}
+        run: |
+          node ./scripts/deploy_token_analyzer.mjs | tee deploy.out
+          echo "DEPLOY_OUTPUT<<EOF" >> $GITHUB_ENV
+          cat deploy.out >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Extract Address
+        id: extract
+        run: |
+          ADDR=$(grep -E "^VITE_TOKEN_ANALYZER_CONTRACT=" <<< "$DEPLOY_OUTPUT" | awk -F'= ' '{print $2}')
+          echo "contract=$ADDR" >> $GITHUB_OUTPUT
+
+      - name: Summary
+        run: echo "Deployed contract: ${{ steps.extract.outputs.contract }}"
