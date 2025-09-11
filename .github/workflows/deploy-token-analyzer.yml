@@ -1,0 +1,71 @@
+name: Deploy Token Analyzer (Sei CosmWasm)
+
+on:
+  workflow_dispatch:
+    inputs:
+      chain_id:
+        description: "Sei chain id"
+        required: false
+        default: "pacific-1"
+      rpc:
+        description: "Sei RPC"
+        required: false
+        default: "https://sei-rpc.polkachu.com"
+      rest:
+        description: "Sei REST"
+        required: false
+        default: "https://sei-api.polkachu.com"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile || npm ci
+
+      - name: Build optimized WASM (CosmWasm Optimizer)
+        uses: CosmWasm/rust-optimizer@v1
+        with:
+          workspace: contracts/native/token-analyzer
+
+      - name: List artifact
+        run: ls -lah contracts/native/token-analyzer/artifacts
+
+      - name: Deploy via CosmJS
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          SEI_NATIVE_CHAIN_ID: ${{ github.event.inputs.chain_id }}
+          SEI_NATIVE_RPC: ${{ github.event.inputs.rpc }}
+          SEI_NATIVE_REST: ${{ github.event.inputs.rest }}
+        run: |
+          node -e "console.log('node ok')"
+          node ./scripts/deploy_token_analyzer.mjs | tee deploy.out
+          echo "DEPLOY_OUTPUT<<EOF" >> $GITHUB_ENV
+          cat deploy.out >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Extract contract address
+        id: extract
+        run: |
+          ADDR=$(grep -E "^VITE_TOKEN_ANALYZER_CONTRACT=" <<< "$DEPLOY_OUTPUT" | awk -F'= ' '{print $2}')
+          echo "contract=$ADDR" >> $GITHUB_OUTPUT
+
+      - name: Summary
+        run: |
+          echo "Deployed contract: ${{ steps.extract.outputs.contract }}"
