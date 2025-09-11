@@ -272,8 +272,10 @@ export class ChatBrain {
       const txMsg = await cambrianSeiAgent.swapTokens({ tokenIn: ps.tokenIn as any, tokenOut: ps.tokenOut as any, amount: ps.amount, minOut: ps.minOut })
       const txHashMatch = /0x[a-fA-F0-9]{64}/.exec(txMsg || '')
       const txHash = txHashMatch ? txHashMatch[0] : undefined
+      const link = txHash ? `https://seitrace.com/tx/${txHash}?chain=sei-testnet` : undefined
+      const desc = link ? `🔗 View on Explorer: ${link}` : ''
       return {
-        message: `✅ Swap executed. ${txHash ? `TX: ${txHash}` : txMsg}`,
+        message: `✅ Swap executed\n${txHash ? `TX: ${txHash}` : txMsg}${desc ? `\n${desc}` : ''}`,
         success: true,
         intent: IntentType.SYMPHONY_SWAP,
         confidence: 0.95
@@ -388,9 +390,12 @@ export class ChatBrain {
       
       // Clear pending transfer
       this.context.pendingTransfer = undefined;
+      const txHashMatch = /0x[a-fA-F0-9]{64}/.exec(result || '')
+      const txHash = txHashMatch ? txHashMatch[0] : undefined
+      const link = txHash ? `https://seitrace.com/tx/${txHash}?chain=sei-testnet` : undefined
       
       return {
-        message: `✅ Transfer successful!\n\n💰 Amount: ${transfer.amount} ${ (transfer as any).token ? 'USDC' : 'SEI' }\n📤 To: ${transfer.recipient}\n🔗 Transaction: ${result}\n\nYour remaining balance: ${transfer.remainingBalance} ${ (transfer as any).token ? 'USDC' : 'SEI' }`,
+        message: `✅ Transfer successful!\n\n💰 Amount: ${transfer.amount} ${ (transfer as any).token ? 'USDC' : 'SEI' }\n📤 To: ${transfer.recipient}\n${txHash ? `TX: ${txHash}\n` : ''}${link ? `🔗 View on Explorer: ${link}\n` : ''}\nYour remaining balance: ${transfer.remainingBalance} ${ (transfer as any).token ? 'USDC' : 'SEI' }`,
         success: true,
         intent: IntentType.TRANSFER_CONFIRMATION,
         confidence: 0.95
