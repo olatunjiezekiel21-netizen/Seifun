@@ -2,6 +2,8 @@ import { actionBrain, IntentType } from './ActionBrain';
 import { cambrianSeiAgent } from './CambrianSeiAgent';
 import { langChainSeiAgent, LangChainResponse } from './LangChainSeiAgent';
 import { chatGPTService } from './ChatGPTService';
+import { trendingService } from './TrendingService';
+import { tokenInfoService } from './TokenInfoService';
 
 // Conversation Context
 interface ConversationContext {
@@ -97,7 +99,7 @@ export class ChatBrain {
       
       // Step 2: Try LangChain AI Agent First (Enhanced Intelligence)
       // But if the message seems actionable (swap/stake/create), skip straight to ActionBrain
-      const lcShouldRun = !/\b(swap|exchange|trade|stake|unstake|redelegate|delegate|claim|create\s+token|add\s+liquidity|burn|send|transfer|balance|holdings|portfolio)\b/i.test(userMessage)
+      const lcShouldRun = !/\b(swap|exchange|trade|stake|unstake|redelegate|delegate|claim|create\s+token|add\s+liquidity|burn|send|transfer|balance|holdings|portfolio|trending|good\s+coins|token\s+info|price)\b/i.test(userMessage)
       if (lcShouldRun) {
         try {
           console.log('🚀 Trying LangChain AI Agent...');
@@ -179,7 +181,33 @@ export class ChatBrain {
         } catch {}
       }
 
-      // Step 4: Fallback to ActionBrain System
+      // Step 4: Market/trending queries
+      const isTrending = /\b(trending|good\s+coins|top\s+pairs|what\s+to\s+trade)\b/i.test(userMessage);
+      if (isTrending) {
+        try {
+          const items = await trendingService.getTrending();
+          const top = items.slice(0, 8).map((it, i) => `${i + 1}. ${it.symbol} — $${(it.priceUsd || 0).toFixed(4)} (${(it.priceChange24h || 0).toFixed(2)}%)${it.liquidityUsd ? ` | Liq $${Math.round(it.liquidityUsd).toLocaleString()}` : ''}${it.url ? ` — ${it.url}` : ''}`).join('\n');
+          return { message: `🔥 Trending pairs (24h)\n${top}`, success: true, intent: IntentType.CONVERSATION, confidence: 0.9 };
+        } catch (e) {}
+      }
+
+      // Step 5: Token info queries
+      const tokenInfoMatch = userMessage.match(/(?:token\s+info|tell\s+me\s+about|price\s+of|price)\s+([a-z0-9_\-\.\/$ ]{2,25})/i);
+      if (tokenInfoMatch) {
+        const q = tokenInfoMatch[1].trim();
+        try {
+          const info = await tokenInfoService.getInfo(q);
+          const lines = [
+            `📈 ${info.name} (${info.symbol}) — $${(info.priceUsd || 0).toFixed(6)} (${(info.priceChange24h || 0).toFixed(2)}%)`,
+            info.website ? `🌐 ${info.website}` : '',
+            info.twitter ? `𝕏 ${info.twitter}` : '',
+            info.url ? `More: ${info.url}` : ''
+          ].filter(Boolean).join('\n');
+          return { message: lines, success: true, intent: IntentType.CONVERSATION, confidence: 0.9 };
+        } catch {}
+      }
+
+      // Step 6: Fallback to ActionBrain System
       console.log('🔄 Using ActionBrain fallback system...');
       
       // Intent Recognition through Action Brain
