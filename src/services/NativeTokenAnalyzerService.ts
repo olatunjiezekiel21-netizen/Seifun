@@ -28,12 +28,12 @@ export interface TokenAnalyzerContract {
 }
 
 export class NativeTokenAnalyzerService {
-  private readonly SEI_RPC_ENDPOINT = 'https://sei-rpc.polkachu.com';
-  private readonly SEI_REST_ENDPOINT = 'https://sei-api.polkachu.com';
-  private readonly SEI_CHAIN_ID = 'pacific-1';
+  private readonly SEI_RPC_ENDPOINT = (import.meta as any).env.VITE_SEI_NATIVE_RPC || 'https://sei-rpc.polkachu.com';
+  private readonly SEI_REST_ENDPOINT = (import.meta as any).env.VITE_SEI_NATIVE_REST || 'https://sei-api.polkachu.com';
+  private readonly SEI_CHAIN_ID = (import.meta as any).env.VITE_SEI_NATIVE_CHAIN_ID || 'pacific-1';
   
   // Contract addresses for token analyzer (would be deployed contracts)
-  private readonly TOKEN_ANALYZER_CONTRACT = 'sei1...'; // Placeholder for deployed contract
+  private readonly TOKEN_ANALYZER_CONTRACT = (import.meta as any).env.VITE_TOKEN_ANALYZER_CONTRACT || '';
   
   /**
    * Analyze a native SEI token using the smart contract
@@ -88,8 +88,15 @@ export class NativeTokenAnalyzerService {
    */
   private async analyzeTokenDirect(denom: string): Promise<NativeTokenAnalysisResult> {
     try {
+      // Resolve IBC denom traces to base denom first
+      const resolved = await this.resolveDenom(denom);
+      const baseDenom = resolved?.baseDenom || denom;
+      
       // Get token metadata from bank module
-      const metadata = await this.getTokenMetadata(denom);
+      const metadata = await this.getTokenMetadata(baseDenom);
+      
+      // Get total supply if available
+      const totalSupply = await this.getTotalSupply(baseDenom).catch(() => '0');
       
       // Perform risk analysis
       const { riskLevel, warnings } = this.analyzeTokenRisk(denom, metadata);
@@ -98,14 +105,14 @@ export class NativeTokenAnalyzerService {
       const isVerified = this.isTokenVerified(denom);
       
       return {
-        denom,
+        denom: baseDenom,
         name: metadata.name || 'Unknown Token',
-        symbol: metadata.symbol || denom,
+        symbol: metadata.symbol || baseDenom,
         decimals: metadata.decimals || 6,
-        totalSupply: '0', // Would need separate query
-        isNative: denom === 'usei',
+        totalSupply,
+        isNative: baseDenom === 'usei',
         isIBC: denom.startsWith('ibc/'),
-        isCW20: denom.startsWith('sei1'),
+        isCW20: baseDenom.startsWith('sei1'),
         riskLevel,
         isVerified,
         warnings,
@@ -152,6 +159,34 @@ export class NativeTokenAnalyzerService {
         description: null,
       };
     }
+  }
+
+  /**
+   * Resolve IBC denom traces to base denom
+   */
+  private async resolveDenom(denom: string): Promise<{ baseDenom: string; path?: string } | null> {
+    try {
+      if (!denom.startsWith('ibc/')) return { baseDenom: denom };
+      const hash = denom.split('/')[1];
+      const res = await fetch(`${this.SEI_REST_ENDPOINT}/ibc/apps/transfer/v1/denom_traces/${hash}`);
+      if (!res.ok) return { baseDenom: denom };
+      const data = await res.json();
+      const base = data?.denom_trace?.base_denom || denom;
+      const path = data?.denom_trace?.path;
+      return { baseDenom: base, path };
+    } catch {
+      return { baseDenom: denom };
+    }
+  }
+
+  /**
+   * Get total supply from bank module for a given denom
+   */
+  private async getTotalSupply(denom: string): Promise<string> {
+    const res = await fetch(`${this.SEI_REST_ENDPOINT}/cosmos/bank/v1beta1/supply/by_denom?denom=${encodeURIComponent(denom)}`);
+    if (!res.ok) return '0';
+    const data = await res.json();
+    return data?.amount?.amount || '0';
   }
   
   /**
