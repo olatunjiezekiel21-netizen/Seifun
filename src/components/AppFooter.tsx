@@ -20,10 +20,9 @@ const AppFooter = () => {
           <div>
             <h4 className="app-heading-md mb-4">Platform</h4>
             <ul className="space-y-2">
-                              <li><Link to="/app/seilist" className="app-text-secondary hover:app-text-primary">SeiList</Link></li>
-              <li><Link to="/app/seifun-launch" className="app-text-secondary hover:app-text-primary">Token Discovery</Link></li>
-                              <li><Link to="/app/seilor" className="app-text-secondary hover:app-text-primary">Seilor 0</Link></li>
-              <li><Link to="/app/dev-plus" className="app-text-secondary hover:app-text-primary">Developer Tools</Link></li>
+              <li><Link to="/app/safechecker" className="app-text-secondary hover:app-text-primary">SafeChecker</Link></li>
+              <li><Link to="/app/seilor" className="app-text-secondary hover:app-text-primary">Seilor 0</Link></li>
+              <li><Link to="/app/docs" className="app-text-secondary hover:app-text-primary">Documentation</Link></li>
             </ul>
           </div>
           
@@ -31,25 +30,25 @@ const AppFooter = () => {
             <h4 className="app-heading-md mb-4">Resources</h4>
             <ul className="space-y-2">
               <li><Link to="/app/docs" className="app-text-secondary hover:app-text-primary">Documentation</Link></li>
-              <li><a href="#" className="app-text-secondary hover:app-text-primary">API Reference</a></li>
-              <li><a href="#" className="app-text-secondary hover:app-text-primary">Community</a></li>
-              <li><a href="#" className="app-text-secondary hover:app-text-primary">Support</a></li>
+              <li><a href="#" className="app-text-secondary hover:app-text-primary">API Reference (coming soon)</a></li>
+              <li><a href="#" className="app-text-secondary hover:app-text-primary">Community (coming soon)</a></li>
+              <li><a href="#" className="app-text-secondary hover:app-text-primary">Support (coming soon)</a></li>
             </ul>
           </div>
           
           <div>
             <h4 className="app-heading-md mb-4">Connect</h4>
             <div className="flex space-x-4">
-              <a href="#" className="p-2 rounded-lg app-bg-tertiary hover:app-bg-primary transition-colors">
+              <a href="https://x.com/seifu_trade" target="_blank" rel="noreferrer" className="p-2 rounded-lg app-bg-tertiary hover:app-bg-primary transition-colors">
                 <Twitter className="w-5 h-5 app-text-secondary" />
               </a>
-              <a href="#" className="p-2 rounded-lg app-bg-tertiary hover:app-bg-primary transition-colors">
+              <a href="https://github.com/Milesno2/Seifun" target="_blank" rel="noreferrer" className="p-2 rounded-lg app-bg-tertiary hover:app-bg-primary transition-colors">
                 <Github className="w-5 h-5 app-text-secondary" />
               </a>
               <a href="#" className="p-2 rounded-lg app-bg-tertiary hover:app-bg-primary transition-colors">
                 <MessageCircle className="w-5 h-5 app-text-secondary" />
               </a>
-              <a href="#" className="p-2 rounded-lg app-bg-tertiary hover:app-bg-primary transition-colors">
+              <a href="mailto:team@seifun.xyz" className="p-2 rounded-lg app-bg-tertiary hover:app-bg-primary transition-colors">
                 <Mail className="w-5 h-5 app-text-secondary" />
               </a>
             </div>
