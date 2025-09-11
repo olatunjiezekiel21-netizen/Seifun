@@ -94,22 +94,10 @@ const AppHeaderSafe = () => {
               Home
             </Link>
             <Link 
-              to="/app/seilist"
-              className={`app-nav-link ${isActive('/app/seilist') ? 'active' : ''}`}
-            >
-              SeiList
-            </Link>
-            <Link 
               to="/app/safechecker"
               className={`app-nav-link ${isActive('/app/safechecker') ? 'active' : ''}`}
             >
               SafeChecker
-            </Link>
-            <Link 
-              to="/app/launch" 
-              className={`app-nav-link ${isActive('/app/launch') ? 'active' : ''}`}
-            >
-              Launch
             </Link>
 
             <Link 
@@ -124,12 +112,7 @@ const AppHeaderSafe = () => {
             >
               Docs
             </Link>
-            <Link 
-              to="/app/devplus" 
-              className={`app-nav-link ${isActive('/app/devplus') ? 'active' : ''}`}
-            >
-              Dev++
-            </Link>
+            
           </nav>
 
           {/* Right Side */}
@@ -218,13 +201,13 @@ const AppHeaderSafe = () => {
               >
                 Home
               </Link>
-              <Link to="/app/seilist" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/seilist') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>SeiList</Link>
+              
               <Link to="/app/safechecker" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/safechecker') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>SafeChecker</Link>
-              <Link to="/app/launch" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/launch') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>Launch</Link>
+              
 
               <Link to="/app/seilor" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/seilor') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>Seilor 0</Link>
               <Link to="/app/docs" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/docs') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>Docs</Link>
-              <Link to="/app/devplus" className={`block px-4 py-2 rounded-lg transition-colors ${isActive('/app/devplus') ? 'app-bg-secondary app-text-primary' : 'app-text-secondary hover:app-bg-secondary'}`} onClick={() => setIsMobileMenuOpen(false)}>Dev++</Link>
+              
             </nav>
           </div>
         )}
