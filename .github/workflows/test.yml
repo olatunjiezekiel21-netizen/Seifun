@@ -36,5 +36,9 @@ jobs:
 
       - name: Run Forge tests (contracts/evm)
         run: |
-          forge test -vvv --root contracts/evm
+          if [ -n "$(find contracts/evm -type f \( -name "*.t.sol" -o -name "*Test*.sol" \))" ]; then \
+            forge test -vvv --root contracts/evm; \
+          else \
+            echo "No tests found under contracts/evm; skipping tests"; \
+          fi
         id: test
